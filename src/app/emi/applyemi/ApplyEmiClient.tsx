@@ -18,14 +18,13 @@ import creditcardicon from '../../../../public/svgfile/creditcardicon.svg';
 import downpaymenticon from '../../../../public/svgfile/payementiconcash.svg';
 import addcreditcard from '../../../../public/svgfile/creditcardplus.svg';
 import { useContextEmi } from '../emiContext';
-import CreditCardComponent from './CreditCardform'
 // import BuyerPersonalInfo from './BuyerPersonalInfo'; // Seems unused in original, logic was inline
 import RenderReview from './ReviewApplyEmiDoc'
 import ProgressBar from './ProgressBar';
 import EmiProductDetails from './EmiProductDetails';
 import DocumentUpload from './DocumentUpload';
 import SignaturePad from './SignaturePad';
-import { ArrowBigLeft, Loader2, CheckCircle2, ChevronRight, Search, CreditCard, ChevronDown } from 'lucide-react';
+import { ArrowBigLeft, Loader2, CheckCircle2, ChevronRight } from 'lucide-react';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import { useAuth } from '@/app/context/AuthContext';
 import LoginAlertDialog from '@/components/auth/LoginAlertDialog';
@@ -34,8 +33,25 @@ interface ApplyEmiClientProps {
     initialProduct: ProductDetails | null;
 }
 
+interface FieldOption {
+    label: string;
+    name: string;
+    value: string | number | undefined;
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+    placeholder?: string;
+    maxLength?: number;
+    svgicon?: string | React.ReactNode;
+    extenduserinfo?: string;
+    type?: string;
+    options?: string[];
+    step?: string;
+    disabled?: boolean;
+    helper?: string | null;
+    maxvalue?: number;
+}
+
 // FormField component moved outside to prevent re-creation on every render
-const FormField = React.memo(({ field, error }: { field: any, error?: string }) => (
+const FormField = React.memo(({ field, error }: { field: FieldOption, error?: string }) => (
     <div className={`space-y-1 ${field.extenduserinfo || ''}`}>
         <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{field.label}</label>
         <div className="relative group">
@@ -54,7 +70,7 @@ const FormField = React.memo(({ field, error }: { field: any, error?: string }) 
                     className={`w-full bg-white/50 backdrop-blur-sm border ${error ? 'border-red-400' : 'border-gray-200'} text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent block pl-10 p-2.5 outline-none transition-all shadow-sm`}
                 >
                     <option value="" disabled>Select {field.label}</option>
-                    {field.options && field.options.map((opt: any) => (
+                    {field.options && field.options.map((opt: string) => (
                         <option key={opt} value={opt}>{opt}</option>
                     ))}
                 </select>
@@ -75,11 +91,12 @@ const FormField = React.memo(({ field, error }: { field: any, error?: string }) 
     </div>
 ));
 
+FormField.displayName = 'FormField';
+
 const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
     const { setShowLoginAlert, authState } = useAuth();
     const user = authState?.user;
     const { emiContextInfo, setEmiContextInfo, AvailablebankProvider, emiCalculation } = useContextEmi();
-    const [NoCreditCard, setNoCreditCard] = useState(false);
     const [currentstep, setcurrentstep] = useState(0);
     const [previews, setPreviews] = useState<{ [key: string]: string }>({});
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -122,7 +139,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
                 }
             }));
         }
-    }, [initialProduct, searchParams]);
+    }, [initialProduct, searchParams, emiContextInfo.product?.id, setEmiContextInfo]);
 
     // Handle file previews
     useEffect(() => {
@@ -132,7 +149,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             const docFiles = files[docGroup as keyof typeof files];
             if (docFiles && typeof docFiles === 'object') {
                 Object.keys(docFiles).forEach((key) => {
-                    const file = (docFiles as any)[key];
+                    const file = (docFiles as unknown as Record<string, File | null>)[key];
                     if (file && file instanceof File) {
                         const previewKey = `${docGroup === 'granterDocument' ? 'granter' : 'citizenship'}-${key}`;
                         newPreviews[previewKey] = URL.createObjectURL(file);
@@ -168,26 +185,30 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
         return Yup.object();
     };
 
-    const validateFormSection = async (section: any, data: any) => {
+    const validateFormSection = async (section: { sectionKey: string }, data: Record<string, unknown>) => {
         try {
             const schema = getValidationSchema(section.sectionKey, selectedOption);
             await schema.validate(data, { abortEarly: false });
             return {};
-        } catch (validationError: any) {
+        } catch (validationError: unknown) {
             const errors: { [key: string]: string } = {};
-            validationError.inner.forEach((error: any) => {
-                errors[error.path] = error.message;
-            });
+            if (validationError instanceof Yup.ValidationError) {
+                validationError.inner.forEach((error: Yup.ValidationError) => {
+                    if (error.path) {
+                        errors[error.path] = error.message;
+                    }
+                });
+            }
             return errors;
         }
     };
 
-    const handleInputChange = (e: any, section: string) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, section: string) => {
         const { name, value } = e.target;
         setEmiContextInfo((prev) => ({
             ...prev,
             [section]: {
-                ...(prev as any)[section],
+                ...(prev as unknown as Record<string, Record<string, unknown>>)[section],
                 [name]: value,
             },
         }));
@@ -199,14 +220,14 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
 
     const handleFileDelete = (docType: string, isGranter = false) => {
         setEmiContextInfo((prev) => {
-            const key = docType === 'bankStatement' ? 'bankStatement' : `${isGranter ? 'granter' : 'citizenship'}-${docType}`;
             // Logic to cleanup previews handled by effect
+            const fileKey = docType === 'bankStatement' ? 'bankStatement' : isGranter ? 'granterDocument' : 'citizenshipFile';
             return {
                 ...prev,
                 files: {
                     ...prev.files,
-                    [docType === 'bankStatement' ? 'bankStatement' : isGranter ? 'granterDocument' : 'citizenshipFile']: {
-                        ...(prev.files as any)[docType === 'bankStatement' ? 'bankStatement' : isGranter ? 'granterDocument' : 'citizenshipFile'],
+                    [fileKey]: {
+                        ...(prev.files as unknown as Record<string, Record<string, File | null>>)[fileKey],
                         [docType]: null,
                     },
                 },
@@ -215,11 +236,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
     };
 
     // Simplified handlers without auto-formatting to prevent cursor jumping
-    const handleCardNumberChange = (e: any) => {
+    const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         handleInputChange(e, 'bankinfo');
     };
 
-    const handleExpiryChange = (e: any) => {
+    const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         handleInputChange(e, 'bankinfo');
     };
 
@@ -229,7 +250,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
         setEmiContextInfo((prev) => ({
             ...prev,
             [section]: {
-                ...(prev as any)[section],
+                ...(prev as unknown as Record<string, Record<string, unknown>>)[section],
                 [name]: value,
             },
             interestRate: AvailablebankProvider.find((b) => b.name === value)?.rate || 10,
@@ -239,13 +260,14 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
         try {
             await schema.validateAt(name, { [name]: value });
             setErrors((prev) => ({ ...prev, [name]: undefined }));
-        } catch (error: any) {
-            setErrors((prev) => ({ ...prev, [name]: error.message }));
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Validation error';
+            setErrors((prev) => ({ ...prev, [name]: errorMessage }));
         }
     };
 
-    const handleFileChange = (e: any, docType: string, isGranter = false) => {
-        const file = e.target.files[0];
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, docType: string, isGranter = false) => {
+        const file = e.target.files?.[0];
         if (!file) return;
         if (docType === 'userSignature') {
             setEmiContextInfo((prev) => ({
@@ -263,7 +285,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
                 files: {
                     ...prev.files,
                     [isGranter ? 'granterDocument' : 'citizenshipFile']: {
-                        ...(prev.files as any)[isGranter ? 'granterDocument' : 'citizenshipFile'],
+                        ...(prev.files as unknown as Record<string, Record<string, File | null>>)[isGranter ? 'granterDocument' : 'citizenshipFile'],
                         [docType]: file,
                     },
                 },
@@ -281,7 +303,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             const data =
                 currentSection.sectionKey === 'emiCalculation'
                     ? { ...emiContextInfo.emiCalculation, bankname: emiContextInfo.bankinfo.bankname }
-                    : (emiContextInfo as any)[currentSection.sectionKey];
+                    : (emiContextInfo as unknown as Record<string, Record<string, unknown>>)[currentSection.sectionKey];
 
             // 1. Validate Form Fields
             const sectionErrors = await validateFormSection(currentSection, data);
@@ -294,7 +316,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
 
             // 2. Validate Files (if applicable for this step)
             // check based on selectedOption and currentStep
-            let fileErrors: string[] = [];
+            const fileErrors: string[] = [];
             const files = emiContextInfo.files;
 
             if (selectedOption === 'downPayment') {
@@ -434,9 +456,10 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
                 toast.success('Application Submitted Successfully!');
                 router.push('/');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Submission error:", error);
-            toast.error(`Failed to submit application: ${error.message || 'Unknown error'}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            toast.error(`Failed to submit application: ${errorMessage}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -477,7 +500,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'User Name',
             name: 'name',
             value: emiContextInfo.userInfo.name,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter user name',
             maxLength: 50,
             svgicon: '/svgfile/menperson.svg',
@@ -487,7 +510,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Email',
             name: 'email',
             value: emiContextInfo.userInfo.email,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter email',
             svgicon: '/svgfile/emailsvg.svg',
             extenduserinfo: '',
@@ -497,7 +520,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Gender',
             name: 'gender',
             value: emiContextInfo.userInfo.gender,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             type: 'select',
             options: ['Male', 'Female', 'Other'],
             svgicon: emiContextInfo.userInfo.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg',
@@ -507,7 +530,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Marriage Status',
             name: 'marriageStatus',
             value: emiContextInfo.userInfo.marriageStatus,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             type: 'select',
             options: ['Single', 'Married'],
             svgicon: emiContextInfo.userInfo.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg',
@@ -517,7 +540,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: emiContextInfo.userInfo.gender === 'Male' ? 'Wife Name' : 'Husband Name',
             name: 'userpartnerName',
             value: emiContextInfo.userInfo.userpartnerName,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             extenduserinfo: emiContextInfo.userInfo.marriageStatus === 'Single' ? 'hidden' : '',
             svgicon: emiContextInfo.userInfo.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg',
         },
@@ -525,7 +548,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Phone Number',
             name: 'phone',
             value: emiContextInfo.userInfo.phone,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter phone number',
             svgicon: '/svgfile/phoneIcon.png',
             extenduserinfo: '',
@@ -535,7 +558,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'National ID Number',
             name: 'nationalID',
             value: emiContextInfo.userInfo.nationalID,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter national ID number',
             svgicon: '/svgfile/idcardicon2.png',
             extenduserinfo: '',
@@ -544,7 +567,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Address',
             name: 'address',
             value: emiContextInfo.userInfo.address,
-            onChange: (e: any) => handleInputChange(e, 'userInfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter address',
             maxLength: 100,
             svgicon: '/svgfile/homeaddressicon.png',
@@ -557,7 +580,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Bank Name',
             name: 'bankname',
             value: emiContextInfo.bankinfo.bankname,
-            onChange: (e: any) => handleBankSelect('bankinfo', 'bankname', e.target.value),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value),
             type: 'select',
             options: bankOptions,
             svgicon: '/svgfile/bank.svg',
@@ -567,7 +590,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Card Holder Name',
             name: 'cardHolderName',
             value: emiContextInfo.bankinfo.cardHolderName,
-            onChange: (e: any) => handleInputChange(e, 'bankinfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'),
             placeholder: 'Card Holder Name',
             svgicon: '/svgfile/menperson.svg',
             extenduserinfo: '',
@@ -596,7 +619,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Card Limit',
             name: 'cardLimit',
             value: emiContextInfo.bankinfo.cardLimit,
-            onChange: (e: any) => handleInputChange(e, 'bankinfo'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'),
             placeholder: 'Card Limit',
             svgicon: '/svgfile/creditcardicon.svg',
             extenduserinfo: '',
@@ -609,20 +632,20 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
     // To save space and ensure correctness I will rely on the user to check/copy or assume standard fields.
     // Actually I must provide them.
     const bankdetailsInfo = [
-        { label: 'Bank Name', name: 'bankname', value: emiContextInfo.bankinfo.bankname, onChange: (e: any) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, svgicon: '/svgfile/bank.svg', extenduserinfo: '' },
-        { label: 'Account Number', name: 'accountNumber', value: emiContextInfo.bankinfo.accountNumber, onChange: (e: any) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter account number', svgicon: '/svgfile/idcardicon2.png', extenduserinfo: '' },
-        { label: 'Bank Branch', name: 'bankbranch', value: emiContextInfo.bankinfo.bankbranch, onChange: (e: any) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter Bank Branch', svgicon: '/svgfile/bank.svg', extenduserinfo: '' },
-        { label: 'Salary Amount', name: 'salaryAmount', value: emiContextInfo.bankinfo.salaryAmount, onChange: (e: any) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter salary amount', svgicon: '/svgfile/moneycashicon.png', extenduserinfo: '', type: 'number' },
+        { label: 'Bank Name', name: 'bankname', value: emiContextInfo.bankinfo.bankname, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, svgicon: '/svgfile/bank.svg', extenduserinfo: '' },
+        { label: 'Account Number', name: 'accountNumber', value: emiContextInfo.bankinfo.accountNumber, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter account number', svgicon: '/svgfile/idcardicon2.png', extenduserinfo: '' },
+        { label: 'Bank Branch', name: 'bankbranch', value: emiContextInfo.bankinfo.bankbranch, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter Bank Branch', svgicon: '/svgfile/bank.svg', extenduserinfo: '' },
+        { label: 'Salary Amount', name: 'salaryAmount', value: emiContextInfo.bankinfo.salaryAmount, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter salary amount', svgicon: '/svgfile/moneycashicon.png', extenduserinfo: '', type: 'number' },
     ];
 
     const granterPersonalDetails = [
-        { label: 'Guarantors Full Name', name: 'name', value: emiContextInfo.granterPersonalDetails.name, onChange: (e: any) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Guarantor name', svgicon: '/svgfile/menperson.svg', extenduserinfo: '' },
-        { label: 'Phone Number', name: 'phone', value: emiContextInfo.granterPersonalDetails.phone, onChange: (e: any) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Phone Number', svgicon: '/svgfile/phoneIcon.png', extenduserinfo: '', type: 'tel' },
-        { label: 'Gender', name: 'gender', value: emiContextInfo.granterPersonalDetails.gender, onChange: (e: any) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Male', 'Female'], svgicon: emiContextInfo.granterPersonalDetails.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg', extenduserinfo: '' },
-        { label: 'Marriage Status', name: 'marriageStatus', value: emiContextInfo.granterPersonalDetails.marriageStatus, onChange: (e: any) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Single', 'Married'], svgicon: emiContextInfo.granterPersonalDetails.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg', extenduserinfo: '' },
-        { label: emiContextInfo.granterPersonalDetails.gender === 'Male' ? 'Wife Name' : 'Husband Name', name: 'userpartnerName', value: emiContextInfo.granterPersonalDetails.userpartnerName, onChange: (e: any) => handleInputChange(e, 'granterPersonalDetails'), extenduserinfo: emiContextInfo.granterPersonalDetails.marriageStatus === 'Single' ? 'hidden' : '', svgicon: emiContextInfo.granterPersonalDetails.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg' },
-        { label: 'Citizenship Number', name: 'nationalID', value: emiContextInfo.granterPersonalDetails.nationalID, onChange: (e: any) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter citizenship number', svgicon: '/svgfile/idcardicon2.png', extenduserinfo: '' },
-        { label: 'Address', name: 'address', value: emiContextInfo.granterPersonalDetails.address, onChange: (e: any) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Address', maxLength: 100, svgicon: '/svgfile/homeaddressicon.png', extenduserinfo: '' },
+        { label: 'Guarantors Full Name', name: 'name', value: emiContextInfo.granterPersonalDetails.name, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Guarantor name', svgicon: '/svgfile/menperson.svg', extenduserinfo: '' },
+        { label: 'Phone Number', name: 'phone', value: emiContextInfo.granterPersonalDetails.phone, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Phone Number', svgicon: '/svgfile/phoneIcon.png', extenduserinfo: '', type: 'tel' },
+        { label: 'Gender', name: 'gender', value: emiContextInfo.granterPersonalDetails.gender, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Male', 'Female'], svgicon: emiContextInfo.granterPersonalDetails.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg', extenduserinfo: '' },
+        { label: 'Marriage Status', name: 'marriageStatus', value: emiContextInfo.granterPersonalDetails.marriageStatus, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Single', 'Married'], svgicon: emiContextInfo.granterPersonalDetails.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg', extenduserinfo: '' },
+        { label: emiContextInfo.granterPersonalDetails.gender === 'Male' ? 'Wife Name' : 'Husband Name', name: 'userpartnerName', value: emiContextInfo.granterPersonalDetails.userpartnerName, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), extenduserinfo: emiContextInfo.granterPersonalDetails.marriageStatus === 'Single' ? 'hidden' : '', svgicon: emiContextInfo.granterPersonalDetails.gender === 'Male' ? '/svgfile/menperson.svg' : '/svgfile/creditcardicon.svg' },
+        { label: 'Citizenship Number', name: 'nationalID', value: emiContextInfo.granterPersonalDetails.nationalID, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter citizenship number', svgicon: '/svgfile/idcardicon2.png', extenduserinfo: '' },
+        { label: 'Address', name: 'address', value: emiContextInfo.granterPersonalDetails.address, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Address', maxLength: 100, svgicon: '/svgfile/homeaddressicon.png', extenduserinfo: '' },
     ];
 
     const EmiConditionFields = [
@@ -630,7 +653,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Down Payment Amount',
             name: 'downPayment',
             value: emiContextInfo.emiCalculation.downPayment,
-            onChange: (e: any) => handleInputChange(e, 'emiCalculation'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'),
             svgicon: '/svgfile/moneycashicon.png',
             extenduserinfo: '',
             placeholder: 'Enter down payment amount (e.g. 40% or 5000)',
@@ -640,8 +663,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
                 ? `Calculated: Rs. ${emiData.downPayment.toLocaleString()}`
                 : null
         },
-        { label: 'Bank', name: 'bankname', value: emiContextInfo.bankinfo.bankname, onChange: (e: any) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, placeholder: 'Select Bank', svgicon: '/svgfile/monthicon.png', extenduserinfo: '' },
-        { label: 'Duration (months)', name: 'duration', value: emiCalc.duration, onChange: (e: any) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: '/svgfile/monthicon.png', extenduserinfo: '' },
+        { label: 'Bank', name: 'bankname', value: emiContextInfo.bankinfo.bankname, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, placeholder: 'Select Bank', svgicon: '/svgfile/monthicon.png', extenduserinfo: '' },
+        { label: 'Duration (months)', name: 'duration', value: emiCalc.duration, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: '/svgfile/monthicon.png', extenduserinfo: '' },
         { label: 'Finance Amount', name: 'financeAmount', value: emiData.financeAmount, onChange: () => { }, svgicon: '/svgfile/moneycashicon.png', extenduserinfo: '', disabled: true },
     ];
 
@@ -650,7 +673,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
             label: 'Down Payment Amount',
             name: 'downPayment',
             value: emiContextInfo.emiCalculation.downPayment,
-            onChange: (e: any) => handleInputChange(e, 'emiCalculation'),
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'),
             svgicon: '/svgfile/moneycashicon.png',
             extenduserinfo: '',
             placeholder: 'Enter down payment amount',
@@ -660,7 +683,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
                 ? `Calculated: Rs. ${emiData.downPayment.toLocaleString()}`
                 : null
         },
-        { label: 'Duration (months)', name: 'duration', value: emiCalc.duration, onChange: (e: any) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: '/svgfile/monthicon.png', extenduserinfo: '' },
+        { label: 'Duration (months)', name: 'duration', value: emiCalc.duration, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: '/svgfile/monthicon.png', extenduserinfo: '' },
         { label: 'Finance Amount', name: 'financeAmount', value: emiData.financeAmount, onChange: () => { }, svgicon: '/svgfile/moneycashicon.png', extenduserinfo: '', disabled: true },
     ];
 
@@ -714,14 +737,13 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
 
     const selectedOption = emiContextInfo.hasCreditCard === 'yes' ? 'creditCard' : emiContextInfo.hasCreditCard === 'make' ? 'makeCard' : 'downPayment';
     const currentFormSection = currentstep > 0 && currentstep < 4 ? formSections[selectedOption as keyof typeof formSections]?.find((section) => section.step === currentstep) : null;
-    const isFormValid = currentFormSection ? Object.keys(errors).length === 0 : true;
 
     if (!product) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
-                    <p className="text-gray-500 mb-6">We couldn't find the product details. Please access this page from a valid product link.</p>
+                    <p className="text-gray-500 mb-6">We couldn&apos;t find the product details. Please access this page from a valid product link.</p>
                     <Button onClick={() => router.push('/')} className="bg-blue-600 hover:bg-blue-700 text-white">Return Home</Button>
                 </div>
             </div>
@@ -802,7 +824,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
                                                 <h2 className="text-lg font-bold text-gray-800">Select Color / Variant</h2>
                                                 <div className="flex flex-wrap gap-4">
                                                     {/* We need distinct colors/variants */}
-                                                    {Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean).map((color: any) => {
+                                                    {Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean).map((color: string) => {
                                                         const isSelected = emiContextInfo.selectedVariant === color;
                                                         // Find image for this color
                                                         const variantImg = product.images?.find(img => img.color === color || img.custom_properties?.color === color)?.thumb || product.image?.thumb;
