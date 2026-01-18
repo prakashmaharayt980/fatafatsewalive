@@ -59,6 +59,7 @@ export interface getAllCategory {
     id: number;
     title: string;
     slug: string;
+    description?: string;
     parent_id: number | null;
 
 

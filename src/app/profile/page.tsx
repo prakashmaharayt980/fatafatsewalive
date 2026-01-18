@@ -14,7 +14,8 @@ import AddressSelectionUI from '../checkout/AddressSectionUi';
 import ChangePassword from './ChangePassword';
 import Notifications from './Notifications';
 
-export default function ProfilePage() {
+// Wrapped component that uses searchParams
+function ProfilePageContent() {
     const { logout, authState } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -153,5 +154,13 @@ export default function ProfilePage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ProfilePage() {
+    return (
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>}>
+            <ProfilePageContent />
+        </React.Suspense>
     );
 }
