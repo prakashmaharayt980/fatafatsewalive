@@ -91,9 +91,9 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
     }, [isAutoPlaying, nextSlide, mainImages.length]);
 
     return (
-        <div className="w-full bg-gradient-to-br from-gray-50 to-white overflow-hidden m-0 p-0 sm:px-4">
+        <div className="w-full bg-white rounded-xl overflow-hidden m-0 p-0 sm:px-4 sm:py-6">
             {/* Main Banner Section */}
-            <div className="flex flex-col lg:flex-row gap-0 sm:gap-6 mb-2 sm:mb-8">
+            <div className="flex flex-col lg:flex-row gap-0 sm:gap-6 mb-0 sm:mb-4">
                 {/* Main Carousel - 50% width */}
                 <div className="flex-1 lg:w-1/2">
                     <div
@@ -102,7 +102,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                         onMouseLeave={() => setIsAutoPlaying(true)}
                     >
                         {/* Image Container with Enhanced Styling */}
-                        <div className="relative h-50 sm:h-80 md:h-100 lg:h-[28rem] rounded-none sm:rounded-2xl overflow-hidden">
+                        <div className="relative h-50 sm:h-80 md:h-100 lg:h-[28rem] rounded-none sm:rounded-xl overflow-hidden shadow-md">
                             <div
                                 className="flex transition-transform duration-700 ease-out h-full"
                                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -153,7 +153,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                     <div className="hidden lg:flex lg:w-1/2 lg:flex-col gap-4">
                         {/* Top image - Full width, 50% height */}
                         <div className="relative group cursor-pointer h-1/2">
-                            <Link href={sideImages[0].link || '#'} className="relative block h-full rounded-xl overflow-hidden shadow-lg">
+                            <Link href={sideImages[0].link || '#'} className="relative block h-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
                                 <Image
                                     src={sideImages[0]?.default || ''}
                                     alt={sideImages[0]?.name || 'Banner Image'}
@@ -162,7 +162,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                     priority
                                 // quality={100}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 <div className="absolute bottom-3 left-3 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                     <p className="text-sm font-medium drop-shadow-lg">{sideImages[0]?.name}</p>
                                 </div>
@@ -172,7 +172,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                         {/* Bottom two images - Each 50% width, remaining 50% height */}
                         <div className="flex gap-4 h-1/2">
                             <div className="relative group cursor-pointer w-1/2">
-                                <Link href={sideImages[1].link || '#'} className="relative block h-full rounded-xl overflow-hidden shadow-lg">
+                                <Link href={sideImages[1].link || '#'} className="relative block h-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <Image
                                         src={sideImages[1]?.default || ''}
                                         alt={sideImages[1]?.name || 'Banner Image'}
@@ -180,7 +180,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                         className="w-full h-full  object-fill transition-transform duration-500 group-hover:scale-105"
                                         priority
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     <div className="absolute bottom-3 left-3 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                         <p className="text-sm font-medium drop-shadow-lg">{sideImages[1]?.name}</p>
                                     </div>
@@ -188,14 +188,14 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                             </div>
 
                             <div className="relative group cursor-pointer w-1/2">
-                                <Link href={sideImages[2].link || '#'} className="relative block h-full rounded-xl overflow-hidden shadow-lg">
+                                <Link href={sideImages[2].link || '#'} className="relative block h-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <Image
                                         src={sideImages[2]?.default || ''}
                                         alt={sideImages[2]?.name || 'Banner Image'}
                                         fill
                                         className="w-full h-full  object-fill transition-transform duration-500 group-hover:scale-105"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     <div className="absolute bottom-3 left-3 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                         <p className="text-sm font-medium drop-shadow-lg">{sideImages[2]?.name}</p>
                                     </div>

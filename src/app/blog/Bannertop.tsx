@@ -48,6 +48,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
           height={200}
           className="w-full h-auto object-cover transition-transform duration-300"
           priority
+          unoptimized={bannerImage.src === defaultImg}
         />
       </div>
 

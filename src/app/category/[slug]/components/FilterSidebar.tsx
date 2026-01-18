@@ -14,6 +14,8 @@ import {
     Box,
     DollarSign,
     Search,
+    Layers,
+    Store,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -72,13 +74,13 @@ const FilterSection = memo(({
                     {Icon && (
                         <div
                             className={cn(
-                                'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300',
+                                'w-7 h-7 rounded-md flex items-center justify-center transition-all duration-300',
                                 isOpen
-                                    ? 'bg-orange-100 text-orange-600'
+                                    ? 'bg-orange-50 text-orange-600'
                                     : 'bg-gray-50 text-gray-500 group-hover/section:bg-orange-50 group-hover/section:text-orange-600'
                             )}
                         >
-                            <Icon size={16} />
+                            <Icon size={15} />
                         </div>
                     )}
                     <span
@@ -154,7 +156,7 @@ const CheckboxItem = memo(({
     onChange,
     showColor = false,
 }: CheckboxItemProps) => (
-    <label className="flex items-center gap-3 py-1.5 px-2 cursor-pointer group/item rounded-lg transition-all duration-200 hover:bg-gray-50">
+    <label className="flex items-center gap-2.5 py-1 px-2 cursor-pointer group/item rounded-md transition-all duration-200 hover:bg-gray-50">
         <div className="relative flex items-center">
             <input
                 type="checkbox"
@@ -615,6 +617,7 @@ const FilterSidebar = memo(({
                 {/* Categories */}
                 <FilterSection
                     title="Categories"
+                    icon={Layers}
                     loading={loadingCategories}
                     onClear={() => onFiltersChange({ ...filters, categories: [] })}
                     showClear={filters.categories.length > 0}
@@ -641,6 +644,7 @@ const FilterSidebar = memo(({
                 {/* Brands */}
                 <FilterSection
                     title="Brands"
+                    icon={Store}
                     loading={loadingBrands}
                     onClear={() => onFiltersChange({ ...filters, brands: [] })}
                     showClear={filters.brands.length > 0}
@@ -657,6 +661,7 @@ const FilterSidebar = memo(({
                 {/* Colors */}
                 <FilterSection
                     title="Colors"
+                    icon={Palette}
                     defaultOpen={true}
                     onClear={() => onFiltersChange({ ...filters, colors: [] })}
                     showClear={filters.colors.length > 0}

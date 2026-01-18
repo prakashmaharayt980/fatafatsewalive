@@ -11,6 +11,9 @@ import RelatedProducts from "./RelatedProducts";
 import SimilarCompare from "./SimilarCompare";
 import ProductKeySpecs from "./ProductKeySpecs";
 import OurArticles from "@/app/homepage/OurArticles";
+import SkeltonCard from "@/app/homepage/SkeltonCard";
+import SkeltonBanner from "@/app/homepage/SkeltonBanner";
+import LazyLoadSection from "@/components/LazyLoadSection";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useContextCart } from "@/app/checkout/CartContext1";
@@ -243,25 +246,25 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                 <div className="h-[env(safe-area-inset-bottom)] bg-white"></div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
                 {/* Breadcrumb */}
-                <div className=" mx-auto mb-8">
-                    <nav className="flex items-center space-x-2 text-sm text-gray-500 animate-in slide-in-from-left-4 duration-500">
+                <div className="mx-auto mb-6 sm:mb-8">
+                    <nav className="flex flex-wrap items-center gap-2 text-sm sm:text-base text-gray-500 animate-in slide-in-from-left-4 duration-500 font-medium">
                         <Link
                             href="/"
-                            className="hover:text-[var(--colour-fsP1)] transition-colors font-medium "
+                            className="hover:text-[var(--colour-fsP1)] transition-colors whitespace-nowrap"
                         >
                             Home
                         </Link>
-                        <ChevronRight className="w-4 h-4 text-gray-300" />
+                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
                         <Link
                             href={`/category/${productDetails.categories?.[0]?.slug || ''}`} // Safety check
-                            className="hover:text-[var(--colour-fsP1)] transition-colors font-medium"
+                            className="hover:text-[var(--colour-fsP1)] transition-colors whitespace-nowrap"
                         >
                             {productDetails.categories?.map((category) => category.title).join(" ") || 'Category'}
                         </Link>
-                        <ChevronRight className="w-4 h-4 text-gray-300" />
-                        <span className="text-gray-900 font-semibold truncate max-w-xs">
+                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-900 font-semibold truncate max-w-[200px] sm:max-w-md md:max-w-xl text-ellipsis">
                             {productDetails.name}
                         </span>
                     </nav>
@@ -335,7 +338,9 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
 
             {/* Similar Compare */}
             {relatedCategory.id && (
-                <SimilarCompare currentProduct={productDetails} categoryId={relatedCategory.id} />
+                <LazyLoadSection fallback={<SkeltonBanner />} className="w-full">
+                    <SimilarCompare currentProduct={productDetails} categoryId={relatedCategory.id} />
+                </LazyLoadSection>
             )}
 
             {/* Lazy-Loaded Related Products */}
@@ -344,18 +349,22 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                     <>
                         <div className="relative">
                             {/* <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" /> */}
+                            <LazyLoadSection fallback={<SkeltonCard />} className="w-full">
+                                <RelatedProducts
+                                    title={`More from ${productDetails.brand?.name || 'Brand'}`}
+                                    slug={relatedCategory.slug}
+                                    id={relatedCategory.id}
+
+                                />
+                            </LazyLoadSection>
+                        </div>
+                        <LazyLoadSection fallback={<SkeltonCard />} className="w-full">
                             <RelatedProducts
-                                title={`More from ${productDetails.brand?.name || 'Brand'}`}
+                                title="Products Related to this"
                                 slug={relatedCategory.slug}
                                 id={relatedCategory.id}
-
                             />
-                        </div>
-                        <RelatedProducts
-                            title="Products Related to this"
-                            slug={relatedCategory.slug}
-                            id={relatedCategory.id}
-                        />
+                        </LazyLoadSection>
                     </>
                 )}
             </section>
@@ -368,7 +377,9 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                         View All <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
-                <OurArticles blogpage="product-page" />
+                <LazyLoadSection fallback={<SkeltonBanner />} className="w-full">
+                    <OurArticles blogpage="product-page" />
+                </LazyLoadSection>
             </aside>
         </div>
     );

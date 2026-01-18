@@ -61,39 +61,47 @@ function ProfilePageContent() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 py-6 sm:py-10">
-            <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
+        <div className="min-h-screen bg-slate-50 lg:py-10">
+            <div className="container mx-auto px-0 sm:px-4 max-w-7xl">
 
-                {/* Header Welcome */}
-                <div className="mb-4 sm:mb-6">
-                    <h1 className="text-xl sm:text-2xl font-bold text-slate-800">My Account</h1>
-                    <p className="text-xs sm:text-sm text-slate-500">Manage your profile and preferences.</p>
+                {/* Header Welcome (Desktop Only) */}
+                <div className="mb-6 hidden lg:block px-4 sm:px-0">
+                    <h1 className="text-2xl font-bold text-slate-800">My Account</h1>
+                    <p className="text-sm text-slate-500">Manage your profile and preferences.</p>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                    {/* Mobile Navigation (Horizontal Scroll) */}
-                    <div className="lg:hidden -mx-3 px-3 overflow-x-auto no-scrollbar">
-                        <div className="flex space-x-2 pb-2">
+                    {/* Mobile Profile Header */}
+                    <div className="lg:hidden bg-white p-6 pb-8 flex flex-col items-center text-center border-b border-slate-100">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 p-0.5 mb-4 relative overflow-hidden shadow-lg ring-4 ring-blue-50">
+                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-blue-600 text-3xl font-bold overflow-hidden">
+                                {authState.user?.avatar_image?.thumb ? (
+                                    <Image src={authState.user.avatar_image.thumb} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
+                                ) : (
+                                    authState.user?.name?.substring(0, 2).toUpperCase() || <User size={40} />
+                                )}
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-800">{authState.user?.name || 'Guest User'}</h2>
+                        <p className="text-slate-500 font-medium">{authState.user?.email}</p>
+                    </div>
+
+                    {/* Mobile Navigation (Sticky) */}
+                    <div className="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 overflow-x-auto scrollbar-hide">
+                        <div className="flex px-4 space-x-3 min-w-max">
                             {menuItems.map(item => (
                                 <Link
                                     key={item.id}
                                     href={`/profile?tab=${item.id}`}
-                                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-all ${currentTab === item.id
-                                        ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${currentTab === item.id
+                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-200 ring-1 ring-blue-600'
+                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                                         }`}
                                 >
-                                    <item.icon className="w-3.5 h-3.5" />
+                                    <item.icon className={`w-4 h-4 ${currentTab === item.id ? 'text-white' : 'text-slate-500'}`} />
                                     {item.label}
                                 </Link>
                             ))}
-                            <button
-                                onClick={handleLogout}
-                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-all"
-                            >
-                                <LogOut className="w-3.5 h-3.5" />
-                                Sign Out
-                            </button>
                         </div>
                     </div>
 
@@ -147,8 +155,19 @@ function ProfilePageContent() {
 
                     {/* Main Content */}
                     <main className="flex-1 min-w-0">
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 min-h-[400px] shadow-sm">
+                        <div className="bg-white lg:rounded-xl lg:border lg:border-slate-200 p-4 sm:p-6 min-h-[400px] lg:shadow-sm">
                             {renderContent()}
+
+                            {/* Mobile Logout Button (Bottom of Content) */}
+                            <div className="lg:hidden mt-8 pt-8 border-t border-slate-100">
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-colors"
+                                >
+                                    <LogOut className="w-5 h-5" />
+                                    Sign Out
+                                </button>
+                            </div>
                         </div>
                     </main>
                 </div>

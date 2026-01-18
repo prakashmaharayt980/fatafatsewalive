@@ -45,17 +45,26 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     // Track previous filters for comparison
     const prevFiltersRef = useRef<FilterState>(filters);
 
-    // Update URL when filters change
+    // Update URL when filters change (Silent update to avoid page refresh)
     const updateUrl = useCallback((newFilters: FilterState) => {
         if (!syncToUrl) return;
 
         const queryString = buildFilterQueryString(newFilters);
-        const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
-        startTransition(() => {
-            router.replace(newUrl, { scroll: false });
-        });
-    }, [pathname, router, syncToUrl]);
+        // Preserve 'id' from current search params if it exists
+        const currentId = searchParams.get('id');
+        let finalQuery = queryString;
+        if (currentId) {
+            finalQuery = queryString ? `${queryString}&id=${currentId}` : `id=${currentId}`;
+        }
+
+        const newUrl = finalQuery ? `${pathname}?${finalQuery}` : pathname;
+
+        // Use window.history methods to update URL without triggering Next.js navigation/re-render
+        // This solves "not that change page" while keeping "observation"
+        window.history.replaceState(null, '', newUrl);
+
+    }, [pathname, syncToUrl, searchParams]);
 
     // Set filters with URL sync
     const setFilters = useCallback((
@@ -181,6 +190,7 @@ export const useProducts = ({
         revalidateOnMount: !initialData,
         dedupingInterval: 60000,
         parallel: true,
+        keepPreviousData: true, // Prevents flashing empty state during refetching
     });
 
     // Flatten products from all pages

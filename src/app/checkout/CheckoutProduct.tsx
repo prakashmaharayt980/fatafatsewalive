@@ -57,9 +57,9 @@ export default function CheckoutProduct({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">Order Summary</h3>
-        <Badge variant="secondary" className="font-normal bg-gray-100 text-gray-600 hover:bg-gray-200">
+      <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <h3 className="text-xl font-bold text-gray-900 tracking-tight">Order Summary</h3>
+        <Badge variant="secondary" className="font-semibold bg-white border border-gray-200 text-gray-700 shadow-sm px-3 py-1">
           {items.length} {items.length === 1 ? 'Item' : 'Items'}
         </Badge>
       </div>
@@ -123,17 +123,17 @@ export default function CheckoutProduct({
               </Button>
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Input
                 value={submittedvaluelist.promoCode}
                 onChange={(e) => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: e.target.value }))}
-                placeholder="Promo Code"
-                className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                placeholder="Enter Promo Code"
+                className="bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP1)] focus:ring-2 focus:ring-blue-50 transition-all h-12 text-base px-4 rounded-xl"
               />
               <Button
                 onClick={handleApplyPromo}
                 variant="outline"
-                className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                className="h-12 px-6 border-[var(--colour-fsP1)] text-[var(--colour-fsP1)] font-semibold hover:bg-blue-50 hover:text-[var(--colour-fsP1)] rounded-xl transition-all"
               >
                 Apply
               </Button>
@@ -158,9 +158,9 @@ export default function CheckoutProduct({
 
           <Separator className="bg-gray-100 my-2" />
 
-          <div className="flex justify-between items-center">
-            <span className="text-base font-semibold text-gray-900">Total Payable</span>
-            <span className="text-xl font-bold text-[var(--colour-fsP2)]">Rs {totalPayable.toFixed(2)}</span>
+          <div className="flex justify-between items-end pt-2">
+            <span className="text-lg font-bold text-gray-900">Total Payable</span>
+            <span className="text-2xl font-extrabold text-[var(--colour-fsP2)] leading-none">Rs {totalPayable.toFixed(2)}</span>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 import ProductCard from '../ProductCard';
+import SkeltonCard from '@/app/homepage/SkeltonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
 import RemoteServices from '@/app/api/remoteservice';
@@ -55,25 +56,9 @@ const RelatedProducts = ({ title, slug, id }: RelatedProductsProps) => {
   // Loading state
   if (!productList && inView) {
     return (
-      <div ref={ref} className="w-full bg-white">
-        <div className="flex items-center justify-between p-4">
-          <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-6 w-24 bg-gray-200 rounded animate-pulse"></div>
-        </div>
-        <hr className="mx-2 border-b-2 border-gray-200" />
-        <div className="p-4">
-          <div className="flex gap-4 overflow-x-hidden">
-            {[...Array(6)].map((_, index) => (
-              <div key={index} className="flex-shrink-0 w-[calc(16.666%-6px)]">
-                <div className="bg-white rounded-lg p-2">
-                  <div className="w-full h-40 bg-gray-200 rounded-lg animate-pulse"></div>
-                  <div className="mt-2 h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="mt-2 h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="mt-2 h-6 w-1/3 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div ref={ref} className="w-full bg-gray-50/50 py-12 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SkeltonCard />
         </div>
       </div>
     );
@@ -130,7 +115,7 @@ const RelatedProducts = ({ title, slug, id }: RelatedProductsProps) => {
           </button>
         </div>
 
-        <div className={cn('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6')}>
+        <div className={cn('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-6')}>
           {products.slice(0, 10).map((product, index) => (
             <div
               key={`${product.slug}-${index}`}

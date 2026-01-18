@@ -45,20 +45,20 @@ const ResponseCard = ({ item }: { item: ApiResponse }) => {
   const isEligible = item.decision?.toLowerCase() === 'eligible';
 
   return (
-    <div className="mt-3 bg-white rounded-2xl border border-blue-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div className="mt-3 bg-white rounded-xl border border-gray-200 overflow-hidden card-shadow hover:card-shadow-hover transition-shadow">
       {/* Status Header */}
       <div className={cn(
         "px-4 py-3 flex items-center justify-between border-b",
         isEligible
-          ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100"
-          : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100"
+          ? "bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-200"
+          : "bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-200"
       )}>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#1967b3] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-[#1967b3] flex items-center justify-center shadow-sm">
             <CheckCircle2 className="w-4 h-4 text-white" />
           </div>
           <div>
-            <span className="font-bold text-sm text-[#1967b3]">
+            <span className="font-bold text-sm text-slate-800">
               {item.decision || 'Response'}
             </span>
             <p className="text-[10px] text-slate-500">Status</p>
@@ -71,10 +71,10 @@ const ResponseCard = ({ item }: { item: ApiResponse }) => {
       </div>
 
       {/* Card Body */}
-      <div className="p-4">
+      <div className="p-4 bg-white">
         {/* User Info Row */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1967b3] to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-200">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1967b3] to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
             {item.user_name?.charAt(0).toUpperCase() || '?'}
           </div>
           <div className="flex-1">
@@ -86,10 +86,10 @@ const ResponseCard = ({ item }: { item: ApiResponse }) => {
           </div>
         </div>
 
-        {/* Stats Grid - Simplified for Test */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-3 border border-slate-200">
-            <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium mb-1">
+          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <div className="flex items-center gap-1.5 text-slate-600 text-xs font-medium mb-1">
               <Package className="w-3.5 h-3.5" />
               Product
             </div>
@@ -97,8 +97,8 @@ const ResponseCard = ({ item }: { item: ApiResponse }) => {
               {item.detected_product || 'Test Product'}
             </p>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
-            <div className="flex items-center gap-1.5 text-blue-600 text-xs font-medium mb-1">
+          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+            <div className="flex items-center gap-1.5 text-blue-700 text-xs font-medium mb-1">
               <CreditCard className="w-3.5 h-3.5" />
               Limit
             </div>
@@ -122,10 +122,10 @@ const ResponseList = ({ items }: { items: ApiResponse[] }) => (
 
 const HistoryItem = ({ item }: { item: ApiResponse }) => {
   return (
-    <div className="bg-white rounded-xl border border-blue-100 p-4 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer group">
+    <div className="bg-white rounded-xl border border-gray-200 p-4 card-shadow hover:card-shadow-hover hover:border-blue-300 transition-all cursor-pointer group">
       <div className="flex items-center gap-3">
         {/* Avatar */}
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg flex-shrink-0 transition-transform group-hover:scale-105 bg-gradient-to-br from-[#1967b3] to-blue-500 shadow-blue-200">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0 transition-transform group-hover:scale-105 bg-gradient-to-br from-[#1967b3] to-blue-600">
           {item.user_name?.charAt(0).toUpperCase() || 'T'}
         </div>
 
@@ -133,7 +133,7 @@ const HistoryItem = ({ item }: { item: ApiResponse }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <p className="font-semibold text-slate-800 truncate">{item.user_name || 'Test User'}</p>
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 bg-blue-100 text-[#1967b3]">
+            <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 bg-blue-100 text-blue-700">
               Test
             </span>
           </div>
@@ -294,19 +294,19 @@ export default function ChatBot() {
         'bottom-20 sm:bottom-6 right-4 sm:right-6 w-[400px] max-w-[calc(100vw-32px)] sm:max-w-[calc(100vw-48px)]',
         isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 pointer-events-none translate-y-4'
       )}>
-        <div className="bg-white rounded-3xl overflow-hidden flex flex-col h-[600px] shadow-2xl shadow-blue-100/50 border border-blue-100">
+        <div className="bg-white rounded-2xl overflow-hidden flex flex-col h-[600px] shadow-2xl border border-gray-200">
 
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#1967b3] to-blue-500 px-5 py-4 text-white">
+          <div className="bg-gradient-to-r from-[#1967b3] to-blue-600 px-5 py-4 text-white">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center relative backdrop-blur-sm">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center relative backdrop-blur-sm">
                   <Bot className="w-5 h-5" />
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white" />
                 </div>
                 <div>
                   <h3 className="font-bold text-base tracking-tight">Fatafat Assistant</h3>
-                  <p className="text-[10px] text-white/80 flex items-center gap-1 font-medium">
+                  <p className="text-[10px] text-white/90 flex items-center gap-1 font-medium">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                     Online
                   </p>
@@ -315,14 +315,14 @@ export default function ChatBot() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={clearChat}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                   title="Clear chat"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -331,17 +331,17 @@ export default function ChatBot() {
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-slate-50 border-b border-blue-50">
+          <div className="flex bg-gray-50 border-b border-gray-200">
             <button
               onClick={() => setActiveTab('chat')}
               className={cn(
-                'flex-1 py-3 text-xs font-semibold transition-all flex items-center justify-center gap-2 relative',
+                'flex-1 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 relative',
                 activeTab === 'chat'
                   ? 'text-[#1967b3] bg-white'
-                  : 'text-slate-500 hover:text-slate-700'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-gray-100'
               )}
             >
-              <MessageSquare className="w-3.5 h-3.5" />
+              <MessageSquare className="w-4 h-4" />
               Chat
               {activeTab === 'chat' && (
                 <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#1967b3] rounded-full" />
@@ -350,13 +350,13 @@ export default function ChatBot() {
             <button
               onClick={() => setActiveTab('history')}
               className={cn(
-                'flex-1 py-3 text-xs font-semibold transition-all flex items-center justify-center gap-2 relative',
+                'flex-1 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 relative',
                 activeTab === 'history'
                   ? 'text-[#1967b3] bg-white'
-                  : 'text-slate-500 hover:text-slate-700'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-gray-100'
               )}
             >
-              <History className="w-3.5 h-3.5" />
+              <History className="w-4 h-4" />
               History
               {activeTab === 'history' && (
                 <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#1967b3] rounded-full" />
@@ -365,7 +365,7 @@ export default function ChatBot() {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto bg-gray-50/50 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto bg-white scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
 
             {/* Chat Tab */}
             {activeTab === 'chat' && (
@@ -374,12 +374,12 @@ export default function ChatBot() {
                   <div
                     key={i}
                     className={cn(
-                      'flex gap-2',
+                      'flex gap-2.5',
                       msg.user === 'Bot' ? 'justify-start' : 'justify-end'
                     )}
                   >
                     {msg.user === 'Bot' && (
-                      <div className="w-8 h-8 rounded-xl bg-[#1967b3] flex items-center justify-center flex-shrink-0 mt-1 shadow-md shadow-blue-100">
+                      <div className="w-8 h-8 rounded-lg bg-[#1967b3] flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
                         <Bot className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -387,10 +387,10 @@ export default function ChatBot() {
                     <div className={cn('flex flex-col gap-1', msg.user === 'Bot' ? 'max-w-[85%]' : 'max-w-[85%]')}>
                       <div
                         className={cn(
-                          'px-4 py-2.5 text-sm leading-relaxed',
+                          'px-4 py-3 text-sm leading-relaxed',
                           msg.user === 'Bot'
-                            ? 'bg-white border border-gray-100 text-gray-700 rounded-2xl rounded-tl-sm shadow-sm'
-                            : 'bg-[#1967b3] text-white rounded-2xl rounded-tr-sm shadow-md shadow-blue-100'
+                            ? 'bg-gray-50 border border-gray-200 text-slate-700 rounded-xl rounded-tl-sm'
+                            : 'bg-[#1967b3] text-white rounded-xl rounded-tr-sm shadow-sm'
                         )}
                       >
                         {msg.message}
@@ -417,11 +417,11 @@ export default function ChatBot() {
 
                 {/* Typing Indicator */}
                 {isLoading && (
-                  <div className="flex gap-2 justify-start">
-                    <div className="w-8 h-8 rounded-xl bg-[#1967b3] flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-100">
+                  <div className="flex gap-2.5 justify-start">
+                    <div className="w-8 h-8 rounded-lg bg-[#1967b3] flex items-center justify-center flex-shrink-0 shadow-sm">
                       <Bot className="w-4 h-4 text-white" />
                     </div>
-                    <div className="bg-white border border-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm">
+                    <div className="bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl rounded-tl-sm">
                       <div className="flex gap-1.5">
                         <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                         <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

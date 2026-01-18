@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider1>
               <CompareProvider>
                 <HeaderBody />
-                <main className="flex-1 w-full  mx-auto ">
+                <main className="flex-1 w-full mx-auto bg-gray-50">
                   <EmiProvider>
                     {children}
                     <LoginPage />

@@ -15,6 +15,7 @@ import FilterSidebar from "./FilterSidebar";
 import ProductGrid from './ProductGrid';
 import CategoryHeader from './CategoryHeader';
 import MobileFilterDrawer from "./MobileFilterDrawer";
+import { SmartStickyWrapper } from './SmartStickyWrapper';
 
 // ============================================
 // GLOBAL STYLES
@@ -90,7 +91,7 @@ export default function CategoryPageClient({
         clearAllFilters,
         activeFilterCount,
         isPending,
-    } = useFilters({ syncToUrl: false });
+    } = useFilters({ syncToUrl: true });
 
     // Filter data with hydrated initial data
     const { categories, brands, isLoading: filterDataLoading } = useFilterData(
@@ -177,7 +178,7 @@ export default function CategoryPageClient({
                     <div className="flex gap-8">
                         {/* Desktop Sidebar */}
                         <aside className="hidden lg:block w-72 flex-shrink-0">
-                            <div className="sticky top-6">
+                            <SmartStickyWrapper topOffset={24} bottomOffset={24}>
                                 <FilterSidebar
                                     filters={filters}
                                     onFiltersChange={handleFiltersChange}
@@ -189,7 +190,7 @@ export default function CategoryPageClient({
                                     loadingBrands={filterDataLoading}
                                     activeFilterCount={activeFilterCount}
                                 />
-                            </div>
+                            </SmartStickyWrapper>
                         </aside>
 
                         {/* Product Grid */}

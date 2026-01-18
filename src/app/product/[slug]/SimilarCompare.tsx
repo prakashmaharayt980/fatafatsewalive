@@ -21,7 +21,7 @@ export default function SimilarCompare({ currentProduct, categoryId }: SimilarCo
     const { addToCart, compareItems } = useContextCart();
     const router = useRouter();
 
-    const { data: similarData } = useSWR(
+    const { data: similarData, isLoading } = useSWR(
         `http://localhost:8000/api/products/get-product-by-category/${categoryId}`,
         fetcher
     );
@@ -33,6 +33,26 @@ export default function SimilarCompare({ currentProduct, categoryId }: SimilarCo
             .sort(() => 0.5 - Math.random()) // Randomize for variety
             .slice(0, 3); // Show up to 3 similar products
     }, [similarData, currentProduct.id]);
+
+    if (isLoading) {
+        return (
+            <div className="w-full max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 bg-white mt-12 border-t border-gray-100">
+                <div className="flex justify-between items-end mb-8 px-2">
+                    <div className="space-y-2">
+                        <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 w-48 bg-gray-100 rounded animate-pulse"></div>
+                    </div>
+                </div>
+                <div className="flex overflow-x-auto pb-8 gap-4 sm:gap-6 scrollbar-hide px-2">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="min-w-[280px] w-[280px] shrink-0">
+                            <div className="h-[400px] bg-gray-100 rounded-2xl animate-pulse"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     if (!similarProducts.length) return null;
 

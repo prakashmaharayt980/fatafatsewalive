@@ -24,12 +24,14 @@ export interface navsection {
   result: navitem[];
 }
 
-const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitemlist }: {
+const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitemlist, openCart, openWishlist }: {
   open: boolean;
   toggleMobileMenu: () => void;
   IsUserLogin: boolean;
   loginNeed: () => void;
   nvaitemlist: navsection['result'];
+  openCart: () => void;
+  openWishlist: () => void;
 }) => {
   const router = useRouter();
   const { authState, logout } = useAuth();
@@ -40,8 +42,10 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
   };
 
   const handleCategoryClick = (item: navitem) => {
-    // Navigate to category page with slug and id
-    router.push(`/category/${item.slug}?id=${item.id}`);
+    // Navigate to category page with slug only, matching NavBar
+    // Ensure no double slashes if slug starts with /
+    const cleanSlug = item.slug.startsWith('/') ? item.slug.substring(1) : item.slug;
+    router.push(`/category/${cleanSlug}`);
     toggleMobileMenu();
   };
 
@@ -208,23 +212,27 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
 
           {/* Bottom Section */}
           <div className="px-4 py-3 border-t border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                href="/wishlist"
-                onClick={toggleMobileMenu}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer shadow-sm"
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  toggleMobileMenu();
+                  openWishlist();
+                }}
+                className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-sm active:scale-95"
               >
-                <Heart className="w-3.5 h-3.5" />
+                <Heart className="w-4 h-4 text-red-500" />
                 Wishlist
-              </Link>
-              <Link
-                href="/cart"
-                onClick={toggleMobileMenu}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-900 transition-colors cursor-pointer shadow-sm"
+              </button>
+              <button
+                onClick={() => {
+                  toggleMobileMenu();
+                  openCart();
+                }}
+                className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all cursor-pointer shadow-sm active:scale-95"
               >
-                <ShoppingCart className="w-3.5 h-3.5" />
+                <ShoppingCart className="w-4 h-4" />
                 Cart
-              </Link>
+              </button>
             </div>
           </div>
         </div>

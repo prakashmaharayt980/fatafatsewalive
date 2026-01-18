@@ -184,17 +184,17 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
                     </button>
                 </div>
 
-                {/* Footer Badges */}
-                <div className="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-gray-50/80">
+                {/* Footer Badges - Enhanced Design */}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3 pt-3 border-t border-gray-100">
                     {product.emi_enabled !== 0 && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-[var(--colour-fsP1)] bg-blue-50 px-2.5 py-1 rounded-md">
-                            <CheckCheck className="w-3 h-3" />
-                            EMI
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold text-blue-700 bg-gradient-to-r from-blue-50 to-blue-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-blue-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                            <CheckCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span>EMI Available</span>
                         </div>
                     )}
-                    <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-md">
-                        <Truck className="w-3 h-3" />
-                        Free Delivery
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold text-green-700 bg-gradient-to-r from-green-50 to-green-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-green-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span>Free Delivery</span>
                     </div>
                 </div>
             </div>

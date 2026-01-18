@@ -29,20 +29,43 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+// Helper function to retry API calls with exponential backoff
+async function fetchWithRetry<T>(
+  fetchFn: () => Promise<T>,
+  retries = 3,
+  delay = 1000
+): Promise<T | null> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fetchFn();
+    } catch (error: any) {
+      const isLastAttempt = i === retries - 1;
+      const isDNSError = error?.code === 'EAI_AGAIN' || error?.code === 'ENOTFOUND';
+
+      if (isLastAttempt || !isDNSError) {
+        console.error(`Failed to fetch after ${i + 1} attempts:`, error);
+        return null;
+      }
+
+      // Wait before retrying with exponential backoff
+      const waitTime = delay * Math.pow(2, i);
+      console.log(`DNS error, retrying in ${waitTime}ms... (attempt ${i + 1}/${retries})`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+  return null;
+}
+
 // Server Component
 async function page() {
-  // Server-side data fetching
-  let bannerData = null;
-  try {
+  // Server-side data fetching with retry logic
+  const bannerData = await fetchWithRetry(async () => {
     const res = await RemoteServices.BannerDetails();
-    bannerData = {
+    return {
       data: res.data,
       meta: res.meta,
     };
-  } catch (error) {
-    console.error("Failed to fetch banner data:", error);
-    // Handle error gracefully, maybe pass empty data or error state
-  }
+  });
 
   const jsonLd = {
     "@context": "https://schema.org",

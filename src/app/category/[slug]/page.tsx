@@ -253,7 +253,7 @@ function generateStructuredData(
     const itemList = {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
-        itemListElement: products.data.slice(0, 10).map((product, index) => ({
+        itemListElement: (Array.isArray(products?.data) ? products.data : []).slice(0, 10).map((product, index) => ({
             '@type': 'ListItem',
             position: index + 1,
             item: {

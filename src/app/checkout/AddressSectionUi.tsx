@@ -13,8 +13,8 @@ import RemoteServices from '../api/remoteservice';
 import { nepalLocations } from './NepalLocations';
 import { toast } from 'sonner';
 
-// Import GoogleMapAddress (Dynamic import to avoid SSR)
-const GoogleMapAddress = dynamic(() => import('./GoogleMapAddress'), { ssr: false });
+// Import LeafletMapAddress (Dynamic import to avoid SSR)
+const LeafletMapAddress = dynamic(() => import('./LeafletMapAddress'), { ssr: false });
 
 interface Address {
   id: number;
@@ -78,6 +78,7 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
   // LOCAL STATE ONLY (No API Fetch)
   // Dummy data for immediate usability
   useEffect(() => {
+    // Mock Data "Reset"
     setSavedAddresses([
       {
         id: 101,
@@ -91,9 +92,41 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
         street: 'Thamel',
         state: 'Bagmati',
         landmark: 'Near Garden of Dreams'
+      },
+      {
+        id: 102,
+        label: 'Work',
+        first_name: 'Kali',
+        last_name: 'Office',
+        contact: '9811111111',
+        province: 'Bagmati',
+        district: 'Lalitpur',
+        city: 'Lalitpur',
+        street: 'Pulchowk',
+        state: 'Bagmati',
+        landmark: 'Near Engineering Campus'
       }
     ]);
   }, []);
+
+  /* API Disabled
+  const fetchAddresses = async () => {
+    setIsLoadingAddresses(true);
+    try {
+      const response = await RemoteServices.AddressList();
+      if (response?.data) {
+        setSavedAddresses(response.data);
+      } else if (Array.isArray(response)) {
+        setSavedAddresses(response);
+      }
+    } catch (error) {
+      console.error("Failed to fetch addresses:", error);
+      toast.error("Failed to load addresses");
+    } finally {
+      setIsLoadingAddresses(false);
+    }
+  };
+  */
 
   const handleAddressSelect = (address: Address) => {
     setSelectedAddress(address);
@@ -101,12 +134,13 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
   };
 
   const handleDeleteAddress = (id: number) => {
+    // Local Delete Only
     const updatedAddresses = savedAddresses.filter((address) => address.id !== id);
     setSavedAddresses(updatedAddresses);
     if (selectedAddress?.id === id) {
       setSelectedAddress(updatedAddresses.length > 0 ? updatedAddresses[0] : null);
     }
-    toast.success("Address removed locally");
+    toast.success("Address removed (Local)");
   };
 
   useEffect(() => {
@@ -137,13 +171,18 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
     setLocationError('');
   };
 
-  // Callback from GoogleMapAddress
+  // Callback from LeafletMapAddress
   const handleLocationSelect = ({ lat, lng, address }: { lat: number; lng: number, address?: string }) => {
     setCoordinates({ lat, lng });
     if (address) {
+      // Basic parsing or just set full address as street for now, or append to existing?
+      // User requested "dynamic" - if we get a street name, use it.
+      // Nominatim returns full display_name. We can set it to street, or try to respect privacy?
+      // Let's set it to 'street' and maybe clear others if they are empty?
+      // Actually, if we get a precise address, we might want to let user edit it.
       setNewAddress(prev => ({
         ...prev,
-        street: address,
+        street: address, // LeafletMapAddress returns friendly string or display_name
       }));
     }
   };
@@ -155,15 +194,16 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
     }
 
     const payload = {
-      id: Date.now(), // Generate local ID
+      id: Date.now(), // Local ID
       label: addressLabel || 'Address',
       ...newAddress
     } as Address;
 
+    // Local Save Only
     setSavedAddresses(prev => [...prev, payload]);
     setSelectedAddress(payload);
     setDialogState('closed');
-    toast.success("Address saved locally (Not persistent)");
+    toast.success("Address saved locally (No API)");
   };
 
   const renderDialogContent = () => {
@@ -179,42 +219,54 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
             ) : (
               <>
                 {savedAddresses.length > 0 && (
-                  <div ref={ref} className="max-h-[45vh] overflow-y-auto scrollbar-thin pr-2">
-                    <div className="grid grid-cols-1 gap-2">
+                  <div ref={ref} className="max-h-[50vh] overflow-y-auto scrollbar-thin pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {savedAddresses.map((address) => (
                         <div key={address.id} className="relative group">
                           <button
                             onClick={() => handleAddressSelect(address)}
-                            className={`w-full p-4 rounded-xl border text-left transition-all duration-200 hover:border-blue-400 ${selectedAddress?.id === address.id
-                              ? 'border-[var(--colour-fsP1)] bg-blue-50/50 ring-1 ring-[var(--colour-fsP1)]'
-                              : 'border-[var(--colour-fsP2)] bg-white hover:bg-gray-50'
+                            className={`w-full h-full p-4 rounded-xl border-2 text-left transition-all duration-200 flex flex-col gap-3 hover:shadow-md ${selectedAddress?.id === address.id
+                              ? 'border-[var(--colour-fsP1)] bg-blue-50/40'
+                              : 'border-gray-100 bg-white hover:border-blue-200 hover:bg-gray-50'
                               }`}
                           >
-                            <div className="flex items-start gap-4">
-                              <div className={`mt-1 p-2 rounded-full flex-shrink-0 ${selectedAddress?.id === address.id ? 'bg-blue-100 text-[var(--colour-fsP1)]' : 'bg-gray-100 text-gray-500'
-                                }`}>
-                                {address.label && address.label.toLowerCase().includes('home') ? <Home className="w-4 h-4" /> :
-                                  address.label && address.label.toLowerCase().includes('work') ? <Briefcase className="w-4 h-4" /> :
-                                    <MapPin className="w-4 h-4" />}
-                              </div>
-
-                              <div className="flex-1 space-y-1">
-                                <span className={`font-semibold text-sm ${selectedAddress?.id === address.id ? 'text-[var(--colour-fsP1)]' : 'text-gray-900'
+                            <div className="flex items-start justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                <div className={`p-2 rounded-full shrink-0 ${selectedAddress?.id === address.id
+                                  ? 'bg-[var(--colour-fsP1)] text-white shadow-sm'
+                                  : 'bg-gray-100 text-gray-500'
                                   }`}>
-                                  {address.label}
-                                </span>
-                                <div className="text-sm font-medium text-gray-800">
-                                  {address.first_name} &nbsp; {address.last_name}
+                                  {address.label?.toLowerCase().includes('home') ? <Home size={16} /> :
+                                    address.label?.toLowerCase().includes('work') ? <Briefcase size={16} /> :
+                                      <MapPin size={16} />}
                                 </div>
-                                <div className="text-sm text-gray-600 leading-snug">
-                                  {address.street}, {address.city}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {address.district}, {address.province}
+                                <div>
+                                  <span className={`block font-bold text-sm leading-none mb-1 ${selectedAddress?.id === address.id ? 'text-[var(--colour-fsP1)]' : 'text-gray-900'
+                                    }`}>
+                                    {address.label}
+                                  </span>
+                                  <span className="text-xs text-gray-500 font-medium">
+                                    {address.contact}
+                                  </span>
                                 </div>
                               </div>
+                              {selectedAddress?.id === address.id && (
+                                <div className="h-5 w-5 rounded-full bg-[var(--colour-fsP1)] flex items-center justify-center">
+                                  <div className="h-2 w-2 rounded-full bg-white" />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="mt-auto pt-2 border-t border-gray-100/50 w-full">
+                              <div className="text-sm font-semibold text-gray-800">
+                                {address.first_name} {address.last_name}
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed mt-0.5 line-clamp-2">
+                                {address.street}, {address.city}, {address.district}
+                              </p>
                             </div>
                           </button>
+
                           <Button
                             variant="ghost"
                             size="icon"
@@ -222,27 +274,30 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
                               e.stopPropagation();
                               handleDeleteAddress(address.id);
                             }}
-                            className="absolute top-3 right-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 size={14} />
                           </Button>
                         </div>
                       ))}
+
+                      {/* Add New Card Button */}
+                      <button
+                        onClick={() => openDialog('addEditAddress')}
+                        className="flex flex-col items-center justify-center gap-2 h-full min-h-[140px] p-4 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[var(--colour-fsP1)] hover:bg-blue-50/30 hover:text-[var(--colour-fsP1)] transition-all group"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gray-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+                          <Plus className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-semibold">Add New Address</span>
+                      </button>
                     </div>
                   </div>
                 )}
               </>
             )}
 
-            <div className="flex flex-col gap-3 border-t border-gray-100 pt-4 mt-2">
-              <Button
-                onClick={() => openDialog('addEditAddress')}
-                className="h-12 bg-[var(--colour-fsP1)] hover:opacity-90 text-white shadow-sm w-full"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Address
-              </Button>
-            </div>
+            {/* Removed redundant button as it's now part of the grid */}
           </div>
         );
 
@@ -275,10 +330,9 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
 
                 {coordinates && (
                   <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 shadow-md animate-in fade-in zoom-in-95 duration-200 ring-4 ring-white">
-                    <GoogleMapAddress
+                    <LeafletMapAddress
                       onLocationSelect={handleLocationSelect}
                       initialPosition={coordinates}
-                      isOptional={true}
                     />
                   </div>
                 )}
@@ -534,9 +588,9 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
         </div>
 
         <Drawer open={dialogState !== 'closed'} onOpenChange={(open) => !open && closeDialog()}>
-          <DrawerContent className="max-h-[85vh] bg-white max-w-3xl mx-auto">
-            <div className="max-w-2xl mx-auto w-full py-2">
-              <DrawerHeader className="px-0 pt-0  flex  flex-row items-center justify-between border-b border-gray-100 mb-1">
+          <DrawerContent className="max-h-[90vh] bg-white max-w-5xl mx-auto">
+            <div className="max-w-4xl mx-auto w-full py-4 px-4 sm:px-6">
+              <DrawerHeader className="px-0 pt-0 flex flex-row items-center justify-between border-b border-gray-100 mb-4 pb-4">
                 <DrawerTitle className="text-xl font-semibold text-gray-900 p-0 m-0">
                   {dialogState === 'addressList' ? 'Address Book' : 'Enter Address Details'}
                 </DrawerTitle>
@@ -603,9 +657,9 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
       )}
 
       <Drawer open={dialogState !== 'closed'} onOpenChange={(open) => !open && closeDialog()}>
-        <DrawerContent className="max-h-[85vh] bg-white max-w-3xl mx-auto">
-          <div className="max-w-2xl mx-auto w-full py-2">
-            <DrawerHeader className="px-0 pt-0  flex  flex-row items-center justify-between border-b border-gray-100 mb-1">
+        <DrawerContent className="max-h-[90vh] bg-white max-w-5xl mx-auto">
+          <div className="max-w-4xl mx-auto w-full py-4 px-4 sm:px-6">
+            <DrawerHeader className="px-0 pt-0 flex flex-row items-center justify-between border-b border-gray-100 mb-4 pb-4">
               <DrawerTitle className="text-xl font-semibold text-gray-900 p-0 m-0">
                 {dialogState === 'addressList' ? 'Address Book' : 'Enter Address Details'}
               </DrawerTitle>

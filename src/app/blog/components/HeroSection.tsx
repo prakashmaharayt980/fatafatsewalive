@@ -18,7 +18,7 @@ const HeroSection = ({ title, image, category, date, author, readTime }: HeroPro
                     <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide uppercase">
                         {category}
                     </span>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-[1.1] font-heading max-w-4xl">
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1] font-heading max-w-5xl">
                         {title}
                     </h1>
 
@@ -47,6 +47,7 @@ const HeroSection = ({ title, image, category, date, author, readTime }: HeroPro
                         src={image}
                         alt={title}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
                         className="object-cover"
                         priority
                     />

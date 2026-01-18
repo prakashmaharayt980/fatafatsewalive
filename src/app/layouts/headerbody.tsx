@@ -413,6 +413,8 @@ const HeaderComponent = () => {
                     IsUserLogin={IsUserLogin}
                     loginNeed={() => setloginDailogOpen(true)}
                     nvaitemlist={nabrItems}
+                    openCart={() => setIsCartOpen(true)}
+                    openWishlist={() => setIsWishlistOpen(true)}
                 />
 
                 {/* Mobile Search Bar */}

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 import ProductCard from '../product/ProductCard';
+import SkeltonCard from './SkeltonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
 import RemoteServices from '../api/remoteservice';
@@ -55,26 +56,8 @@ const BasketCardwithImage = ({ title, slug, id }: BasketCardwithImageProps) => {
   // Loading state with skeleton UI
   if (!productList && inView) {
     return (
-      <div ref={ref} className="w-full bg-white">
-        <div className="flex items-center justify-between p-4">
-          <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-6 w-24 bg-gray-200 rounded animate-pulse"></div>
-        </div>
-        <hr className="mx-2 border-b-2 border-gray-200" />
-        <div className="p-4">
-          <div className="flex gap-4 overflow-x-hidden">
-            {[...Array(6)].map((_, index) => (
-              <div key={index} className="flex-shrink-0 w-[calc(16.666%-6px)]">
-                <div className="bg-white rounded-lg p-2">
-                  <div className="w-full h-40 bg-gray-200 rounded-lg animate-pulse"></div>
-                  <div className="mt-2 h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="mt-2 h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="mt-2 h-6 w-1/3 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div ref={ref} className="w-full">
+        <SkeltonCard />
       </div>
     );
   }
@@ -119,15 +102,15 @@ const BasketCardwithImage = ({ title, slug, id }: BasketCardwithImageProps) => {
   };
 
   return (
-    <div ref={ref} className="w-full bg-white overflow-visible">
-      <div className={cn('flex items-center justify-between py-2', 'px-3 sm:px-6')}>
-        <h2 className={cn('text-lg font-bold text-gray-900', 'sm:text-xl')}>{title}</h2>
+    <div ref={ref} className="w-full bg-white rounded-xl card-shadow overflow-visible my-4">
+      <div className={cn('flex items-center justify-between py-3', 'px-4 sm:px-6')}>
+        <h2 className={cn('text-xl font-bold text-slate-800', 'sm:text-2xl')}>{title}</h2>
         <button
           onClick={() => router.push(`/category/${slug}`)}
           className={cn(
-            'flex items-center gap-2 rounded-2xl border-transparent text-xs font-medium',
-            'px-2 py-1 text-blue-600 hover:text-blue-700',
-            'sm:text-sm sm:px-4 sm:py-2'
+            'flex items-center gap-2 rounded-lg text-sm font-semibold transition-all',
+            'px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50',
+            'sm:text-base sm:px-4 sm:py-2'
           )}
         >
           <span>View More</span>
@@ -135,9 +118,9 @@ const BasketCardwithImage = ({ title, slug, id }: BasketCardwithImageProps) => {
         </button>
       </div>
 
-      <hr className={cn('mx-2 border-b-2 border-orange-500')} />
+      <hr className={cn('mx-4 border-t-2 border-orange-500')} />
 
-      <div className={cn('py-2 pb-2', 'px-2 sm:px-6')}>
+      <div className={cn('py-3 pb-4', 'px-3 sm:px-6')}>
         <div
           ref={scrollContainerRef}
           className={cn(
@@ -153,7 +136,7 @@ const BasketCardwithImage = ({ title, slug, id }: BasketCardwithImageProps) => {
           {productList.data && productList?.data.map((product, index) => (
             <div
               key={`${product.slug}-${index}`}
-              className={cn('flex-shrink-0', 'w-[calc(50%-8px)] sm:w-[calc(25%-6px)]')}
+              className={cn('flex-shrink-0', 'w-[calc(50%-8px)] sm:w-[calc(33.333%-8px)] md:w-[calc(25%-8px)] lg:w-[calc(16.666%-8px)]')}
             >
               <ProductCard product={product} index={index} />
             </div>
