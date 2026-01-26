@@ -46,8 +46,8 @@ const inputClassName = (error: boolean) => `
 
 const primaryButtonClassName = `
   w-full cursor-pointer h-12 
-  bg-gradient-to-r from-[var(--colour-fsP2)] to-[var(--colour-fsP1)]
-  hover:from-[var(--colour-fsP1)] hover:to-[var(--colour-fsP2)]
+  bg-[var(--colour-fsP2)]
+  hover:bg-[var(--colour-fsP1)]
   text-white text-sm font-bold tracking-wide uppercase
   rounded-xl 
   transition-all duration-300 ease-out
