@@ -36,18 +36,6 @@ const HeaderComponent = () => {
 
     useEffect(() => {
         setMounted(true);
-        RemoteServices.getCategoriesAll().then(res => {
-            // console.log(res)
-        })
-
-        RemoteServices.getBrandsAll().then(res => {
-            // console.log(res)
-        })
-
-        RemoteServices.getCategoriesParent().then(res => {
-            // console.log(res)
-        })
-
     }, [])
 
     useEffect(() => {
@@ -77,7 +65,7 @@ const HeaderComponent = () => {
 
     useEffect(() => {
         if (nabrItems.length === 0) {
-            RemoteServices.NavbarItems().then((data) => {
+            RemoteServices.getNavbarItems().then((data) => {
                 setnabrItems(data)
             })
         }
@@ -106,7 +94,7 @@ const HeaderComponent = () => {
             const timeoutId = setTimeout(async () => {
                 try {
                     // Send the raw value with spaces to the API
-                    const res = await RemoteServices.SerachProducts(value);
+                    const res = await RemoteServices.searchProducts({ search: value });
                     updateState({
                         searchResults: res.data || [],
                         isSearching: false

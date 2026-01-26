@@ -209,8 +209,8 @@ export default function CheckoutClient() {
 
     // Sync receiverNO with address contact if available
     useEffect(() => {
-        if (submittedvaluelist.address && (submittedvaluelist.address as any).contact) {
-            setsubmittedvaluelist(prev => ({ ...prev, receiverNO: (submittedvaluelist.address as any).contact }));
+        if (submittedvaluelist.address && (submittedvaluelist.address as any).phone) {
+            setsubmittedvaluelist(prev => ({ ...prev, receiverNO: (submittedvaluelist.address as any).phone }));
         }
     }, [submittedvaluelist.address]);
 

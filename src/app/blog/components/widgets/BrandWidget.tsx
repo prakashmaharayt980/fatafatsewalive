@@ -9,7 +9,7 @@ import { Store } from 'lucide-react';
 
 const BrandWidget = () => {
     const { data: brands, isLoading } = useSWR('blog-sidebar-brands', () =>
-        RemoteServices.getBrandsAll().then(res => res.data?.slice(0, 9) || [])
+        RemoteServices.getAllBrands().then(res => res.data?.slice(0, 9) || [])
     );
 
     if (isLoading) return <div className="h-48 bg-gray-100 rounded-2xl animate-pulse"></div>;

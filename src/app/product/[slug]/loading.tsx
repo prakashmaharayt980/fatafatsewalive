@@ -18,10 +18,10 @@ export default function ProductLoading() {
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10 m-4">
 
-                    {/* Left: Image Gallery Skeleton (3/5) */}
+                    {/* Left: Image Gallery Skeleton (3/5 width) */}
                     <div className="lg:col-span-3 space-y-4">
-                        {/* Main Image */}
-                        <div className="w-full aspect-[4/3] bg-gray-200 rounded-2xl animate-pulse" />
+                        {/* Main Image - aspect-square to match ImageGallery */}
+                        <div className="w-full aspect-square bg-gray-200 rounded-2xl animate-pulse" />
 
                         {/* Thumbnails */}
                         <div className="grid grid-cols-5 gap-2 sm:gap-4">
@@ -31,8 +31,8 @@ export default function ProductLoading() {
                         </div>
                     </div>
 
-                    {/* Right: Info Skeleton (2/5) */}
-                    <div className="lg:col-span-2 space-y-6">
+                    {/* Right: Info Skeleton (2/5 width) */}
+                    <div className="lg:col-span-2 space-y-6 min-h-[600px] flex flex-col">
                         {/* Title */}
                         <div className="h-8 w-3/4 bg-gray-200 rounded-lg animate-pulse" />
 
@@ -54,7 +54,7 @@ export default function ProductLoading() {
                             <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
                             <div className="flex gap-3">
                                 {[...Array(3)].map((_, i) => (
-                                    <div key={i} className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                                    <div key={i} className="w-12 h-12 rounded-full bg-gray-200 animate-pulse" />
                                 ))}
                             </div>
                         </div>
@@ -72,11 +72,11 @@ export default function ProductLoading() {
                         </div>
 
                         {/* Highlights */}
-                        <div className="pt-6 space-y-3">
+                        <div className="pt-6 space-y-3 flex-grow">
                             <div className="h-5 w-40 bg-gray-200 rounded animate-pulse mb-4" />
                             {[...Array(4)].map((_, i) => (
                                 <div key={i} className="flex gap-3">
-                                    <div className="w-1.5 h-1.5 mt-2 rounded-full bg-gray-200" />
+                                    <div className="w-4 h-4 rounded-full bg-gray-200 shrink-0" />
                                     <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
                                 </div>
                             ))}

@@ -35,6 +35,7 @@ export const verifySchema = yup.object({
   confirmNewPassword: yup.string()
     .oneOf([yup.ref('newPassword')], 'Passwords must match')
     .required('Please confirm your password'),
+  email: yup.string().optional(),
 });
 
 export type LoginFormData = yup.InferType<typeof loginSchema>;

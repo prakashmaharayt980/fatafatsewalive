@@ -1,6 +1,9 @@
+// ImageGallery.tsx
 import React from "react";
 import Image from "next/image";
 import { ProductDetails } from "@/app/types/ProductDetailsTypes";
+import { Heart, Maximize2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ImageGalleryProps {
   product: ProductDetails;
@@ -15,51 +18,76 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   selectedImage,
   setSelectedImage
 }) => {
-
   const currentImages = images.length > 0 ? images : [product.image.full];
+  const isInStock = product.quantity > 0;
 
   return (
-    <>
-      <div className="w-full h-full max-w-lg flex flex-col gap-3 sm:gap-1 justify-center">
-        {/* Main Image Container */}
-        <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-white overflow-hidden group">
+    <div className="w-full flex flex-col gap-3">
+      {/* Main Image Container */}
+      <div className="relative w-full aspect-square bg-white rounded-xl overflow-hidden border border-gray-200">
+        {/* Stock Badge */}
+        <div className="absolute top-3 left-3 z-10">
+          <span className={cn(
+            "px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide",
+            isInStock
+              ? "bg-emerald-500 text-white"
+              : "bg-red-500 text-white"
+          )}>
+            {isInStock ? "In Stock" : "Out of Stock"}
+          </span>
+        </div>
+
+        {/* Wishlist Button */}
+        <button
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+        >
+          <Heart className="w-4 h-4" />
+        </button>
+
+        {/* Fullscreen Icon */}
+        <button className="absolute bottom-3 right-3 z-10 w-7 h-7 rounded bg-black/50 flex items-center justify-center text-white/80 hover:bg-black/70 transition-colors">
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Main Image */}
+        <div className="relative w-full h-full p-4">
           <Image
             src={selectedImage || currentImages[0]}
             alt={product.name}
-            className={`w-full h-full object-contain transition-all duration-500`}
+            className="object-contain"
             fill
             priority
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 60vw"
+            sizes="(max-width: 640px) 100vw, 400px"
           />
         </div>
-
-        {/* Thumbnail Strip */}
-        {currentImages.length > 1 && (
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide items-center justify-center p-2">
-            {currentImages.slice(0, 4).map((image, idx) => (
-              <div
-                key={`thumbnail-${idx}`}
-                className={`relative w-16 h-16 cursor-pointer overflow-hidden rounded-lg transition-all duration-300 flex-shrink-0 group/thumb 
-                  ${selectedImage === image
-                    ? "ring-2 ring-[var(--colour-fsP2)] ring-offset-2"
-                    : "ring-1 ring-gray-200 hover:ring-gray-300"
-                  }`}
-                onClick={() => setSelectedImage(image)}
-              >
-                <Image
-                  src={image}
-                  alt={`${product.name} view ${idx + 1}`}
-                  className="w-full h-full object-cover transition-all duration-300 group-hover/thumb:scale-105"
-                  fill
-                  quality={85}
-                  sizes="(max-width: 640px) 64px, 80px"
-                />
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-    </>
+
+      {/* Thumbnail Strip */}
+      {currentImages.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          {currentImages.slice(0, 5).map((image, idx) => (
+            <button
+              key={`thumbnail-${idx}`}
+              className={cn(
+                "relative w-14 h-14 cursor-pointer overflow-hidden rounded-lg transition-all flex-shrink-0 border-2",
+                selectedImage === image
+                  ? "border-[var(--colour-fsP2)]"
+                  : "border-gray-200 hover:border-gray-300"
+              )}
+              onClick={() => setSelectedImage(image)}
+            >
+              <Image
+                src={image}
+                alt={`View ${idx + 1}`}
+                className="object-contain p-1"
+                fill
+                sizes="56px"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

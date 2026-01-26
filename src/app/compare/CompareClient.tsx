@@ -35,8 +35,8 @@ function CompareContent() {
                 const fetched = await Promise.all(
                     initialIds.map(async (id) => {
                         try {
-                            const data = await RemoteServices.ProductDetails_ID(id);
-                            return data;
+                            const response = await RemoteServices.searchProducts({ search: id });
+                            return response.data?.[0] || null;
                         } catch (e) {
                             console.error(`Failed to load product ${id}`, e);
                             return null;
@@ -215,8 +215,8 @@ function CompareContent() {
                             key={cat}
                             onClick={() => setActiveSpecTab(cat)}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${activeSpecTab === cat
-                                    ? 'bg-[var(--colour-fsP1)] text-white shadow-md'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-[var(--colour-fsP1)] text-white shadow-md'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             {cat}

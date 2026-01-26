@@ -105,6 +105,25 @@ body {
     --font-family-math: 'math';
     --font-heading: 'Inter', sans-serif;
 
+    /* Premium Design System */
+    --premium-slate: #2C3E50;
+    --premium-slate-light: #34495E;
+    --premium-slate-dark: #1C2833;
+    --premium-blue: #007BFF;
+    --premium-blue-light: #3395FF;
+    --premium-blue-dark: #0056B3;
+    --shadow-premium-sm: 0 2px 8px rgba(44, 62, 80, 0.08);
+    --shadow-premium-md: 0 4px 16px rgba(44, 62, 80, 0.12);
+    --shadow-premium-lg: 0 8px 32px rgba(44, 62, 80, 0.16);
+    --shadow-premium-xl: 0 16px 48px rgba(44, 62, 80, 0.20);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+    --duration-fast: 150ms;
+    --duration-base: 250ms;
+    --duration-slow: 350ms;
+
 
 }
 
@@ -200,6 +219,63 @@ body {
         outline: none;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
     }
+
+    /* Glassmorphism Utilities */
+    .glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+    }
+
+    .glass-premium {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Premium Shadows */
+    .shadow-premium-sm {
+        box-shadow: var(--shadow-premium-sm);
+    }
+
+    .shadow-premium-md {
+        box-shadow: var(--shadow-premium-md);
+    }
+
+    .shadow-premium-lg {
+        box-shadow: var(--shadow-premium-lg);
+    }
+
+    .shadow-premium-xl {
+        box-shadow: var(--shadow-premium-xl);
+    }
+
+    /* Premium Transitions */
+    .transition-premium {
+        transition: all var(--duration-base) var(--ease-premium);
+    }
+
+    .transition-smooth {
+        transition: all var(--duration-slow) var(--ease-smooth);
+    }
+
+    /* Premium Hover Lift */
+    .hover-premium {
+        transition: transform var(--duration-base) var(--ease-premium),
+            box-shadow var(--duration-base) var(--ease-premium);
+    }
+
+    .hover-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-premium-md);
+    }
+
+    /* Smooth Fade In Animation */
+    .animate-fade-in-premium {
+        animation: fadeInPremium var(--duration-slow) var(--ease-premium);
+    }
 }
 
 @keyframes fadeIn {
@@ -233,6 +309,18 @@ body {
     to {
         opacity: 1;
         transform: scale(1);
+    }
+}
+
+@keyframes fadeInPremium {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 

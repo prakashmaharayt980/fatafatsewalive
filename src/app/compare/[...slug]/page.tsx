@@ -44,12 +44,13 @@ export default function ComparisonPage() {
                         // Try fetching by slug/search
                         // If s looks like an ID (numeric), use ID fetch
                         if (!isNaN(Number(s))) {
-                            return RemoteServices.ProductDetails_ID(s);
+                            const res = await RemoteServices.searchProducts({ search: s });
+                            return res.data?.[0] || null;
                         }
 
                         // Fallback: Search by name/slug and take first result
                         // This is inexact but works for demo/SEO URLs if names are unique enough
-                        const res = await RemoteServices.SerachProducts(s.replace(/-/g, ' '));
+                        const res = await RemoteServices.searchProducts({ search: s.replace(/-/g, ' ') });
                         return res.data?.[0] || null;
                     })
                 );

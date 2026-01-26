@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 
 export default async function BlogPage() {
     // 1. Fetch Main Blog List
-    const blogRes = await RemoteServices.Bloglist();
+    const blogRes = await RemoteServices.getBlogList();
     const articles: Article[] = Array.isArray(blogRes) ? blogRes : blogRes.data || [];
 
     // 2. Fetch Banner Data
     // Handling error gracefully or ensuring API response structure matches
     let bannerData = { data: [], meta: {} };
     try {
-        const bannerRes = await RemoteServices.BannerDetails();
+        const bannerRes = await RemoteServices.getAllBanners();
         bannerData = { data: bannerRes.data || [], meta: bannerRes.meta || {} };
     } catch (e) {
         console.error("Banner fetch failed", e);
@@ -26,7 +26,7 @@ export default async function BlogPage() {
 
     // 3. Fetch Brand Articles
     // Reusing Bloglist fetch logic for now, slicing first 4 reversed as per previous logic
-    const brandRes = await RemoteServices.Bloglist();
+    const brandRes = await RemoteServices.getBlogList();
     const brandArticles: Article[] = (Array.isArray(brandRes) ? brandRes : brandRes.data || [])
         .reverse()
         .slice(0, 4);

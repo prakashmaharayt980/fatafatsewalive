@@ -20,6 +20,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('login');
   const [loading, setLoading] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false); // NEW: Track OTP step
   const [socialToken, setSocialToken] = useState('');
   const [socialProvider, setSocialProvider] = useState<'google' | 'facebook'>('google');
 
@@ -30,6 +31,8 @@ export default function LoginPage() {
     verify: { otpCode: '', newPassword: '', confirmNewPassword: '' },
     socialComplete: { phone: '', address: '', password: '', confirmPassword: '' },
   });
+
+  // ... (existing errors state)
   const [errors, setErrors] = useState({
     login: {},
     register: {},
@@ -37,7 +40,9 @@ export default function LoginPage() {
     verify: {},
     socialComplete: {},
   });
+
   const [showPassword, setShowPassword] = useState({
+    // ... existing
     loginPassword: false,
     registerPassword: false,
     registerConfirmPassword: false,
@@ -47,6 +52,7 @@ export default function LoginPage() {
     socialConfirmPassword: false,
   });
 
+  // ... (existing handleInputChange)
   const handleInputChange = (section, field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -60,6 +66,7 @@ export default function LoginPage() {
     }
   };
 
+  // ... (existing toggleShowPassword, trimFormData, validateForm)
   const toggleShowPassword = (field) => {
     setShowPassword((prev) => ({
       ...prev,
@@ -95,7 +102,7 @@ export default function LoginPage() {
     }
   };
 
-
+  // ... (handleLogin, handleGoogleLogin, handleFacebookLogin, handleRegister, handleForgotPassword - keep as is)
   const handleLogin = async (e) => {
     e.preventDefault();
     const trimmedData = trimFormData('login');
@@ -107,9 +114,7 @@ export default function LoginPage() {
       const res = await RemoteServices.Login(trimmedData);
       if (res) {
         toast.success("Login successful!");
-        // Redirect to home or previous page
         router.push('/');
-        // Refresh to update auth state
         window.location.reload();
       }
     } catch (error: any) {
@@ -119,21 +124,16 @@ export default function LoginPage() {
     }
   };
 
-
   const handleGoogleLogin = async (credentialResponse) => {
-
     const id_token = credentialResponse.credential;
     setSocialToken(id_token);
     setSocialProvider('google');
-    // Use your actual backend address here
     const address = 'http://127.0.0.1:8000/api/'
 
     try {
       const response = await fetch(`${address}accounts/social/google/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token }),
       });
 
@@ -146,7 +146,6 @@ export default function LoginPage() {
       } else {
         toast.error(data.error || "Google login failed");
       }
-
     } catch (error) {
       console.log('err', error)
       toast.error("Network error during Google login");
@@ -154,6 +153,7 @@ export default function LoginPage() {
   };
 
   const handleFacebookLogin = async (response) => {
+    // ... (keep implementation)
     const access_token = response.accessToken;
     setSocialToken(access_token);
     setSocialProvider('facebook');
@@ -169,7 +169,6 @@ export default function LoginPage() {
       });
 
       const data = await apiResponse.json();
-      console.log('fb data', data);
 
       if (apiResponse.ok) {
         toast.success("Login successful!");
@@ -179,14 +178,12 @@ export default function LoginPage() {
         toast.error(data.error || "Facebook login failed");
       }
     } catch (error) {
-      console.error(error);
       toast.error("Network error during Facebook login");
     }
   };
 
-
-
   const handleRegister = async (e) => {
+    // ... (keep implementation)
     e.preventDefault();
     const trimmedData = trimFormData('register');
     const isValid = await validateForm('register', trimmedData);
@@ -194,7 +191,6 @@ export default function LoginPage() {
 
     setLoading(true);
     RemoteServices.Register(trimmedData).then(res => {
-
       toast.success("Registration successful! Please login.");
       setActiveSection('login');
       setFormData(prev => ({
@@ -202,20 +198,18 @@ export default function LoginPage() {
         register: { name: '', email: '', password: '', password_confirmation: '', phone: '', address: '' }
       }));
     }).catch((error) => {
-
       if (error.response && error.response.status === 400 && error.response.data.email) {
         toast.error(error.response.data.email[0]);
       } else {
         toast.error(error.message || "Please check your details and try again");
       }
-
-
     }).finally(() => {
       setLoading(false);
     });
   };
 
   const handleForgotPassword = async (e) => {
+    // ... (keep implementation)
     e.preventDefault();
     const trimmedData = trimFormData('forgot');
     const isValid = await validateForm('forgot', trimmedData);
@@ -224,28 +218,78 @@ export default function LoginPage() {
     setLoading(true);
     RemoteServices.ForgottenPassword(trimmedData).then(res => {
       toast.success("Verification code sent to your email!");
-      setActiveSection('emailSent');
+      setFormData(prev => ({
+        ...prev,
+        verify: { otpCode: '', newPassword: '', confirmNewPassword: '' }
+      }));
+      setActiveSection('verify'); // Go directly to verify
     }).catch((error) => {
       toast.error(error.message || "Email not found");
     }).finally(() => {
       setLoading(false);
     });
-
   };
 
-  const handleVerifyOTP = async (e) => {
+  // NEW: Handle just the OTP Step check
+  const handleVerifyCode = async (e) => {
     e.preventDefault();
-    const trimmedData = trimFormData('verify');
-    const isValid = await validateForm('verify', trimmedData);
-    if (!isValid) return;
+    const code = formData.verify.otpCode?.trim();
+    if (!code || !/^\d{6}$/.test(code)) {
+      setErrors(prev => ({ ...prev, verify: { ...prev.verify, otpCode: "Enter a valid 6-digit code" } }));
+      return;
+    }
 
     setLoading(true);
     try {
-      const res = await RemoteServices.VerifyOtp(trimmedData);
+      // Verify OTP with backend before showing password fields
+      // User requested: "otp verfiy end only otp code ,as code not otpcode"
+      await RemoteServices.VerifyOtp({
+        email: formData.forgot.email,
+        code: code,
+      } as any);
+
+      setOtpVerified(true);
+      toast.success("Code verified successfully");
+    } catch (error: any) {
+      console.error("OTP Verification Error:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Invalid Verification Code";
+      setErrors(prev => ({ ...prev, verify: { ...prev.verify, otpCode: errorMessage } }));
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Modified: Resets password
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    const trimmedData = trimFormData('verify');
+
+    // We only validate password fields here mostly, but schema checks all
+    const isValid = await validateForm('verify', trimmedData);
+    console.log("Validation Result:", isValid, trimmedData);
+    if (!isValid) {
+      toast.error("Please check the form for errors");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Include email from the previous step so the backend knows who to verify
+      // Map otpCode to code as requested
+      const payload = {
+        email: formData.forgot.email,
+        code: trimmedData.otpCode,
+        password: trimmedData.newPassword,
+        password_confirmation: trimmedData.confirmNewPassword
+      };
+
+      const res = await RemoteServices.ResetPassword(payload as any); // Use NEW endpoint
       toast.success("Password reset successfully!");
       setActiveSection('resetSuccess');
+      setOtpVerified(false); // Reset state
     } catch (error) {
-      toast.error(error.message || "Invalid verification code");
+      toast.error(error.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
@@ -256,17 +300,18 @@ export default function LoginPage() {
     errors,
     loading,
     showPassword,
+    otpVerified, // Pass this
     handleInputChange,
     toggleShowPassword,
     handleLogin,
     handleRegister,
     handleForgotPassword,
-    handleVerifyOTP,
+    handleVerifyCode, // Pass this
+    handleResetPassword, // Pass this
     setActiveSection,
     setFormData,
     handleGoogleSuccess: handleGoogleLogin,
     handleFacebookSuccess: handleFacebookLogin,
-
   };
 
   if (!loginDailogOpen) return null;
@@ -278,26 +323,27 @@ export default function LoginPage() {
           relative 
           bg-white 
           rounded-2xl 
-          shadow-2xl 
-          border border-gray-200 
+          shadow-xl 
+          border border-gray-100 
           overflow-hidden 
           flex flex-col
           transition-all duration-300 ease-in-out
-          ${activeSection === 'register' ? 'w-full max-w-3xl min-h-[600px]' : 'w-full max-w-[500px] min-h-[550px]'}
+          ${activeSection === 'register' ? 'w-full max-w-3xl min-h-[600px]' : 'w-full max-w-[480px] min-h-[500px]'}
           max-h-[90vh]
         `}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={() => setloginDailogOpen(false)}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
         >
-          <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white to-teal-50 p-6 sm:p-8 flex flex-col gap-4">
+        {/* Removed gradient bg-gradient-to-b from-white to-teal-50 */}
+        <div className="flex-1 overflow-y-auto bg-white p-6 sm:p-8 flex flex-col gap-2">
           {loading && (
             <div className="absolute inset-0 bg-white/80 z-50 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">

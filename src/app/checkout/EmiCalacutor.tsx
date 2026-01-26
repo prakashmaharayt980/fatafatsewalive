@@ -43,7 +43,7 @@ export default function EMICalculator() {
   // Search and filter products
   useEffect(() => {
     if (searchQuery.trim()) {
-      RemoteServices.SerachProducts(searchQuery.trim()).then(res => {
+      RemoteServices.searchProducts({ search: searchQuery.trim() }).then(res => {
         setFilteredProducts(res.data);
       }).catch(e => console.log('error', e));
     } else {

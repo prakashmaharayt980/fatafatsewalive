@@ -1,24 +1,22 @@
+// ProductPageClient.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Star, ChevronRight, ShoppingBasket, CreditCard, Scale } from "lucide-react";
-import { useInView } from "react-intersection-observer";
+import { Star, ChevronRight, Scale, Share2 } from "lucide-react";
 import Link from "next/link";
 import ImageGallery from "./ImageGallery";
 import ProductInfo from "./ProductInfo";
 import MoreDetailsProduct from "./MoreDetailsProduct";
 import RelatedProducts from "./RelatedProducts";
-import SimilarCompare from "./SimilarCompare";
-import ProductKeySpecs from "./ProductKeySpecs";
+import RelatedComparison from "./RelatedComparison";
+import RelatedNews from "./RelatedNews";
 import OurArticles from "@/app/homepage/OurArticles";
 import SkeltonCard from "@/app/homepage/SkeltonCard";
 import SkeltonBanner from "@/app/homepage/SkeltonBanner";
 import LazyLoadSection from "@/components/LazyLoadSection";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useContextCart } from "@/app/checkout/CartContext1";
 import { useRouter } from "next/navigation";
-import { useContextEmi } from "@/app/emi/emiContext";
 import { CustomVariantGroup, ProductDetails, ProductDisplayState } from "@/app/types/ProductDetailsTypes";
 
 interface ProductPageClientProps {
@@ -29,7 +27,8 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [selectedVariant, setSelectedVariant] = useState<any>(null);
     const [quantity, setQuantity] = useState<number>(1);
-    const [productDisplay, setProductDisplay] = useState<ProductDisplayState | null>(null)
+    const [productDisplay, setProductDisplay] = useState<ProductDisplayState | null>(null);
+
     const relatedCategory = useMemo(() => {
         if (productDetails.categories && productDetails.categories.length > 0) {
             const firstCategory = productDetails.categories[0];
@@ -42,60 +41,37 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
         return { id: '', slug: '', name: '' };
     }, [productDetails]);
 
+    // Calculate price range for "Similar Price" section (+/- 30%)
+    const priceRange = useMemo(() => {
+        const basePrice = productDetails.discounted_price || productDetails.price;
+        if (!basePrice) return null;
+        return {
+            min: Math.floor(basePrice * 0.7),
+            max: Math.ceil(basePrice * 1.3)
+        };
+    }, [productDetails.price, productDetails.discounted_price]);
+
     const { addToCart, compareItems } = useContextCart();
-    const { setEmiContextInfo, addToCompare } = useContextEmi(); // Assuming addToCompare is here or similar
     const router = useRouter();
 
-    const { ref: mainProductRef, inView: isMainVisible } = useInView({
-        initialInView: true,
-        rootMargin: "-200px 0px 0px 0px",
-    });
-
-    const handlerouter = (path: string) => {
-        router.push(path);
-    };
-
-    // Helper function to normalize specifications/attributes format
-    const normalizeData = (data: any): Record<string, string> => {
-        if (!data) return {};
-        if (typeof data === 'object' && !Array.isArray(data)) {
-            if ('items' in data || 'title' in data) {
-                const result: Record<string, string> = {};
-                if (Array.isArray(data)) {
-                    data.forEach((group: any) => {
-                        if (group.items && Array.isArray(group.items)) {
-                            group.items.forEach((item: any) => {
-                                if (item.name && item.content) {
-                                    result[item.name] = item.content;
-                                }
-                            });
-                        }
-                    });
-                } else if (data.items && Array.isArray(data.items)) {
-                    data.items.forEach((item: any) => {
-                        if (item.name && item.content) {
-                            result[item.name] = item.content;
-                        }
-                    });
-                }
-                return result;
-            }
-            const result: Record<string, string> = {};
-            Object.entries(data).forEach(([key, value]) => {
-                if (typeof value === 'string') {
-                    result[key] = value;
-                } else if (value !== null && value !== undefined) {
-                    result[key] = String(value);
-                }
-            });
-            return result;
-        }
-        return {};
-    };
+    const renderRating = (rating: number, size = 12) => (
+        <div className="flex items-center space-x-0.5">
+            {[...Array(5)].map((_, i) => (
+                <Star
+                    key={i}
+                    size={size}
+                    className={cn(
+                        i < Math.floor(rating)
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-gray-300"
+                    )}
+                />
+            ))}
+        </div>
+    );
 
     useEffect(() => {
         if (productDetails) {
-            // Initialize state from props
             setSelectedImage(productDetails.image?.full);
 
             const managedVariants: CustomVariantGroup[] = productDetails.variants.map((variant) => {
@@ -131,8 +107,6 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                 variantsByColor: uniqueManagedVariants
             });
 
-
-
             if (uniqueManagedVariants.length > 0) {
                 setSelectedVariant(uniqueManagedVariants[0]);
                 if (uniqueManagedVariants[0].images.length > 0) {
@@ -142,140 +116,48 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
         }
     }, [productDetails]);
 
-    const renderRating = (rating: number, size = 12) => (
-        <div className="flex items-center space-x-1" aria-label={`${rating} out of 5 stars`}>
-            {[...Array(5)].map((_, i) => (
-                <Star
-                    key={i}
-                    size={size}
-                    className={`transition-all duration-200 ${i < Math.floor(rating)
-                        ? "text-yellow-400 fill-yellow-400 drop-shadow-sm"
-                        : "text-gray-300 hover:text-yellow-200"
-                        }`}
-                    aria-hidden="true"
-                />
-            ))}
-        </div>
-    );
-
-    if (!productDisplay) return null; // Should not happen if productDetails is provided but good for Type Safety state init
+    if (!productDisplay) return null;
 
     return (
-        <div className="min-h-screen h-full bg-gradient-to-br from-gray-50 to-white pb-20">
-            {/* Sticky Bottom Bar */}
-            <div
-                className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.15)] border-t border-slate-100 transform transition-all duration-300 ${!isMainVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-                    }`}
-            >
-                <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
-                    {/* Mobile Layout */}
-                    <div className="flex items-center gap-3">
-                        {/* Product Info */}
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className="w-11 h-11 sm:w-12 sm:h-12 relative rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
-                                {selectedImage ? (
-                                    <Image
-                                        src={selectedImage}
-                                        alt={productDetails.name}
-                                        fill
-                                        className="object-contain p-1"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                                        <ShoppingBasket className="w-4 h-4 text-gray-300" />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="min-w-0 hidden sm:block">
-                                <h3 className="text-xs sm:text-sm font-semibold truncate text-slate-800 max-w-[150px] lg:max-w-[250px]">{productDetails.name}</h3>
-                                <p className="text-blue-600 font-bold text-sm">
-                                    Rs {(selectedVariant?.discounted_price || productDetails.discounted_price || productDetails.price).toLocaleString()}
-                                </p>
-                            </div>
-                            {/* Mobile only price */}
-                            <div className="sm:hidden">
-                                <p className="text-blue-600 font-bold text-sm">
-                                    Rs {(selectedVariant?.discounted_price || productDetails.discounted_price || productDetails.price).toLocaleString()}
-                                </p>
-                            </div>
-                        </div>
+        <div className="min-h-screen bg-gray-50 pb-24 sm:pb-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-4 overflow-x-auto pb-1 scrollbar-hide">
+                    <Link href="/" className="hover:text-[var(--colour-fsP1)] whitespace-nowrap text-xs">Home</Link>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <Link href={`/category/${productDetails.categories?.[0]?.slug || ''}`} className="hover:text-[var(--colour-fsP1)] whitespace-nowrap text-xs">
+                        {productDetails.categories?.[0]?.title || 'Category'}
+                    </Link>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span className="text-gray-700 font-medium truncate max-w-[150px] sm:max-w-[250px] text-xs">{productDetails.name}</span>
+                </nav>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2">
-                            {/* Compare button - hidden on very small screens */}
-                            <button
-                                className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all"
-                                onClick={() => {
-                                    const currentIds = compareItems?.map((i: any) => i.id) || [];
-                                    const newIds = Array.from(new Set([...currentIds, productDetails.id])).join(',');
-                                    router.push(`/compare?ids=${newIds}`);
-                                }}
-                                title="Compare"
-                            >
-                                <Scale className="w-4 h-4" />
-                            </button>
-
-                            {/* EMI button - if enabled */}
-                            {productDetails.emi_enabled === 1 && (
-                                <button
-                                    className="hidden xs:flex items-center justify-center gap-1.5 px-3 h-10 rounded-lg bg-[var(--colour-fsP2)] text-white font-semibold text-xs hover:bg-red-600 transition-all"
-                                    onClick={() => {
-                                        router.push(`/emi/applyemi?slug=${productDetails.slug}&id=${productDetails.id}`);
-                                    }}
-                                >
-                                    <CreditCard className="w-3.5 h-3.5" />
-                                    <span className="hidden sm:inline">EMI</span>
-                                </button>
-                            )}
-
-                            {/* Add to Cart - main action */}
-                            <button
-                                className={cn(
-                                    "flex items-center justify-center gap-1.5 px-4 sm:px-5 h-10 sm:h-11",
-                                    "rounded-lg font-bold text-xs sm:text-sm transition-all",
-                                    "bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:shadow-lg"
-                                )}
-                                onClick={() => addToCart(productDetails.id, quantity)}
-                            >
-                                <ShoppingBasket className="w-4 h-4" />
-                                <span>Add to Cart</span>
-                            </button>
-                        </div>
+                {/* Product Title Row */}
+                <div className="flex items-start justify-between gap-4 mb-6">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">{productDetails.name}</h1>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={() => {
+                                const currentIds = compareItems?.map((i: any) => i.id) || [];
+                                const newIds = Array.from(new Set([...currentIds, productDetails.id])).join(',');
+                                router.push(`/compare?ids=${newIds}`);
+                            }}
+                            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-[var(--colour-fsP2)] transition-colors"
+                        >
+                            <Scale className="w-4 h-4" />
+                            <span className="hidden sm:inline">Compare</span>
+                        </button>
+                        <button className="flex items-center text-slate-500 hover:text-[var(--colour-fsP2)] transition-colors">
+                            <Share2 className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
-                <div className="h-[env(safe-area-inset-bottom)] bg-white"></div>
-            </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-                {/* Breadcrumb */}
-                <div className="mx-auto mb-6 sm:mb-8">
-                    <nav className="flex flex-wrap items-center gap-2 text-sm sm:text-base text-gray-500 animate-in slide-in-from-left-4 duration-500 font-medium">
-                        <Link
-                            href="/"
-                            className="hover:text-[var(--colour-fsP1)] transition-colors whitespace-nowrap"
-                        >
-                            Home
-                        </Link>
-                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
-                        <Link
-                            href={`/category/${productDetails.categories?.[0]?.slug || ''}`} // Safety check
-                            className="hover:text-[var(--colour-fsP1)] transition-colors whitespace-nowrap"
-                        >
-                            {productDetails.categories?.map((category) => category.title).join(" ") || 'Category'}
-                        </Link>
-                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
-                        <span className="text-gray-900 font-semibold truncate max-w-[200px] sm:max-w-md md:max-w-xl text-ellipsis">
-                            {productDetails.name}
-                        </span>
-                    </nav>
-
-                    {/* Main Product Section - 2:1 Layout */}
-                    <div
-                        ref={mainProductRef}
-                        className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10 m-4 animate-in fade-in duration-700"
-                    >
-                        {/* Left Column: Image Gallery (3/5 width) */}
-                        <div className="lg:col-span-3">
+                {/* Main Content - 3 Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left Column - Image Gallery */}
+                    <div className="lg:col-span-4">
+                        <div className="lg:sticky lg:top-20">
                             <ImageGallery
                                 product={productDetails}
                                 images={selectedVariant?.images?.map((i: any) => i.url) || []}
@@ -283,104 +165,125 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                                 setSelectedImage={setSelectedImage}
                             />
                         </div>
-                        {/* Right Column: Sticky Sidebar (2/5 width) */}
-                        <div className="lg:col-span-2">
-                            <div className="lg:sticky lg:top-24 space-y-4">
-                                <ProductInfo
-                                    product={productDetails}
-                                    productDisplay={productDisplay}
-                                    selectedVariant={selectedVariant}
-                                    setSelectedVariant={setSelectedVariant}
-                                    selectedImage={selectedImage}
-                                    setSelectedImage={setSelectedImage}
-                                    quantity={quantity}
-                                    setQuantity={setQuantity}
-                                    renderRating={renderRating}
-                                />
+                    </div>
 
+                    {/* Middle Column - Product Info */}
+                    <div className="lg:col-span-5">
+                        <ProductInfo
+                            product={productDetails}
+                            productDisplay={productDisplay}
+                            selectedVariant={selectedVariant}
+                            setSelectedVariant={setSelectedVariant}
+                            selectedImage={selectedImage}
+                            setSelectedImage={setSelectedImage}
+                            quantity={quantity}
+                            setQuantity={setQuantity}
+                            renderRating={renderRating}
+                        />
+
+                        {/* Product Description Preview */}
+                        {productDetails.description && (
+                            <div className="mt-6 pt-5 border-t border-gray-200">
+                                <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">
+                                    {productDetails.description?.replace(/<[^>]*>/g, '').slice(0, 200)}...
+                                </p>
+                                <a href="#specifications" className="text-xs font-semibold text-[var(--colour-fsP2)] hover:underline mt-2 inline-block">
+                                    Read more
+                                </a>
                             </div>
-                        </div>
+                        )}
+                    </div>
+
+                    {/* Right Column - Sidebar */}
+                    <div className="lg:col-span-3 space-y-4">
+                        <RelatedNews productName={productDetails.name} />
+                        <RelatedComparison
+                            currentProduct={productDetails}
+                            categoryId={relatedCategory.id}
+                        />
                     </div>
                 </div>
 
-                {/* Product Highlights */}
-                {productDetails.highlights && (
-                    <div className="mt-12 animate-in slide-in-from-bottom-8 duration-700 delay-100">
-                        <div className="max-w-2xl">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Star className="w-5 h-5 text-gray-900 fill-current" />
-                                Product Highlights
-                            </h3>
-                            <div className="space-y-2">
-                                {productDetails.highlights.split("|").map((highlight, index) => (
-                                    <div key={`highlight-${index}`} className="flex items-start gap-3 py-1">
-                                        <div className="mt-2 w-1.5 h-1.5 rounded-full bg-gray-900 shrink-0" />
-                                        <span className="text-sm font-medium text-gray-600 leading-relaxed">{highlight.trim()}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+                {/* Product Details Section */}
+                <div className="mt-10">
+                    <MoreDetailsProduct
+                        productDesciption={productDetails.description || productDetails.highlights || ''}
+                        keyFeatures={productDetails.attributes?.product_attributes || {}}
+                        specifications={{}}
+                        productID={productDetails.id}
+                        product={productDetails}
+                        categoryId={relatedCategory.id}
+                    />
+                </div>
 
-            {/* Product Details Tabs */}
-            <div className="max-w-7xl mx-auto mb-16 animate-in slide-in-from-bottom-8 duration-700 delay-200">
-                <MoreDetailsProduct
-                    productDesciption={productDetails.description || productDetails.highlights}
-                    keyFeatures={normalizeData(productDetails.attributes?.product_attributes)}
-                    specifications={{}}
-                    productID={productDetails.id}
-                    product={productDetails}
-                    categoryId={relatedCategory.id}
-                />
-            </div>
+                {/* Related Products */}
+                {relatedCategory.id && (
+                    <section className="mt-10 space-y-8">
+                        {/* Same Brand */}
+                        <LazyLoadSection fallback={<SkeltonCard />}>
+                            <RelatedProducts
+                                title={`More from ${productDetails.brand?.name || 'Brand'}`}
+                                slug={relatedCategory.slug}
+                                id={relatedCategory.id}
+                                brandSlug={productDetails.brand?.slug}
+                            />
+                        </LazyLoadSection>
 
-            {/* Similar Compare */}
-            {relatedCategory.id && (
-                <LazyLoadSection fallback={<SkeltonBanner />} className="w-full">
-                    <SimilarCompare currentProduct={productDetails} categoryId={relatedCategory.id} />
-                </LazyLoadSection>
-            )}
-
-            {/* Lazy-Loaded Related Products */}
-            <section className="max-w-7xl mx-auto space-y-12 animate-in slide-in-from-bottom-8 duration-700 delay-300" aria-label="Related Products">
-                {relatedCategory && relatedCategory.id && (
-                    <>
-                        <div className="relative">
-                            {/* <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" /> */}
-                            <LazyLoadSection fallback={<SkeltonCard />} className="w-full">
+                        {/* Similar Price Range */}
+                        {priceRange && (
+                            <LazyLoadSection fallback={<SkeltonCard />}>
                                 <RelatedProducts
-                                    title={`More from ${productDetails.brand?.name || 'Brand'}`}
+                                    title="Similar Price Range"
                                     slug={relatedCategory.slug}
                                     id={relatedCategory.id}
-
+                                    minPrice={priceRange.min}
+                                    maxPrice={priceRange.max}
                                 />
                             </LazyLoadSection>
-                        </div>
-                        <LazyLoadSection fallback={<SkeltonCard />} className="w-full">
+                        )}
+
+                        {/* General Related */}
+                        <LazyLoadSection fallback={<SkeltonCard />}>
                             <RelatedProducts
-                                title="Products Related to this"
+                                title="Related Products"
                                 slug={relatedCategory.slug}
                                 id={relatedCategory.id}
                             />
                         </LazyLoadSection>
-                    </>
+                    </section>
                 )}
-            </section>
 
-            {/* Blog Section */}
-            <aside className="max-w-7xl mx-auto mt-16 pt-8" aria-label="Related Articles">
-                <div className="flex items-center justify-between mb-8 px-4">
-                    <h2 className="text-2xl font-bold text-gray-900 border-l-4 border-[var(--colour-fsP1)] pl-3">Latest from our Blog</h2>
-                    <Link href="/blog" className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1 group">
-                        View All <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                {/* Blog Section */}
+                <aside className="mt-12 pt-8 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-bold text-gray-900">Latest from Blog</h2>
+                        <Link href="/blog" className="text-xs font-medium text-[var(--colour-fsP2)] hover:underline flex items-center gap-1">
+                            View All <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                    </div>
+                    <LazyLoadSection fallback={<SkeltonBanner />}>
+                        <OurArticles blogpage="product-page" />
+                    </LazyLoadSection>
+                </aside>
+            </div>
+
+            {/* Mobile Sticky Bottom Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 sm:hidden pb-[env(safe-area-inset-bottom)]">
+                <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-500 truncate">{productDetails.name}</p>
+                        <p className="text-base font-bold text-[var(--colour-fsP2)]">
+                            Rs. {(selectedVariant?.discounted_price || productDetails.discounted_price || productDetails.price).toLocaleString()}
+                        </p>
+                    </div>
+                    <button
+                        className="px-5 py-2.5 bg-[var(--colour-fsP1)] text-white font-bold text-sm rounded-lg flex-shrink-0"
+                        onClick={() => addToCart(productDetails.id, quantity)}
+                    >
+                        Add to Cart
+                    </button>
                 </div>
-                <LazyLoadSection fallback={<SkeltonBanner />} className="w-full">
-                    <OurArticles blogpage="product-page" />
-                </LazyLoadSection>
-            </aside>
+            </div>
         </div>
     );
 }

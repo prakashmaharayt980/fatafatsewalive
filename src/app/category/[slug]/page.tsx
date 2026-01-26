@@ -24,7 +24,7 @@ interface PageProps {
 // ============================================
 async function getCategoryData(slug: string): Promise<CategoryData | null> {
     try {
-        const response = await RemoteServices.categoryProduct_slug(slug);
+        const response = await RemoteServices.getCategoryBySlug(slug);
         return response?.data || null;
     } catch (error) {
         console.error('Error fetching category:', error);
@@ -52,9 +52,11 @@ async function getInitialProducts(
             1
         );
         const queryString = new URLSearchParams(params).toString();
-        const response = await RemoteServices.CategoryProduct_ID(
-            categoryId
-        );
+        const response = await RemoteServices.searchProducts({
+            search: '',
+            ...params as any, // Cast because searchProducts strict typing might be missing optional filters
+            categories: categoryId // Passing ID or Slug
+        });
         return response;
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -64,17 +66,21 @@ async function getInitialProducts(
 
 async function getCategories(): Promise<CategoryData[]> {
     try {
-        const response = await RemoteServices.getCategoriesAll();
-        return response?.data || [];
+        const response = await RemoteServices.getAllCategories();
+        // Handle array vs object response
+        const data = Array.isArray(response) ? response : response.data || [];
+        return data.map((cat: any) => ({
+            slug: [cat.slug],
+        }));
     } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('Error generating static params:', error);
         return [];
     }
 }
 
-async function getBrands(): Promise<BrandData[]> {
+async function getBrands() {
     try {
-        const response = await RemoteServices.getBrandsAll();
+        const response = await RemoteServices.getAllBrands();
         return response?.data || [];
     } catch (error) {
         console.error('Error fetching brands:', error);

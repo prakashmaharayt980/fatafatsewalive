@@ -38,7 +38,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
     const delayDebounceFn = setTimeout(() => {
       if (searchQuery.trim()) {
         setLoading(true);
-        RemoteServices.SerachProducts(searchQuery.trim())
+        RemoteServices.searchProducts({ search: searchQuery.trim() })
           .then((res) => {
             setSelectItems(res.data);
           })
@@ -52,10 +52,10 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  const handleProductSelect = async (productId: string) => {
+  const handleProductSelect = async (productSlug: string) => {
     setLoading(true);
     try {
-      const fullProduct = await RemoteServices.ProductDetails_ID(productId);
+      const fullProduct = await RemoteServices.getProductBySlug(productSlug);
       if (fullProduct) {
         setEmiContextInfo((prev) => ({
           ...prev,
@@ -133,7 +133,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                   {selectItems.map((product: any) => (
                     <div
                       key={product.id}
-                      onClick={() => handleProductSelect(product.id.toString())}
+                      onClick={() => handleProductSelect(product.slug)}
                       className="flex items-center gap-4 p-3 bg-white rounded-xl hover:shadow-md cursor-pointer transition-all duration-200 group"
                     >
                       <div className="relative w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">

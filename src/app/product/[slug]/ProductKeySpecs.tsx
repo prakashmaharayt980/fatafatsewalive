@@ -52,9 +52,9 @@ const ProductKeySpecs: React.FC<ProductKeySpecsProps> = ({ product }) => {
     }
 
     return (
-        <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-sm">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide flex items-center gap-2">
-                <div className="w-1 h-4 bg-[var(--colour-fsP1)] rounded-full"></div>
+        <div className="bg-white/50 backdrop-blur-sm border border-gray-100/80 rounded-2xl p-5 sm:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+            <h3 className="text-sm font-bold text-gray-900 mb-5 uppercase tracking-wide flex items-center gap-3">
+                <div className="w-1.5 h-1.5 bg-[var(--colour-fsP1)] rounded-full ring-4 ring-blue-50"></div>
                 Key Specifications
             </h3>
 
@@ -66,14 +66,14 @@ const ProductKeySpecs: React.FC<ProductKeySpecsProps> = ({ product }) => {
                             key={index}
                             className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-white transition-colors group"
                         >
-                            <div className="mt-0.5 p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                                <Icon className="w-4 h-4 text-[var(--colour-fsP1)]" />
+                            <div className="mt-0.5 p-2.5 rounded-xl bg-blue-50/80 group-hover:bg-blue-100 text-blue-600 transition-colors">
+                                <Icon className="w-5 h-5 text-[var(--colour-fsP1)]" />
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 pt-0.5">
                                 <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">
                                     {spec.label}
                                 </div>
-                                <div className="text-sm font-medium text-gray-900 leading-tight">
+                                <div className="text-sm font-medium text-gray-900 leading-tight border-b border-gray-100 pb-2 last:border-0 last:pb-0">
                                     {spec.value}
                                 </div>
                             </div>

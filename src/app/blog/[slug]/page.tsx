@@ -14,7 +14,7 @@ interface PageProps {
 // Data Fetching Helper
 const getArticleData = async (slug: string) => {
     try {
-        const blogRes = await RemoteServices.Bloglist();
+        const blogRes = await RemoteServices.getBlogList();
         const articles: Article[] = Array.isArray(blogRes) ? blogRes : blogRes.data || [];
         const article = articles.find((a) => a.slug === slug);
         return article;
@@ -61,7 +61,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     let relatedProduct: ProductDetails | undefined = undefined;
     if (article.category?.title) {
         try {
-            const productRes = await RemoteServices.SerachProducts(article.category.title);
+            const productRes = await RemoteServices.searchProducts({ search: article.category.title });
             const products = productRes.data || [];
             if (products.length > 0) {
                 relatedProduct = products[0];

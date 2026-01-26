@@ -90,14 +90,16 @@ export default function MoreDetailsProduct({
   const { triggerLoginAlert, authState } = useAuth();
 
   useEffect(() => {
-    RemoteServices.ReviewList(productID, currentPage)
-      .then(res => {
-        setReviews({
-          data: res.data,
-          meta: res.meta
-        });
+    if (productID) {
+      RemoteServices.getReviews(productID, currentPage)
+        .then(res => {
+          setReviews({
+            data: res.data,
+            meta: res.meta
+          });
 
-      })
+        })
+    }
   }, [productID, currentPage]);
 
   const handleWriteReviewClick = () => {
@@ -121,12 +123,12 @@ export default function MoreDetailsProduct({
     if (!Rating.newReview.trim() || Rating.newRating === 0) return;
     setRating({ ...Rating, isSubmittingReview: true });
 
-    RemoteServices.ReviewCreate({
+    RemoteServices.createReview({
+      id: productID,
       data: {
         rating: Rating.newRating,
         review: Rating.newReview,
-      },
-      id: productID
+      }
     })
       .then(res => {
 
@@ -153,10 +155,10 @@ export default function MoreDetailsProduct({
 
         {/* Product Description Section (2/3 width on desktop) */}
         <div className="lg:col-span-2">
-          <section ref={descriptionRef} className="bg-white rounded-2xl p-4 sm:p-6 lg:p-10 shadow-sm h-full">
-            <div className="pb-6 mb-8 flex items-center gap-4">
-              <div className="w-1.5 h-10 bg-[var(--colour-fsP1)] rounded-full"></div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Product Description</h2>
+          <section ref={descriptionRef} className="bg-white rounded-[2rem] p-6 sm:p-8 lg:p-12 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 h-full border border-gray-100">
+            <div className="pb-6 mb-8 flex items-center gap-4 border-b border-gray-100/50">
+              <div className="w-1.5 h-12 bg-[var(--colour-fsP1)] rounded-full shadow-sm"></div>
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Product Description</h2>
             </div>
 
             <div className={cn(
@@ -178,29 +180,54 @@ export default function MoreDetailsProduct({
           {hasAnyFeatures && (
             <section ref={specsRef} className="lg:sticky lg:top-24 space-y-8">
               <div>
-                <div className="pb-4 mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <Scale className="w-5 h-5 text-[var(--colour-fsP1)]" />
-                    Full Specifications
+                <div className="pb-4 mb-4 px-2 sm:px-0 border-b border-gray-100">
+                  <h3 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-xl">
+                      <Scale className="w-6 h-6 text-[var(--colour-fsP1)]" />
+                    </div>
+                    Specifications
                   </h3>
                 </div>
 
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-4">
                   {Object.entries(specsData).map(([key, value], index) => (
                     <div
                       key={`spec-${index}`}
-                      className="bg-white p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:shadow-sm transition-all duration-200"
+                      className="bg-white p-4 rounded-2xl border border-gray-100 hover:border-violet-100 hover:shadow-md transition-all duration-300 group"
                     >
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 text-[var(--colour-fsP1)] mb-0.5">
-                          <IconRenderer iconKey={key} size={14} color="currentColor" />
-                          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{key}</h4>
+                      <div className="flex flex-col gap-2 h-full">
+                        <div className="flex items-center gap-2 text-[var(--colour-fsP1)] mb-auto">
+                          {/* Dot indicator for 'destila dot' request */}
+                          <div className="w-2 h-2 rounded-full bg-[var(--colour-fsP1)] flex-shrink-0 group-hover:scale-125 transition-transform" />
+                          <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">{key}</h4>
                         </div>
-                        <p className="text-sm font-semibold text-gray-900 leading-snug break-words">{value}</p>
+                        <p className="text-base font-bold text-gray-900 leading-tight break-words pl-4">{value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Additional Content Section */}
+              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100/50">
+                <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                  Additional Info
+                </h4>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3 text-sm text-gray-600 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                    <span>Official Warranty Available</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-gray-600 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                    <span>7 Days Return Policy</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-gray-600 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                    <span>Express Delivery Support</span>
+                  </li>
+                </ul>
               </div>
 
               {/* Related Comparison Widget */}

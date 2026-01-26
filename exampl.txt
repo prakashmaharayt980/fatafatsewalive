@@ -1,0 +1,5 @@
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=247120999597-e4a2foh0m1ktns4sgslafuj8tjr8d1ci.apps.googleusercontent.com
+NEXT_PUBLIC_API_URL=https://api.fatafatsewa.com/api
+NEXT_PUBLIC_API_KEY='pk_live_8bz9lO04NnHjqooxQrU6aeJC5Fwzdx1i'
+NEXT_PUBLIC_API_N8N_URL=http://localhost:5678/webhook-test
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=''

@@ -46,8 +46,8 @@ export default function AddProductSearch({ onSelect, excludeIds }: AddProductSea
 
             setLoading(true);
             try {
-                // Note: RemoteServices has a typo "SerachProducts"
-                const res = await RemoteServices.SerachProducts(debouncedQuery);
+                // RemoteServices typo fixed
+                const res = await RemoteServices.searchProducts({ search: debouncedQuery });
                 // The API structure for search returns { data: [...] } usually
                 const products = res.data || res || [];
                 setResults(products);

@@ -13,7 +13,7 @@ import RemoteServices from '../api/remoteservice';
 import { Article } from '@/app/types/Blogtypes';
 
 const fetcher = async (): Promise<Article[]> => {
-  const res = await RemoteServices.Bloglist();
+  const res = await RemoteServices.getBlogList();
   return res.data;
 };
 
@@ -32,7 +32,7 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
   if (isLoading) return <ArticleSkeleton />;
 
   return (
-    <div className="mx-auto py-8 md:py-12 max-w-[1400px] px-4" ref={ref}>
+    <div className="mx-auto py-8 md:py-12  px-4" ref={ref}>
       {/* Responsive Header */}
       <div className="flex items-center gap-2 md:gap-4 mb-8 md:mb-10">
         <div className="h-[1px] md:h-[2px] flex-1 bg-gradient-to-r from-transparent to-blue-600" />

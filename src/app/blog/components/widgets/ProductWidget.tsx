@@ -11,7 +11,7 @@ import { formatPrice } from '@/app/category/[slug]/utils';
 const ProductWidget = () => {
     // Fetch generic products to act as "Trending" or "Just For You"
     const { data: products, isLoading } = useSWR('blog-sidebar-products', () =>
-        RemoteServices.SerachProducts('smartphones').then(res => res.data?.slice(0, 6) || [])
+        RemoteServices.searchProducts({ search: 'smartphones' }).then(res => res.data?.slice(0, 6) || [])
     );
 
     if (isLoading) return <div className="h-64 bg-gray-100 rounded-2xl animate-pulse"></div>;

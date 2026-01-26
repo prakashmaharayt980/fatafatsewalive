@@ -9,20 +9,29 @@ import ProductCard from '../ProductCard';
 import SkeltonCard from '@/app/homepage/SkeltonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
-import RemoteServices from '@/app/api/remoteservice';
+import RemoteServices, { CategoryService } from '@/app/api/remoteservice';
 
 interface RelatedProductsProps {
   title?: string;
   slug: string;
   id: string;
+  brandSlug?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
-const fetcher = async (id: string) => {
-  const response = await RemoteServices.CategoryProduct_ID(id);
+const fetcher = async ({ id, brandSlug, minPrice, maxPrice }: { id: string; brandSlug?: string; minPrice?: number; maxPrice?: number }) => {
+  const response = await CategoryService.getCategoryProducts({
+    categories: id,
+    brand: brandSlug,
+    min_price: minPrice,
+    max_price: maxPrice,
+    per_page: 6
+  } as any);
   return response;
 };
 
-const RelatedProducts = ({ title, slug, id }: RelatedProductsProps) => {
+const RelatedProducts = ({ title, slug, id, brandSlug, minPrice, maxPrice }: RelatedProductsProps) => {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { ref, inView } = useInView({
@@ -33,8 +42,8 @@ const RelatedProducts = ({ title, slug, id }: RelatedProductsProps) => {
   const [activeDot, setActiveDot] = useState(0);
 
   // Fetch data with SWR
-  const { data: productList, error } = useSWR<CategorySlug_ID>(
-    inView ? id : null,
+  const { data: productList, error } = useSWR(
+    inView ? { id, brandSlug, minPrice, maxPrice } : null,
     fetcher,
     {
       dedupingInterval: 60000,
@@ -94,29 +103,26 @@ const RelatedProducts = ({ title, slug, id }: RelatedProductsProps) => {
   return (
     <div ref={ref} className="w-full bg-gray-50/50 py-12 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={cn('flex items-center justify-between mb-8')}>
-          <div>
-            <h2 className={cn('text-2xl font-bold text-gray-900', 'sm:text-3xl tracking-tight')}>
-              {title}
-            </h2>
-            <p className="text-gray-500 mt-2 text-sm uppercase tracking-widest font-medium">
-              Curated just for you
-            </p>
+        <div className="flex items-center justify-between mb-6 px-2 sm:px-0">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-7 bg-slate-800 rounded-full" />
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+                {title}
+              </h2>
+            </div>
           </div>
           <button
             onClick={() => router.push(`/category/${slug}`)}
-            className={cn(
-              'group flex items-center gap-2 rounded-full border border-gray-200 bg-white shadow-sm transition-all hover:bg-gray-50 hover:shadow-md hover:border-blue-200',
-              'px-4 py-2 text-sm font-semibold text-gray-700 hover:text-blue-600'
-            )}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all duration-200 group"
           >
             <span>View All</span>
-            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
 
-        <div className={cn('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-6')}>
-          {products.slice(0, 10).map((product, index) => (
+        <div className={cn('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-6')}>
+          {products.slice(0, 5).map((product, index) => (
             <div
               key={`${product.slug}-${index}`}
               className="w-full transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl rounded-2xl bg-white"

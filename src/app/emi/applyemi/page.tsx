@@ -10,8 +10,8 @@ type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 async function getProduct(id: string) {
   if (!id) return null;
   try {
-    const data = await RemoteServices.ProductDetails_ID(id);
-    return data;
+    const response = await RemoteServices.searchProducts({ search: id });
+    return response.data?.[0] || null;
   } catch (error) {
     console.error("Error fetching product for EMI:", error);
     return null;

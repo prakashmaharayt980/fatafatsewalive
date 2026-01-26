@@ -8,7 +8,7 @@ import { Layers } from 'lucide-react';
 
 const CategoryWidget = () => {
     const { data: categories, isLoading } = useSWR('blog-sidebar-categories', () =>
-        RemoteServices.getCategoriesAll().then(res => res.data?.slice(0, 8) || [])
+        RemoteServices.getAllCategories().then(res => res.data?.slice(0, 8) || [])
     );
 
     if (isLoading) return <div className="h-48 bg-gray-100 rounded-2xl animate-pulse"></div>;

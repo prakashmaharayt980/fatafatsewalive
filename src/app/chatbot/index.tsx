@@ -3,11 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import {
-  Send, X, Minimize2, Paperclip, History, MessageSquare,
-  Bot, User, Loader2, CreditCard, CheckCircle2, XCircle,
-  Calendar, Package, RefreshCw, Trash2, ChevronRight
+  Send, X, Paperclip, History, MessageSquare,
+  Loader2, CreditCard,
+  Calendar, Package, RefreshCw, Trash2, ChevronRight, ChevronLeft,
+  Sparkles, HelpCircle, FileText, Clock
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import RemoteServices from '@/app/api/remoteservice';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import Image from 'next/image';
+import { CompanyLogo } from '../CommonVue/Payment';
 
 interface ApiResponse {
   id: number;
@@ -24,9 +30,15 @@ interface Message {
   message: string;
   timestamp: Date;
   data?: ApiResponse | ApiResponse[];
+  quickActions?: string[];
 }
 
-// --- Helper Components Defined Outside to Prevent Re-renders ---
+// Mock product data for carousel
+const mockProducts = [
+  { id: 1, name: 'Premium Card', description: 'Best for travel', price: '$0/year', image: '💳' },
+  { id: 2, name: 'Rewards Plus', description: 'Cash back rewards', price: '$95/year', image: '🎁' },
+  { id: 3, name: 'Business Pro', description: 'For businesses', price: '$150/year', image: '💼' },
+];
 
 const formatTime = (date: Date) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -41,69 +53,117 @@ const formatDate = (dateString: string) => {
   });
 };
 
+// Product Carousel Component
+const ProductCarousel = () => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 180;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div className="mt-3 relative">
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {mockProducts.map((product) => (
+          <div
+            key={product.id}
+            className="flex-shrink-0 w-[140px] bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group"
+          >
+            <div className="h-20 bg-gray-50 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+              {product.image}
+            </div>
+            <div className="p-3">
+              <p className="font-semibold text-gray-900 text-sm">{product.name}</p>
+              <p className="text-xs text-gray-500 mb-1">{product.description}</p>
+              <p className="text-sm font-bold text-[var(--colour-fsP1)] group-hover:text-[var(--colour-fsP2)] transition-colors">{product.price}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Scroll buttons */}
+      <button
+        onClick={() => scroll('left')}
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[var(--colour-fsP2)] transition-colors opacity-0 hover:opacity-100 focus:opacity-100"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => scroll('right')}
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[var(--colour-fsP2)] transition-colors"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
+// Quick Action Buttons
+const QuickActions = ({ actions, onSelect }: { actions: string[], onSelect: (action: string) => void }) => (
+  <div className="flex flex-wrap gap-2 mt-3">
+    {actions.map((action) => (
+      <button
+        key={action}
+        onClick={() => onSelect(action)}
+        className="px-4 py-2 text-sm font-medium text-[var(--colour-fsP2)] bg-white border border-blue-200 rounded-full hover:bg-blue-50 hover:border-blue-300 transition-all"
+      >
+        {action}
+      </button>
+    ))}
+  </div>
+);
+
 const ResponseCard = ({ item }: { item: ApiResponse }) => {
   const isEligible = item.decision?.toLowerCase() === 'eligible';
 
   return (
-    <div className="mt-3 bg-white rounded-xl border border-gray-200 overflow-hidden card-shadow hover:card-shadow-hover transition-shadow">
-      {/* Status Header */}
+    <div className="mt-3 bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
       <div className={cn(
-        "px-4 py-3 flex items-center justify-between border-b",
-        isEligible
-          ? "bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-200"
-          : "bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-200"
+        "px-4 py-2.5 flex items-center justify-between",
+        isEligible ? "bg-emerald-50 border-b border-emerald-100" : "bg-gray-50 border-b border-gray-100"
       )}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#1967b3] flex items-center justify-center shadow-sm">
-            <CheckCircle2 className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <span className="font-bold text-sm text-slate-800">
-              {item.decision || 'Response'}
-            </span>
-            <p className="text-[10px] text-slate-500">Status</p>
-          </div>
+          <div className={cn(
+            "w-2 h-2 rounded-full",
+            isEligible ? "bg-emerald-500" : "bg-gray-400"
+          )} />
+          <span className="font-semibold text-sm text-gray-800">{item.decision || 'Response'}</span>
         </div>
-        <div className="text-right">
-          <span className="text-xs font-mono text-slate-400">ID</span>
-          <p className="text-sm font-bold text-slate-700">#{item.id}</p>
-        </div>
+        <span className="text-xs text-gray-400 font-mono">#{item.id}</span>
       </div>
 
-      {/* Card Body */}
-      <div className="p-4 bg-white">
-        {/* User Info Row */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1967b3] to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full bg-[var(--colour-fsP1)] flex items-center justify-center text-white font-semibold">
             {item.user_name?.charAt(0).toUpperCase() || '?'}
           </div>
-          <div className="flex-1">
-            <p className="font-semibold text-slate-800 text-base">{item.user_name || 'Test User'}</p>
-            <div className="flex items-center gap-1 text-slate-500 text-xs mt-0.5">
-              <Calendar className="w-3 h-3" />
-              {formatDate(item.created_at)}
-            </div>
+          <div>
+            <p className="font-semibold text-gray-900">{item.user_name || 'User'}</p>
+            <p className="text-xs text-gray-400">{formatDate(item.created_at)}</p>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-            <div className="flex items-center gap-1.5 text-slate-600 text-xs font-medium mb-1">
-              <Package className="w-3.5 h-3.5" />
-              Product
-            </div>
-            <p className="font-semibold text-slate-800 text-sm capitalize truncate">
-              {item.detected_product || 'Test Product'}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-gray-50 rounded-xl p-3">
+            <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">Product</p>
+            <p className="text-sm font-medium text-gray-800 capitalize truncate">
+              {item.detected_product || 'N/A'}
             </p>
           </div>
-          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-            <div className="flex items-center gap-1.5 text-blue-700 text-xs font-medium mb-1">
-              <CreditCard className="w-3.5 h-3.5" />
-              Limit
-            </div>
-            <p className="font-bold text-[#1967b3] text-lg">
-              ${item.credit_limit?.toLocaleString() || '10,000'}
+          <div className="bg-blue-50 rounded-xl p-3">
+            <p className="text-[10px] uppercase tracking-wide text-blue-400 mb-0.5">Limit</p>
+            <p className="text-base font-bold text-[var(--colour-fsP2)]">
+              ${item.credit_limit?.toLocaleString() || '0'}
             </p>
           </div>
         </div>
@@ -113,66 +173,88 @@ const ResponseCard = ({ item }: { item: ApiResponse }) => {
 };
 
 const ResponseList = ({ items }: { items: ApiResponse[] }) => (
-  <div className="space-y-3 mt-2">
+  <div className="space-y-2 mt-2">
     {items.map((item, index) => (
       <ResponseCard key={item.id || index} item={item} />
     ))}
   </div>
 );
 
-const HistoryItem = ({ item }: { item: ApiResponse }) => {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 card-shadow hover:card-shadow-hover hover:border-blue-300 transition-all cursor-pointer group">
-      <div className="flex items-center gap-3">
-        {/* Avatar */}
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0 transition-transform group-hover:scale-105 bg-gradient-to-br from-[#1967b3] to-blue-600">
-          {item.user_name?.charAt(0).toUpperCase() || 'T'}
-        </div>
+const MarkdownMessage = ({ content }: { content: string }) => (
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
+      h1: ({ node, ...props }) => <h1 className="text-base font-semibold mt-2 mb-1.5 text-gray-900" {...props} />,
+      h2: ({ node, ...props }) => <h2 className="text-sm font-semibold mt-2 mb-1 text-gray-900" {...props} />,
+      h3: ({ node, ...props }) => <h3 className="text-sm font-medium mt-1.5 mb-1 text-gray-800" {...props} />,
+      p: ({ node, ...props }) => <p className="mb-1.5 last:mb-0 text-gray-700" {...props} />,
+      ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-1.5 space-y-0.5 text-gray-700" {...props} />,
+      ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-1.5 space-y-0.5 text-gray-700" {...props} />,
+      li: ({ node, ...props }) => <li className="text-gray-700" {...props} />,
+      blockquote: ({ node, ...props }) => (
+        <blockquote className="border-l-2 border-blue-300 pl-3 py-0.5 my-1.5 text-gray-600 italic" {...props} />
+      ),
+      code: ({ node, inline, ...props }: any) =>
+        inline ? (
+          <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-[var(--colour-fsP2)]" {...props} />
+        ) : (
+          <code className="block bg-gray-100 p-2.5 rounded-lg text-xs font-mono overflow-x-auto my-1.5 text-gray-700" {...props} />
+        ),
+      pre: ({ node, ...props }) => <pre className="overflow-x-auto" {...props} />,
+      a: ({ node, ...props }) => (
+        <a className="text-[var(--colour-fsP2)] hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
+      ),
+      strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />,
+      em: ({ node, ...props }) => <em className="italic" {...props} />,
+    }}
+  >
+    {content}
+  </ReactMarkdown>
+);
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="font-semibold text-slate-800 truncate">{item.user_name || 'Test User'}</p>
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 bg-blue-100 text-blue-700">
-              Test
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-slate-600 capitalize flex items-center gap-1">
-              <Package className="w-3.5 h-3.5 text-slate-400" />
-              {item.detected_product || 'Test Product'}
-            </span>
-          </div>
-          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            {formatDate(item.created_at)}
-          </p>
-        </div>
-
-        {/* Arrow */}
-        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#1967b3] group-hover:translate-x-1 transition-all flex-shrink-0" />
-      </div>
+const HistoryItem = ({ item }: { item: ApiResponse }) => (
+  <div className="group flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer">
+    <div className="w-10 h-10 rounded-full bg-[var(--colour-fsP1)] flex items-center justify-center text-white font-medium flex-shrink-0">
+      {item.user_name?.charAt(0).toUpperCase() || 'U'}
     </div>
-  );
-};
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 mb-0.5">
+        <p className="font-medium text-gray-900 truncate text-sm">{item.user_name || 'User'}</p>
+        <span className={cn(
+          "text-[10px] px-2 py-0.5 rounded-full font-medium",
+          item.decision?.toLowerCase() === 'eligible'
+            ? "bg-emerald-100 text-emerald-700"
+            : "bg-gray-100 text-gray-600"
+        )}>
+          {item.decision || 'Pending'}
+        </span>
+      </div>
+      <p className="text-xs text-gray-500 truncate">{item.detected_product || 'No product'}</p>
+    </div>
+    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[var(--colour-fsP2)] transition-colors flex-shrink-0" />
+  </div>
+);
 
 const HistorySkeleton = () => (
-  <div className="space-y-3">
+  <div className="space-y-2">
     {[1, 2, 3].map(i => (
-      <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 animate-pulse">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gray-100" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 bg-gray-100 rounded w-1/3" />
-            <div className="h-3 bg-gray-50 rounded w-1/2" />
-          </div>
+      <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 animate-pulse">
+        <div className="w-10 h-10 rounded-full bg-gray-100" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3.5 bg-gray-100 rounded w-24" />
+          <div className="h-3 bg-gray-50 rounded w-32" />
         </div>
       </div>
     ))}
   </div>
 );
 
-// --- Main Component ---
+// Bot Icon Component
+const BotIcon = () => (
+  <div className="w-10 h-10 rounded-full  flex items-center justify-center shadow-md shadow-blue-100">
+    <Image src={CompanyLogo} alt="Bot Icon" width={40} height={40} />
+  </div>
+);
 
 export default function ChatBot() {
   const [input, setInput] = useState('');
@@ -180,11 +262,13 @@ export default function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyData, setHistoryData] = useState<ApiResponse[]>([]);
+  const [sessionId, setSessionId] = useState(Math.floor(Math.random() * 1000000));
   const [messages, setMessages] = useState<Message[]>([
     {
       user: 'Bot',
-      message: "Hello! How can I help you today?",
-      timestamp: new Date()
+      message: "Hi, I'm Fatafat Bot!\nHow can I help you today? 😊",
+      timestamp: new Date(),
+      quickActions: ['Check my application', 'View products', 'Talk to an agent']
     }
   ]);
 
@@ -192,34 +276,78 @@ export default function ChatBot() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<'chat' | 'history'>('chat');
+  const [sessionValid, setSessionValid] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [showProducts, setShowProducts] = useState(false);
 
-  // Fetch history when tab changes
   useEffect(() => {
-    if (activeTab === 'history') {
+    if (activeTab === 'history' && sessionValid) {
       fetchHistory();
     }
-  }, [activeTab]);
+  }, [activeTab, sessionValid]);
 
-  const fetchHistory = () => {
+  const fetchHistory = async () => {
     setHistoryLoading(true);
-    // Mock History
-    setTimeout(() => {
-      setHistoryData([
-        {
-          id: 101,
-          user_name: 'Test History',
-          user_message: 'History check',
-          detected_product: 'iPhone 15',
-          credit_limit: 50000,
-          decision: 'Eligible',
-          created_at: new Date().toISOString()
-        }
-      ]);
+    setSessionError(null);
+
+    try {
+      if (!sessionId) {
+        setSessionError('Invalid session');
+        setSessionValid(false);
+        setHistoryLoading(false);
+        return;
+      }
+
+      const response = await RemoteServices.getChatbotHistory(sessionId);
+
+      if (response && Array.isArray(response)) {
+        setHistoryData(response);
+      } else if (response?.data && Array.isArray(response.data)) {
+        setHistoryData(response.data);
+      } else {
+        setHistoryData([]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching chat history:', error);
+
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        setSessionError('Session expired');
+        setSessionValid(false);
+      } else {
+        setSessionError('Failed to load history');
+      }
+
+      setHistoryData([]);
+    } finally {
       setHistoryLoading(false);
-    }, 1000);
+    }
   };
 
-  const sendMessage = (userMessage: string) => {
+  const handleQuickAction = (action: string) => {
+    if (action === 'View products') {
+      setShowProducts(true);
+      const userMsg: Message = {
+        user: 'User',
+        message: action,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMsg]);
+
+      setTimeout(() => {
+        const botMsg: Message = {
+          user: 'Bot',
+          message: "Here are some products I recommend for you:",
+          timestamp: new Date(),
+          quickActions: ['Apply now', 'Compare cards', 'More options']
+        };
+        setMessages(prev => [...prev, botMsg]);
+      }, 500);
+    } else {
+      sendMessage(action);
+    }
+  };
+
+  const sendMessage = async (userMessage: string) => {
     const userMsg: Message = {
       user: 'User',
       message: userMessage,
@@ -229,16 +357,64 @@ export default function ChatBot() {
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
-    // Mock Response
-    setTimeout(() => {
+    try {
+      const response = await RemoteServices.chatBotQuery({
+        message: userMessage,
+        sessionId: sessionId
+      });
+
+      let botText = "I've received your request. Let me help you with that.";
+      let botData: ApiResponse | ApiResponse[] | undefined = undefined;
+      let quickActions: string[] | undefined = undefined;
+
+      if (typeof response === 'string') {
+        botText = response;
+      } else if (response && typeof response === 'object') {
+        if (Array.isArray(response)) {
+          if (response[0]?.output) {
+            botText = response[0].output;
+          } else if (response.length > 0 && (response[0].id || response[0].decision)) {
+            botData = response as ApiResponse[];
+          }
+        } else {
+          botText = response.output || response.message || response.text || botText;
+
+          if (response.id && (response.decision || response.credit_limit)) {
+            botData = response as ApiResponse;
+          } else if (response.data) {
+            if (Array.isArray(response.data) || response.data.id) {
+              botData = response.data;
+            }
+          }
+        }
+      }
+
+      // Add contextual quick actions
+      if (userMessage.toLowerCase().includes('application') || userMessage.toLowerCase().includes('status')) {
+        quickActions = ['Check another', 'View details', 'Contact support'];
+      }
+
       const botMsg: Message = {
         user: 'Bot',
-        message: "This is a test response.",
-        timestamp: new Date()
+        message: botText,
+        timestamp: new Date(),
+        data: botData,
+        quickActions
       };
       setMessages(prev => [...prev, botMsg]);
+
+    } catch (error) {
+      console.error("Chatbot Error:", error);
+      const botMsg: Message = {
+        user: 'Bot',
+        message: "I'm sorry, something went wrong. Please try again.",
+        timestamp: new Date(),
+        quickActions: ['Try again', 'Contact support']
+      };
+      setMessages(prev => [...prev, botMsg]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   useEffect(() => {
@@ -248,7 +424,7 @@ export default function ChatBot() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 100) + 'px';
     }
   }, [input]);
 
@@ -256,6 +432,9 @@ export default function ChatBot() {
     if (!input.trim() || isLoading) return;
     sendMessage(input.trim());
     setInput('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -266,48 +445,50 @@ export default function ChatBot() {
   };
 
   const clearChat = () => {
+    setShowProducts(false);
     setMessages([{
       user: 'Bot',
-      message: "Chat cleared.",
-      timestamp: new Date()
+      message: "Chat cleared! How can I help you?",
+      timestamp: new Date(),
+      quickActions: ['Check my application', 'View products', 'Talk to an agent']
     }]);
+    setSessionId(Math.floor(Math.random() * 1000000));
   };
 
   return (
     <>
-      {/* Toggle Button */}
+      {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'fixed z-[9999] w-14 h-14 rounded-2xl transition-all duration-300 flex items-center justify-center',
-          'bottom-20 sm:bottom-6 right-4 sm:right-6 bg-gradient-to-br from-[#1967b3] to-blue-500 text-white',
-          'shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 hover:scale-110',
-          isOpen ? 'scale-0 opacity-0 rotate-90' : 'scale-100 opacity-100 rotate-0'
+          'fixed z-[9999] w-14 h-14 rounded-full transition-all duration-200 flex items-center justify-center',
+          'bottom-24 right-6 bg-[var(--colour-fsP2)] text-white',
+          'shadow-lg shadow-blue-200/50 hover:shadow-xl hover:shadow-blue-300/50 hover:bg-blue-700 hover:scale-105 active:scale-95',
+          isOpen && 'scale-0 opacity-0 pointer-events-none'
         )}
       >
-        <MessageSquare className="w-6 h-6" strokeWidth={2.5} />
+        <MessageSquare className="w-6 h-6" />
       </button>
 
       {/* Chat Window */}
       <div className={cn(
-        'fixed z-[9998] transition-all duration-300 ease-out',
-        'bottom-20 sm:bottom-6 right-4 sm:right-6 w-[400px] max-w-[calc(100vw-32px)] sm:max-w-[calc(100vw-48px)]',
-        isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 pointer-events-none translate-y-4'
+        'fixed z-[9998] transition-all duration-200',
+        'bottom-24 right-6 w-[380px] max-w-[calc(100vw-48px)]',
+        isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
       )}>
-        <div className="bg-white rounded-2xl overflow-hidden flex flex-col h-[600px] shadow-2xl border border-gray-200">
+        <div className="bg-white rounded-3xl overflow-hidden flex flex-col h-[600px] shadow-2xl shadow-gray-200/60 border border-gray-100">
 
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#1967b3] to-blue-600 px-5 py-4 text-white">
+          <div className="px-5 py-4 border-b border-gray-100 bg-white">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center relative backdrop-blur-sm">
-                  <Bot className="w-5 h-5" />
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-md shadow-blue-100">
+                  <Image src={CompanyLogo} alt="Bot Icon" width={40} height={40} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base tracking-tight">Fatafat Assistant</h3>
-                  <p className="text-[10px] text-white/90 flex items-center gap-1 font-medium">
-                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  <h3 className="font-bold text-gray-900">Fatafat Assistant</h3>
+                  <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                     Online
                   </p>
                 </div>
@@ -315,14 +496,14 @@ export default function ChatBot() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={clearChat}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                   title="Clear chat"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -331,101 +512,109 @@ export default function ChatBot() {
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-gray-50 border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={cn(
-                'flex-1 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 relative',
-                activeTab === 'chat'
-                  ? 'text-[#1967b3] bg-white'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-gray-100'
-              )}
-            >
-              <MessageSquare className="w-4 h-4" />
-              Chat
-              {activeTab === 'chat' && (
-                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#1967b3] rounded-full" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={cn(
-                'flex-1 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 relative',
-                activeTab === 'history'
-                  ? 'text-[#1967b3] bg-white'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-gray-100'
-              )}
-            >
-              <History className="w-4 h-4" />
-              History
-              {activeTab === 'history' && (
-                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#1967b3] rounded-full" />
-              )}
-            </button>
+          <div className="flex border-b border-gray-100 bg-gray-50/50">
+            {(['chat', 'history'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'flex-1 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-1.5 relative',
+                  activeTab === tab
+                    ? 'text-[var(--colour-fsP2)] bg-white'
+                    : 'text-gray-400 hover:text-gray-600'
+                )}
+              >
+                {tab === 'chat' ? <MessageSquare className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                <span className="capitalize">{tab}</span>
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--colour-fsP2)]" />
+                )}
+              </button>
+            ))}
           </div>
 
-          {/* Content Area */}
-          <div className="flex-1 overflow-y-auto bg-white scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto bg-gray-50/30">
 
             {/* Chat Tab */}
             {activeTab === 'chat' && (
               <div className="p-4 space-y-4">
                 {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      'flex gap-2.5',
-                      msg.user === 'Bot' ? 'justify-start' : 'justify-end'
-                    )}
-                  >
-                    {msg.user === 'Bot' && (
-                      <div className="w-8 h-8 rounded-lg bg-[#1967b3] flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-                        <Bot className="w-4 h-4 text-white" />
+                  <div key={i}>
+                    <div
+                      className={cn(
+                        'flex gap-2.5',
+                        msg.user === 'Bot' ? 'justify-start' : 'justify-end'
+                      )}
+                    >
+                      {msg.user === 'Bot' && <BotIcon />}
+
+                      <div className={cn('flex flex-col gap-1', msg.user === 'Bot' ? 'max-w-[85%]' : 'max-w-[75%]')}>
+                        <div
+                          className={cn(
+                            'px-4 py-2.5 text-[14px] leading-relaxed whitespace-pre-wrap',
+                            msg.user === 'Bot'
+                              ? 'bg-white text-gray-700 rounded-2xl rounded-tl-md shadow-sm border border-gray-100'
+                              : 'bg-[var(--colour-fsP2)] text-white rounded-2xl rounded-tr-md shadow-md shadow-blue-100'
+                          )}
+                        >
+                          {msg.user === 'Bot' ? (
+                            <MarkdownMessage content={msg.message} />
+                          ) : (
+                            msg.message
+                          )}
+                        </div>
+
+                        <span
+                          suppressHydrationWarning
+                          className={cn(
+                            'text-[10px] text-gray-400 px-1',
+                            msg.user === 'User' && 'text-right'
+                          )}>
+                          {formatTime(msg.timestamp)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Product Carousel after View products */}
+                    {msg.user === 'Bot' && showProducts && msg.message.includes('recommend') && (
+                      <div className="ml-10">
+                        <ProductCarousel />
                       </div>
                     )}
 
-                    <div className={cn('flex flex-col gap-1', msg.user === 'Bot' ? 'max-w-[85%]' : 'max-w-[85%]')}>
-                      <div
-                        className={cn(
-                          'px-4 py-3 text-sm leading-relaxed',
-                          msg.user === 'Bot'
-                            ? 'bg-gray-50 border border-gray-200 text-slate-700 rounded-xl rounded-tl-sm'
-                            : 'bg-[#1967b3] text-white rounded-xl rounded-tr-sm shadow-sm'
-                        )}
-                      >
-                        {msg.message}
-                      </div>
-
-                      {/* Render Response Cards */}
-                      {msg.data && (
-                        Array.isArray(msg.data)
+                    {/* Response Cards */}
+                    {msg.data && (
+                      <div className="ml-10">
+                        {Array.isArray(msg.data)
                           ? <ResponseList items={msg.data} />
                           : <ResponseCard item={msg.data} />
-                      )}
+                        }
+                      </div>
+                    )}
 
-                      <span
-                        suppressHydrationWarning
-                        className={cn(
-                          'text-[10px] text-gray-400 px-1',
-                          msg.user === 'User' && 'text-right'
-                        )}>
-                        {formatTime(msg.timestamp)}
-                      </span>
-                    </div>
+                    {/* Quick Actions */}
+                    {msg.user === 'Bot' && msg.quickActions && (
+                      <div className="ml-10">
+                        <QuickActions actions={msg.quickActions} onSelect={handleQuickAction} />
+                      </div>
+                    )}
                   </div>
                 ))}
 
                 {/* Typing Indicator */}
                 {isLoading && (
                   <div className="flex gap-2.5 justify-start">
-                    <div className="w-8 h-8 rounded-lg bg-[#1967b3] flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <Bot className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl rounded-tl-sm">
-                      <div className="flex gap-1.5">
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <BotIcon />
+                    <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-md shadow-sm border border-gray-100">
+                      <div className="flex gap-1">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className="w-2 h-2 bg-[var(--colour-fsP2)] rounded-full animate-bounce"
+                            style={{ animationDelay: `${i * 150}ms` }}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -438,36 +627,47 @@ export default function ChatBot() {
             {/* History Tab */}
             {activeTab === 'history' && (
               <div className="p-4">
-                {/* Refresh Button */}
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-sm font-bold text-gray-800">
-                    Recent
-                  </h4>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent Conversations</h4>
                   <button
                     onClick={fetchHistory}
-                    disabled={historyLoading}
-                    className="flex items-center gap-1.5 text-xs font-medium text-[#1967b3] hover:underline transition-all disabled:opacity-50"
+                    disabled={historyLoading || !sessionValid}
+                    className="flex items-center gap-1 text-xs text-[var(--colour-fsP2)] hover:text-blue-700 font-medium disabled:opacity-50 transition-colors"
                   >
                     <RefreshCw className={cn("w-3 h-3", historyLoading && "animate-spin")} />
                     Refresh
                   </button>
                 </div>
 
+                {sessionError && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-100 rounded-xl">
+                    <p className="text-xs text-red-600 font-medium">{sessionError}</p>
+                  </div>
+                )}
+
                 {historyLoading ? (
                   <HistorySkeleton />
+                ) : !sessionValid ? (
+                  <div className="text-center py-10">
+                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                      <Clock className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-700">Session Invalid</p>
+                    <p className="text-xs text-gray-500 mt-1">Start a new conversation</p>
+                  </div>
                 ) : historyData.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {historyData.map((item, index) => (
                       <HistoryItem key={item.id || index} item={item} />
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4 text-[#1967b3]">
-                      <History className="w-8 h-8" />
+                  <div className="text-center py-10">
+                    <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
+                      <Clock className="w-6 h-6 text-[var(--colour-fsP2)]" />
                     </div>
-                    <p className="text-gray-900 font-semibold">No history</p>
-                    <p className="text-gray-500 text-xs mt-1">Start a conversation</p>
+                    <p className="text-sm font-medium text-gray-700">No history yet</p>
+                    <p className="text-xs text-gray-500 mt-1">Start chatting to see history</p>
                   </div>
                 )}
               </div>
@@ -475,10 +675,10 @@ export default function ChatBot() {
           </div>
 
           {/* Input Area */}
-          <div className="p-3 border-t border-gray-100 bg-white">
-            <div className="flex items-end gap-2 bg-gray-50 rounded-xl p-2 border border-transparent focus-within:border-blue-100 focus-within:ring-2 focus-within:ring-blue-50 transition-all">
+          <div className="p-4 border-t border-gray-100 bg-white">
+            <div className="flex items-end gap-2">
               <DropdownMenu>
-                <DropdownMenuTrigger className="p-2 text-gray-400 hover:text-[#1967b3] transition-colors rounded-lg hover:bg-gray-100">
+                <DropdownMenuTrigger className="p-2.5 text-gray-400 hover:text-[var(--colour-fsP2)] hover:bg-blue-50 transition-colors rounded-full flex-shrink-0">
                   <Paperclip className="w-5 h-5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="rounded-xl">
@@ -493,46 +693,35 @@ export default function ChatBot() {
 
               <input type="file" ref={fileInputRef} className="hidden" />
 
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Ask something..."
-                className="flex-1 bg-transparent py-2 px-1 text-sm outline-none resize-none max-h-24 placeholder:text-gray-400 text-gray-700"
-                rows={1}
-                disabled={isLoading}
-              />
+              <div className="flex-1 bg-gray-100 rounded-full border border-transparent focus-within:border-blue-200 focus-within:bg-white transition-all">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Type a message..."
+                  className="w-full bg-transparent py-2.5 px-4 text-sm outline-none resize-none max-h-24 placeholder:text-gray-400 text-gray-700"
+                  rows={1}
+                  disabled={isLoading}
+                />
+              </div>
 
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
                 className={cn(
-                  "p-2.5 rounded-lg transition-all duration-200 flex items-center justify-center",
+                  "p-2.5 rounded-full transition-all flex items-center justify-center flex-shrink-0",
                   input.trim() && !isLoading
-                    ? "bg-[#1967b3] text-white shadow-md hover:shadow-lg hover:bg-blue-600"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "bg-[var(--colour-fsP2)] text-white hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-200"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 )}
               >
                 {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <Send className="w-5 h-5" />
                 )}
               </button>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex gap-2 mt-2 overflow-x-auto pb-1 no-scrollbar">
-              {['Test Chat', 'Check status', 'Help'].map((action) => (
-                <button
-                  key={action}
-                  onClick={() => setInput(action)}
-                  className="flex-shrink-0 px-3 py-1.5 text-[10px] font-medium text-gray-600 bg-gray-50 hover:bg-blue-50 hover:text-[#1967b3] rounded-full transition-colors border border-gray-100"
-                >
-                  {action}
-                </button>
-              ))}
             </div>
           </div>
         </div>

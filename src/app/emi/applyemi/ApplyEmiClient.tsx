@@ -450,7 +450,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct }) => {
                 if (files.userSignature) formData.append('user_signature', files.userSignature);
             }
 
-            const response = await RemoteServices.ApplyEmi(formData);
+            const response = await RemoteServices.applyEmi(formData);
 
             if (response) {
                 toast.success('Application Submitted Successfully!');

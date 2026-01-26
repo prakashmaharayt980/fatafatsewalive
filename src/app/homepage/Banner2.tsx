@@ -35,36 +35,40 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
   }, [data]);
 
   return (
-    <div className={cn(
-      'w-full flex flex-col sm:flex-row gap-4 sm:gap-2 px-4 sm:px-6 py-4'
-    )}>
-      {images.map((img, idx) => (
-        <Link
-          key={img.id}
-          href={img.link}
-          className={cn(
-            'w-full sm:w-1/2 relative overflow-hidden h-52 rounded-lg group cursor-pointer',
-            'transition-all duration-300 hover:shadow-lg'
-          )}
-        >
-          <Image
-            src={img.src}
-            alt={img.name}
-            width={500}
-            height={200}
-            className="w-full  object-cover group-hover:scale-105 transition-transform duration-300"
-            priority={idx === 0}
-          />
-        </Link>
-      ))}
+    <div className="w-full px-4 sm:px-6 py-4">
+      <div className={cn(
+        'flex flex-row overflow-x-auto sm:grid sm:grid-cols-2 gap-4 pb-4 sm:pb-0 snap-x snap-mandatory scrollbar-hide'
+      )}>
+        {images.map((img, idx) => (
+          <Link
+            key={img.id}
+            href={img.link}
+            className={cn(
+              'min-w-[90%] sm:min-w-0 flex-shrink-0 snap-center',
+              'relative overflow-hidden rounded-xl sm:rounded-2xl group cursor-pointer border-none', // Removed border
+              'aspect-[16/9] sm:aspect-[18/6]', // Standard Aspect Ratio
+              'transition-all duration-300 hover:-translate-y-1', // Attractive lift effect
+              'shadow-sm hover:shadow-xl' // Stronger shadow on hover
+            )}
+          >
+            <Image
+              src={img.src}
+              alt={img.name}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105" // Ensure object-cover for better fit
+              priority={idx === 0}
+              sizes="(max-width: 640px) 85vw, 50vw"
+            />
 
-      <style jsx>{`
-        .group:hover .image {
-          transform: scale(1.05);
-        }
-      `}</style>
+            {/* Premium Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };
+
+
 
 export default TwoImageBanner;

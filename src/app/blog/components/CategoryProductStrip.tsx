@@ -18,7 +18,7 @@ const CategoryProductStrip = ({ categorySlug, categoryTitle }: CategoryProductSt
     // Fetch products by category (using search as proxy or specific endpoint if available)
     const { data: products, isLoading } = useSWR<ProductDetails[]>(
         ['category-strip', categorySlug],
-        () => RemoteServices.SerachProducts(categoryTitle).then(res => res.data || []),
+        () => RemoteServices.searchProducts({ search: categoryTitle }).then(res => res.data || []),
         { dedupingInterval: 600000 } // Cache for 10 mins
     );
 

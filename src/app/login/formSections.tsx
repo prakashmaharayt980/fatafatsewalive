@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle, Eye, EyeOff, Facebook, IdCardLanyard, Loader } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, EyeOff, Facebook, IdCardLanyard, Loader, KeyRound } from 'lucide-react';
 import { sectionFields } from './formConfig';
 import { GoogleLogin } from "@react-oauth/google";
 import FacebookLogin from '@greatsumini/react-facebook-login';
@@ -12,12 +12,14 @@ interface FormSectionsProps {
   errors: any;
   loading: boolean;
   showPassword: any;
+  otpVerified: boolean; // NEW
   handleInputChange: (section: string, field: string, value: string) => void;
   toggleShowPassword: (field: string) => void;
   handleLogin: (e: React.FormEvent) => void;
   handleRegister: (e: React.FormEvent) => void;
   handleForgotPassword: (e: React.FormEvent) => void;
-  handleVerifyOTP: (e: React.FormEvent) => void;
+  handleVerifyCode: (e: React.FormEvent) => void; // NEW
+  handleResetPassword: (e: React.FormEvent) => void; // NEW
   setActiveSection: (section: string) => void;
   setFormData: (data: any) => void;
   handleGoogleSuccess: (credentialResponse: any) => void;
@@ -272,6 +274,7 @@ export const formSections = {
       );
     },
   },
+
   forgot: {
     render: (props: FormSectionsProps) => (
       <div className="space-y-6">
@@ -352,91 +355,109 @@ export const formSections = {
   },
 
   verify: {
-    render: (props: FormSectionsProps) => (
-      <div className="space-y-6">
-        <div className="text-center mb-6">
-          <div className="mx-auto w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-3">
-            <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900">Verify & Reset</h3>
-          <p className="text-sm text-gray-500 mt-1">Enter the code sent to your email</p>
-        </div>
+    render: (props: FormSectionsProps) => {
+      // Split fields: Step 1 = otpCode, Step 2 = newPassword, confirmNewPassword
+      const step1Field = sectionFields.verify.find(f => f.id === 'otpCode');
+      const step2Fields = sectionFields.verify.filter(f => f.id !== 'otpCode');
 
-        <form className="space-y-4" onSubmit={props.handleVerifyOTP}>
-          {sectionFields.verify.map((field) => (
-            <div key={field.id} className="group">
-              <Label
-                htmlFor={field.id}
-                className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1"
-              >
-                {field.label}
-              </Label>
-              <div className="relative">
-                <Input
-                  id={field.id}
-                  type={field.showPasswordToggle && props.showPassword[field.passwordField!] ? 'text' : field.type}
-                  placeholder={field.placeholder}
-                  value={props.formData.verify[field.id]}
-                  onChange={(e) => props.handleInputChange('verify', field.id, e.target.value)}
-                  required={field.required}
-                  disabled={props.loading}
-                  className={inputClassName(!!props.errors.verify[field.id])}
-                />
-                {field.icon && (
-                  <field.icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[var(--colour-fsP1)] transition-colors" />
-                )}
-                {field.showPasswordToggle && (
-                  <button
-                    type="button"
-                    onClick={() => props.toggleShowPassword(field.passwordField!)}
-                    disabled={props.loading}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-[var(--colour-fsP1)] transition-colors duration-200"
-                  >
-                    {props.showPassword[field.passwordField!] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                )}
-              </div>
-              {props.errors.verify[field.id] && (
-                <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1.5 animate-in slide-in-from-left-1">
-                  <AlertCircle className="w-3.5 h-3.5" /> {props.errors.verify[field.id]}
-                </p>
-              )}
-              {field.helperText && (
-                <p className="mt-2 text-xs text-gray-500">{field.helperText}</p>
-              )}
+      return (
+        <div className="space-y-6">
+          <div className="text-center mb-6">
+            <div className="mx-auto w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-3">
+              <KeyRound className="w-6 h-6 text-green-500" />
             </div>
-          ))}
-          <Button
-            type="submit"
-            disabled={props.loading}
-            className={primaryButtonClassName}
-          >
-            {props.loading ? <Loader className="w-5 h-5 animate-spin" /> : null}
-            {props.loading ? 'Resetting...' : 'Reset Password'}
-          </Button>
-        </form>
+            <h3 className="text-xl font-bold text-gray-900">
+              {props.otpVerified ? "Set New Password" : "Enter Verification Code"}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {props.otpVerified ? "Secure your account with a new password" : "Enter the code sent to your email"}
+            </p>
+          </div>
 
-        <div className="flex justify-between text-sm pt-2 px-1">
-          <button
-            type="button"
-            onClick={() => props.setActiveSection('forgot')}
-            disabled={props.loading}
-            className="text-gray-500 hover:text-gray-700 font-medium transition-colors duration-200"
-          >
-            ← Try another email
-          </button>
-          <button
-            type="button"
-            disabled={props.loading}
-            className="text-[var(--colour-fsP1)] hover:text-[var(--colour-fsP2)] font-semibold hover:underline transition-colors duration-200"
-          >
-            Resend code
-          </button>
+          {!props.otpVerified ? (
+            // STEP 1: OTP Input
+            <form className="space-y-4" onSubmit={props.handleVerifyCode}>
+              {step1Field && (
+                <div className="group">
+                  <Label htmlFor={step1Field.id} className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1">{step1Field.label}</Label>
+                  <div className="relative">
+                    <Input
+                      id={step1Field.id}
+                      type="text"
+                      placeholder={step1Field.placeholder}
+                      value={props.formData.verify[step1Field.id]}
+                      onChange={(e) => props.handleInputChange('verify', step1Field.id, e.target.value)}
+                      required={step1Field.required}
+                      className={inputClassName(!!props.errors.verify[step1Field.id])}
+                      autoFocus
+                    />
+                    <step1Field.icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
+                  {props.errors.verify[step1Field.id] && (
+                    <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" /> {props.errors.verify[step1Field.id]}</p>
+                  )}
+                  <p className="mt-2 text-xs text-gray-500">{step1Field.helperText}</p>
+                </div>
+              )}
+              <Button type="submit" className={primaryButtonClassName}>
+                Verify Code
+              </Button>
+            </form>
+          ) : (
+            // STEP 2: Password Reset
+            <form className="space-y-4" onSubmit={props.handleResetPassword}>
+              {/* Show OTP as readonly context */}
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-100 rounded-xl mb-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-medium text-gray-700">Code Verified</span>
+                </div>
+                <span className="text-sm font-bold text-gray-900 tracking-widest">{props.formData.verify.otpCode}</span>
+              </div>
+
+              {step2Fields.map((field) => (
+                <div key={field.id} className="group">
+                  <Label htmlFor={field.id} className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1">{field.label}</Label>
+                  <div className="relative">
+                    <Input
+                      id={field.id}
+                      type={props.showPassword[field.passwordField!] ? 'text' : field.type}
+                      placeholder={field.placeholder}
+                      value={props.formData.verify[field.id]}
+                      onChange={(e) => props.handleInputChange('verify', field.id, e.target.value)}
+                      required={field.required}
+                      className={inputClassName(!!props.errors.verify[field.id])}
+                    />
+                    <field.icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[var(--colour-fsP1)] transition-colors" />
+                    {field.showPasswordToggle && (
+                      <button type="button" onClick={() => props.toggleShowPassword(field.passwordField!)} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[var(--colour-fsP1)]">
+                        {props.showPassword[field.passwordField!] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    )}
+                  </div>
+                  {props.errors.verify[field.id] && (
+                    <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" /> {props.errors.verify[field.id]}</p>
+                  )}
+                </div>
+              ))}
+              <div className="pt-2">
+                <Button type="submit" disabled={props.loading} className={primaryButtonClassName}>
+                  {props.loading ? <Loader className="w-5 h-5 animate-spin" /> : null}
+                  {props.loading ? 'Resetting...' : 'Reset Password'}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          <div className="flex justify-between text-sm pt-2 px-1">
+            <button type="button" onClick={() => props.setActiveSection('forgot')} className="text-gray-500 hover:text-gray-700 font-medium">← Try another email</button>
+            {!props.otpVerified && (
+              <button type="button" className="text-[var(--colour-fsP1)] font-semibold hover:underline">Resend code</button>
+            )}
+          </div>
         </div>
-      </div>
-    ),
+      );
+    },
   },
 
   emailSent: {

@@ -19,10 +19,10 @@ const parseSlugAndId = (rawSlug: string, searchParamId?: string | null) => {
 };
 
 // Fetch product data on server
-async function getProduct(id: string): Promise<ProductDetails | null> {
-  if (!id) return null;
+async function getProduct(slug: string): Promise<ProductDetails | null> {
+  if (!slug) return null;
   try {
-    const data = await RemoteServices.ProductDetails_ID(id);
+    const data = await RemoteServices.getProductBySlug(slug);
     return data;
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -34,9 +34,9 @@ export async function generateMetadata({ params, searchParams }: SlugProps): Pro
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams; // searchParams is a promise in Next.js 15, assume awaitable if older or standard
 
-  const { id } = parseSlugAndId(resolvedParams.slug, typeof resolvedSearchParams === 'object' ? (resolvedSearchParams as any).id : undefined);
+  const { slug } = parseSlugAndId(resolvedParams.slug, typeof resolvedSearchParams === 'object' ? (resolvedSearchParams as any).id : undefined);
 
-  const product = await getProduct(id);
+  const product = await getProduct(slug);
 
   if (!product) {
     return {

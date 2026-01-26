@@ -21,7 +21,7 @@ const FooterBody = () => {
     { title: "Terms & Conditions", url: "#" },
     { title: "Privacy Policy", url: "#" },
     { title: "Return Policy", url: "#" },
-    
+
   ];
 
   const Categories = [
@@ -30,7 +30,7 @@ const FooterBody = () => {
     { title: "Accessories", url: "#" },
     { title: "Office Parts", url: "#" },
     { title: "Emi Payment ", url: "#" },
- 
+
   ];
 
   const ContactInfo = [
@@ -68,6 +68,7 @@ const FooterBody = () => {
       {/* Main Footer Content */}
       <div className="py-8 lg:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+
           {/* Logo and Company Info */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="mb-4 flex justify-center lg:justify-start">
@@ -143,12 +144,12 @@ const FooterBody = () => {
             </ul>
           </div>
 
-          {/* Contact Information */}
+          {/* Contact Information & Payment Methods */}
           <div className="sm:col-span-2 lg:col-span-1">
             <h3 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center lg:text-left">
               Contact Info
             </h3>
-            <ul className="space-y-3 flex flex-col justify-center lg:justify-start  sm:items-start">
+            <ul className="space-y-3 flex flex-col justify-center lg:justify-start sm:items-start mb-6">
               {ContactInfo.map((info, index) => (
                 <li key={index} className="flex items-start gap-3 text-center lg:text-left">
                   <div className="flex-shrink-0 w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center mx-0">
@@ -158,76 +159,45 @@ const FooterBody = () => {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-      </div>
 
-      {/* Bottom Section */}
-      <div className="bg-white border-t border-gray-200 py-8 lg:py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             {/* Payment Methods */}
-            <div className="lg:col-span-1">
+            <div className="mt-6">
               <h4 className="font-semibold text-[var(--colour-fsP2)] text-lg mb-4 text-center lg:text-left">Payment Methods</h4>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 justify-center lg:justify-start">
-                {paymentMethods.map((method, index) => (
+              <div className="grid grid-cols-4 gap-3 justify-center lg:justify-start">
+                {[
+                  "/imgfile/esewa.png",
+                  "/imgfile/khalti.webp",
+                  "/imgfile/paymentMethod1.png",
+                  "/imgfile/paymentMethod2.png",
+                  "/imgfile/paymentMethod3.png",
+                  "/imgfile/paymentMethod4.png",
+                  "/imgfile/bankingPartners1.png",
+                  "/imgfile/bankingPartners2.png",
+                  "/imgfile/bankingPartners3.png",
+                  "/imgfile/bankingPartners4.png",
+                  "/imgfile/bankingPartners5.png",
+                  "/imgfile/bankingPartners6.png",
+                  "/imgfile/bankingPartners7.png",
+                  "/imgfile/bankingPartners8.png"
+                ].map((src, index) => (
                   <div
                     key={index}
-                    className="bg-white rounded-lg shadow-md p-3 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+                    className="bg-white rounded-md p-1 border border-gray-100 shadow-sm hover:shadow-md transition-all flex items-center justify-center h-10 w-full"
                   >
                     <Image
-                      src={method.src}
-                      alt={method.alt}
-                      width={55}
-                      height={35}
-                      className="object-contain"
+                      src={src}
+                      alt={`Payment Method ${index + 1}`}
+                      width={40}
+                      height={24}
+                      className="object-contain h-6 w-auto"
                       quality={100}
                     />
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Newsletter Subscription */}
-            <div className="lg:col-span-1">
-              <div className="text-center lg:text-left">
-                <p className="text-gray-600 text-sm lg:text-base mb-4 font-medium">Subscribe to get special offers and updates</p>
-                <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--colour-fsP1)] focus:border-transparent transition-all duration-200"
-                  />
-                  <button className="bg-[var(--colour-fsP1)] text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-opacity-90 hover:shadow-lg text-sm whitespace-nowrap">
-                    Subscribe
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* App Store Links */}
-            <div className="lg:col-span-1">
-              <h4 className="font-semibold text-[var(--colour-fsP2)] text-lg mb-4 text-center lg:text-left">Download Our App</h4>
-              <div className="flex gap-3 justify-center lg:justify-start">
-                {playStoreImages.map((image, index) => (
-                  <a
-                    key={index}
-                    href={image.url}
-                    className="block bg-black rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105"
-                  >
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      width={130}
-                      height={45}
-                      className="object-contain"
-                      quality={100}
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
           </div>
+
         </div>
       </div>
 

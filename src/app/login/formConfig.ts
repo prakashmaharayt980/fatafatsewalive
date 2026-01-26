@@ -227,7 +227,7 @@ export const sectionFields = {
       passwordField: 'newPassword',
     },
     {
-      id: 'password_confirmation',
+      id: 'confirmNewPassword',
       label: 'Confirm New Password',
       type: 'password',
       placeholder: 'Confirm new password',

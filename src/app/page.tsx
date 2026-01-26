@@ -60,7 +60,7 @@ async function fetchWithRetry<T>(
 async function page() {
   // Server-side data fetching with retry logic
   const bannerData = await fetchWithRetry(async () => {
-    const res = await RemoteServices.BannerDetails();
+    const res = await RemoteServices.getAllBanners();
     return {
       data: res.data,
       meta: res.meta,

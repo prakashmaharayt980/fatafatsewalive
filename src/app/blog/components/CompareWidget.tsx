@@ -15,7 +15,7 @@ const CompareWidget = () => {
 
     // Fetch fallback only if list is empty (mock suggestion)
     const { data: fallbackProducts } = useSWR<ProductDetails[]>('compare-products-pro',
-        () => RemoteServices.SerachProducts('Pro').then(res => res.data || []),
+        () => RemoteServices.searchProducts({ search: 'Pro' }).then(res => res.data || []),
         { dedupingInterval: 600000, keepPreviousData: true }
     );
 

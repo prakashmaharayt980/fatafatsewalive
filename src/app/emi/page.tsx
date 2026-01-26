@@ -10,7 +10,8 @@ interface PageProps {
 
 const getProduct = async (id: string) => {
     try {
-        return await RemoteServices.ProductDetails_ID(id);
+        const response = await RemoteServices.searchProducts({ search: id });
+        return response.data?.[0] || null;
     } catch (error) {
         console.error("Failed to fetch product for EMI Metadata:", error);
         return null;

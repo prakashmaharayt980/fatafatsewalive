@@ -166,10 +166,14 @@ export const useProducts = ({
     // Fetcher function
     const fetcher = useCallback(
         async ([, queryString]: [string, string, string]) => {
-            return await RemoteServices.CategoryProduct_ID(
-                categoryId,
-                queryString
-            );
+            // Parse query string to object
+            const queryParams = Object.fromEntries(new URLSearchParams(queryString));
+            // Ensure category filtering is applied (categoryId is likely ID, need to check if searchProducts supports ID or Slug)
+            // Assuming searchProducts can handle 'categories' param filter
+            return await RemoteServices.searchProducts({
+                ...queryParams as any,
+                categories: categoryId // Passing ID/Slug to categories filter
+            });
         },
         [categoryId]
     );
@@ -269,7 +273,7 @@ export const useFilterData = (
         isLoading: categoriesLoading,
     } = useSWR(
         'categories',
-        () => RemoteServices.getCategoriesAll(),
+        () => RemoteServices.getAllCategories(),
         {
             fallbackData: initialCategories ? { data: initialCategories } : undefined,
             revalidateOnFocus: false,
@@ -285,7 +289,7 @@ export const useFilterData = (
         isLoading: brandsLoading,
     } = useSWR(
         'brands',
-        () => RemoteServices.getBrandsAll(),
+        () => RemoteServices.getAllBrands(),
         {
             fallbackData: initialBrands ? { data: initialBrands } : undefined,
             revalidateOnFocus: false,
