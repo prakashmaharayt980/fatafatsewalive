@@ -5,19 +5,6 @@ import { ProductDetails } from "@/app/types/ProductDetailsTypes";
 import ProductPageClient from "./ProductPageClient";
 import { Metadata } from "next";
 
-// Helper to parse slug and ID
-const parseSlugAndId = (rawSlug: string, searchParamId?: string | null) => {
-  if (rawSlug.includes('id=')) {
-    // Handle cases like "some-slug&id=123" or "some-slug?id=123" if encoded
-    // Simple split by pattern if known format is slug&id=...
-    const parts = rawSlug.split(/&id=|%26id%3D/);
-    if (parts.length > 1) {
-      return { slug: decodeURIComponent(parts[0]), id: decodeURIComponent(parts[1]) };
-    }
-  }
-  return { slug: decodeURIComponent(rawSlug), id: searchParamId || '' };
-};
-
 // Fetch product data on server
 async function getProduct(slug: string): Promise<ProductDetails | null> {
   if (!slug) return null;
@@ -30,11 +17,9 @@ async function getProduct(slug: string): Promise<ProductDetails | null> {
   }
 }
 
-export async function generateMetadata({ params, searchParams }: SlugProps): Promise<Metadata> {
+export async function generateMetadata({ params }: SlugProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams; // searchParams is a promise in Next.js 15, assume awaitable if older or standard
-
-  const { slug } = parseSlugAndId(resolvedParams.slug, typeof resolvedSearchParams === 'object' ? (resolvedSearchParams as any).id : undefined);
+  const slug = resolvedParams.slug;
 
   const product = await getProduct(slug);
 
@@ -44,34 +29,35 @@ export async function generateMetadata({ params, searchParams }: SlugProps): Pro
     };
   }
 
-  const cleanCanonicalUrl = `https://fatafatsewa.com/product/${product.slug}?id=${product.id}`;
+  const cleanCanonicalUrl = `https://fatafatsewa.com/products/${product.slug}`;
+
+  const description = product.short_description || product.description?.replace(/<[^>]*>/g, '').substring(0, 160) || `Buy ${product.name} at the best price in Nepal from Fatafat Sewa.`;
 
   return {
     title: `${product.name} | Buy Online at Best Price in Nepal | Fatafat Sewa`,
-    description: product.short_description || product.description?.substring(0, 160) || `Buy ${product.name} at Fatafat Sewa.`,
+    description,
+    keywords: [product.name, product.brand?.name, product.categories?.[0]?.title, 'buy online Nepal', 'Fatafat Sewa'].filter(Boolean),
     alternates: {
       canonical: cleanCanonicalUrl,
     },
     openGraph: {
       images: [product.image?.full || ""],
       title: product.name,
-      description: product.short_description || "",
+      description,
       url: cleanCanonicalUrl,
+      type: 'website',
     },
   };
 }
 
-export default async function ProductDetailsPage({ params, searchParams }: SlugProps) {
+export default async function ProductDetailsPage({ params }: SlugProps) {
   const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams; // Await searchParams if it's a promise (standard in newer Next.js)
-
-  const { id } = parseSlugAndId(resolvedParams.slug, typeof resolvedSearchParams === 'object' ? (resolvedSearchParams as any).id : undefined);
-
-  const productDetails = await getProduct(id);
+  const slug = resolvedParams.slug;
+  const productDetails = await getProduct(slug);
 
   if (!productDetails) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen h-full flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Product Not Found</h1>
           <p className="text-gray-600">The product you are looking for does not exist or has been removed.</p>
@@ -94,7 +80,7 @@ export default async function ProductDetailsPage({ params, searchParams }: SlugP
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://fatafatsewa.com/product/${productDetails.slug}?id=${productDetails.id}`,
+      "url": `https://fatafatsewa.com/products/${productDetails.slug}`,
       "priceCurrency": "NPR",
       "price": productDetails.discounted_price || productDetails.price,
       "priceValidUntil": "2026-12-31", // Example validity

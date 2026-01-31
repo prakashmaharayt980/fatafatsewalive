@@ -3,7 +3,11 @@ import React from 'react'
 import HomePage from './homepage'
 import RemoteServices from './api/remoteservice'
 import { Metadata } from 'next'
-
+import { Suspense } from 'react'
+import BannerFetcher from './components/BannerFetcher'
+import OneImageBanner from './homepage/Bannertop'
+import TwoImageBanner from './homepage/Banner2'
+import OfferBanner from './homepage/OfferBanner'
 // Generate Metadata for SEO
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -58,14 +62,71 @@ async function fetchWithRetry<T>(
 
 // Server Component
 async function page() {
-  // Server-side data fetching with retry logic
-  const bannerData = await fetchWithRetry(async () => {
-    const res = await RemoteServices.getAllBanners();
-    return {
-      data: res.data,
-      meta: res.meta,
-    };
+  // 1. Fetch Critical Data in Parallel
+  const criticalSlugs = {
+    main: 'main-banner',
+    side: 'home-banner-3-images', // Corrected slug for side
+    category: 'right-slider-thumbnail',
+    // Side banner is also used in section three, so we fetch it once here
+  };
+
+  const promises = Object.entries(criticalSlugs).map(async ([key, slug]) => {
+    try {
+      const res = await RemoteServices.getBannerSlug(slug);
+      return { key, data: res.data?.[0] || null };
+    } catch (e) {
+      console.error(`Failed to fetch critical banner: ${slug}`, e);
+      return { key, data: null };
+    }
   });
+
+  const results = await Promise.all(promises);
+  const criticalData = results.reduce((acc, { key, data }) => {
+    acc[key] = data;
+    return acc;
+  }, {} as Record<string, any>);
+
+  // 2. Define Suspense/Streaming slots
+  const SectionOne = (
+    <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-xl" />}>
+      <BannerFetcher
+        slug="home-banner-secound"
+        Component={OneImageBanner}
+      />
+    </Suspense>
+  );
+
+  const OfferSection = (
+    <Suspense fallback={<div className="h-60 bg-gray-100 animate-pulse" />}>
+      <BannerFetcher
+        slug="offer-banner"
+        Component={OfferBanner}
+      />
+    </Suspense>
+  );
+
+  const SectionTwo = (
+    <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-xl" />}>
+      <BannerFetcher
+        slug="home-banner-secound"
+        Component={OneImageBanner}
+      />
+    </Suspense>
+  );
+
+  // Section Three uses the already fetched side banner data
+  const SectionThree = (
+    <TwoImageBanner data={criticalData.side} />
+  );
+
+  const SectionFour = (
+    <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-xl" />}>
+      <BannerFetcher
+        slug="home-banner-fourth"
+        Component={OneImageBanner}
+      />
+    </Suspense>
+  );
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -100,7 +161,16 @@ async function page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomePage initialBannerData={bannerData} />
+      <HomePage
+        mainBannerData={criticalData.main}
+        sideBannerData={criticalData.side}
+        categorySectionImage={criticalData.category?.images?.[0]?.image?.full}
+        sectionOne={SectionOne}
+        offerSection={OfferSection}
+        sectionTwo={SectionTwo}
+        sectionThree={SectionThree}
+        sectionFour={SectionFour}
+      />
     </>
   )
 }

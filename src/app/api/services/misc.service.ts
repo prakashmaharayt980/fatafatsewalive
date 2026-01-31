@@ -16,6 +16,8 @@ export const MiscService = {
     // Get all active banners
     getAllBanners: () =>
         apiPublic.get(`/v1/banners`).then(res => res.data),
+    getBannerSlug: (slug: string) =>
+        apiPublic.get(`/v1/banners?slug=${slug}`).then(res => res.data),
 
     // AI Chatbot query
     chatBotQuery: (data: { message: string; sessionId?: string | number }) =>

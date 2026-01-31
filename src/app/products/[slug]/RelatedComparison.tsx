@@ -52,18 +52,19 @@ const RelatedComparison: React.FC<RelatedComparisonProps> = ({
                     >
                         {/* Current Product */}
                         <div className="flex flex-col items-center flex-1 min-w-0">
-                            <div className="relative w-12 h-12 mb-1.5">
+                            <div className="relative w-14 h-14 mb-1.5">
                                 <Image
                                     src={currentProduct.image?.thumb || currentProduct.image?.full || "/placeholder.png"}
                                     alt={currentProduct.name}
                                     fill
                                     className="object-contain"
+                                    sizes="56px"
                                 />
                             </div>
-                            <p className="text-[10px] font-semibold text-slate-700 text-center line-clamp-1 w-full">
+                            <p className="text-[11px] font-medium text-slate-700 text-center line-clamp-1 w-full">
                                 {currentProduct.name.split(' ').slice(0, 2).join(' ')}
                             </p>
-                            <p className="text-[10px] font-bold text-[var(--colour-fsP1)]">
+                            <p className="text-[11px] font-bold text-[var(--colour-fsP1)]">
                                 Rs. {(currentProduct.discounted_price || currentProduct.price).toLocaleString()}
                             </p>
                         </div>
@@ -71,24 +72,25 @@ const RelatedComparison: React.FC<RelatedComparisonProps> = ({
                         {/* VS Badge */}
                         <div className="flex-shrink-0">
                             <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center">
-                                <span className="text-[8px] font-bold text-white">VS</span>
+                                <span className="text-[9px] font-bold text-white">VS</span>
                             </div>
                         </div>
 
                         {/* Compared Product */}
                         <div className="flex flex-col items-center flex-1 min-w-0">
-                            <div className="relative w-12 h-12 mb-1.5">
+                            <div className="relative w-14 h-14 mb-1.5">
                                 <Image
                                     src={product.image?.thumb || product.image?.full || "/placeholder.png"}
                                     alt={product.name}
                                     fill
                                     className="object-contain"
+                                    sizes="56px"
                                 />
                             </div>
-                            <p className="text-[10px] font-semibold text-slate-700 text-center line-clamp-1 w-full">
+                            <p className="text-[11px] font-medium text-slate-700 text-center line-clamp-1 w-full">
                                 {product.name.split(' ').slice(0, 2).join(' ')}
                             </p>
-                            <p className="text-[10px] font-bold text-[var(--colour-fsP1)]">
+                            <p className="text-[11px] font-bold text-[var(--colour-fsP1)]">
                                 Rs. {(product.discounted_price || product.price).toLocaleString()}
                             </p>
                         </div>

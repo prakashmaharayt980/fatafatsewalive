@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react';
-import { MapPin, X, Loader2, AlertCircle, Edit2, Plus, Trash2, Home, Briefcase, Check, Mail } from 'lucide-react';
+import { MapPin, X, Loader2, AlertCircle, Plus, Trash2, Check, Mail } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useInView } from 'react-intersection-observer';
 import dynamic from 'next/dynamic';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -90,11 +88,6 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
       : [];
   }, [formData.state, district]);
 
-
-  const { ref, inView } = useInView({
-    triggerOnce: false,
-    threshold: 0.1,
-  });
 
   const fetchAddresses = async () => {
     setIsLoadingAddresses(true);
@@ -223,78 +216,90 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
         return (
           <div className="flex flex-col justify-between min-h-[35vh]">
             {isLoadingAddresses ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2">
-                <Loader2 className="w-8 h-8 animate-spin text-[var(--colour-fsP1)]" />
-                <span className="text-gray-500 text-sm">Loading addresses...</span>
+              <div className="flex flex-col items-center justify-center h-40 gap-4">
+                <div className="w-10 h-10 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+                <span className="text-gray-600 text-sm font-bold">Loading addresses...</span>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-1">
+                {/* Address Count Header */}
+                {savedAddresses.length > 0 && (
+                  <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
+                    <p className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                      {savedAddresses.length} Saved {savedAddresses.length === 1 ? 'Address' : 'Addresses'}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-1">
                   {savedAddresses.map((address) => (
                     <div key={address.id} className="relative group">
                       <button
                         onClick={() => handleAddressSelect(address)}
-                        className={`w-full h-full p-4 rounded-xl border-2 text-left transition-all duration-200 flex flex-col gap-3 hover:shadow-md ${selectedAddress?.id === address.id
-                          ? 'border-[var(--colour-fsP1)] bg-blue-50/40'
-                          : 'border-gray-100 bg-white hover:border-blue-200 hover:bg-gray-50'
+                        className={`w-full h-full p-5 rounded-xl border text-left transition-all duration-200 flex flex-col gap-4 ${selectedAddress?.id === address.id
+                          ? 'border-gray-900 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                          : 'border-gray-200 bg-white hover:border-gray-400 hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
                           }`}
                       >
                         <div className="flex items-start justify-between w-full">
-                          <div className="flex items-center gap-2">
-                            <div className={`p-2 rounded-full shrink-0 ${selectedAddress?.id === address.id
-                              ? 'bg-[var(--colour-fsP1)] text-white shadow-sm'
-                              : 'bg-gray-100 text-gray-500'
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-lg border flex items-center justify-center shrink-0 ${selectedAddress?.id === address.id
+                              ? 'border-gray-900 bg-gray-900 text-white'
+                              : 'border-gray-200 bg-gray-50 text-gray-600'
                               }`}>
-                              <MapPin size={16} />
+                              <MapPin size={18} />
                             </div>
                             <div>
-                              <span className={`block font-bold text-sm leading-none mb-1 ${selectedAddress?.id === address.id ? 'text-[var(--colour-fsP1)]' : 'text-gray-900'
+                              <span className={`block font-bold text-sm leading-none mb-1.5 uppercase tracking-wide ${selectedAddress?.id === address.id ? 'text-gray-900' : 'text-gray-700'
                                 }`}>
                                 {address.label || 'Address'}
                               </span>
-                              <span className="text-xs text-gray-500 font-medium">
+                              <span className="text-xs text-gray-500 font-semibold">
                                 {address.phone}
                               </span>
                             </div>
                           </div>
-                          {address.is_default && (
-                            <span className="text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full uppercase">Default</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {address.is_default && (
+                              <span className="text-[10px] border border-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded uppercase tracking-wider bg-white">Default</span>
+                            )}
+                            {selectedAddress?.id === address.id && (
+                              <span className="text-[10px] border border-gray-900 text-gray-900 font-bold px-2.5 py-1 rounded uppercase tracking-wider bg-white">Selected</span>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="mt-auto pt-2 border-t border-gray-100/50 w-full">
-                          <div className="text-sm font-semibold text-gray-800">
+                        <div className="mt-auto pt-3 border-t border-gray-100 w-full">
+                          <div className="text-sm font-bold text-gray-900 mb-1">
                             {address.full_name}
                           </div>
-                          <p className="text-xs text-gray-600 leading-relaxed mt-0.5 line-clamp-2">
+                          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
                             {address.address}, {address.city}, {address.state}
                           </p>
                         </div>
                       </button>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteAddress(address.id);
                         }}
-                        className="absolute top-2 right-2 h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center border border-gray-200 bg-white text-gray-400 hover:text-red-600 hover:border-red-300 hover:shadow-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                       >
                         <Trash2 size={14} />
-                      </Button>
+                      </button>
                     </div>
                   ))}
 
                   {/* Add New Card Button */}
                   <button
                     onClick={() => openDialog('addEditAddress')}
-                    className="flex flex-col items-center justify-center gap-2 h-full min-h-[140px] p-4 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[var(--colour-fsP1)] hover:bg-blue-50/30 hover:text-[var(--colour-fsP1)] transition-all group"
+                    className="flex flex-col items-center justify-center gap-3 h-full min-h-[180px] p-5 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-gray-900 hover:text-gray-900 transition-all group bg-white"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gray-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+                    <div className="w-12 h-12 rounded-lg border border-gray-200 bg-gray-50 group-hover:border-gray-900 group-hover:bg-gray-900 group-hover:text-white flex items-center justify-center transition-all">
                       <Plus className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-semibold">Add New Address</span>
+                    <span className="text-sm font-bold">Add New Address</span>
                   </button>
                 </div>
               </>
@@ -307,7 +312,7 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
           <div className="p-1 max-h-[70vh] overflow-y-auto pr-1">
             <div className="space-y-8 px-4 sm:px-0 pb-6">
               {/* 1. Precise Location Section */}
-              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 shadow-sm">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <div className="relative flex items-center">
@@ -318,19 +323,19 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
                           if (e.target.checked) setCoordinates({ lat: 27.7172, lng: 85.3240 });
                           else setCoordinates(null);
                         }}
-                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-300 bg-white transition-all checked:border-blue-600 checked:bg-blue-600 hover:border-blue-400"
+                        className="peer h-5 w-5 cursor-pointer appearance-none rounded border-2 border-gray-300 bg-white transition-all checked:border-gray-900 checked:bg-gray-900 hover:border-gray-500"
                       />
                       <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white w-3 h-3 peer-checked:opacity-100 opacity-0" />
                     </div>
-                    <span className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">Pinpoint Exact Location</span>
+                    <span className="font-bold text-gray-900 group-hover:text-gray-700 transition-colors">Pinpoint Exact Location</span>
                   </label>
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-700 uppercase tracking-wide">
-                    Highly Recommended
+                  <span className="inline-flex items-center px-3 py-1 rounded border border-gray-300 text-[11px] font-bold bg-white text-gray-700 uppercase tracking-wider">
+                    Recommended
                   </span>
                 </div>
 
                 {coordinates && (
-                  <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 shadow-md animate-in fade-in zoom-in-95 duration-200 ring-4 ring-white">
+                  <div className="mt-4 rounded-xl overflow-hidden border border-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] animate-in fade-in zoom-in-95 duration-200">
                     <LeafletMapAddress
                       onLocationSelect={handleLocationSelect}
                       initialPosition={coordinates}
@@ -340,23 +345,23 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
               </div>
 
               {/* 2. Contact Details */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <span className="w-1.5 h-4 bg-blue-600 rounded-full"></span>
+              <div className="space-y-5">
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2 border-b border-gray-200 pb-3 uppercase tracking-wider">
+                  <span className="w-1 h-4 bg-gray-900 rounded-full"></span>
                   Contact Information
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Full Name <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Full Name <span className="text-red-500">*</span></Label>
                     <Input
                       placeholder="e.g. John Doe"
                       value={formData.full_name}
                       onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      className="h-11 bg-gray-50/30 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all rounded-lg"
+                      className="h-11 bg-white border-gray-300 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-100 transition-all rounded-lg font-medium"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Mobile Number <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Mobile Number <span className="text-red-500">*</span></Label>
                     <Input
                       placeholder="e.g. 98XXXXXXXX"
                       maxLength={10}
@@ -365,11 +370,11 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
                         const val = e.target.value.replace(/\D/g, '');
                         setFormData({ ...formData, phone: val });
                       }}
-                      className="h-11 bg-gray-50/30 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all rounded-lg tracking-widest font-medium"
+                      className="h-11 bg-white border-gray-300 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-100 transition-all rounded-lg tracking-widest font-bold"
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Email Address</Label>
+                    <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Email Address</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -377,7 +382,7 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="h-11 pl-10 bg-gray-50/30 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all rounded-lg"
+                        className="h-11 pl-10 bg-white border-gray-300 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-100 transition-all rounded-lg font-medium"
                       />
                     </div>
                   </div>
@@ -385,16 +390,16 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
               </div>
 
               {/* 3. Address Details */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <span className="w-1.5 h-4 bg-blue-600 rounded-full"></span>
+              <div className="space-y-5">
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2 border-b border-gray-200 pb-3 uppercase tracking-wider">
+                  <span className="w-1 h-4 bg-gray-900 rounded-full"></span>
                   Address Details
                 </h4>
 
                 {/* Province & District */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Province / State <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Province / State <span className="text-red-500">*</span></Label>
                     <Select
                       value={formData.state}
                       onValueChange={(val) => {
@@ -402,18 +407,18 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
                         setDistrict('');
                       }}
                     >
-                      <SelectTrigger className="h-11 bg-gray-50/30 border-gray-200 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 rounded-lg">
+                      <SelectTrigger className="h-11 bg-white border-gray-300 focus:ring-2 focus:ring-gray-100 focus:border-gray-900 rounded-lg font-medium">
                         <SelectValue placeholder="Select Province" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-100 shadow-xl rounded-xl max-h-[300px]">
+                      <SelectContent className="bg-white border border-gray-200 shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-xl max-h-[300px]">
                         {Object.keys(nepalLocations).map((prov) => (
-                          <SelectItem key={prov} value={prov} className="cursor-pointer hover:bg-gray-50 focus:bg-blue-50 focus:text-blue-600 rounded-md my-0.5">{prov}</SelectItem>
+                          <SelectItem key={prov} value={prov} className="cursor-pointer hover:bg-gray-50 focus:bg-gray-100 focus:text-gray-900 rounded-md my-0.5 font-medium">{prov}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">District</Label>
+                    <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">District</Label>
                     <Select
                       value={district}
                       onValueChange={(val) => {
@@ -422,12 +427,12 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
                       }}
                       disabled={!formData.state}
                     >
-                      <SelectTrigger className="h-11 bg-gray-50/30 border-gray-200 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 rounded-lg disabled:opacity-50">
+                      <SelectTrigger className="h-11 bg-white border-gray-300 focus:ring-2 focus:ring-gray-100 focus:border-gray-900 rounded-lg disabled:opacity-40 font-medium">
                         <SelectValue placeholder="Select District" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-100 shadow-xl rounded-xl max-h-[300px]">
+                      <SelectContent className="bg-white border border-gray-200 shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-xl max-h-[300px]">
                         {districts.map((dist) => (
-                          <SelectItem key={dist} value={dist} className="cursor-pointer hover:bg-gray-50 focus:bg-blue-50 focus:text-blue-600 rounded-md my-0.5">{dist}</SelectItem>
+                          <SelectItem key={dist} value={dist} className="cursor-pointer hover:bg-gray-50 focus:bg-gray-100 focus:text-gray-900 rounded-md my-0.5 font-medium">{dist}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -436,19 +441,19 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
 
                 {/* City */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">City / Municipality <span className="text-red-500">*</span></Label>
+                  <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">City / Municipality <span className="text-red-500">*</span></Label>
                   {availableCities.length > 0 ? (
                     <Select
                       value={formData.city}
                       onValueChange={(val) => setFormData({ ...formData, city: val })}
                       disabled={!district}
                     >
-                      <SelectTrigger className="h-11 bg-gray-50/30 border-gray-200 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 rounded-lg disabled:opacity-50">
+                      <SelectTrigger className="h-11 bg-white border-gray-300 focus:ring-2 focus:ring-gray-100 focus:border-gray-900 rounded-lg disabled:opacity-40 font-medium">
                         <SelectValue placeholder="Select City" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-100 shadow-xl rounded-xl max-h-[300px]">
+                      <SelectContent className="bg-white border border-gray-200 shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-xl max-h-[300px]">
                         {availableCities.map((city: string) => (
-                          <SelectItem key={city} value={city} className="cursor-pointer hover:bg-gray-50 focus:bg-blue-50 focus:text-blue-600 rounded-md my-0.5">{city}</SelectItem>
+                          <SelectItem key={city} value={city} className="cursor-pointer hover:bg-gray-50 focus:bg-gray-100 focus:text-gray-900 rounded-md my-0.5 font-medium">{city}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -457,60 +462,63 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
                       placeholder="e.g. Kathmandu Metro"
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="h-11 bg-gray-50/30 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all rounded-lg"
+                      className="h-11 bg-white border-gray-300 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-100 transition-all rounded-lg font-medium"
                     />
                   )}
                 </div>
 
                 {/* Address & Postal */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Street Address <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Street Address <span className="text-red-500">*</span></Label>
                     <Input
                       placeholder="e.g. New Baneshwor, Marg 1"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="h-11 bg-gray-50/30 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all rounded-lg"
+                      className="h-11 bg-white border-gray-300 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-100 transition-all rounded-lg font-medium"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Postal Code</Label>
+                    <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Postal Code</Label>
                     <Input
                       placeholder="e.g. 44600"
                       value={formData.postal_code}
                       onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                      className="h-11 bg-gray-50/30 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all rounded-lg"
+                      className="h-11 bg-white border-gray-300 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-100 transition-all rounded-lg font-medium"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="isDefault"
-                    checked={formData.is_default}
-                    onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Label htmlFor="isDefault" className="text-sm text-gray-700">Set as default shipping address</Label>
+                <div className="flex items-center space-x-3 pt-3">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isDefault"
+                      checked={formData.is_default}
+                      onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+                      className="peer h-5 w-5 cursor-pointer appearance-none rounded border-2 border-gray-300 bg-white transition-all checked:border-gray-900 checked:bg-gray-900 hover:border-gray-500"
+                    />
+                    <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white w-3 h-3 peer-checked:opacity-100 opacity-0" />
+                  </div>
+                  <Label htmlFor="isDefault" className="text-sm font-semibold text-gray-700 cursor-pointer">Set as default shipping address</Label>
                 </div>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
-                <Button
-                  variant="outline"
+              {/* Action Buttons */}
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-gray-100">
+                <button
                   onClick={() => setDialogState('addressList')}
-                  className="flex-1 h-12 border-gray-200 hover:bg-gray-50 text-gray-700 font-medium"
+                  className="flex-1 h-12 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-lg transition-all hover:shadow-sm"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="flex-[2] h-12 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 font-bold tracking-wide"
+                  className="flex-[2] h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-lg transition-all shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.25)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : "Save Shipping Address"}
-                </Button>
+                  {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save Shipping Address"}
+                </button>
               </div>
             </div>
           </div >
@@ -523,71 +531,71 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
 
   if (mode === 'management') {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-gray-900">Saved Addresses</h3>
-          <Button onClick={() => openDialog('addEditAddress')} className="bg-[var(--colour-fsP1)] text-white gap-2">
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Saved Addresses</h3>
+          <button
+            onClick={() => openDialog('addEditAddress')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white font-bold text-sm rounded-lg border border-gray-900 shadow-[0_2px_6px_rgba(0,0,0,0.15)] hover:bg-gray-800 hover:shadow-[0_4px_10px_rgba(0,0,0,0.2)] transition-all"
+          >
             <Plus className="w-4 h-4" /> Add New
-          </Button>
+          </button>
         </div>
 
         <div className="grid gap-4">
           {savedAddresses.map((address) => (
             <div
               key={address.id}
-              className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group"
+              className="flex items-start justify-between p-5 rounded-xl border border-gray-200 hover:border-gray-400 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all group"
             >
               <div className="flex items-start gap-4">
-                <div className="mt-1 p-2 rounded-full bg-white border border-gray-200 text-gray-500">
-                  <MapPin className="w-5 h-5" />
+                <div className="mt-0.5 w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-[18px] h-[18px]" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-gray-900">{address.label || 'Address'}</span>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <span className="font-bold text-gray-900 uppercase tracking-wide text-sm">{address.label || 'Address'}</span>
                     {address.is_default && (
-                      <span className="text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full uppercase">Default</span>
+                      <span className="text-[10px] border border-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded uppercase tracking-wider bg-white">Default</span>
                     )}
                   </div>
+                  <p className="text-sm font-bold text-gray-800 mb-1">{address.full_name}</p>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     {address.address}, {address.city}, {address.state}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">{address.phone}</p>
+                  <p className="text-sm font-semibold text-gray-700 mt-1.5">{address.phone}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteAddress(address.id)}
-                  className="text-gray-400 hover:text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              <button
+                onClick={() => handleDeleteAddress(address.id)}
+                className="h-9 w-9 flex items-center justify-center border border-gray-200 bg-white text-gray-400 hover:text-red-600 hover:border-red-300 hover:shadow-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           ))}
 
           {savedAddresses.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-12 text-gray-500 font-semibold">
               No saved addresses found.
             </div>
           )}
         </div>
 
         <Drawer open={dialogState !== 'closed'} onOpenChange={(open) => !open && closeDialog()}>
-          <DrawerContent className="max-h-[90vh] bg-white max-w-5xl mx-auto">
+          <DrawerContent className="max-h-[90vh] bg-white max-w-5xl mx-auto border border-gray-200">
             <div className="max-w-4xl mx-auto w-full py-4 px-4 sm:px-6">
-              <DrawerHeader className="px-0 pt-0 flex flex-row items-center justify-between border-b border-gray-100 mb-4 pb-4">
-                <DrawerTitle className="text-xl font-semibold text-gray-900 p-0 m-0">
+              <DrawerHeader className="px-0 pt-0 flex flex-row items-center justify-between border-b border-gray-200 mb-5 pb-4">
+                <DrawerTitle className="text-xl font-bold text-gray-900 p-0 m-0 uppercase tracking-wide">
                   {dialogState === 'addressList' ? 'Address Book' : 'Enter Address Details'}
                 </DrawerTitle>
-                <DrawerClose className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <DrawerClose className="p-2 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors">
                   <X className="w-5 h-5 text-gray-500" />
                 </DrawerClose>
               </DrawerHeader>
               {renderDialogContent()}
               {locationError && (
-                <div className="flex items-center gap-2 mt-4 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600">
+                <div className="flex items-center gap-2 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {locationError}
                 </div>
@@ -602,29 +610,30 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
   return (
     <div className="space-y-4">
       {selectedAddress ? (
-        <div className="relative group border border-blue-200 bg-blue-50/30 rounded-xl p-4 transition-all hover:border-blue-300 hover:shadow-sm">
+        <div className="relative group border border-gray-900 bg-white rounded-xl p-5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="flex items-start gap-4">
-            <div className="mt-1 p-2 rounded-full bg-blue-100 text-[var(--colour-fsP1)] shrink-0">
-              <MapPin className="w-5 h-5" />
+            <div className="mt-0.5 w-10 h-10 rounded-lg border border-gray-900 bg-gray-900 text-white flex items-center justify-center shrink-0">
+              <MapPin className="w-[18px] h-[18px]" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-semibold text-gray-900">{selectedAddress.label || 'Address'}</span>
-                <span className="text-[10px] bg-blue-100 text-[var(--colour-fsP1)] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Selected</span>
+              <div className="flex items-center gap-2.5 mb-2">
+                <span className="font-bold text-gray-900 uppercase tracking-wide text-sm">{selectedAddress.label || 'Address'}</span>
+                <span className="text-[10px] border border-gray-900 text-gray-900 px-2.5 py-1 rounded font-bold uppercase tracking-wider bg-white">Selected</span>
               </div>
 
-              <div className="mb-2 text-sm text-gray-800 font-medium">
-                {selectedAddress.full_name}, {selectedAddress.phone}
+              <div className="border-t border-gray-100 pt-2 mt-1">
+                <p className="text-sm font-bold text-gray-900 mb-1">
+                  {selectedAddress.full_name}
+                </p>
+                <p className="text-sm text-gray-600 leading-relaxed mb-1">
+                  {selectedAddress.address}, {selectedAddress.city}, {selectedAddress.state}
+                </p>
+                <p className="text-sm font-semibold text-gray-700">{selectedAddress.phone}</p>
               </div>
-
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {selectedAddress.address}, {selectedAddress.city}<br />
-                {selectedAddress.state}
-              </p>
             </div>
             <button
               onClick={() => openDialog('addressList')}
-              className="text-sm font-medium text-[var(--colour-fsP1)] hover:underline px-2 py-1"
+              className="text-sm font-bold text-gray-900 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 hover:shadow-sm transition-all"
             >
               Change
             </button>
@@ -633,23 +642,23 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
       ) : (
         <button
           onClick={() => openDialog('addressList')}
-          className="w-full flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed border-[var(--colour-fsP2)] text-gray-500 hover:border-[var(--colour-fsP1)] hover:bg-blue-50 hover:text-[var(--colour-fsP1)] transition-all duration-200 group"
+          className="w-full flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-gray-900 hover:text-gray-900 transition-all duration-200 group bg-white"
         >
-          <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+          <div className="w-12 h-12 rounded-lg border border-gray-200 bg-gray-50 group-hover:border-gray-900 group-hover:bg-gray-900 group-hover:text-white flex items-center justify-center transition-all">
             <Plus className="w-6 h-6" />
           </div>
-          <span className="font-medium">Add Shipping Address</span>
+          <span className="font-bold">Add Shipping Address</span>
         </button>
       )}
 
       <Drawer open={dialogState !== 'closed'} onOpenChange={(open) => !open && closeDialog()}>
-        <DrawerContent className="max-h-[90vh] bg-white max-w-5xl mx-auto">
+        <DrawerContent className="max-h-[90vh] bg-white max-w-5xl mx-auto border border-gray-200">
           <div className="max-w-4xl mx-auto w-full py-4 px-4 sm:px-6">
-            <DrawerHeader className="px-0 pt-0 flex flex-row items-center justify-between border-b border-gray-100 mb-4 pb-4">
-              <DrawerTitle className="text-xl font-semibold text-gray-900 p-0 m-0">
+            <DrawerHeader className="px-0 pt-0 flex flex-row items-center justify-between border-b border-gray-200 mb-5 pb-4">
+              <DrawerTitle className="text-xl font-bold text-gray-900 p-0 m-0 uppercase tracking-wide">
                 {dialogState === 'addressList' ? 'Address Book' : 'Enter Address Details'}
               </DrawerTitle>
-              <DrawerClose className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <DrawerClose className="p-2 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </DrawerClose>
             </DrawerHeader>
@@ -657,7 +666,7 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
             {renderDialogContent()}
 
             {locationError && (
-              <div className="flex items-center gap-2 mt-4 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600">
+              <div className="flex items-center gap-2 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 {locationError}
               </div>

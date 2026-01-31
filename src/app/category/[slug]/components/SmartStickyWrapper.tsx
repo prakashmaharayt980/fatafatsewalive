@@ -51,6 +51,7 @@ export const SmartStickyWrapper = ({
                 top: topOffset,
                 maxHeight: `calc(100vh - ${topOffset + bottomOffset}px)`,
                 overflowY: 'auto',
+                overflowX: 'hidden',
                 scrollbarWidth: 'thin' // Firefox
             });
         } else {

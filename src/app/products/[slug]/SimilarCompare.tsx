@@ -22,7 +22,7 @@ export default function SimilarCompare({ currentProduct, categoryId }: SimilarCo
     const router = useRouter();
 
     const { data: similarData, isLoading } = useSWR(
-        `http://localhost:8000/api/products/get-product-by-category/${categoryId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/products/get-product-by-category/${categoryId}`,
         fetcher
     );
 
@@ -118,7 +118,7 @@ export default function SimilarCompare({ currentProduct, categoryId }: SimilarCo
 
                     return (
                         <div key={product.id} className="min-w-[300px] w-[300px] snap-center shrink-0 group relative">
-                            <Link href={`/product/${product.slug}?id=${product.id}`}>
+                            <Link href={`/products/${product.slug}`}>
                                 <div className="h-full flex flex-col bg-white rounded-3xl border border-gray-200 hover:border-gray-300 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                                     <div className="relative aspect-[4/3] bg-gray-50 group-hover:bg-gray-100 transition-colors">
                                         {product.image && (product.image.thumb || product.image.full) ? (

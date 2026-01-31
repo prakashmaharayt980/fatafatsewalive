@@ -85,8 +85,24 @@ export interface ProductDetails {
         quantity: number;
         attributes: Record<string, string>;
         status: any;
+        image?: {
+            full: string;
+            thumb: string;
+            preview: string | null;
+        };
+        images?: Array<{
+            url: string;
+            thumb: string;
+        }>;
     }>;
     reviews: Review
+    related_products?: {
+        category?: {
+            id: number;
+            name: string;
+            slug: string;
+        };
+    };
     created_at: string;
     updated_at: string;
 }

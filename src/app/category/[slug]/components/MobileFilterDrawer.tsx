@@ -19,27 +19,19 @@ const MobileFilterDrawer = memo(({
     onApply,
     children,
 }: MobileFilterDrawerProps) => {
-    // Prevent body scroll when drawer is open
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
-
-        return () => {
-            document.body.style.overflow = '';
-        };
+        return () => { document.body.style.overflow = ''; };
     }, [isOpen]);
 
-    // Handle escape key
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                onClose();
-            }
+            if (e.key === 'Escape' && isOpen) onClose();
         };
-
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
     }, [isOpen, onClose]);
@@ -57,7 +49,7 @@ const MobileFilterDrawer = memo(({
             {/* Backdrop */}
             <div
                 className={cn(
-                    'absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300',
+                    'absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300',
                     isOpen ? 'opacity-100' : 'opacity-0'
                 )}
                 onClick={onClose}
@@ -67,27 +59,24 @@ const MobileFilterDrawer = memo(({
             {/* Drawer */}
             <div
                 className={cn(
-                    'absolute left-0 top-0 bottom-0 w-[85%] max-w-md bg-white transform transition-transform duration-300 ease-out flex flex-col shadow-2xl',
+                    'absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-white transform transition-transform duration-300 ease-out flex flex-col',
                     isOpen ? 'translate-x-0' : '-translate-x-full'
                 )}
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-200">
-                            <SlidersHorizontal size={18} className="text-white" />
+                <div className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-[var(--colour-fsP2)] flex items-center justify-center">
+                            <SlidersHorizontal size={14} className="text-white" />
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900">Filters</h2>
-                            <p className="text-xs text-gray-400">Refine your search</p>
-                        </div>
+                        <h2 className="text-base font-bold text-gray-900">Filters</h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                        className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
                         aria-label="Close filters"
                     >
-                        <X size={20} />
+                        <X size={16} />
                     </button>
                 </div>
 
@@ -97,16 +86,16 @@ const MobileFilterDrawer = memo(({
                 </div>
 
                 {/* Footer */}
-                <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                <div className="bg-white border-t border-gray-100 px-4 py-3 flex gap-2.5 shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
                     <button
                         onClick={onClear}
-                        className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex-1 py-2.5 border border-gray-200 rounded-lg font-semibold text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                         Clear All
                     </button>
                     <button
                         onClick={onApply}
-                        className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-200"
+                        className="flex-1 py-2.5 bg-[var(--colour-fsP2)] text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-all"
                     >
                         Show Results
                     </button>

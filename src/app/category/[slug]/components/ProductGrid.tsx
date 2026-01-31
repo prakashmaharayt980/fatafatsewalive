@@ -13,7 +13,7 @@ import {
     ViewMode,
 } from '../types';
 import { useProducts, useIntersectionObserver } from '../hooks';
-import ProductCard, { ProductCardSkeleton } from './ProductCard';
+import ProductCard, { ProductCardSkeleton, ProductCardRow, ProductCardRowSkeleton } from './ProductCard';
 import { ActiveFilterTag } from './FilterSidebar';
 
 // ============================================
@@ -34,7 +34,7 @@ const EmptyState = memo(({ onClearFilters }: EmptyStateProps) => (
         </p>
         <button
             onClick={onClearFilters}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2.5 rounded-full font-medium hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-200"
+            className="bg-[var(--colour-fsP2)] text-white px-6 py-2.5 rounded-full font-medium hover:opacity-90 transition-all shadow-lg cursor-pointer"
         >
             Clear All Filters
         </button>
@@ -51,10 +51,14 @@ interface LoadingGridProps {
 }
 
 const LoadingGrid = memo(({ count = 12, viewMode = 'grid' }: LoadingGridProps) => (
-    <div className={cn('grid gap-4 lg:gap-6', GRID_CONFIGS[viewMode])}>
-        {[...Array(count)].map((_, i) => (
-            <ProductCardSkeleton key={i} />
-        ))}
+    <div className={cn('grid gap-2 sm:gap-4 lg:gap-6', GRID_CONFIGS[viewMode])}>
+        {[...Array(count)].map((_, i) =>
+            viewMode === 'list' ? (
+                <ProductCardRowSkeleton key={i} />
+            ) : (
+                <ProductCardSkeleton key={i} />
+            )
+        )}
     </div>
 ));
 LoadingGrid.displayName = 'LoadingGrid';
@@ -136,6 +140,14 @@ const ActiveFiltersBar = memo(({
             });
         }
 
+        if (filters.emiOnly) {
+            items.push({
+                key: 'emiOnly',
+                label: 'EMI Available',
+                onRemove: () => onFiltersChange({ ...filters, emiOnly: false }),
+            });
+        }
+
         if (filters.priceRange[0] > 0 || filters.priceRange[1] < 100000) {
             items.push({
                 key: 'price',
@@ -160,7 +172,7 @@ const ActiveFiltersBar = memo(({
             ))}
             <button
                 onClick={onClearAll}
-                className="text-sm text-gray-500 hover:text-orange-600 font-medium ml-2 transition-colors"
+                className="text-sm text-gray-500 hover:text-[var(--colour-fsP2)] font-medium ml-2 transition-colors cursor-pointer"
             >
                 Clear All
             </button>
@@ -195,7 +207,6 @@ const ProductGrid = memo(({
     onFiltersChange,
     onClearFilters,
 }: ProductGridProps) => {
-    // Use products hook with filter-based fetching
     const {
         products,
         meta,
@@ -211,25 +222,21 @@ const ProductGrid = memo(({
         enabled: !!categoryId,
     });
 
-    // Infinite scroll trigger
     const loadMoreRef = useIntersectionObserver(loadMore, {
         enabled: !isLoadingMore && !isReachingEnd,
         rootMargin: '200px',
     });
 
-    // Manual load more handler
     const handleLoadMore = useCallback(() => {
         if (!isLoadingMore && !isReachingEnd) {
             loadMore();
         }
     }, [isLoadingMore, isReachingEnd, loadMore]);
 
-    // Initial loading state
     if (isLoading && products.length === 0) {
-        return <LoadingGrid count={12} viewMode={viewMode} />;
+        return <LoadingGrid count={viewMode === 'list' ? 6 : 12} viewMode={viewMode} />;
     }
 
-    // Empty state
     if (isEmpty || products.length === 0) {
         return <EmptyState onClearFilters={onClearFilters} />;
     }
@@ -246,23 +253,32 @@ const ProductGrid = memo(({
                 onClearAll={onClearFilters}
             />
 
-            {/* Product Grid */}
-            <div className={cn('grid gap-4 lg:gap-6', GRID_CONFIGS[viewMode])}>
-                {products.map((product, index) => (
-                    <ProductCard
-                        key={`${product.id}-${index}`}
-                        product={product}
-                        index={index}
-                        priority={index < 4}
-                    />
-                ))}
+            {/* Product Grid / List */}
+            <div className={cn('grid gap-2 sm:gap-4 lg:gap-6', GRID_CONFIGS[viewMode])}>
+                {products.map((product, index) =>
+                    viewMode === 'list' ? (
+                        <ProductCardRow
+                            key={`${product.id}-${index}`}
+                            product={product}
+                            index={index}
+                            priority={index < 4}
+                        />
+                    ) : (
+                        <ProductCard
+                            key={`${product.id}-${index}`}
+                            product={product}
+                            index={index}
+                            priority={index < 4}
+                        />
+                    )
+                )}
             </div>
 
             {/* Load More Section */}
             <div ref={loadMoreRef} className="mt-8">
                 {isLoadingMore && (
                     <div className="flex items-center justify-center py-8">
-                        <Loader2 size={32} className="text-orange-500 animate-spin" />
+                        <Loader2 size={32} className="text-[var(--colour-fsP2)] animate-spin" />
                     </div>
                 )}
 
@@ -270,7 +286,7 @@ const ProductGrid = memo(({
                     <div className="text-center">
                         <button
                             onClick={handleLoadMore}
-                            className="px-6 py-3 bg-white border border-gray-200 rounded-xl font-medium text-sm hover:border-orange-300 hover:text-orange-600 transition-all"
+                            className="px-6 py-3 bg-white border border-gray-200 rounded-xl font-medium text-sm hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-all cursor-pointer"
                         >
                             Load More Products
                         </button>

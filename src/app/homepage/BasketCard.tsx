@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
-import ProductCard from '../product/ProductCard';
+import ProductCard from '../products/ProductCard';
 import SkeltonCard from './SkeltonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug, CategorySlug_ID } from '@/app/types/CategoryTypes';
@@ -88,7 +88,7 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
 
   // Responsive items per page
   const isMobile = windowWidth < 640;
-  const itemsPerPage = isMobile ? 2 : 6;
+  const itemsPerPage = isMobile ? 2 : 5;
   const totalPages = Math.ceil(products.length / itemsPerPage) || 1;
 
   // Scroll to specific page
@@ -152,7 +152,7 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
               key={`${product.slug}-${index}`}
               className={cn(
                 'flex-shrink-0 snap-start',
-                'w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] md:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]'
+                'w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-13px)]'
               )}
             >
               <ProductCard product={product} index={index} />

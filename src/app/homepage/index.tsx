@@ -4,7 +4,7 @@ import React, { lazy, Suspense } from 'react';
 import Image from 'next/image';
 import Imgbanner from './Imgbanner';
 
-import BasketCardTrading from './BasketCardTrading';
+
 import SkeltonCard from './SkeltonCard';
 import SkeltonBanner from './SkeltonBanner';
 import LazyLoadSection from '@/components/LazyLoadSection';
@@ -12,7 +12,7 @@ import { BannerTypes } from '@/app/types/BannerTypes';
 
 
 // Lazy-loaded components
-const BasketCard = lazy(() => import('./BasketCard'));
+import BasketCard from './BasketCard';
 const OfferBanner = lazy(() => import('./OfferBanner'));
 const OurArticles = lazy(() => import('./OurArticles'));
 const CategoryProductSection = lazy(() => import('./BasketCardwithImage'));
@@ -21,7 +21,7 @@ const OneImageBanner = lazy(() => import('./Bannertop'));
 
 // Demo category data - Replace with API fetch later
 const demoCategories = [
-  { id: '1', title: 'Mobile Phone', slug: 'mobile-price-in-nepal', image: '/images/categories/new-arrivals.jpg' },
+  { id: '1', title: 'Mobile Phone', slug: 'mobile-price-in-nepal' },
   { id: '2', title: 'Laptop ', slug: 'laptop-price-in-nepal', image: '/images/categories/laptop.jpg' },
   { id: '3', title: 'Accessories', slug: 'accessories-price-in-nepal', image: '/images/categories/accessories.jpg' },
   { id: '74', title: 'Drone', slug: 'drone-price-in-nepal', image: '/images/categories/drone.jpg' },
@@ -29,13 +29,29 @@ const demoCategories = [
   { id: '34', title: 'Camera', slug: 'dslr-camera-price-in-nepal', image: '/images/categories/dslr-camera.jpg' },
 ];
 
+
+
 interface HomePageProps {
-  initialBannerData?: BannerTypes | null;
+  mainBannerData: any;
+  sideBannerData: any;
+  categorySectionImage: string;
+  sectionOne: React.ReactNode;
+  offerSection: React.ReactNode;
+  sectionTwo: React.ReactNode;
+  sectionThree: React.ReactNode;
+  sectionFour: React.ReactNode;
 }
 
-const HomePage = ({ initialBannerData }: HomePageProps) => {
-  // Use data passed from server
-  const bannerData = initialBannerData;
+const HomePage = ({
+  mainBannerData,
+  sideBannerData,
+  categorySectionImage,
+  sectionOne,
+  offerSection,
+  sectionTwo,
+  sectionThree,
+  sectionFour
+}: HomePageProps) => {
 
   return (
     <div className="mx-auto h-full m-0 p-0 sm:py-2 space-y-2 sm:space-y-3 bg-[#f8f9fa] relative overflow-hidden">
@@ -48,32 +64,19 @@ const HomePage = ({ initialBannerData }: HomePageProps) => {
         <div className="sm:px-2 md:px-4">
           {/* Index 0 (Scroll) and Index 1 (Side Grid) */}
           <Imgbanner
-            mainBanner={bannerData?.data?.[0]}
-            sideBanner={bannerData?.data?.[1]}
+            mainBanner={mainBannerData}
+            sideBanner={sideBannerData}
           />
 
           {/* Removed BannerProductGrid as per request */}
 
-          <LazyLoadSection fallback={<SkeltonCard />}>
-            <Suspense fallback={<SkeltonCard />}>
-              <BasketCardTrading title={demoCategories[0].title} slug={demoCategories[0].slug} id={demoCategories[0].id} />
-            </Suspense>
-          </LazyLoadSection>
+          <BasketCard title={demoCategories[0].title} slug={demoCategories[0].slug} id={demoCategories[0].id} />
 
 
 
-          <LazyLoadSection fallback={<SkeltonBanner />}>
-            <Suspense fallback={<SkeltonBanner />}>
-              {/* Index 2 */}
-              <OneImageBanner data={bannerData?.data?.[4]} />
-            </Suspense>
-          </LazyLoadSection>
+          {sectionOne}
 
-          <LazyLoadSection fallback={<SkeltonCard />}>
-            <Suspense fallback={<SkeltonCard />}>
-              <BasketCard title={demoCategories[1].title} slug={demoCategories[1].slug} id={demoCategories[1].id} />
-            </Suspense>
-          </LazyLoadSection>
+          <BasketCard title={demoCategories[1].title} slug={demoCategories[1].slug} id={demoCategories[1].id} />
 
 
           <LazyLoadSection fallback={<SkeltonCard />}>
@@ -82,55 +85,24 @@ const HomePage = ({ initialBannerData }: HomePageProps) => {
                 title={demoCategories[2].title}
                 slug={demoCategories[2].slug}
                 id={demoCategories[2].id}
-                imageUrl={bannerData?.data?.[3]?.images?.[0]?.image?.full}
+                imageUrl={categorySectionImage}
               />
             </Suspense>
           </LazyLoadSection>
         </div>
-        <LazyLoadSection fallback={<SkeltonBanner />}>
-          <Suspense fallback={<SkeltonBanner />}>
-            <OfferBanner />
-          </Suspense>
-        </LazyLoadSection>
+        {offerSection}
         <div className="sm:px-2 md:px-4">
-          <LazyLoadSection fallback={<SkeltonCard />}>
-            <Suspense fallback={<SkeltonCard />}>
-              <BasketCard title={demoCategories[3].title} slug={demoCategories[3].slug} id={demoCategories[3].id} />
-            </Suspense>
-          </LazyLoadSection>
+          <BasketCard title={demoCategories[3].title} slug={demoCategories[3].slug} id={demoCategories[3].id} />
 
-          <LazyLoadSection fallback={<SkeltonBanner />}>
-            <Suspense fallback={<SkeltonBanner />}>
-              {/* Index 5 */}
-              <OneImageBanner data={bannerData?.data?.[4]} />
-            </Suspense>
-          </LazyLoadSection>
+          {sectionTwo}
 
-          <LazyLoadSection fallback={<SkeltonCard />}>
-            <Suspense fallback={<SkeltonCard />}>
-              <BasketCard title={demoCategories[4].title} slug={demoCategories[4].slug} id={demoCategories[4].id} />
-            </Suspense>
-          </LazyLoadSection>
+          <BasketCard title={demoCategories[4].title} slug={demoCategories[4].slug} id={demoCategories[4].id} />
 
-          <LazyLoadSection fallback={<SkeltonBanner />}>
-            <Suspense fallback={<SkeltonBanner />}>
-              {/* Index 6 */}
-              <TwoImageBanner data={bannerData?.data?.[1]} />
-            </Suspense>
-          </LazyLoadSection>
+          {sectionThree}
 
-          <LazyLoadSection fallback={<SkeltonCard />}>
-            <Suspense fallback={<SkeltonCard />}>
-              <BasketCard title={demoCategories[5].title} slug={demoCategories[5].slug} id={demoCategories[5].id} />
-            </Suspense>
-          </LazyLoadSection>
+          <BasketCard title={demoCategories[5].title} slug={demoCategories[5].slug} id={demoCategories[5].id} />
 
-          <LazyLoadSection fallback={<SkeltonBanner />}>
-            <Suspense fallback={<SkeltonBanner />}>
-              {/* Index 7 */}
-              <OneImageBanner data={bannerData?.data?.[8]} />
-            </Suspense>
-          </LazyLoadSection>
+          {sectionFour}
 
           <LazyLoadSection fallback={<SkeltonCard />}>
             <Suspense fallback={<SkeltonCard />}>

@@ -48,8 +48,8 @@ async function getInitialProducts(
                 sortBy: filters.sortBy || 'default',
                 inStock: filters.inStock || false,
                 onSale: filters.onSale || false,
-            },
-            1
+                emiOnly: filters.emiOnly || false,
+            }
         );
         const queryString = new URLSearchParams(params).toString();
         const response = await RemoteServices.searchProducts({
@@ -69,19 +69,19 @@ async function getCategories(): Promise<CategoryData[]> {
         const response = await RemoteServices.getAllCategories();
         // Handle array vs object response
         const data = Array.isArray(response) ? response : response.data || [];
-        return data.map((cat: any) => ({
-            slug: [cat.slug],
-        }));
+        return data;
     } catch (error) {
         console.error('Error generating static params:', error);
         return [];
     }
 }
 
-async function getBrands() {
+async function getBrands(): Promise<BrandData[]> {
     try {
         const response = await RemoteServices.getAllBrands();
-        return response?.data || [];
+        // Handle both array and object response
+        const data = Array.isArray(response) ? response : response?.data || [];
+        return data;
     } catch (error) {
         console.error('Error fetching brands:', error);
         return [];
@@ -265,7 +265,7 @@ function generateStructuredData(
             item: {
                 '@type': 'Product',
                 name: product.name,
-                url: `${baseUrl}/product/${product.slug}`,
+                url: `${baseUrl}/products/${product.slug}`,
                 image: product.image?.full || product.image?.preview,
                 offers: {
                     '@type': 'Offer',

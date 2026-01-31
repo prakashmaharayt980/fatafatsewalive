@@ -1,17 +1,12 @@
 'use client';
 
-import React, { useState, memo, useCallback, useMemo } from 'react';
+import React, { useState, memo, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
     ChevronDown,
-    ChevronUp,
     X,
     SlidersHorizontal,
     Check,
-    Star,
-    Sparkles,
-    Tag,
     Palette,
-    Box,
     DollarSign,
     Search,
     Layers,
@@ -25,22 +20,9 @@ import {
     BrandData,
     COLORS,
 } from '../types';
-import { debounce } from '../utils';
 
 // ============================================
-// FILTER BACKGROUND (Cleaned up as per request to "make well")
-// ============================================
-const FilterBackground = memo(() => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Subtler background */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-orange-50/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-32 -left-16 w-64 h-64 bg-amber-50/30 rounded-full blur-3xl" />
-    </div>
-));
-FilterBackground.displayName = 'FilterBackground';
-
-// ============================================
-// FILTER SECTION
+// FILTER SECTION — minimal accordion
 // ============================================
 interface FilterSectionProps {
     title: string;
@@ -64,75 +46,57 @@ const FilterSection = memo(({
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className="group/section border-b border-gray-100 last:border-0">
+        <div className="border-b border-gray-100/80 last:border-0">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full py-4 text-left transition-all duration-300"
+                className="flex items-center justify-between w-full py-3.5 text-left group/sec cursor-pointer"
                 aria-expanded={isOpen}
             >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                     {Icon && (
-                        <div
+                        <Icon
+                            size={14}
                             className={cn(
-                                'w-7 h-7 rounded-md flex items-center justify-center transition-all duration-300',
-                                isOpen
-                                    ? 'bg-orange-50 text-orange-600'
-                                    : 'bg-gray-50 text-gray-500 group-hover/section:bg-orange-50 group-hover/section:text-orange-600'
+                                'transition-colors',
+                                isOpen ? 'text-[var(--colour-fsP2)]' : 'text-gray-400 group-hover/sec:text-[var(--colour-fsP2)]'
                             )}
-                        >
-                            <Icon size={15} />
-                        </div>
+                        />
                     )}
-                    <span
-                        className={cn(
-                            'font-semibold text-sm tracking-wide transition-colors duration-300',
-                            isOpen
-                                ? 'text-gray-900'
-                                : 'text-gray-600 group-hover/section:text-gray-900'
-                        )}
-                    >
+                    <span className="font-semibold text-[13px] text-gray-800 tracking-wide">
                         {title}
                     </span>
                     {showClear && onClear && (
                         <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onClear();
-                            }}
-                            className="text-[10px] uppercase font-bold text-orange-600 hover:text-orange-700 px-2 py-0.5 rounded bg-orange-50 hover:bg-orange-100 transition-all ml-2"
+                            onClick={(e) => { e.stopPropagation(); onClear(); }}
+                            className="text-[10px] font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] ml-1.5 transition-colors cursor-pointer"
                         >
                             Clear
                         </button>
                     )}
                 </div>
-                <div
+                <ChevronDown
+                    size={14}
                     className={cn(
-                        'transition-transform duration-300',
-                        isOpen ? 'rotate-180' : 'rotate-0'
+                        'text-gray-400 transition-transform duration-200',
+                        isOpen && 'rotate-180 text-[var(--colour-fsP2)]'
                     )}
-                >
-                    <ChevronDown size={14} className={cn(isOpen ? "text-orange-600" : "text-gray-400")} />
-                </div>
+                />
             </button>
 
             <div
                 className={cn(
-                    'overflow-hidden transition-all duration-500 ease-in-out',
-                    isOpen ? 'max-h-[500px] opacity-100 pb-5' : 'max-h-0 opacity-0'
+                    'overflow-hidden transition-all duration-300 ease-in-out',
+                    isOpen ? 'max-h-[500px] opacity-100 pb-4' : 'max-h-0 opacity-0'
                 )}
             >
                 {loading ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                         {[...Array(4)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="h-8 bg-gray-50 rounded-lg animate-pulse"
-                                style={{ animationDelay: `${i * 100}ms` }}
-                            />
+                            <div key={i} className="h-7 bg-gray-50 rounded-md animate-pulse" />
                         ))}
                     </div>
                 ) : (
-                    <div className="pl-1">{children}</div>
+                    children
                 )}
             </div>
         </div>
@@ -141,70 +105,49 @@ const FilterSection = memo(({
 FilterSection.displayName = 'FilterSection';
 
 // ============================================
-// CHECKBOX ITEM
+// CHECKBOX ITEM — compact pill style
 // ============================================
 interface CheckboxItemProps {
     option: FilterOption;
     checked: boolean;
     onChange: (id: string | number) => void;
-    showColor?: boolean;
 }
 
-const CheckboxItem = memo(({
-    option,
-    checked,
-    onChange,
-    showColor = false,
-}: CheckboxItemProps) => (
-    <label className="flex items-center gap-2.5 py-1 px-2 cursor-pointer group/item rounded-md transition-all duration-200 hover:bg-gray-50">
-        <div className="relative flex items-center">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => onChange(option.id)}
-                className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
-            />
-        </div>
-
-        {showColor && option.color && (
-            <span
-                className={cn(
-                    'w-4 h-4 rounded-full border border-gray-200',
-                    option.color === '#fafafa' && 'border-gray-300'
-                )}
-                style={{ backgroundColor: option.color }}
-            />
+const CheckboxItem = memo(({ option, checked, onChange }: CheckboxItemProps) => (
+    <button
+        onClick={() => onChange(option.id)}
+        className={cn(
+            'flex items-center gap-2 w-full py-1.5 px-2 rounded-lg text-left transition-all duration-150 cursor-pointer',
+            checked
+                ? 'bg-[var(--colour-fsP2)]/8'
+                : 'hover:bg-gray-50'
         )}
-
-        <span
+    >
+        <div
             className={cn(
-                'flex-1 text-sm transition-colors duration-200',
+                'w-4 h-4 rounded border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all duration-150',
                 checked
-                    ? 'text-gray-900 font-medium'
-                    : 'text-gray-600 group-hover/item:text-gray-900'
+                    ? 'bg-[var(--colour-fsP2)] border-[var(--colour-fsP2)]'
+                    : 'border-gray-300'
             )}
         >
+            {checked && <Check size={10} className="text-white" strokeWidth={3} />}
+        </div>
+        <span className={cn(
+            'flex-1 text-[13px] truncate',
+            checked ? 'text-gray-900 font-medium' : 'text-gray-600'
+        )}>
             {option.label}
         </span>
-
         {option.count !== undefined && (
-            <span
-                className={cn(
-                    'text-xs px-2 py-0.5 rounded-full transition-all duration-200',
-                    checked
-                        ? 'bg-orange-100 text-orange-700'
-                        : 'bg-gray-100 text-gray-500'
-                )}
-            >
-                {option.count}
-            </span>
+            <span className="text-[11px] text-gray-400 tabular-nums">{option.count}</span>
         )}
-    </label>
+    </button>
 ));
 CheckboxItem.displayName = 'CheckboxItem';
 
 // ============================================
-// SEARCHABLE LIST COMPONENT
+// SEARCHABLE LIST
 // ============================================
 interface SearchableListProps {
     items: Array<{ id: string | number; label: string }>;
@@ -225,48 +168,42 @@ const SearchableList = memo(({
 
     const filteredItems = useMemo(() => {
         if (!searchTerm) return items;
-        const lowerTerm = searchTerm.toLowerCase();
-        return items.filter((item) =>
-            item.label.toLowerCase().includes(lowerTerm)
-        );
+        const lower = searchTerm.toLowerCase();
+        return items.filter((item) => item.label.toLowerCase().includes(lower));
     }, [items, searchTerm]);
 
     return (
-        <>
-            <div className="mb-3 px-1 relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div>
+            <div className="relative mb-2">
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                     type="text"
                     placeholder={placeholder}
-                    className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 bg-white transition-all"
+                    className="w-full pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-gray-50/50 focus:outline-none focus:border-[var(--colour-fsP2)] focus:bg-white transition-all"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
-            <div className="space-y-0.5 max-h-52 overflow-y-auto custom-scrollbar pr-2">
+            <div className="overflow-y-auto space-y-0.5">
                 {filteredItems.map((item) => (
-                    <div key={item.id}>
-                        <CheckboxItem
-                            option={{ id: item.id, label: item.label }}
-                            checked={selectedIds.includes(item.id)}
-                            onChange={onToggle}
-                        />
-                    </div>
+                    <CheckboxItem
+                        key={item.id}
+                        option={{ id: item.id, label: item.label }}
+                        checked={selectedIds.includes(item.id)}
+                        onChange={onToggle}
+                    />
                 ))}
                 {filteredItems.length === 0 && (
-                    <p className="text-sm text-gray-400 py-4 text-center">
-                        {emptyMessage}
-                    </p>
+                    <p className="text-xs text-gray-400 py-3 text-center">{emptyMessage}</p>
                 )}
             </div>
-        </>
+        </div>
     );
 });
-
 SearchableList.displayName = 'SearchableList';
 
 // ============================================
-// COLOR SWATCH GRID (Redesigned)
+// COLOR SWATCH GRID — cleaner circles
 // ============================================
 interface ColorSwatchGridProps {
     colors: FilterOption[];
@@ -275,37 +212,35 @@ interface ColorSwatchGridProps {
 }
 
 const ColorSwatchGrid = memo(({ colors, selected, onChange }: ColorSwatchGridProps) => (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="flex flex-wrap gap-2">
         {colors.map((color) => {
             const isSelected = selected.includes(color.id as string);
             return (
                 <button
                     key={color.id}
                     onClick={() => onChange(color.id)}
-                    className={cn(
-                        "group/color flex flex-col items-center justify-center p-1 rounded-lg transition-all border-2",
-                        isSelected ? "border-orange-500 bg-orange-50" : "border-transparent hover:bg-gray-50"
-                    )}
+                    className="group/color relative cursor-pointer"
                     title={color.label}
                     aria-pressed={isSelected}
                 >
                     <div
                         className={cn(
-                            'w-8 h-8 rounded-full shadow-sm border border-gray-200 flex items-center justify-center relative overflow-hidden',
+                            'w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-150',
+                            isSelected
+                                ? 'border-[var(--colour-fsP2)] scale-110 shadow-sm'
+                                : 'border-gray-200 hover:border-gray-300 hover:scale-105',
+                            color.color === '#fafafa' && 'border-gray-300'
                         )}
                         style={{ backgroundColor: color.color }}
                     >
                         {isSelected && (
-                            <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                                <Check
-                                    size={14}
-                                    className="text-white drop-shadow-md"
-                                    strokeWidth={3}
-                                />
-                            </div>
+                            <Check
+                                size={12}
+                                className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+                                strokeWidth={3}
+                            />
                         )}
                     </div>
-                    {/* Tooltip-style Label on Hover could go here, but omitted for cleanliness as requested */}
                 </button>
             );
         })}
@@ -314,7 +249,7 @@ const ColorSwatchGrid = memo(({ colors, selected, onChange }: ColorSwatchGridPro
 ColorSwatchGrid.displayName = 'ColorSwatchGrid';
 
 // ============================================
-// PRICE RANGE SLIDER
+// PRICE RANGE SLIDER — redesigned with dual thumbs
 // ============================================
 interface PriceRangeSliderProps {
     min: number;
@@ -325,92 +260,93 @@ interface PriceRangeSliderProps {
 
 const PriceRangeSlider = memo(({ min, max, value, onChange }: PriceRangeSliderProps) => {
     const [localValue, setLocalValue] = useState(value);
-    const debouncedOnChange = useMemo(() => debounce(onChange, 500), [onChange]);
+    const trackRef = useRef<HTMLDivElement>(null);
+
+    const minPct = ((localValue[0] - min) / (max - min)) * 100;
+    const maxPct = ((localValue[1] - min) / (max - min)) * 100;
 
     const handleMin = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const newMin = Math.min(Number(e.target.value), localValue[1] - 500);
-        const newValue: [number, number] = [newMin, localValue[1]];
-        setLocalValue(newValue);
+        const v = Math.min(Number(e.target.value), localValue[1] - 500);
+        setLocalValue([v, localValue[1]]);
     }, [localValue]);
 
     const handleMax = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const newMax = Math.max(Number(e.target.value), localValue[0] + 500);
-        const newValue: [number, number] = [localValue[0], newMax];
-        setLocalValue(newValue);
+        const v = Math.max(Number(e.target.value), localValue[0] + 500);
+        setLocalValue([localValue[0], v]);
     }, [localValue]);
 
     const commit = useCallback(() => {
         onChange(localValue);
     }, [localValue, onChange]);
 
-    const minPct = ((localValue[0] - min) / (max - min)) * 100;
-    const maxPct = ((localValue[1] - min) / (max - min)) * 100;
-
     return (
-        <div className="space-y-6 pt-2">
-            <div className="relative h-2 mt-2">
-                <div className="absolute inset-0 bg-gray-100 rounded-full" />
+        <div className="space-y-4 pt-1">
+            {/* Inputs row first */}
+            <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]">Rs.</span>
+                    <input
+                        type="number"
+                        value={localValue[0]}
+                        onChange={handleMin}
+                        onBlur={commit}
+                        className="w-full pl-7 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[var(--colour-fsP2)] transition-all text-center"
+                    />
+                </div>
+                <span className="text-gray-300 text-xs">—</span>
+                <div className="flex-1 relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]">Rs.</span>
+                    <input
+                        type="number"
+                        value={localValue[1]}
+                        onChange={handleMax}
+                        onBlur={commit}
+                        className="w-full pl-7 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[var(--colour-fsP2)] transition-all text-center"
+                    />
+                </div>
+            </div>
+
+            {/* Track */}
+            <div ref={trackRef} className="relative h-1.5 mx-1">
+                {/* Background track */}
+                <div className="absolute inset-0 bg-gray-200 rounded-full" />
+                {/* Active range */}
                 <div
-                    className="absolute h-full bg-orange-500 rounded-full"
+                    className="absolute h-full bg-[var(--colour-fsP2)] rounded-full"
                     style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }}
                 />
+                {/* Range inputs (invisible, on top) */}
                 <input
                     type="range"
                     min={min}
                     max={max}
+                    step={100}
                     value={localValue[0]}
                     onChange={handleMin}
                     onMouseUp={commit}
                     onTouchEnd={commit}
-                    className="absolute w-full h-full opacity-0 cursor-pointer z-10"
+                    className="absolute inset-0 w-full opacity-0 cursor-pointer z-20"
                 />
                 <input
                     type="range"
                     min={min}
                     max={max}
+                    step={100}
                     value={localValue[1]}
                     onChange={handleMax}
                     onMouseUp={commit}
                     onTouchEnd={commit}
-                    className="absolute w-full h-full opacity-0 cursor-pointer z-10"
+                    className="absolute inset-0 w-full opacity-0 cursor-pointer z-20"
                 />
+                {/* Thumb indicators */}
                 <div
-                    className="absolute w-5 h-5 bg-white border-2 border-orange-500 rounded-full shadow hover:scale-110 transition-transform -translate-y-1/2 top-1/2 -translate-x-1/2 pointer-events-none"
+                    className="absolute w-4 h-4 rounded-full bg-white border-2 border-[var(--colour-fsP2)] shadow-sm -translate-y-1/2 top-1/2 -translate-x-1/2 pointer-events-none z-10"
                     style={{ left: `${minPct}%` }}
                 />
                 <div
-                    className="absolute w-5 h-5 bg-white border-2 border-orange-500 rounded-full shadow hover:scale-110 transition-transform -translate-y-1/2 top-1/2 -translate-x-1/2 pointer-events-none"
+                    className="absolute w-4 h-4 rounded-full bg-white border-2 border-[var(--colour-fsP2)] shadow-sm -translate-y-1/2 top-1/2 -translate-x-1/2 pointer-events-none z-10"
                     style={{ left: `${maxPct}%` }}
                 />
-            </div>
-
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
-                    <label className="text-[10px] uppercase font-bold text-gray-500 mb-1 block">Min</label>
-                    <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">Rs.</span>
-                        <input
-                            type="number"
-                            value={localValue[0]}
-                            onChange={handleMin}
-                            onBlur={commit}
-                            className="w-full pl-8 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                        />
-                    </div>
-                </div>
-                <div className="flex-1">
-                    <label className="text-[10px] uppercase font-bold text-gray-500 mb-1 block">Max</label>
-                    <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">Rs.</span>
-                        <input
-                            type="number"
-                            value={localValue[1]}
-                            onChange={handleMax}
-                            onBlur={commit}
-                            className="w-full pl-8 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                        />
-                    </div>
-                </div>
             </div>
         </div>
     );
@@ -418,68 +354,40 @@ const PriceRangeSlider = memo(({ min, max, value, onChange }: PriceRangeSliderPr
 PriceRangeSlider.displayName = 'PriceRangeSlider';
 
 // ============================================
-// TOGGLE SWITCH
+// TOGGLE SWITCH — compact
 // ============================================
 interface ToggleSwitchProps {
     label: string;
-    description?: string;
     checked: boolean;
     onChange: () => void;
-    icon?: React.ElementType;
 }
 
-const ToggleSwitch = memo(({
-    label,
-    description,
-    checked,
-    onChange,
-    icon: Icon,
-}: ToggleSwitchProps) => (
-    <label className="flex items-center gap-3 py-2 px-3 cursor-pointer group/toggle rounded-xl transition-all hover:bg-gray-50 border border-transparent hover:border-gray-100">
-        {Icon && (
-            <div
-                className={cn(
-                    'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
-                    checked ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'
-                )}
-            >
-                <Icon size={16} />
-            </div>
+const ToggleSwitch = memo(({ label, checked, onChange }: ToggleSwitchProps) => (
+    <button
+        onClick={onChange}
+        className={cn(
+            'flex items-center justify-between w-full py-2 px-2.5 rounded-lg transition-all duration-150 cursor-pointer',
+            checked ? 'bg-[var(--colour-fsP2)]/8' : 'hover:bg-gray-50'
         )}
-
-        <div className="flex-1">
-            <span
-                className={cn(
-                    'block text-sm font-medium transition-colors',
-                    checked ? 'text-gray-900' : 'text-gray-600'
-                )}
-            >
-                {label}
-            </span>
-        </div>
-
+    >
+        <span className={cn(
+            'text-[13px] font-medium',
+            checked ? 'text-gray-900' : 'text-gray-600'
+        )}>
+            {label}
+        </span>
         <div className="relative">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={onChange}
-                className="sr-only"
-            />
-            <div
-                className={cn(
-                    'w-10 h-6 rounded-full transition-all duration-300',
-                    checked ? 'bg-orange-500' : 'bg-gray-200'
-                )}
-            >
-                <div
-                    className={cn(
-                        'absolute w-4 h-4 bg-white rounded-full shadow-sm top-1 transition-all duration-300',
-                        checked ? 'left-5' : 'left-1'
-                    )}
-                />
+            <div className={cn(
+                'w-9 h-[22px] rounded-full transition-all duration-200',
+                checked ? 'bg-[var(--colour-fsP2)]' : 'bg-gray-200'
+            )}>
+                <div className={cn(
+                    'absolute w-[16px] h-[16px] bg-white rounded-full shadow-sm top-[3px] transition-all duration-200',
+                    checked ? 'left-[19px]' : 'left-[3px]'
+                )} />
             </div>
         </div>
-    </label>
+    </button>
 ));
 ToggleSwitch.displayName = 'ToggleSwitch';
 
@@ -492,21 +400,21 @@ interface ActiveFilterTagProps {
 }
 
 export const ActiveFilterTag = memo(({ label, onRemove }: ActiveFilterTagProps) => (
-    <span className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 px-2.5 py-1 rounded-full text-xs font-medium border border-orange-100">
+    <span className="inline-flex items-center gap-1 bg-[var(--colour-fsP2)]/8 text-[var(--colour-fsP2)] px-2 py-0.5 rounded-md text-xs font-medium">
         {label}
         <button
             onClick={onRemove}
-            className="p-0.5 rounded-full hover:bg-orange-100 text-orange-600 transition-colors"
+            className="p-0.5 rounded hover:bg-[var(--colour-fsP2)]/15 transition-colors cursor-pointer"
             aria-label={`Remove ${label} filter`}
         >
-            <X size={12} />
+            <X size={11} />
         </button>
     </span>
 ));
 ActiveFilterTag.displayName = 'ActiveFilterTag';
 
 // ============================================
-// MAIN FILTER SIDEBAR COMPONENT
+// MAIN FILTER SIDEBAR
 // ============================================
 interface FilterSidebarProps {
     filters: FilterState;
@@ -548,17 +456,17 @@ const FilterSidebar = memo(({
         onFiltersChange({ ...filters, onSale: !filters.onSale });
     }, [filters, onFiltersChange]);
 
+    const handleEmiOnlyChange = useCallback(() => {
+        onFiltersChange({ ...filters, emiOnly: !filters.emiOnly });
+    }, [filters, onFiltersChange]);
+
     const handleCategoryToggle = useCallback(
-        (id: string | number) => {
-            onToggleFilter('categories', id);
-        },
+        (id: string | number) => { onToggleFilter('categories', id); },
         [onToggleFilter]
     );
 
     const handleBrandToggle = useCallback(
-        (id: string | number) => {
-            onToggleFilter('brands', id);
-        },
+        (id: string | number) => { onToggleFilter('brands', id); },
         [onToggleFilter]
     );
 
@@ -573,35 +481,35 @@ const FilterSidebar = memo(({
     );
 
     return (
-        <div
-            className={cn(
-                'relative bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden',
-                className
-            )}
-        >
-            <FilterBackground />
-
+        <div className={cn(
+            'relative bg-white rounded-xl border border-gray-200/80 overflow-hidden',
+            className
+        )}>
             {/* Header */}
-            <div className="relative px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <SlidersHorizontal size={18} className="text-gray-800" />
-                    <h2 className="text-base font-bold text-gray-900">Filters</h2>
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <SlidersHorizontal size={15} className="text-gray-700" />
+                    <h2 className="text-sm font-bold text-gray-900">Filters</h2>
+                    {activeFilterCount > 0 && (
+                        <span className="text-[10px] font-bold bg-[var(--colour-fsP2)] text-white w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center">
+                            {activeFilterCount}
+                        </span>
+                    )}
                 </div>
-
                 {activeFilterCount > 0 && (
                     <button
                         onClick={onClearAll}
-                        className="text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline transition-all"
+                        className="text-[11px] font-medium text-[var(--colour-fsP2)] hover:underline transition-all cursor-pointer"
                     >
-                        Reset All
+                        Reset
                     </button>
                 )}
             </div>
 
-            {/* Filter Content */}
-            <div className="relative px-5 py-2 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar">
+            {/* Content */}
+            <div className="px-3 py-1">
                 {/* Quick Toggles */}
-                <div className="py-4 space-y-2 border-b border-gray-100">
+                <div className="py-2.5 space-y-1 border-b border-gray-100/80">
                     <ToggleSwitch
                         label="In Stock Only"
                         checked={filters.inStock}
@@ -611,6 +519,11 @@ const FilterSidebar = memo(({
                         label="On Sale"
                         checked={filters.onSale}
                         onChange={handleOnSaleChange}
+                    />
+                    <ToggleSwitch
+                        label="EMI Available"
+                        checked={filters.emiOnly}
+                        onChange={handleEmiOnlyChange}
                     />
                 </div>
 
@@ -626,7 +539,7 @@ const FilterSidebar = memo(({
                         items={categoryItems}
                         selectedIds={filters.categories}
                         onToggle={handleCategoryToggle}
-                        placeholder="Filter categories..."
+                        placeholder="Search categories..."
                         emptyMessage="No categories"
                     />
                 </FilterSection>
@@ -653,7 +566,7 @@ const FilterSidebar = memo(({
                         items={brandItems}
                         selectedIds={filters.brands}
                         onToggle={handleBrandToggle}
-                        placeholder="Filter brands..."
+                        placeholder="Search brands..."
                         emptyMessage="No brands"
                     />
                 </FilterSection>

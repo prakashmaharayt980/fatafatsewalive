@@ -27,7 +27,7 @@ const ProductWidget = () => {
                 {products.map((product: any) => (
                     <Link
                         key={product.id}
-                        href={`/product/${product.slug}`}
+                        href={`/products/${product.slug}`}
                         className="flex gap-3 group items-center"
                     >
                         <div className="relative w-14 h-14 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 group-hover:border-blue-200 transition-colors">

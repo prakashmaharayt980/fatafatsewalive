@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 import RemoteServices from '../api/remoteservice';
+import WishlistService from '../api/services/wishlist';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { getCookie } from 'cookies-next';
 import { useAuth } from '../context/AuthContext';
@@ -63,6 +64,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [cartItems, setCartItems] = useState<CartResponse>();
     const [wishlistItems, setWishlistItems] = useState<ProductDetails[]>([]);
+    const [wishlistMap, setWishlistMap] = useState<Record<number, number>>({});
     const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
     const [isWishlistOpen, setIsWishlistOpen] = useState<boolean>(false);
 
@@ -79,12 +81,47 @@ export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     const fetchWishlist = async () => {
-        // TODO: Implement Wishlist API
-        // RemoteServices.WishlistList().then(res => {
-        //     setWishlistItems(res.data)
-        // }).catch(err => {
-        //     console.error(err);
-        // })
+        try {
+            const data = await WishlistService.getWishlist();
+            // Assuming data is an array of objects { id: number, product: ProductDetails }
+            // or verify structure. If it's just products, we can't delete by ID easily unless ID matches.
+            // Based on user request "delete use ../wishlist/id", we assume wrapper object.
+
+            // Check if data is array
+            if (Array.isArray(data)) {
+                const products: ProductDetails[] = [];
+                const mapping: Record<number, number> = {};
+
+                data.forEach((item: any) => {
+                    if (item.product) {
+                        products.push(item.product);
+                        mapping[item.product.id] = item.id;
+                    } else if (item.name) {
+                        // Maybe it returned direct products?
+                        products.push(item);
+                        // If direct product, we assume delete takes product id? Unlikely given instructions.
+                        // But we'll map product.id to product.id just in case
+                        mapping[item.id] = item.id;
+                    }
+                });
+                setWishlistItems(products);
+                setWishlistMap(mapping);
+            } else if (data.results && Array.isArray(data.results)) {
+                // Handle paginated response
+                const products: ProductDetails[] = [];
+                const mapping: Record<number, number> = {};
+                data.results.forEach((item: any) => {
+                    if (item.product) {
+                        products.push(item.product);
+                        mapping[item.product.id] = item.id;
+                    }
+                });
+                setWishlistItems(products);
+                setWishlistMap(mapping);
+            }
+        } catch (error) {
+            console.error("Failed to fetch wishlist", error);
+        }
     };
     const CartUpdateQuantity = async (id: number, quantity: number) => {
 
@@ -144,19 +181,42 @@ export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ childre
     // --- WISHLIST LOGIC ---
 
     const addToWishlist = async (id: number) => {
-
         if (!authState.user) {
             triggerLoginAlert();
             return;
         }
 
+        // Optimistic check
         if (wishlistItems.find(i => i.id === id)) return;
-        // setWishlistItems((prev) => [...prev, id]);
-        // await RemoteServices.AddToWishlist(product.id);
+
+        try {
+            await WishlistService.addToWishlist(id);
+            // Refresh wishlist to get new ID mapping
+            fetchWishlist();
+            setIsWishlistOpen(true);
+        } catch (error) {
+            console.error("Failed to add to wishlist", error);
+        }
     };
 
     const removeFromWishlist = async (id: number) => {
-        setWishlistItems((prev) => prev.filter((item) => item.id !== id));
+        // id is product_id here (passed from ProductCard)
+        try {
+            const wishlistId = wishlistMap[id];
+            if (wishlistId) {
+                await WishlistService.removeFromWishlist(wishlistId);
+                // Optimistic update
+                setWishlistItems((prev) => prev.filter((item) => item.id !== id));
+                // We should also remove from map, but fetching is cleaner
+                fetchWishlist();
+            } else {
+                console.warn("No wishlist ID found for product", id);
+                // Fallback: maybe the ID passed IS the wishlist ID? 
+                // But signature is removeFromWishlist(product.id)
+            }
+        } catch (error) {
+            console.error("Failed to remove from wishlist", error);
+        }
     };
 
     // --- COMPARE LOGIC ---

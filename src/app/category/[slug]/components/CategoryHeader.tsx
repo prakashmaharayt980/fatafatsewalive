@@ -7,6 +7,7 @@ import {
     SlidersHorizontal,
     Grid3X3,
     LayoutGrid,
+    LayoutList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FilterState, SORT_OPTIONS, ViewMode } from '../types';
@@ -39,7 +40,7 @@ const SortDropdown = memo(({ value, onChange }: SortDropdownProps) => {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl font-medium text-sm min-w-[180px] justify-between hover:border-orange-300 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl font-medium text-sm min-w-[180px] justify-between hover:border-[var(--colour-fsP2)] transition-colors"
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
             >
@@ -71,7 +72,7 @@ const SortDropdown = memo(({ value, onChange }: SortDropdownProps) => {
                                     className={cn(
                                         'w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition-colors',
                                         value === opt.id
-                                            ? 'bg-orange-50 text-orange-600 font-medium'
+                                            ? 'bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] font-medium'
                                             : 'hover:bg-gray-50 text-gray-700'
                                     )}
                                     role="option"
@@ -79,7 +80,7 @@ const SortDropdown = memo(({ value, onChange }: SortDropdownProps) => {
                                 >
                                     {opt.label}
                                     {value === opt.id && (
-                                        <Check size={16} className="text-orange-500" />
+                                        <Check size={16} className="text-[var(--colour-fsP2)]" />
                                     )}
                                 </button>
                             </li>
@@ -100,34 +101,30 @@ interface ViewModeToggleProps {
     onChange: (mode: ViewMode) => void;
 }
 
+const VIEW_MODES: { mode: ViewMode; icon: React.ElementType; label: string }[] = [
+    { mode: 'grid', icon: LayoutGrid, label: 'Grid view' },
+    { mode: 'compact', icon: Grid3X3, label: 'Compact view' },
+    { mode: 'list', icon: LayoutList, label: 'List view' },
+];
+
 const ViewModeToggle = memo(({ value, onChange }: ViewModeToggleProps) => (
     <div className="hidden sm:flex items-center bg-white border border-gray-200 rounded-xl p-1">
-        <button
-            onClick={() => onChange('grid')}
-            className={cn(
-                'p-2 rounded-lg transition-all',
-                value === 'grid'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700'
-            )}
-            aria-label="Grid view"
-            aria-pressed={value === 'grid'}
-        >
-            <LayoutGrid size={18} />
-        </button>
-        <button
-            onClick={() => onChange('compact')}
-            className={cn(
-                'p-2 rounded-lg transition-all',
-                value === 'compact'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700'
-            )}
-            aria-label="Compact view"
-            aria-pressed={value === 'compact'}
-        >
-            <Grid3X3 size={18} />
-        </button>
+        {VIEW_MODES.map(({ mode, icon: Icon, label }) => (
+            <button
+                key={mode}
+                onClick={() => onChange(mode)}
+                className={cn(
+                    'p-2 rounded-lg transition-all',
+                    value === mode
+                        ? 'bg-[var(--colour-fsP2)] text-white shadow-md'
+                        : 'text-gray-500 hover:text-gray-700'
+                )}
+                aria-label={label}
+                aria-pressed={value === mode}
+            >
+                <Icon size={18} />
+            </button>
+        ))}
     </div>
 ));
 ViewModeToggle.displayName = 'ViewModeToggle';
@@ -143,12 +140,12 @@ interface MobileFilterButtonProps {
 const MobileFilterButton = memo(({ onClick, activeCount = 0 }: MobileFilterButtonProps) => (
     <button
         onClick={onClick}
-        className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl font-medium text-sm hover:border-orange-300 transition-colors"
+        className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl font-medium text-sm hover:border-[var(--colour-fsP2)] transition-colors"
     >
         <SlidersHorizontal size={18} />
         <span>Filters</span>
         {activeCount > 0 && (
-            <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+            <span className="bg-[var(--colour-fsP2)] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                 {activeCount}
             </span>
         )}
@@ -180,7 +177,7 @@ const CategoryHeader = memo(({
     onViewModeChange,
     onMobileFilterClick,
 }: CategoryHeaderProps) => (
-    <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">{title}</h1>
             <span className="text-gray-500 bg-gray-100 px-3 py-1 rounded-full text-sm">
@@ -188,7 +185,7 @@ const CategoryHeader = memo(({
             </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
             <MobileFilterButton
                 onClick={onMobileFilterClick}
                 activeCount={activeFilterCount}

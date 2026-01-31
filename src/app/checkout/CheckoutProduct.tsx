@@ -57,43 +57,43 @@ export default function CheckoutProduct({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-        <h3 className="text-xl font-bold text-gray-900 tracking-tight">Order Summary</h3>
-        <Badge variant="secondary" className="font-semibold bg-white border border-gray-200 text-gray-700 shadow-sm px-3 py-1">
+      {/* Header */}
+      <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+        <h3 className="text-lg font-bold text-gray-900">Order Summary</h3>
+        <Badge variant="secondary" className="font-semibold bg-gray-100 text-gray-700 px-2.5 py-1 text-xs">
           {items.length} {items.length === 1 ? 'Item' : 'Items'}
         </Badge>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-5 space-y-5">
         {/* Products List */}
-        <div className="max-h-[400px] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-200">
+        <div className="max-h-[350px] overflow-y-auto pr-1 space-y-3 scrollbar-thin scrollbar-thumb-gray-200">
           {items.map((item, index) => {
             const product = item.product;
             const price = Number(product.price);
-            // API provides 'price' as number usually, but let's be safe as per previous fixes
             const quantity = item.quantity || 1;
             const itemTotal = price * quantity;
 
             return (
-              <div key={item.id || index} className="flex gap-4 group">
-                <div className="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+              <div key={item.id || index} className="flex gap-3.5 p-3 rounded-xl bg-gray-50/50 border border-gray-100 group hover:border-gray-200 transition-colors">
+                <div className="relative w-18 h-18 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden rounded-lg bg-white border border-gray-100">
                   <Image
                     src={product.image?.thumb || product.image?.full || '/placeholder-image.jpg'}
                     alt={product.name || 'Product'}
                     fill
-                    sizes="64px"
-                    className="object-contain p-1 transition-transform duration-300 group-hover:scale-105"
+                    sizes="80px"
+                    className="object-contain p-1.5"
                   />
                 </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight" title={product.name}>
-                      {product.name || 'Unnamed Product'}
-                    </p>
-                  </div>
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug" title={product.name}>
+                    {product.name || 'Unnamed Product'}
+                  </p>
                   <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded">Qty: {quantity}</div>
-                    <div className="text-sm font-medium text-gray-900">Rs {itemTotal.toFixed(2)}</div>
+                    <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100">
+                      Qty: {quantity}
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">Rs. {itemTotal.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -103,37 +103,37 @@ export default function CheckoutProduct({
 
         <Separator className="bg-gray-100" />
 
-        {/* Promo Code Section */}
+        {/* Promo Code */}
         <div>
           {submittedvaluelist.appliedPromo ? (
-            <div className="flex items-center justify-between bg-green-50 border border-green-100 rounded-lg p-3">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs">
+            <div className="flex items-center justify-between bg-green-50 border border-green-100 rounded-xl p-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs">
                   %
                 </div>
-                <span className="text-sm font-medium text-green-700">{submittedvaluelist.appliedPromo.code} applied</span>
+                <span className="text-sm font-semibold text-green-700">{submittedvaluelist.appliedPromo.code} applied</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: '', appliedPromo: null }))}
-                className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="h-8 px-3 text-red-500 hover:text-red-700 hover:bg-red-50 text-xs font-semibold"
               >
                 Remove
               </Button>
             </div>
           ) : (
-            <div className="flex gap-3">
+            <div className="flex gap-2.5">
               <Input
                 value={submittedvaluelist.promoCode}
                 onChange={(e) => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: e.target.value }))}
-                placeholder="Enter Promo Code"
-                className="bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP1)] focus:ring-2 focus:ring-blue-50 transition-all h-12 text-base px-4 rounded-xl"
+                placeholder="Promo code"
+                className="bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP1)] transition-all h-11 text-sm px-4 rounded-xl"
               />
               <Button
                 onClick={handleApplyPromo}
                 variant="outline"
-                className="h-12 px-6 border-[var(--colour-fsP1)] text-[var(--colour-fsP1)] font-semibold hover:bg-blue-50 hover:text-[var(--colour-fsP1)] rounded-xl transition-all"
+                className="h-11 px-5 border-[var(--colour-fsP1)] text-[var(--colour-fsP1)] font-bold hover:bg-blue-50 rounded-xl transition-all text-sm"
               >
                 Apply
               </Button>
@@ -144,30 +144,30 @@ export default function CheckoutProduct({
         <Separator className="bg-gray-100" />
 
         {/* Price Breakdown */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center text-sm text-gray-600">
-            <span>Subtotal</span>
-            <span className="font-medium text-gray-900">Rs {subtotal.toFixed(2)}</span>
+        <div className="space-y-2.5">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-500">Subtotal</span>
+            <span className="font-medium text-gray-800">Rs. {subtotal.toLocaleString()}</span>
           </div>
           {submittedvaluelist.appliedPromo && (
             <div className="flex justify-between items-center text-sm text-green-600">
-              <span>Discount ({submittedvaluelist.appliedPromo.discount}%)</span>
-              <span>- Rs {promoDiscount.toFixed(2)}</span>
+              <span>Discount</span>
+              <span className="font-semibold">- Rs. {promoDiscount.toLocaleString()}</span>
             </div>
           )}
 
-          <Separator className="bg-gray-100 my-2" />
-
-          <div className="flex justify-between items-end pt-2">
-            <span className="text-lg font-bold text-gray-900">Total Payable</span>
-            <span className="text-2xl font-extrabold text-[var(--colour-fsP2)] leading-none">Rs {totalPayable.toFixed(2)}</span>
+          <div className="border-t border-gray-200 pt-3 mt-3">
+            <div className="flex justify-between items-end">
+              <span className="text-base font-bold text-gray-900">Total</span>
+              <span className="text-2xl font-bold text-[var(--colour-fsP2)]">Rs. {totalPayable.toLocaleString()}</span>
+            </div>
           </div>
         </div>
       </div>
 
       {submittedvaluelist.appliedPromo && (
-        <div className="bg-green-50 p-3 text-center text-sm text-green-700 border-t border-green-100 font-medium">
-          You saved Rs {promoDiscount.toFixed(2)} on this order
+        <div className="bg-green-50 px-5 py-3 text-center text-sm text-green-700 border-t border-green-100 font-semibold">
+          You saved Rs. {promoDiscount.toLocaleString()} on this order
         </div>
       )}
     </div>

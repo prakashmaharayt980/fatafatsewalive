@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 import Image from 'next/image';
-import ProductCard from '../product/ProductCard';
+import ProductCard from '../products/ProductCard';
 import SkeltonCard from './SkeltonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';

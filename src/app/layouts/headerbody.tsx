@@ -117,7 +117,7 @@ const HeaderComponent = () => {
         e?.preventDefault();
         e?.stopPropagation();
 
-        router.push(`/product/${product.slug}?id=${product.id}`);
+        router.push(`/products/${product.slug}`);
         updateState({ showSearchDropdown: false, mobileSearchVisible: false });
     };
 

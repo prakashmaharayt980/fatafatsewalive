@@ -186,7 +186,7 @@ function CompareContent() {
                                         Rs. {product.discounted_price?.toLocaleString()}
                                     </p>
                                     <Link
-                                        href={`/product/${product.slug}?id=${product.id}`}
+                                        href={`/products/${product.slug}`}
                                         className="w-full py-2.5 px-4 bg-[var(--colour-fsP1)] hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition cursor-pointer text-center block"
                                     >
                                         Buy Now

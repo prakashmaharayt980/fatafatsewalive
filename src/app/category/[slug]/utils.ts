@@ -79,6 +79,9 @@ export const parseFiltersFromSearchParams = (
     if (searchParams.on_sale === '1') {
         filters.onSale = true;
     }
+    if (searchParams.emi_enabled === '1') {
+        filters.emiOnly = true;
+    }
 
     return filters;
 };
@@ -116,6 +119,9 @@ export const buildFilterQueryString = (filters: FilterState): string => {
     if (filters.onSale) {
         params.on_sale = '1';
     }
+    if (filters.emiOnly) {
+        params.emi_enabled = '1';
+    }
 
     return new URLSearchParams(params).toString();
 };
@@ -141,6 +147,7 @@ export const buildApiParams = (
     if (filters.sortBy !== 'default') params.sort = filters.sortBy;
     if (filters.inStock) params.in_stock = '1';
     if (filters.onSale) params.on_sale = '1';
+    if (filters.emiOnly) params.emi_enabled = '1';
 
     return params;
 };

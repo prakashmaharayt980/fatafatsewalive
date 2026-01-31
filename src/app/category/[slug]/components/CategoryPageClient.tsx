@@ -38,21 +38,18 @@ const GlobalStyles = () => (
             opacity: 0;
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+        /* Hide scrollbar everywhere but keep scrollable */
+        .custom-scrollbar::-webkit-scrollbar,
+        *::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+            display: none;
         }
 
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: linear-gradient(to bottom, #fed7aa, #fdba74);
-            border-radius: 10px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(to bottom, #fdba74, #fb923c);
+        .custom-scrollbar,
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     `}</style>
 );
@@ -136,7 +133,7 @@ export default function CategoryPageClient({
                     onClear={clearAllFilters}
                     onApply={handleMobileFilterApply}
                 >
-                    <div className="px-4 py-4">
+                    <div className="px-3 sm:px-4 py-4">
                         <FilterSidebar
                             filters={filters}
                             onFiltersChange={handleFiltersChange}
@@ -168,8 +165,8 @@ export default function CategoryPageClient({
                     {/* Loading indicator for filter changes */}
                     {isPending && (
                         <div className="mb-4">
-                            <div className="h-1 bg-orange-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse w-1/2" />
+                            <div className="h-1 bg-[var(--colour-fsP2)]/10 rounded-full overflow-hidden">
+                                <div className="h-full bg-[var(--colour-fsP2)] animate-pulse w-1/2" />
                             </div>
                         </div>
                     )}

@@ -14,6 +14,7 @@ export interface FilterState {
     sortBy: SortOption;
     inStock: boolean;
     onSale: boolean;
+    emiOnly: boolean;
 }
 
 export type SortOption = 'default' | 'price-low-high' | 'price-high-low' | 'newest' | 'rating';
@@ -71,6 +72,7 @@ export interface SearchParams {
     sort?: string;
     in_stock?: string;
     on_sale?: string;
+    emi_enabled?: string;
 }
 
 export interface CategoryPageData {
@@ -94,6 +96,7 @@ export const INITIAL_FILTERS: FilterState = {
     sortBy: 'default',
     inStock: false,
     onSale: false,
+    emiOnly: false,
 };
 
 export const SORT_OPTIONS = [
@@ -118,6 +121,7 @@ export const COLORS: FilterOption[] = [
 export const GRID_CONFIGS = {
     grid: 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5',
     compact: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
+    list: 'grid-cols-1',
 } as const;
 
 export type ViewMode = keyof typeof GRID_CONFIGS;

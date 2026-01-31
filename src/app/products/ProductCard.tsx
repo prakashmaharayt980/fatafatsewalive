@@ -40,7 +40,7 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
             console.warn('Missing slug or id');
             return;
         }
-        router.push(`/product/${product.slug}?id=${product.id}`);
+        router.push(`/products/${product.slug}`);
     };
 
     const handleAddToCart = (e: React.MouseEvent) => {
