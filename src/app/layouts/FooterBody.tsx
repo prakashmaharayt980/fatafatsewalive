@@ -41,11 +41,11 @@ const FooterBody = () => {
   ];
 
   const socialIcons = [
-    { Icon: Facebook, url: "#", color: "hover:text-blue-600" },
-    { Icon: Twitter, url: "#", color: "hover:text-sky-500" },
-    { Icon: Instagram, url: "#", color: "hover:text-pink-600" },
-    { Icon: Youtube, url: "#", color: "hover:text-red-600" },
-    { Icon: Linkedin, url: "#", color: "hover:text-blue-700" },
+    { name: "Facebook", Icon: Facebook, url: "#", color: "hover:text-blue-600" },
+    { name: "Twitter", Icon: Twitter, url: "#", color: "hover:text-sky-500" },
+    { name: "Instagram", Icon: Instagram, url: "#", color: "hover:text-pink-600" },
+    { name: "YouTube", Icon: Youtube, url: "#", color: "hover:text-red-600" },
+    { name: "LinkedIn", Icon: Linkedin, url: "#", color: "hover:text-blue-700" },
   ];
 
   const paymentMethods = [
@@ -89,10 +89,11 @@ const FooterBody = () => {
             <div className="mb-6">
               <h4 className="text-[var(--colour-fsP2)] font-semibold text-lg mb-4 text-center lg:text-left">Follow Us</h4>
               <div className="flex gap-3 justify-center lg:justify-start">
-                {socialIcons.map(({ Icon, url, color }, index) => (
+                {socialIcons.map(({ name, Icon, url, color }, index) => (
                   <a
                     key={index}
                     href={url}
+                    aria-label={name}
                     className={`w-11 h-11 bg-white rounded-full flex items-center justify-center text-gray-600 ${color} transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 hover:scale-105`}
                   >
                     <Icon className="w-5 h-5" />

@@ -26,19 +26,19 @@ body {
     pointer-events: none;
     position: absolute;
     width: 8px;
-    border-color: #ff6a00;
+    border-color: #c2410c;
 }
 
 .heading-title::before {
-    border-left: 2px solid #ff6a00;
-    border-top: 2px solid #ff6a00;
+    border-left: 2px solid #c2410c;
+    border-top: 2px solid #c2410c;
     left: 0;
     top: 0;
 }
 
 .heading-title::after {
-    border-bottom: 2px solid #ff6a00;
-    border-right: 2px solid #ff6a00;
+    border-bottom: 2px solid #c2410c;
+    border-right: 2px solid #c2410c;
     bottom: 0;
     right: 0;
 }
@@ -91,7 +91,7 @@ body {
     --colour-text4: #CDECFF;
     --colour-yellow1: #FF9107;
 
-    --colour-fsP1: #ff6a00;
+    --colour-fsP1: #c2410c;
     --colour-fsP2: #1967b3;
 
     --colour-fsS2: rgb(79 99 235);

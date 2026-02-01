@@ -45,6 +45,8 @@ const TopBanner = ({ data }: TopBannerProps) => {
         fill
         className="object-fill transition-transform duration-700 "
         priority
+        fetchPriority="high"
+        decoding="sync"
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 1400px"
         unoptimized={bannerImage.src === ''}
       />

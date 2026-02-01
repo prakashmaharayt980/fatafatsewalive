@@ -155,6 +155,8 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     fill
                                                     className="object-fill"
                                                     priority={index === 0}
+                                                    fetchPriority={index === 0 ? "high" : "auto"}
+                                                    decoding={index === 0 ? "sync" : "async"}
                                                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 60vw"
                                                     quality={100}
                                                 />
@@ -209,18 +211,22 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
 
                                 {/* Dots Indicator */}
                                 {mainImages.length > 1 && (
-                                    <div className="absolute bottom-2  left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-full bg-black/20 backdrop-blur-sm">
+                                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 p-1 rounded-full bg-black/20 backdrop-blur-sm pointer-events-auto">
                                         {mainImages.map((_, index) => (
                                             <button
                                                 key={`dot-${index}`}
                                                 onClick={() => goToSlide(index)}
-                                                className={`rounded-full transition-all duration-300 ${index === currentIndex
-                                                    ? 'bg-white w-4 sm:w-5 md:w-6 h-1.5 sm:h-2'
-                                                    : 'bg-white/50 hover:bg-white/70 w-1.5 sm:w-2 h-1.5 sm:h-2'
-                                                    }`}
+                                                className="group p-2 cursor-pointer focus:outline-none"
                                                 aria-label={`Go to slide ${index + 1}`}
                                                 aria-current={index === currentIndex ? 'true' : 'false'}
-                                            />
+                                            >
+                                                <div
+                                                    className={`rounded-full transition-all duration-300 ${index === currentIndex
+                                                        ? 'bg-white w-4 sm:w-5 md:w-6 h-1.5 sm:h-2'
+                                                        : 'bg-white/50 group-hover:bg-white/70 w-1.5 sm:w-2 h-1.5 sm:h-2'
+                                                        }`}
+                                                />
+                                            </button>
                                         ))}
                                     </div>
                                 )}

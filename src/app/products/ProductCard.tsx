@@ -61,7 +61,7 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
                 {/* Badges */}
                 <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-10 flex flex-col gap-1">
                     {isNew && (
-                        <span className="bg-emerald-600 text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded tracking-wider uppercase shadow-sm">
+                        <span className="bg-emerald-700 text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded tracking-wider uppercase shadow-sm">
                             New
                         </span>
                     )}
@@ -79,6 +79,7 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
                         e.stopPropagation();
                         addToWishlist(product.id);
                     }}
+                    aria-label="Add to wishlist"
                 >
                     <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 hover:fill-current" />
                 </button>

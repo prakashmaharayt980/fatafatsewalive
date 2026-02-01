@@ -125,7 +125,7 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
 
         <button
           onClick={() => router.push(`/category/${slug}`)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all duration-200 group"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[var(--colour-fsP2)] cursor-pointer hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all duration-200 group"
         >
           View All
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
@@ -162,19 +162,23 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
 
         {/* Navigation Dots */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-2 gap-1.5">
+          <div className="flex justify-center mt-2 ">
             {[...Array(totalPages)].map((_, index) => (
               <button
                 key={index}
                 onClick={() => handleDotClick(index)}
-                className={cn(
-                  'h-1.5 rounded-full transition-all duration-300 cursor-pointer',
-                  index === activeDot
-                    ? 'bg-slate-800 w-5'
-                    : 'bg-slate-200 hover:bg-slate-300 w-1.5'
-                )}
+                className="group p-3 cursor-pointer focus:outline-none"
                 aria-label={`Go to page ${index + 1}`}
-              />
+              >
+                <div
+                  className={cn(
+                    'h-2 rounded-full transition-all duration-300',
+                    index === activeDot
+                      ? 'bg-slate-300 w-6'
+                      : 'bg-[var(--colour-fsP2)] group-hover:bg-slate-300 w-4'
+                  )}
+                />
+              </button>
             ))}
           </div>
         )}

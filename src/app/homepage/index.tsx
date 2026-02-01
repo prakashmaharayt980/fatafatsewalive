@@ -57,8 +57,8 @@ const HomePage = ({
     <div className="mx-auto h-full m-0 p-0 sm:py-2 space-y-2 sm:space-y-3 bg-[#f8f9fa] relative overflow-hidden">
       {/* Woodmart-Inspired Texture: Subtle Background Orbs */}
       <div className="absolute top-0 left-[-10%] w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none mix-blend-multiply z-0" />
-      <div className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none mix-blend-multiply z-0" />
-      <div className="absolute bottom-0 left-[20%] w-[700px] h-[700px] bg-indigo-50/50 rounded-full blur-[130px] pointer-events-none z-0" />
+      <div className="absolute top-[300px] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none mix-blend-multiply z-0" />
+      <div className="absolute top-[800px] left-[20%] w-[700px] h-[700px] bg-indigo-50/50 rounded-full blur-[130px] pointer-events-none z-0" />
 
       <div className="relative z-10">
         <div className="sm:px-2 md:px-4">

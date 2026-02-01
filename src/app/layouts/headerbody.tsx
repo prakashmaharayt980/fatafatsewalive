@@ -262,7 +262,10 @@ const HeaderComponent = () => {
                                         onChange={handleSearchChange}
                                         className="w-full px-4 py-2.5 bg-transparent border-none focus:outline-none text-sm placeholder-gray-500"
                                     />
-                                    <button className="bg-blue-600 text-white px-4 py-2.5 m-0.5 hover:bg-blue-700 transition-colors rounded-full duration-200 flex items-center justify-center">
+                                    <button
+                                        aria-label="Search"
+
+                                        className="bg-blue-600 text-white px-4 py-2.5 m-0.5 hover:bg-blue-700 transition-colors rounded-full duration-200 flex items-center justify-center">
                                         <Search className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -319,13 +322,7 @@ const HeaderComponent = () => {
                                                         <Package className="w-4 h-4 text-gray-500" />
                                                         My Orders
                                                     </Link>
-                                                    <Link
-                                                        href="/profile?tab=profile"
-                                                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                                                    >
-                                                        <Settings className="w-4 h-4 text-gray-500" />
-                                                        Settings
-                                                    </Link>
+
                                                     <div className="h-px bg-gray-100 my-1"></div>
                                                     <button
                                                         onClick={handleLogout}
