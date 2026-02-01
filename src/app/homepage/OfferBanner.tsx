@@ -146,7 +146,7 @@ const OfferBanner = () => {
               width={420}
               height={420}
               sizes="(max-width: 640px) 65vw, (max-width: 1024px) 50vw, 420px"
-              className="relative object-contain z-10 drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+              className="relative object-contain z-10 drop-shadow-2xl transition-transform duration-500"
               priority
             />
           </div>
@@ -166,7 +166,7 @@ const OfferBanner = () => {
                   alt={product.name}
                   fill
                   sizes="56px"
-                  className="object-contain p-1.5 group-hover:scale-110 transition-transform duration-300"
+                  className="object-contain p-1.5 transition-transform duration-300"
                   loading="lazy"
                 />
               </div>

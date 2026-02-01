@@ -85,7 +85,7 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
                 </button>
 
                 {/* Product Image */}
-                <div className="relative w-full h-full transition-transform duration-500 group-hover:scale-105">
+                <div className="relative w-full h-full transition-transform duration-500">
                     <Image
                         src={imageUrl || '/placeholder-product.png'}
                         alt={product.name || 'Product'}

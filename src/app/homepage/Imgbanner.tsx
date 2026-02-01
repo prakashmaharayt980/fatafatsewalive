@@ -249,7 +249,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             src={image.default}
                                             alt={image.name}
                                             fill
-                                            className="object-fill transition-transform duration-300 hover:scale-105"
+                                            className="object-fill transition-transform duration-300"
                                             sizes="(max-width: 640px) 45vw, 32vw"
                                             quality={100}
                                         />
@@ -268,7 +268,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                         src={sideImages[0].default}
                                         alt={sideImages[0].name}
                                         fill
-                                        className="object-fill transition-transform duration-500 group-hover:scale-105"
+                                        className="object-fill transition-transform duration-500"
                                         sizes="(max-width: 1024px) 0vw, 40vw"
                                         quality={80}
                                     />
@@ -285,7 +285,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             src={sideImages[1].default}
                                             alt={sideImages[1].name}
                                             fill
-                                            className="object-fill transition-transform duration-500 group-hover:scale-105"
+                                            className="object-fill transition-transform duration-500"
                                             sizes="(max-width: 1024px) 0vw, 20vw"
                                             quality={80}
                                         />
@@ -299,7 +299,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             src={sideImages[2].default}
                                             alt={sideImages[2].name}
                                             fill
-                                            className="object-fill transition-transform duration-500 group-hover:scale-105"
+                                            className="object-fill transition-transform duration-500"
                                             sizes="(max-width: 1024px) 0vw, 20vw"
                                             quality={80}
                                         />

@@ -112,7 +112,7 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
               src={imageUrl}
               alt={title || 'Category Banner'}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-fill transition-transform duration-700"
               sizes="(max-width: 1024px) 30vw, 20vw"
             />
             <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-300" />

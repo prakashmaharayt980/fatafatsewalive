@@ -47,7 +47,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
               'min-w-[90%] sm:min-w-0 flex-shrink-0 snap-center',
               'relative overflow-hidden rounded-xl sm:rounded-2xl group cursor-pointer border-none', // Removed border
               'aspect-[16/9] sm:aspect-[18/6]', // Standard Aspect Ratio
-              'transition-all duration-300 hover:-translate-y-1', // Attractive lift effect
+              'transition-all duration-300 ', // Attractive lift effect
               'shadow-sm hover:shadow-xl' // Stronger shadow on hover
             )}
           >
@@ -62,7 +62,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
             />
 
             {/* Premium Overlay */}
-            {/* <div className="absolute inset-0 transition-opacity duration-300" /> */}
+            <div className="absolute inset-0 transition-opacity duration-300" />
           </Link>
         ))}
       </div>

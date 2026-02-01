@@ -6,8 +6,9 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import BannerFetcher from './components/BannerFetcher'
 import OneImageBanner from './homepage/Bannertop'
-import TwoImageBanner from './homepage/Banner2'
-import OfferBanner from './homepage/OfferBanner'
+// import TwoImageBanner from './homepage/Banner2' // Removed static import
+// import OfferBanner from './homepage/OfferBanner' // Removed static import
+import dynamic from 'next/dynamic'
 // Generate Metadata for SEO
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -87,8 +88,12 @@ async function page() {
   }, {} as Record<string, any>);
 
   // 2. Define Suspense/Streaming slots
+  const OneImageBanner = dynamic(() => import('./homepage/Bannertop'));
+  const OfferBanner = dynamic(() => import('./homepage/OfferBanner'));
+  const TwoImageBanner = dynamic(() => import('./homepage/Banner2'));
+
   const SectionOne = (
-    <Suspense fallback={<div className="h-40 bg-gray-100  rounded-xl" />}>
+    <Suspense fallback={<div className="bg-gray-100  rounded-xl" />}>
       <BannerFetcher
         slug="home-banner-secound"
         Component={OneImageBanner}
@@ -97,7 +102,7 @@ async function page() {
   );
 
   const OfferSection = (
-    <Suspense fallback={<div className="h-60 bg-gray-100 " />}>
+    <Suspense fallback={<div className="bg-gray-100 " />}>
       <BannerFetcher
         slug="offer-banner"
         Component={OfferBanner}
@@ -106,7 +111,7 @@ async function page() {
   );
 
   const SectionTwo = (
-    <Suspense fallback={<div className="h-40 bg-gray-100  rounded-xl" />}>
+    <Suspense fallback={<div className="  bg-gray-100  rounded-xl" />}>
       <BannerFetcher
         slug="home-banner-secound"
         Component={OneImageBanner}
@@ -114,13 +119,18 @@ async function page() {
     </Suspense>
   );
 
-  // Section Three uses the already fetched side banner data
+  // Section Three now uses BannerFetcher for consistency
   const SectionThree = (
-    <TwoImageBanner data={criticalData.side} />
+    <Suspense fallback={<div className="bg-gray-100  rounded-xl" />}>
+      <BannerFetcher
+        slug={'home-banner-third'}
+        Component={TwoImageBanner}
+      />
+    </Suspense>
   );
 
   const SectionFour = (
-    <Suspense fallback={<div className="h-40 bg-gray-100  rounded-xl" />}>
+    <Suspense fallback={<div className=" bg-gray-100  rounded-xl" />}>
       <BannerFetcher
         slug="home-banner-fourth"
         Component={OneImageBanner}

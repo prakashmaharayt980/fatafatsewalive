@@ -1,6 +1,6 @@
 'use client';
 
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import Image from 'next/image';
 import Imgbanner from './Imgbanner';
 
@@ -12,12 +12,13 @@ import { BannerTypes } from '@/app/types/BannerTypes';
 
 
 // Lazy-loaded components
-import BasketCard from './BasketCard';
-const OfferBanner = lazy(() => import('./OfferBanner'));
-const OurArticles = lazy(() => import('./OurArticles'));
-const CategoryProductSection = lazy(() => import('./BasketCardwithImage'));
-const TwoImageBanner = lazy(() => import('./Banner2'));
-const OneImageBanner = lazy(() => import('./Bannertop'));
+import dynamic from 'next/dynamic';
+const BasketCard = dynamic(() => import('./BasketCard'));
+const OfferBanner = dynamic(() => import('./OfferBanner'));
+const OurArticles = dynamic(() => import('./OurArticles'));
+const CategoryProductSection = dynamic(() => import('./BasketCardwithImage'));
+const TwoImageBanner = dynamic(() => import('./Banner2'));
+const OneImageBanner = dynamic(() => import('./Bannertop'));
 
 // Demo category data - Replace with API fetch later
 const demoCategories = [
