@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 import RemoteServices from '../api/remoteservice';
-import WishlistService from '../api/services/wishlist';
+import { WishlistService } from '../api/services/wishlist';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { getCookie } from 'cookies-next';
 import { useAuth } from '../context/AuthContext';

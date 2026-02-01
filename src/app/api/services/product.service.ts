@@ -8,7 +8,7 @@ export const ProductService = {
     // Search products with query
     searchProducts: (params: { search?: string; page?: number; per_page?: number; brands?: string | number; categories?: string | number }) => {
         const queryParams = new URLSearchParams();
-        if (params.search) queryParams.append('search', params.search);
+        if (params.search) queryParams.append('name', params.search);
         if (params.page) queryParams.append('page', params.page.toString());
         if (params.brands) queryParams.append('brands', params.brands.toString());
         if (params.categories) queryParams.append('categories', params.categories.toString());

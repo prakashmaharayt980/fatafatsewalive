@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { useContextCart } from "@/app/checkout/CartContext1";
 
+
 interface ProductCardProps {
     product: any;
     index?: number;
@@ -13,7 +14,7 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, index: _index, priority = false, hidePrice = false }: ProductCardProps) => {
     const router = useRouter();
-    const { addToCart, compareItems, addToCompare } = useContextCart();
+    const { addToCart, compareItems, addToCompare, addToWishlist } = useContextCart();
 
     if (!product || !product.id) {
         return null;
@@ -76,6 +77,7 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
                     className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white shadow-sm text-gray-400 hover:text-red-500 hover:shadow-md transition-all duration-200"
                     onClick={(e) => {
                         e.stopPropagation();
+                        addToWishlist(product.id);
                     }}
                 >
                     <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 hover:fill-current" />
