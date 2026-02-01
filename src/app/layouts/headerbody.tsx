@@ -279,6 +279,7 @@ const HeaderComponent = () => {
                         <div className="flex items-center space-x-2 sm:space-x-3">
                             <button
                                 onClick={toggleMobileSearch}
+                                aria-label="Toggle mobile search"
                                 className="lg:hidden p-2 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200"
                             >
                                 <Search className="h-4 w-4" />
@@ -290,6 +291,7 @@ const HeaderComponent = () => {
                                     <div className="relative account-menu">
                                         <button
                                             onClick={toggleAccountMenu}
+                                            aria-label="Account menu"
                                             className="hidden sm:flex items-center space-x-1 p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
                                         >
                                             <User className="h-4 w-4" />
@@ -338,6 +340,7 @@ const HeaderComponent = () => {
 
                                     <button
                                         onClick={() => setIsCartOpen(true)}
+                                        aria-label="Open cart"
                                         className="relative p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
                                     >
                                         <ShoppingCart className="h-4 w-4" />
@@ -354,6 +357,7 @@ const HeaderComponent = () => {
 
                                     <button
                                         onClick={() => setIsWishlistOpen(true)}
+                                        aria-label="Open wishlist"
                                         className="relative p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
                                     >
                                         <Heart className="h-4 w-4" />
@@ -382,6 +386,7 @@ const HeaderComponent = () => {
                             {/* Mobile Menu Toggle */}
                             <button
                                 onClick={toggleMobileMenu}
+                                aria-label="Toggle mobile menu"
                                 className="sm:hidden p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
                             >
                                 {state.isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -418,6 +423,7 @@ const HeaderComponent = () => {
                                     />
                                     <button
                                         onClick={toggleMobileSearch}
+                                        aria-label="Close mobile search"
                                         className="px-4 py-3 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                                     >
                                         <X className="h-4 w-4" />

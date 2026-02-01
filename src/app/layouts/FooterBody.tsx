@@ -191,7 +191,7 @@ const FooterBody = () => {
                       width={40}
                       height={24}
                       className="object-contain h-6 w-auto"
-                      quality={100}
+                      quality={75}
                     />
                   </div>
                 ))}

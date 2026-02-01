@@ -162,12 +162,12 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
 
         {/* Navigation Dots */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-2 ">
-            {[...Array(totalPages)].map((_, index) => (
+          <div className="flex justify-center gap-3">
+            {[...Array(isMobile ? Math.min(totalPages, 2) : totalPages)].map((_, index) => (
               <button
                 key={index}
                 onClick={() => handleDotClick(index)}
-                className="group p-3 cursor-pointer focus:outline-none"
+                className="group cursor-pointer focus:outline-none"
                 aria-label={`Go to page ${index + 1}`}
               >
                 <div

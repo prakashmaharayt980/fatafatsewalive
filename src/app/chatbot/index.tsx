@@ -94,12 +94,14 @@ const ProductCarousel = () => {
       {/* Scroll buttons */}
       <button
         onClick={() => scroll('left')}
+        aria-label="Scroll left"
         className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[var(--colour-fsP2)] transition-colors opacity-0 hover:opacity-100 focus:opacity-100"
       >
         <ChevronLeft className="w-4 h-4" />
       </button>
       <button
         onClick={() => scroll('right')}
+        aria-label="Scroll right"
         className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[var(--colour-fsP2)] transition-colors"
       >
         <ChevronRight className="w-4 h-4" />
@@ -460,6 +462,7 @@ export default function ChatBot() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Toggle chat"
         className={cn(
           'fixed z-[9999] w-14 h-14 rounded-full transition-all duration-200 flex items-center justify-center',
           'bottom-24 right-6 bg-[var(--colour-fsP2)] text-white',
@@ -496,6 +499,7 @@ export default function ChatBot() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={clearChat}
+                  aria-label="Clear chat"
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                   title="Clear chat"
                 >
@@ -503,6 +507,7 @@ export default function ChatBot() {
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
+                  aria-label="Close chat"
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -678,7 +683,7 @@ export default function ChatBot() {
           <div className="p-4 border-t border-gray-100 bg-white">
             <div className="flex items-end gap-2">
               <DropdownMenu>
-                <DropdownMenuTrigger className="p-2.5 text-gray-400 hover:text-[var(--colour-fsP2)] hover:bg-blue-50 transition-colors rounded-full flex-shrink-0">
+                <DropdownMenuTrigger aria-label="Attach file" className="p-2.5 text-gray-400 hover:text-[var(--colour-fsP2)] hover:bg-blue-50 transition-colors rounded-full flex-shrink-0">
                   <Paperclip className="w-5 h-5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="rounded-xl">
@@ -709,6 +714,7 @@ export default function ChatBot() {
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
+                aria-label="Send message"
                 className={cn(
                   "p-2.5 rounded-full transition-all flex items-center justify-center flex-shrink-0",
                   input.trim() && !isLoading

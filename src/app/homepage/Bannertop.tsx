@@ -47,7 +47,8 @@ const TopBanner = ({ data }: TopBannerProps) => {
         priority
         fetchPriority="high"
         decoding="sync"
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 1400px"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 90vw"
+        quality={85}
         unoptimized={bannerImage.src === ''}
       />
 

@@ -144,12 +144,12 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
           </div>
 
           {/* Product Grid */}
-          <div className="flex-1 overflow-visible py-2 px-0 relative pb-8">
+          <div className="flex-1 overflow-visible  px-0 relative pb-8">
             <div
               ref={scrollContainerRef}
               className={cn(
                 'flex overflow-x-auto overflow-y-visible scrollbar-hide h-full items-start',
-                'gap-3 sm:gap-4 px-2'
+                'gap-2 sm:gap-4 px-2'
               )}
               style={{
                 scrollbarWidth: 'none',
@@ -169,13 +169,13 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
 
             {/* Navigation Dots */}
             {totalPages > 1 && (
-              <div className="absolute bottom-0 left-0 right-0 flex justify-center pointer-events-none mt-4">
-                <div className="flex gap-1.5 p-1.5 pointer-events-auto">
-                  {[...Array(Math.min(totalPages, 5))].map((_, index) => (
+              <div className="absolute bottom-0 left-0 right-0 flex justify-center pointer-events-none ">
+                <div className="flex gap-1.5  pointer-events-auto">
+                  {[...Array(isMobile ? Math.min(totalPages, 2) : Math.min(totalPages, 5))].map((_, index) => (
                     <button
                       key={index}
                       onClick={() => handleDotClick(index)}
-                      className="group p-3 cursor-pointer focus:outline-none"
+                      className="group  cursor-pointer focus:outline-none"
                       aria-label={`Go to page ${index + 1}`}
                     >
                       <div

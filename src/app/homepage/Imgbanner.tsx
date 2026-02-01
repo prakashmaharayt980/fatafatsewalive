@@ -157,8 +157,8 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     priority={index === 0}
                                                     fetchPriority={index === 0 ? "high" : "auto"}
                                                     decoding={index === 0 ? "sync" : "async"}
-                                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 60vw"
-                                                    quality={100}
+                                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 60vw"
+                                                    quality={85}
                                                 />
                                             </Link>
                                         </div>
@@ -251,7 +251,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             fill
                                             className="object-fill transition-transform duration-300"
                                             sizes="(max-width: 640px) 45vw, 32vw"
-                                            quality={100}
+                                            quality={80}
                                         />
                                     </Link>
                                 ))}
