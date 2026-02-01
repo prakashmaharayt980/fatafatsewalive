@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { BannerItem } from '@/app/types/BannerTypes';
 
-import defaultImg from '../../../public/imgfile/ASUS-AD-JULY.webp';
+// import defaultImg from '../../../public/imgfile/ASUS-AD-JULY.webp';
 
 interface TopBannerProps {
   data?: BannerItem;
@@ -23,13 +23,13 @@ const TopBanner = ({ data }: TopBannerProps) => {
       .map((img) => ({
         id: img.id,
         name: img.content || 'Banner Image',
-        src: img.image.banner || img.image.full,
+        src: img.image.full || img.image.banner,
         link: img.link,
       }));
   }, [data]);
 
   // Fallback image if no banner data
-  const bannerImage = images[0] || { src: defaultImg, name: 'Top Banner', link: '' };
+  const bannerImage = images[0] || { src: '', name: 'Top Banner', link: '' };
 
   const BannerContent = (
     <div
@@ -46,7 +46,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
         className="object-fill transition-transform duration-700 "
         priority
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 1400px"
-        unoptimized={bannerImage.src === defaultImg}
+        unoptimized={bannerImage.src === ''}
       />
 
       {/* Subtle overlay on hover */}

@@ -26,7 +26,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
             .map((img) => ({
                 id: img.id,
                 name: img.content || 'Banner Image',
-                default: img.image.banner || img.image.full,
+                default: img.image.full,
                 original: img.image.full,
                 preview: img.image.thumb,
                 thumbnail: img.image.thumb,
@@ -43,7 +43,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
             .map((img) => ({
                 id: img.id,
                 name: img.content || 'Side Banner Image',
-                default: img.image.banner || img.image.full,
+                default: img.image.full,
                 link: img.link,
             }));
     }, [sideBanner]);
@@ -156,7 +156,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     className="object-fill"
                                                     priority={index === 0}
                                                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 60vw"
-                                                    quality={85}
+                                                    quality={100}
                                                 />
                                             </Link>
                                         </div>
@@ -209,7 +209,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
 
                                 {/* Dots Indicator */}
                                 {mainImages.length > 1 && (
-                                    <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-full bg-black/20 backdrop-blur-sm">
+                                    <div className="absolute bottom-2  left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-full bg-black/20 backdrop-blur-sm">
                                         {mainImages.map((_, index) => (
                                             <button
                                                 key={`dot-${index}`}
@@ -245,7 +245,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             fill
                                             className="object-fill transition-transform duration-300 hover:scale-105"
                                             sizes="(max-width: 640px) 45vw, 32vw"
-                                            quality={80}
+                                            quality={100}
                                         />
                                     </Link>
                                 ))}

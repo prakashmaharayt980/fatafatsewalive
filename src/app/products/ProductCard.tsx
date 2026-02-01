@@ -49,7 +49,7 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
         addToCart(product.id, 1);
     };
 
-    const imageUrl = product.image?.thumb || product.image?.preview || product.image?.full;
+    const imageUrl = product.image?.preview
 
     return (
         <div

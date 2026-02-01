@@ -88,7 +88,7 @@ async function page() {
 
   // 2. Define Suspense/Streaming slots
   const SectionOne = (
-    <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-xl" />}>
+    <Suspense fallback={<div className="h-40 bg-gray-100  rounded-xl" />}>
       <BannerFetcher
         slug="home-banner-secound"
         Component={OneImageBanner}
@@ -97,7 +97,7 @@ async function page() {
   );
 
   const OfferSection = (
-    <Suspense fallback={<div className="h-60 bg-gray-100 animate-pulse" />}>
+    <Suspense fallback={<div className="h-60 bg-gray-100 " />}>
       <BannerFetcher
         slug="offer-banner"
         Component={OfferBanner}
@@ -106,7 +106,7 @@ async function page() {
   );
 
   const SectionTwo = (
-    <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-xl" />}>
+    <Suspense fallback={<div className="h-40 bg-gray-100  rounded-xl" />}>
       <BannerFetcher
         slug="home-banner-secound"
         Component={OneImageBanner}
@@ -120,7 +120,7 @@ async function page() {
   );
 
   const SectionFour = (
-    <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-xl" />}>
+    <Suspense fallback={<div className="h-40 bg-gray-100  rounded-xl" />}>
       <BannerFetcher
         slug="home-banner-fourth"
         Component={OneImageBanner}

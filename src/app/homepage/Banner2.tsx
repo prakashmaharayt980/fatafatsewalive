@@ -29,7 +29,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
       .map((img) => ({
         id: img.id.toString(),
         name: img.content || 'Banner Image',
-        src: img.image.banner || img.image.full,
+        src: img.image.full,
         link: img.link || '#',
       }));
   }, [data]);
@@ -55,13 +55,14 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
               src={img.src}
               alt={img.name}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105" // Ensure object-cover for better fit
+              className="object-fill transition-transform duration-700 " // Ensure object-cover for better fit
               priority={idx === 0}
               sizes="(max-width: 640px) 85vw, 50vw"
+              quality={100}
             />
 
             {/* Premium Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* <div className="absolute inset-0 transition-opacity duration-300" /> */}
           </Link>
         ))}
       </div>
