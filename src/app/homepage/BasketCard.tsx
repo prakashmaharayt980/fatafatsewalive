@@ -112,9 +112,9 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
   };
 
   return (
-    <div ref={ref} className="w-full py-6 sm:py-8 bg-transparent">
+    <div ref={ref} className="w-full py-4 sm:py-6 bg-transparent">
       {/* Header Section - Clean & Minimal */}
-      <div className="flex items-center justify-between px-4 sm:px-6 mb-5">
+      <div className="flex items-center justify-between px-4 sm:px-6 mb-3">
         <div className="flex items-center gap-3">
           {/* Vertical accent bar */}
           <div className="w-1 h-7 bg-slate-800 rounded-full" />
@@ -133,13 +133,13 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
       </div>
 
       {/* Product List */}
-      <div className="relative group/list px-2 sm:px-4">
+      <div className="relative group/list px-2 sm:px-8">
         <div
           ref={scrollContainerRef}
           className={cn(
             'flex overflow-x-auto overflow-y-visible scrollbar-hide snap-x',
-            'gap-3 sm:gap-4 pb-8',
-            'px-2 sm:px-2'
+            'gap-3 sm:gap-4 pb-4 mt-2 pt-4',
+            'px-2 sm:px-4'
           )}
           style={{
             scrollbarWidth: 'none',

@@ -127,20 +127,20 @@ const NavBar = ({ navbaritems }: {
                             {category.children?.length > 0 ? (
                                 <HoverCard openDelay={0} closeDelay={50}>
                                     <HoverCardTrigger asChild>
-                                        <button className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-white hover:bg-white/10 transition-all duration-200">
+                                        <button aria-label={category.name} className="flex items-center cursor-pointer gap-1 rounded-lg px-3 py-2 text-sm font-medium text-white hover:bg-white/10 transition-all duration-200">
                                             <span className="truncate max-w-[160px]">{category.name}</span>
                                             <ChevronDown className="h-3.5 w-3.5" />
                                         </button>
                                     </HoverCardTrigger>
                                     <HoverCardContent
-                                        className={`${getDropdownWidth(category)} bg-white mx-4 mt-1 mb-8 rounded-xl shadow-lg border-0 p-4 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-orange-400 transition-colors`}
+                                        className={`${getDropdownWidth(category)} bg-white cursor-pointer mx-4 mt-1 mb-8 rounded-xl shadow-lg border-0 p-4 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-orange-400 transition-colors`}
                                         align="start"
                                         sideOffset={8}
                                     >
                                         <div className={`grid ${getGridColumns(category.children.length)} gap-6`}>
                                             {category.children.map((innerItem, innerIndex) => (
                                                 <div key={innerIndex} className="space-y-3">
-                                                    <h3 className="text-sm font-semibold text-orange-600 border-b border-orange-100 pb-2">
+                                                    <h3 className="text-sm font-semibold cursor-pointer text-orange-600 border-b border-orange-100 pb-2">
                                                         {innerItem.name}
                                                     </h3>
                                                     <div className="grid gap-2">
@@ -148,7 +148,7 @@ const NavBar = ({ navbaritems }: {
                                                             <Link
                                                                 key={childIndex}
                                                                 href={`/category/${child.slug}`}
-                                                                className="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-600 hover:text-orange-500 hover:bg-orange-50/50 rounded-md transition-all duration-200 group"
+                                                                className="flex items-center cursor-pointer gap-2 px-2 py-1.5 text-sm text-gray-600 hover:text-orange-500 hover:bg-orange-50/50 rounded-md transition-all duration-200 group"
                                                             >
                                                                 <span className="group-hover:translate-x-0.5 transition-transform">
                                                                     {child.name}
@@ -167,9 +167,9 @@ const NavBar = ({ navbaritems }: {
 
 
                                     <button
-
-                                        onClick={() => handlerouter('/blog')}
-                                        className={`px-3 py-2 gap-1 rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                        aria-label='blog'
+                                        onClick={() => handlerouter('/blogs')}
+                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
                                     >
 
                                         <Image
@@ -182,14 +182,14 @@ const NavBar = ({ navbaritems }: {
                                         <span className={" font-medium items-center "}>Blog</span>
                                     </button>
                                     <button
-
+                                        aria-label='emi-calculator'
                                         onClick={() => handlerouter('/emi')}
 
-                                        className={`px-3 py-2 gap-1 rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
                                     >
                                         <Image
                                             src={imglist.emiCalcultorIocn}
-                                            alt='blog icon'
+                                            alt='emi-calculator icon'
                                             height={20}
                                             width={20}
                                             priority

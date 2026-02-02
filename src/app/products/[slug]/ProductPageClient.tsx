@@ -8,7 +8,7 @@ import ProductMainImage from "./ProductMainImage";
 
 import MoreDetailsProduct from "./MoreDetailsProduct";
 import RelatedProducts from "./RelatedProducts";
-import OurArticles from "@/app/homepage/OurArticles";
+
 import SkeltonCard from "@/app/homepage/SkeltonCard";
 import SkeltonBanner from "@/app/homepage/SkeltonBanner";
 import LazyLoadSection from "@/components/LazyLoadSection";
@@ -176,7 +176,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                         <div className="md:col-span-1 lg:col-span-4">
                             <div className="w-full aspect-square max-h-[420px] bg-gray-200 rounded-2xl animate-pulse" />
                             <div className="flex gap-1.5 mt-2">
-                                {[1,2,3,4].map(i => <div key={i} className="w-14 h-14 bg-gray-200 rounded-lg animate-pulse" />)}
+                                {[1, 2, 3, 4].map(i => <div key={i} className="w-14 h-14 bg-gray-200 rounded-lg animate-pulse" />)}
                             </div>
                         </div>
                         {/* BuyBox skeleton */}
@@ -186,7 +186,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                                 <div className="h-7 w-3/4 bg-gray-200 rounded animate-pulse" />
                                 <div className="h-10 w-1/3 bg-gray-200 rounded animate-pulse" />
                                 <div className="space-y-2">
-                                    {[1,2,3].map(i => <div key={i} className="h-4 w-full bg-gray-100 rounded animate-pulse" />)}
+                                    {[1, 2, 3].map(i => <div key={i} className="h-4 w-full bg-gray-100 rounded animate-pulse" />)}
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <div className="h-11 flex-1 bg-gray-200 rounded-xl animate-pulse" />
@@ -200,7 +200,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                             <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
                                 <div className="h-5 w-28 bg-gray-200 rounded animate-pulse" />
                                 <div className="w-full aspect-[16/9] bg-gray-200 rounded-xl animate-pulse" />
-                                {[1,2,3].map(i => (
+                                {[1, 2, 3].map(i => (
                                     <div key={i} className="flex gap-3">
                                         <div className="w-16 h-14 bg-gray-200 rounded-lg animate-pulse flex-shrink-0" />
                                         <div className="flex-1 space-y-2 py-1">
@@ -291,8 +291,8 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
 
                 {/* === MAIN CONTENT: 3-Column Layout (Gallery | Info | Sidebar) === */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6 mb-8">
-                    {/* Column 1: Gallery (Image + Thumbs) - 4 cols */}
-                    <div className="md:col-span-1 lg:col-span-4 relative">
+                    {/* Column 1: Gallery (Image + Thumbs) - 3 cols */}
+                    <div className="md:col-span-1 lg:col-span-3 relative">
                         <ProductMainImage
                             selectedImage={selectedImage}
                             setSelectedImage={setSelectedImage}
@@ -303,8 +303,8 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                         />
                     </div>
 
-                    {/* Column 2: Details + Actions - 5 cols */}
-                    <div ref={buyBoxRef} className="md:col-span-1 lg:col-span-5">
+                    {/* Column 2: Details + Actions - 6 cols */}
+                    <div ref={buyBoxRef} className="md:col-span-1 lg:col-span-6">
                         <ProductBuyBox
                             product={productDetails}
                             selectedVariant={selectedVariant}
@@ -369,12 +369,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                     </section>
                 )}
 
-                {/* Blog Section */}
-                <aside className="mt-8 pt-4 border-t border-gray-200">
-                    <LazyLoadSection fallback={<SkeltonBanner />}>
-                        <OurArticles blogpage="product-page" />
-                    </LazyLoadSection>
-                </aside>
+
             </div>
 
             {/* Sticky Bottom Bar — appears when BuyBox scrolls out of view (all screen sizes) */}

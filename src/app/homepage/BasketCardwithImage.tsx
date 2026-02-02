@@ -102,7 +102,7 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
   };
 
   return (
-    <div ref={ref} className="w-full my-8">
+    <div ref={ref} className="w-full my-4">
       <div className="flex flex-col md:flex-row gap-4 h-auto items-stretch">
 
         {/* Banner Image Side */}
@@ -125,11 +125,11 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
           imageUrl ? "w-full md:w-4/5" : "w-full"
         )}>
           {/* Header - Clean & Minimal */}
-          <div className="flex items-center justify-between px-2 sm:px-0 mb-5">
+          <div className="flex items-center justify-between px-2 sm:px-0 mb-3">
             <div className="flex items-center gap-3 mx-3">
               {/* Vertical accent bar */}
               <div className="w-1 h-7 bg-slate-800 rounded-full" />
-              <h2 className="text-lg sm:text-xl  font-semibold text-slate-800 tracking-tight">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight">
                 {title}
               </h2>
             </div>
@@ -144,12 +144,12 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
           </div>
 
           {/* Product Grid */}
-          <div className="flex-1 overflow-visible  px-0 relative pb-8">
+          <div className="flex-1 overflow-visible px-0 relative pb-4">
             <div
               ref={scrollContainerRef}
               className={cn(
                 'flex overflow-x-auto overflow-y-visible scrollbar-hide h-full items-start',
-                'gap-2 sm:gap-4 px-2'
+                'gap-2 sm:gap-4 px-4 pt-4'
               )}
               style={{
                 scrollbarWidth: 'none',
@@ -170,12 +170,12 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
             {/* Navigation Dots */}
             {totalPages > 1 && (
               <div className="absolute bottom-0 left-0 right-0 flex justify-center pointer-events-none ">
-                <div className="flex gap-1.5  pointer-events-auto">
+                <div className="flex gap-1.5 pointer-events-auto">
                   {[...Array(isMobile ? Math.min(totalPages, 2) : Math.min(totalPages, 5))].map((_, index) => (
                     <button
                       key={index}
                       onClick={() => handleDotClick(index)}
-                      className="group  cursor-pointer focus:outline-none"
+                      className="group cursor-pointer focus:outline-none"
                       aria-label={`Go to page ${index + 1}`}
                     >
                       <div

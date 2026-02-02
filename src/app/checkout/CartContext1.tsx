@@ -76,7 +76,7 @@ export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ childre
             setCartItems(res.data)
         }).catch(err => {
 
-            fetchCart();
+            // fetchCart();
         })
     };
 

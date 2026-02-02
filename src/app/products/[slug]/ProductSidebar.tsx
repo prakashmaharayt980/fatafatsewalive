@@ -7,9 +7,13 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import RelatedNews from "./RelatedNews";
+
 import { ProductDetails } from "@/app/types/ProductDetailsTypes";
 import { useContextCart } from "@/app/checkout/CartContext1";
+
+import EmiWidget from "./EmiWidget";
+import TrustWidget from "./TrustWidget";
+import PartnersWidget from "./PartnersWidget";
 
 interface ProductSidebarProps {
     product: ProductDetails;
@@ -38,11 +42,20 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({ product, relatedCategor
     }, [similarData, product.id]);
 
     return (
-        <div className="space-y-6 sticky top-24">
-            {/* 1. Related News */}
-            <RelatedNews productName={product.name} />
+        <div className="space-y-4 lg:sticky lg:top-24">
 
-            {/* 2. Related Comparisons */}
+            {/* 1. EMI Widget */}
+            {product.discounted_price && (
+                <EmiWidget price={product.discounted_price || product.price} />
+            )}
+
+            {/* 2. Trust/Warranty Widget */}
+            <TrustWidget />
+
+            {/* 3. Partners Widget */}
+            <PartnersWidget />
+
+            {/* 4. Related Comparisons */}
             {similarProducts.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                     <div className="flex items-center justify-between mb-4">

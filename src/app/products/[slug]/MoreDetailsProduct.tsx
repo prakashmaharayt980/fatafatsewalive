@@ -214,56 +214,57 @@ export default function MoreDetailsProduct({
 
           {/* LEFT: Rating Summary Card */}
           <div className="lg:col-span-4">
-            <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl border border-gray-100 p-6 space-y-5 lg:sticky lg:top-24">
-              {/* Big average score */}
-              <div className="text-center">
-                <div className="text-5xl font-extrabold text-slate-900 leading-none">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6 lg:sticky lg:top-24 shadow-sm">
+              {/* Overall Rating */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-amber-50 text-amber-500 text-2xl font-bold border-4 border-white shadow-sm ring-1 ring-amber-100">
                   {reviews?.meta?.average_rating?.toFixed(1) || product?.average_rating?.toFixed(1) || '0.0'}
                 </div>
-                <div className="flex items-center justify-center gap-0.5 mt-2">
-                  {Array.from({ length: 5 }, (_, i) => {
-                    const avg = reviews?.meta?.average_rating || product?.average_rating || 0;
-                    return (
-                      <Star
-                        key={i}
-                        size={18}
-                        className={cn(
-                          i < Math.round(avg) ? 'fill-amber-400 text-amber-400' : 'text-gray-200'
-                        )}
-                      />
-                    );
-                  })}
+                <div>
+                  <div className="flex items-center gap-1 mb-1">
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const avg = reviews?.meta?.average_rating || product?.average_rating || 0;
+                      return (
+                        <Star
+                          key={i}
+                          size={16}
+                          className={cn(
+                            i < Math.round(avg) ? 'fill-amber-400 text-amber-400' : 'text-gray-200'
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">Overall Rating</p>
+                  <p className="text-xs text-gray-500">
+                    Based on {reviews?.meta?.total || 0} reviews
+                  </p>
                 </div>
-                <p className="text-xs text-gray-400 mt-1.5">
-                  Based on {reviews?.meta?.total || 0} {(reviews?.meta?.total || 0) === 1 ? 'review' : 'reviews'}
-                </p>
               </div>
 
+              {/* Separator */}
+              <div className="h-px bg-gray-100 w-full" />
+
               {/* Star distribution bars */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {[5, 4, 3, 2, 1].map((star) => {
                   const count = reviews?.data?.filter(r => r.rating === star).length || 0;
                   const total = reviews?.data?.length || 0;
                   const pct = total > 0 ? (count / total) * 100 : 0;
-                  const barColors: Record<number, string> = {
-                    5: 'bg-emerald-500',
-                    4: 'bg-green-400',
-                    3: 'bg-amber-400',
-                    2: 'bg-orange-400',
-                    1: 'bg-red-400',
-                  };
 
                   return (
-                    <div key={star} className="flex items-center gap-2.5">
-                      <span className="text-xs font-semibold text-gray-500 w-4 text-right">{star}</span>
-                      <Star size={12} className="fill-amber-400 text-amber-400 flex-shrink-0" />
-                      <div className="flex-1 h-2 bg-gray-200/70 rounded-full overflow-hidden">
+                    <div key={star} className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 w-8 flex-shrink-0">
+                        <span className="text-xs font-bold text-slate-700">{star}</span>
+                        <Star size={10} className="fill-slate-400 text-slate-400" />
+                      </div>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className={cn("h-full rounded-full transition-all duration-500", barColors[star])}
+                          className="h-full rounded-full bg-[var(--colour-fsP2)] transition-all duration-500 opacity-80"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="text-[11px] text-gray-400 w-6 text-right tabular-nums">{count}</span>
+                      <span className="text-xs text-gray-400 w-8 text-right tabular-nums">{count}</span>
                     </div>
                   );
                 })}
@@ -273,9 +274,8 @@ export default function MoreDetailsProduct({
               {!Rating.commentOpen && (
                 <Button
                   onClick={handleWriteReviewClick}
-                  className="w-full h-11 bg-[var(--colour-fsP1)] hover:bg-orange-600 text-white font-semibold rounded-xl shadow-none text-sm"
+                  className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm text-sm transition-all active:scale-[0.98]"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
                   Write a Review
                 </Button>
               )}
@@ -364,8 +364,8 @@ export default function MoreDetailsProduct({
                 {reviews.data.map((review, index) => {
                   const ratingLabel =
                     review.rating >= 4 ? 'text-emerald-700 bg-emerald-50 border-emerald-100' :
-                    review.rating === 3 ? 'text-amber-700 bg-amber-50 border-amber-100' :
-                    'text-red-700 bg-red-50 border-red-100';
+                      review.rating === 3 ? 'text-amber-700 bg-amber-50 border-amber-100' :
+                        'text-red-700 bg-red-50 border-red-100';
 
                   return (
                     <div key={review.id || index} className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 hover:border-gray-200 transition-colors">

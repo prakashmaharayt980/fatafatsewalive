@@ -37,16 +37,16 @@ export const creditCardSchema = Yup.object().shape({
   bankname: Yup.string().required('Please select a bank'),
   cardHolderName: Yup.string()
     .min(2, 'Card holder name must be at least 2 characters')
-    .required('Card holder name is required'),
+  ,
   creditCardNumber: Yup.string()
     .matches(/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/, 'Card number must be 16 digits')
-    .required('Card number is required'),
+  ,
   expiryDate: Yup.string()
     .matches(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Expiry date must be in MM/YY format')
-    .required('Expiry date is required'),
+  ,
   cardLimit: Yup.number()
     .positive('Card limit must be a positive number')
-    .required('Card limit is required'),
+
 });
 
 // Bank Details Schema

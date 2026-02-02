@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
-import { Check, Heart, Truck, CreditCard } from "lucide-react";
+import { Heart, Star, CreditCard, Truck, Zap, Gift } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { useContextCart } from "@/app/checkout/CartContext1";
-
 
 interface ProductCardProps {
     product: any;
@@ -12,9 +11,9 @@ interface ProductCardProps {
     hidePrice?: boolean;
 }
 
-const ProductCard = ({ product, index: _index, priority = false, hidePrice = false }: ProductCardProps) => {
+const ProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
     const router = useRouter();
-    const { addToCart, compareItems, addToCompare, addToWishlist } = useContextCart();
+    const { addToWishlist } = useContextCart();
 
     if (!product || !product.id) {
         return null;
@@ -23,18 +22,12 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
     const originalPrice = typeof product.price === 'string' ? parseInt(product.price) : product.price;
     const discountedPrice = typeof product.discounted_price === 'string' ? parseInt(product.discounted_price) : product.discounted_price;
 
-    const isNew = (() => {
-        if (!product?.created_at) return false;
-        const createdDate = new Date(product.created_at);
-        if (Number.isNaN(createdDate.getTime())) return false;
-        const now = Date.now();
-        const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-        return (now - createdDate.getTime()) <= thirtyDaysMs;
-    })();
-
     const discountPercent = originalPrice > discountedPrice
         ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
         : 0;
+
+    // Calculate EMI (assuming 12 months for now)
+    const emiPrice = Math.round(discountedPrice / 12);
 
     const handleProductClick = () => {
         if (!product.slug || !product.id) {
@@ -44,121 +37,163 @@ const ProductCard = ({ product, index: _index, priority = false, hidePrice = fal
         router.push(`/products/${product.slug}`);
     };
 
-    const handleAddToCart = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        addToCart(product.id, 1);
-    };
+    const imageUrl = product.image?.preview;
 
-    const imageUrl = product.image?.preview
+    // Mock Data for "Noon" style feel
+    const rating = product.average_rating || 4.5;
+    const ratingCount = product.rating_count || 120;
+    const arrivalDate = "Tomorrow, Feb 4"; // Mock arrival
+    const isBestSeller = true;
+    const hasCoupon = true;
+    const limitedTimeDeal = true;
+
+    // Calculate if product is new (less than 1 month old)
+    const isNew = product.created_at
+        ? (new Date().getTime() - new Date(product.created_at).getTime()) < (30 * 24 * 60 * 60 * 1000)
+        : false;
 
     return (
         <div
             onClick={handleProductClick}
-            className="group relative cursor-pointer w-full flex flex-col bg-white hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden border border-gray-200 hover:border-blue-200"
+            className="group relative cursor-pointer w-full flex flex-col bg-white h-full shadow-sm hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] hover:border-[var(--colour-fsP2)]/30 hover:-translate-y-1 transition-all duration-300 rounded-[12px] overflow-hidden border border-gray-100"
         >
-            {/* Image Container */}
-            <div className="relative aspect-square w-full p-3 sm:p-5 bg-white group-hover:bg-gray-50/50 transition-colors">
-                {/* Badges */}
-                <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-10 flex flex-col gap-1">
-                    {isNew && (
-                        <span className="bg-emerald-700 text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded tracking-wider uppercase shadow-sm">
-                            New
-                        </span>
+            {/* Wishlist Button - Absolute Top Right */}
+            <button
+                className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm text-gray-400 hover:text-red-500 hover:scale-110 transition-all duration-200"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    addToWishlist(product.id);
+                }}
+                aria-label="Add to wishlist"
+            >
+                <Heart className="h-4 w-4 stroke-[2.5]" />
+            </button>
+
+            {/* Image Container - Aspect Square (1:1) */}
+            <div className="relative aspect-square w-full bg-white p-2">
+                {/* Badges - Top Left */}
+                <div className="absolute top-0 left-0 z-10 flex flex-col gap-1">
+                    {/* Refined Best Seller Tag - Gold (Only if NOT New) */}
+                    {isBestSeller && !isNew && (
+                        <div className="bg-[#e9c10e] text-white text-[10px] font-bold px-3 py-1 rounded-tl-[10px] rounded-br-[10px] shadow-sm flex items-center gap-1 z-10">
+                            {/* <Zap className="w-3 h-3 fill-current" /> */}
+                            <span>BESTSELLER</span>
+                        </div>
                     )}
-                    {discountPercent > 0 && (
-                        <span className="bg-red-600 text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded tracking-wider shadow-sm">
-                            -{discountPercent}%
-                        </span>
+                    {/* New Tag - Green */}
+                    {isNew && (
+                        <div className="bg-[var(--colour-fsP2)] text-white text-[10px] font-bold px-3 py-1 rounded-tl-[10px] rounded-br-[10px] shadow-sm flex items-center gap-1 z-10">
+                            {/* <Gift className="w-3 h-3 " /> */}
+                            <span>NEW</span>
+                        </div>
                     )}
                 </div>
 
-                {/* Wishlist Button */}
-                <button
-                    className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white shadow-sm text-gray-400 hover:text-red-500 hover:shadow-md transition-all duration-200"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        addToWishlist(product.id);
-                    }}
-                    aria-label="Add to wishlist"
-                >
-                    <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 hover:fill-current" />
-                </button>
-
-                {/* Product Image */}
-                <div className="relative w-full h-full transition-transform duration-500">
+                <div className="relative w-full h-full">
                     <Image
                         src={imageUrl || '/placeholder-product.png'}
                         alt={product.name || 'Product'}
                         fill
-                        className="object-contain mix-blend-normal"
+                        className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                         priority={priority}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
                 </div>
             </div>
 
-            {/* Content Container */}
-            <div className="p-2 sm:p-3 flex flex-col gap-1 sm:gap-1.5 flex-grow border-t border-gray-100">
+            {/* Content Container - Compact padding */}
+            <div className="p-2 flex flex-col gap-0.5 flex-grow">
+                {/* Brand Name */}
+                <div className="flex justify-between items-start">
+                    <div className="text-[11px] text-gray-500 font-bold uppercase tracking-wide">
+                        {product.brand?.name || "Brand Name"}
+                    </div>
+                    {/* Ratings Row - Compact */}
+                    <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5 bg-[var(--colour-fsP2)] text-white px-1.5 py-0.5 rounded-[4px] shadow-sm">
+                            <span className="text-[10px] font-extrabold">{rating}</span>
+                            <Star className="w-2 h-2 fill-current" />
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-medium">({ratingCount}) • 1.2k+ sold</span>
+                    </div>
+                </div>
+
                 {/* Title */}
                 <h3
-                    className="text-xs sm:text-sm md:text-[15px] font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-blue-700 transition-colors"
+                    className="text-[13px] sm:text-[14px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.6em] group-hover:text-[var(--colour-fsP2)] transition-colors mt-0.5"
                     title={product.name}
                 >
                     {product.name}
                 </h3>
 
-                {/* Stock Status */}
-                <div className="flex items-center">
-                    <span className="inline-flex items-center text-emerald-700 text-[10px] sm:text-xs font-medium bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full">
-                        <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1 stroke-[2.5]" />
-                        In Stock
-                    </span>
-                </div>
-
                 {/* Price Section */}
                 {!hidePrice && (
-                    <div className="mt-auto pt-1 sm:pt-2">
-                        <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
-                            <span className="text-sm sm:text-lg md:text-xl font-bold text-slate-900">
+                    <div className="mt-1 space-y-0.5">
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-base sm:text-lg font-extrabold text-[#1f2937]">
                                 Rs. {(discountedPrice || originalPrice)?.toLocaleString()}
                             </span>
-                            {discountPercent > 0 && (
-                                <span className="text-[10px] sm:text-xs text-slate-400 line-through">
-                                    Rs. {originalPrice?.toLocaleString()}
-                                </span>
-                            )}
                         </div>
 
-                        {/* EMI & Delivery Tags - Fit Content Column on Mobile */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 mt-1.5 sm:mt-2">
-                            <span className="inline-flex items-center w-fit text-[9px] sm:text-[11px] font-bold text-white bg-[#1967b3] px-2 py-0.5 sm:py-1 rounded-full shadow-sm">
-                                <CreditCard className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 mr-1 flex-shrink-0" />
-                                EMI
-                            </span>
-                            <span className="inline-flex items-center w-fit text-[9px] sm:text-[11px] font-bold text-white bg-[#1967b3] px-2 py-0.5 sm:py-1 rounded-full shadow-sm">
-                                <Truck className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 mr-1 flex-shrink-0" />
-                                Free Delivery
-                            </span>
+                        {(
+                            <div className="flex items-center gap-2 text-[14px]">
+                                <span className="text-gray-400 line-through decoration-gray-400 font-medium">
+                                    Rs. {originalPrice?.toLocaleString()}
+                                </span>
+                                <span className="text-[var(--colour-fsP2)] font-bold bg-blue-50 px-1 py-0.5 rounded-sm">
+                                    {discountPercent}% OFF
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Coupon Badge - Green & Cutout style */}
+                {hasCoupon && (
+                    <div className="mt-1.5 flex items-center gap-3">
+                        <div className="relative bg-green-50 border border-green-200 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-sm border-dashed flex items-center gap-1 w-fit">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white border border-green-200 absolute -left-1 top-1/2 -translate-y-1/2"></span>
+                            Save Rs. 200 with Coupon
+                            <span className="w-1.5 h-1.5 rounded-full bg-white border border-green-200 absolute -right-1 top-1/2 -translate-y-1/2"></span>
+                        </div>
+                        <div className="relative bg-green-50 border border-green-200 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-sm border-dashed flex items-center gap-1 w-fit">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white border border-green-200 absolute -left-1 top-1/2 -translate-y-1/2"></span>
+                            Save Rs. 400 with Coupon
+                            <span className="w-1.5 h-1.5 rounded-full bg-white border border-green-200 absolute -right-1 top-1/2 -translate-y-1/2"></span>
                         </div>
                     </div>
                 )}
+
+                {/* EMI & Delivery - Modified EMI Size */}
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                    {/* EMI Calculation Badge - Increased Font Size */}
+                    <span className="inline-flex items-center text-[12px] font-semibold text-white bg-[#1967b3] px-1.5 py-0.5 rounded-sm shadow-sm">
+                        {/* <CreditCard className="w-3 h-3 mr-1" /> */}
+                        EMI fr. Rs. {emiPrice?.toLocaleString()}
+                    </span>
+                    <span className="inline-flex items-center text-[12px] font-semibold text-black bg-[#e9d26c] px-1.5 py-0.5 rounded-sm shadow-sm">
+                        {/* <Truck className="w-3 h-3 mr-1" /> */}
+                        Fatafat Delivery
+                    </span>
+                </div>
+
+
             </div>
         </div>
     );
 };
 
 export const ProductCardSkeleton = () => (
-    <div className="bg-white rounded-xl overflow-hidden border border-gray-100">
-        <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse" />
-        <div className="p-2 sm:p-3 space-y-2">
-            <div className="h-3 sm:h-4 w-full bg-gray-200 rounded animate-pulse" />
-            <div className="h-3 sm:h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
-            <div className="h-2.5 sm:h-3 w-14 sm:w-16 bg-gray-200 rounded-full animate-pulse" />
-            <div className="h-4 sm:h-5 w-20 sm:w-24 bg-gray-200 rounded animate-pulse" />
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 pt-1">
-                <div className="h-5 w-12 bg-gray-200 rounded-full animate-pulse" />
-                <div className="h-5 w-20 bg-gray-200 rounded-full animate-pulse" />
+    <div className="bg-white rounded-[12px] overflow-hidden border border-gray-100 h-full card-shadow">
+        <div className="aspect-square bg-gray-50 animate-pulse" />
+        <div className="p-3 space-y-3">
+            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+            <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
+            <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
+            <div className="flex gap-2 pt-2">
+                <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
             </div>
+            <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse mt-3" />
         </div>
     </div>
 );

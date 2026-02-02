@@ -31,11 +31,27 @@ export default async function BlogPage() {
         .reverse()
         .slice(0, 4);
 
+    // 4. Fetch Categories
+    let categories: any[] = [];
+    try {
+        const catRes = await RemoteServices.getBlogCategories();
+        categories = catRes.data || [];
+        // Ensure "All" is present if not returned
+        if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
+            categories.unshift({ id: 'all', title: 'All', slug: 'all' });
+        }
+    } catch (e) {
+        console.error("Category fetch failed", e);
+        // Fallback default
+        categories = [{ id: 'all', title: 'All', slug: 'all' }];
+    }
+
     return (
         <BlogListingClient
             initialArticles={articles}
             initialBannerData={bannerData as any}
             initialBrandArticles={brandArticles}
+            categories={categories}
         />
     );
 }
