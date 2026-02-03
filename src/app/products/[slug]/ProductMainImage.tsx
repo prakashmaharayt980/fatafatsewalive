@@ -54,19 +54,6 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
     return (
         <div className="space-y-2 sticky top-24">
             <div className="relative w-full aspect-[4/4] max-h-[420px] bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group">
-                {/* Wishlist Button */}
-                <button
-                    onClick={toggleWishlist}
-                    className={cn(
-                        "absolute top-3 right-3 z-10 w-9 h-9 rounded-full border flex items-center justify-center transition-all shadow-sm",
-                        isInWishlist
-                            ? "bg-red-50 border-red-200 text-red-500"
-                            : "bg-white/95 border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200"
-                    )}
-                >
-                    <Heart className={cn("w-4.5 h-4.5", isInWishlist && "fill-current")} />
-                </button>
-
                 {/* Image counter */}
                 {currentImages.length > 1 && (
                     <div className="absolute top-3 left-3 z-10 bg-black/50 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">

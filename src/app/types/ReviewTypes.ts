@@ -6,6 +6,7 @@ export interface Review {
         rating: number;
         review: string;
         status: number;
+        images?: string[]; // Array of image URLs
         user: {
             id: number;
             name: string;
@@ -32,4 +33,5 @@ export interface ReviewCreateData {
     product_id: number;
     rating: number;
     review: string;
+    images?: File[];
 }
