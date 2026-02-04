@@ -232,7 +232,7 @@ const HeaderComponent = () => {
 
     return (
         <>
-            <header className="sticky top-0 z-40 w-full bg-white shadow-sm border-b border-gray-100">
+            <header className="sticky top-0 z-40 w-full bg-white shadow-sm ">
                 {/* Main Header */}
                 <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
                     <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">

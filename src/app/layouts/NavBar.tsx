@@ -200,6 +200,63 @@ const NavBar = ({ navbaritems }: {
 
                                     </button>
 
+                                    <button
+                                        aria-label='exchange'
+                                        onClick={() => handlerouter('/ExchangeProducts')}
+
+                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                    >
+                                        <Image
+                                            src={imglist.emiCalcultorIocn}
+                                            alt='exchange icon'
+                                            height={20}
+                                            width={20}
+                                            priority
+                                        />
+                                        <span className={" font-medium items-center "}>Exchange</span>
+
+
+
+                                    </button>
+
+                                    <button
+                                        aria-label='reviews'
+                                        onClick={() => handlerouter('/reviews')}
+
+                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                    >
+                                        <Image
+                                            src={imglist.emiCalcultorIocn}
+                                            alt='exchange icon'
+                                            height={20}
+                                            width={20}
+                                            priority
+                                        />
+                                        <span className={" font-medium items-center "}>Reviews</span>
+
+
+
+                                    </button>
+
+                                    <button
+                                        aria-label='reviews'
+                                        onClick={() => handlerouter('/reviews')}
+
+                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                    >
+                                        <Image
+                                            src={imglist.emiCalcultorIocn}
+                                            alt='exchange icon'
+                                            height={20}
+                                            width={20}
+                                            priority
+                                        />
+                                        <span className={" font-medium items-center "}>Repairs</span>
+
+
+
+                                    </button>
+
                                 </div>
                             )}
                         </div>

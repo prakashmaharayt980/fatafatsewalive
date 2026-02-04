@@ -12,8 +12,8 @@ export default function TrustWidget() {
         },
         {
             icon: <RotateCcw className="w-5 h-5 text-blue-500" />,
-            title: "7 Days Replacement",
-            desc: "If manufacturing defect found"
+            title: "Insurance",
+            desc: "1 Year Insurance above Rs. 10,000"
         },
         {
             icon: <Truck className="w-5 h-5 text-[var(--colour-fsP1)]" />,

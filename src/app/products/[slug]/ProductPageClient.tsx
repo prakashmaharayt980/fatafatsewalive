@@ -18,6 +18,8 @@ import ProductSidebar from "./ProductSidebar";
 import { useContextCart } from "@/app/checkout/CartContext1";
 import { useRouter } from "next/navigation";
 import { CustomVariantGroup, ProductDetails, ProductDisplayState } from "@/app/types/ProductDetailsTypes";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface ProductPageClientProps {
     productDetails: ProductDetails;
@@ -277,6 +279,8 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
+
+
             <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm mb-6 overflow-x-auto pb-1 scrollbar-hide">
@@ -304,7 +308,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                     </div>
 
                     {/* Column 2: Details + Actions - 6 cols */}
-                    <div ref={buyBoxRef} className="md:col-span-1 lg:col-span-6">
+                    <div className="md:col-span-1 lg:col-span-6">
                         <ProductBuyBox
                             product={productDetails}
                             selectedVariant={selectedVariant}
@@ -318,6 +322,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                             quantity={quantity}
                             setQuantity={setQuantity}
                             colorImages={colorImagesForBuyBox}
+                            actionRef={buyBoxRef}
                         />
                     </div>
 
@@ -372,40 +377,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
 
             </div>
 
-            {/* Sticky Bottom Bar — appears when BuyBox scrolls out of view (all screen sizes) */}
-            <div
-                style={{
-                    transform: isBuyBoxVisible ? 'translateY(100%)' : 'translateY(0)',
-                    opacity: isBuyBoxVisible ? 0 : 1,
-                    pointerEvents: isBuyBoxVisible ? 'none' : 'auto',
-                }}
-                className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] transition-all duration-300 pb-[env(safe-area-inset-bottom)]"
-            >
-                <div className="max-w-8xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 sm:gap-4">
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[11px] sm:text-sm font-bold text-slate-900 truncate leading-tight">{productDetails.name}</p>
-                        <p className="text-sm sm:text-lg font-bold text-[var(--colour-fsP2)]">
-                            Rs. {(selectedVariant?.discounted_price || productDetails.discounted_price || productDetails.price).toLocaleString()}
-                        </p>
-                    </div>
-                    <button
-                        className="h-10 sm:h-11 px-4 sm:px-6 bg-[var(--colour-fsP2)] hover:opacity-90 text-white font-bold text-xs sm:text-sm rounded-xl flex items-center gap-1.5 sm:gap-2 flex-shrink-0 active:scale-[0.98] transition-all"
-                        onClick={() => addToCart(productDetails.id, quantity)}
-                    >
-                        <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Add to Cart
-                    </button>
-                    {productDetails.emi_enabled === 1 && (
-                        <button
-                            className="h-10 sm:h-11 px-4 sm:px-6 bg-[var(--colour-fsP1)] hover:opacity-90 text-white font-bold text-xs sm:text-sm rounded-xl flex items-center gap-1.5 sm:gap-2 flex-shrink-0 active:scale-[0.98] transition-all"
-                            onClick={() => router.push(`/emi/applyemi?product=${productDetails.id}`)}
-                        >
-                            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Apply</span> EMI
-                        </button>
-                    )}
-                </div>
-            </div>
+
         </div>
     );
 }

@@ -23,7 +23,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
       .map((img) => ({
         id: img.id,
         name: img.content || 'Banner Image',
-        src: img.image.full || img.image.banner,
+        src: img.image.full,
         link: img.link,
       }));
   }, [data]);
@@ -35,7 +35,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
     <div
       className={cn(
         'w-full relative overflow-hidden rounded-xl sm:rounded-2xl cursor-pointer group',
-        'aspect-[16/7] sm:aspect-[16/2]', // Taller on mobile
+        'aspect-[16/7] sm:aspect-[100/10]', // Taller on mobile
         'transition-premium hover-premium shadow-premium-sm'
       )}
     >
@@ -43,11 +43,11 @@ const TopBanner = ({ data }: TopBannerProps) => {
         src={bannerImage.src}
         alt={bannerImage.name}
         fill
-        className="object-fill transition-transform duration-700 "
+        className="object-contain transition-transform duration-700 "
         priority
         fetchPriority="high"
         decoding="sync"
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 90vw"
+        // sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 90vw"
         quality={85}
         unoptimized={bannerImage.src === ''}
       />

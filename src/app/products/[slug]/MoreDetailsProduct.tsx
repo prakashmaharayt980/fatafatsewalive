@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Star, MessageCircle, Send, ChevronDown, Scale, Check } from 'lucide-react';
+import { Star, MessageCircle, Send, ChevronDown, Scale, Check, Camera, X } from 'lucide-react';
 import ParsedContent from '../ParsedContent';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -36,6 +36,7 @@ interface RatingInterface {
   newReview: string;
   isSubmittingReview: boolean;
   commentOpen: boolean;
+  images: File[];
 }
 
 export default function MoreDetailsProduct({
@@ -53,6 +54,7 @@ export default function MoreDetailsProduct({
     newReview: '',
     isSubmittingReview: false,
     commentOpen: false,
+    images: [],
   });
   const [reviews, setReviews] = useState<Review>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,6 +62,7 @@ export default function MoreDetailsProduct({
   const reviewTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const descriptionRef = useRef<HTMLDivElement | null>(null);
   const specsRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 
 
@@ -95,6 +98,22 @@ export default function MoreDetailsProduct({
     setCurrentPage(page);
   };
 
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      if (Rating.images.length + selectedFiles.length > 5) {
+        toast.error("You can upload a maximum of 5 images.");
+        return;
+      }
+      setRating(prev => ({ ...prev, images: [...prev.images, ...selectedFiles] }));
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setRating(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+  };
+
   // Get the specs data to display
   const specsData = hasSpecifications ? specifications : keyFeatures;
 
@@ -108,6 +127,7 @@ export default function MoreDetailsProduct({
       data: {
         rating: Rating.newRating,
         review: Rating.newReview,
+        // images: Rating.images (Check API service if it supports File[])
       }
     })
       .then(res => {
@@ -123,6 +143,7 @@ export default function MoreDetailsProduct({
         newReview: '',
         isSubmittingReview: false,
         commentOpen: false,
+        images: [],
 
       });
     }, 1500);
@@ -137,7 +158,7 @@ export default function MoreDetailsProduct({
         <div className="lg:col-span-2">
           <section ref={descriptionRef} className="bg-white rounded-2xl p-5 sm:p-6 lg:p-8 shadow-sm h-full ">
             <div className="pb-4 mb-6 flex items-center gap-3 ">
-              <div className="w-1 h-8 bg-[var(--colour-fsP1)] rounded-full"></div>
+              <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Product Description</h2>
             </div>
 
@@ -145,7 +166,7 @@ export default function MoreDetailsProduct({
               "prose prose-sm sm:prose-base prose-slate max-w-none",
               "prose-headings:font-bold prose-headings:text-gray-900",
               "prose-p:text-gray-600 prose-p:leading-7 prose-p:mb-4",
-              "prose-li:text-gray-600 prose-li:marker:text-[var(--colour-fsP1)]",
+              "prose-li:text-gray-600 prose-li:marker:text-[var(--colour-fsP2)]",
               "prose-img:rounded-xl prose-img:shadow-md prose-img:my-6",
               "prose-strong:text-gray-900 prose-strong:font-semibold",
               "prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
@@ -162,8 +183,8 @@ export default function MoreDetailsProduct({
               <div>
                 <div className="pb-3 mb-4 border-b border-gray-100">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
-                    <div className="p-1.5 bg-blue-50 rounded-lg">
-                      <Scale className="w-5 h-5 text-[var(--colour-fsP1)]" />
+                    <div className="p-1.5 bg-[var(--colour-fsP2)]/10 rounded-lg">
+                      <Scale className="w-5 h-5 text-[var(--colour-fsP2)]" />
                     </div>
                     Specifications
                   </h3>
@@ -173,10 +194,10 @@ export default function MoreDetailsProduct({
                   {Object.entries(specsData).map(([key, value], index) => (
                     <div
                       key={`spec-${index}`}
-                      className="bg-white p-3.5 rounded-xl border border-gray-100 hover:border-blue-100 hover:shadow-sm transition-all duration-200 group"
+                      className="bg-white p-3.5 rounded-xl border border-gray-100 hover:border-[var(--colour-fsP2)]/30 hover:shadow-sm transition-all duration-200 group"
                     >
                       <div className="flex flex-row gap-4">
-                        <IconRenderer iconKey={key} size={18} className="text-[var(--colour-fsP1)]" />
+                        <IconRenderer iconKey={key} size={18} className="text-[var(--colour-fsP2)]" />
                         <div className='flex flex-col items-start gap-2'>
                           <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{key}</h4>
                           <p className="text-sm font-medium text-gray-900 leading-snug break-words ">{value}</p>
@@ -274,7 +295,7 @@ export default function MoreDetailsProduct({
               {!Rating.commentOpen && (
                 <Button
                   onClick={handleWriteReviewClick}
-                  className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm text-sm transition-all active:scale-[0.98]"
+                  className="w-full h-11 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold rounded-xl shadow-sm text-sm transition-all active:scale-[0.98]"
                 >
                   Write a Review
                 </Button>
@@ -315,7 +336,7 @@ export default function MoreDetailsProduct({
                         </button>
                       ))}
                       {Rating.newRating > 0 && (
-                        <span className="ml-2 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                        <span className="ml-2 text-xs font-semibold text-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/10 px-2 py-0.5 rounded-full">
                           {Rating.newRating}/5
                         </span>
                       )}
@@ -328,17 +349,59 @@ export default function MoreDetailsProduct({
                     placeholder="What did you like or dislike? How was the quality?"
                     value={Rating.newReview}
                     onChange={(e) => setRating({ ...Rating, newReview: e.target.value })}
-                    className="w-full min-h-[100px] resize-none bg-gray-50 border-gray-200 focus:border-[var(--colour-fsP1)] focus:ring-[var(--colour-fsP1)]/20 rounded-xl text-sm"
+                    className="w-full min-h-[100px] resize-none bg-gray-50 border-gray-200 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20 rounded-xl text-sm"
                   />
 
+                  {/* Image Upload */}
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-2 block">Add Photos</label>
+                    <div className="flex flex-wrap gap-3">
+                      {Rating.images.map((file, index) => (
+                        <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      {Rating.images.length < 5 && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-colors bg-gray-50"
+                        >
+                          <Camera size={20} />
+                          <span className="text-[10px] font-medium">Add</span>
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageSelect}
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                    />
+                  </div>
+
+
                   {/* Actions */}
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-2 pt-2">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() =>
-                        setRating({ ...Rating, commentOpen: false, newRating: 0, newReview: '' })
+                        setRating({ ...Rating, commentOpen: false, newRating: 0, newReview: '', images: [] })
                       }
                       className="text-gray-500 hover:text-gray-700"
                     >
@@ -348,10 +411,10 @@ export default function MoreDetailsProduct({
                       type="submit"
                       size="sm"
                       disabled={!Rating.newReview.trim() || Rating.newRating === 0}
-                      className="bg-[var(--colour-fsP1)] hover:bg-orange-600 text-white font-semibold px-5 rounded-lg"
+                      className="bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-semibold px-5 rounded-lg"
                     >
                       <Send className="w-3.5 h-3.5 mr-1.5" />
-                      Submit
+                      Submit Review
                     </Button>
                   </div>
                 </form>
@@ -478,7 +541,7 @@ export default function MoreDetailsProduct({
                         className={cn(
                           "w-8 h-8 rounded-lg text-sm font-medium transition-all",
                           page === currentPage
-                            ? "bg-[var(--colour-fsP1)] text-white shadow-sm"
+                            ? "bg-[var(--colour-fsP2)] text-white shadow-sm"
                             : "text-gray-600 hover:bg-gray-100"
                         )}
                       >

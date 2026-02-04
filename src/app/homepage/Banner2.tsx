@@ -55,7 +55,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
               src={img.src}
               alt={img.name}
               fill
-              className="object-fill transition-transform duration-700 " // Ensure object-cover for better fit
+              className="object-contain transition-transform duration-700 " // Ensure object-cover for better fit
               priority={idx === 0}
               sizes="(max-width: 640px) 90vw, 50vw"
               quality={85}

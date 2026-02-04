@@ -32,6 +32,7 @@ interface ProductBuyBoxProps {
     quantity: number;
     setQuantity: (qty: number) => void;
     colorImages?: Array<{ url: string; thumb: string }>;
+    actionRef?: React.Ref<HTMLDivElement>;
 }
 
 const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
@@ -42,6 +43,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
     quantity,
     setQuantity,
     colorImages = [],
+    actionRef,
 }) => {
     const { addToCart, compareItems } = useContextCart();
     const router = useRouter();
@@ -163,7 +165,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     {(
                         <>
                             <span className="text-sm text-slate-400 line-through">Rs. {currentPrice.toLocaleString()}</span>
-                            <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">-{discountPercentage}% OFF</span>
+                            <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-500">-{discountPercentage}% OFF</span>
                         </>
                     )}
                 </div>
@@ -222,65 +224,79 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     </div>
                 )
             }
-
-            {/* 6. ACTIONS (Quantity & Cart) */}
-            <div className="pt-2 space-y-3">
+            {/* ACTIONS - Quantity & Cart */}
+            <div className="space-y-4">
                 {/* Quantity Selector */}
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-600">Qty:</span>
-                    <div className="flex items-center border border-gray-200 rounded-lg h-10 w-28 flex-shrink-0 bg-white overflow-hidden">
+                <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-700">Quantity</span>
+                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-2 py-1.5 border border-gray-200">
                         <button
                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                            className="flex-1 h-full flex items-center justify-center text-slate-400 hover:text-[var(--colour-fsP1)] hover:bg-orange-50 font-bold text-lg transition-colors"
+                            className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-40"
                             disabled={quantity <= 1}
                         >
-                            -
+                            −
                         </button>
-                        <span className="w-8 text-center text-sm font-bold text-slate-900">{quantity}</span>
+                        <span className="min-w-[2.5rem] text-center font-semibold text-gray-800">
+                            {quantity}
+                        </span>
                         <button
                             onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
-                            className="flex-1 h-full flex items-center justify-center text-slate-400 hover:text-[var(--colour-fsP1)] hover:bg-orange-50 font-bold text-lg transition-colors"
+                            className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-40"
                             disabled={quantity >= currentStock}
                         >
                             +
                         </button>
                     </div>
                     {currentStock > 0 && currentStock <= 5 && (
-                        <span className="text-xs text-red-500 font-medium">Only {currentStock} left</span>
+                        <span className="text-xs text-red-600 font-medium">
+                            Only {currentStock} left!
+                        </span>
                     )}
                 </div>
 
-                {/* Add to Cart, Apply EMI, Compare — in one row */}
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
-                    <Button
-                        className="col-span-2 sm:flex-1 h-12 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold rounded-xl text-sm shadow-md shadow-[var(--colour-fsP2)]/20 transition-all active:scale-[0.98] group"
+                {/* Action Buttons - 3 in a Row */}
+                <div ref={actionRef} className="grid grid-cols-3 gap-3">
+                    {/* Add to Cart */}
+                    <button
                         onClick={() => addToCart(product.id, quantity)}
+                        title="add-to-cart"
                         disabled={currentStock === 0}
+                        className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        <ShoppingBag className="w-5 h-5 mr-2 group-hover:animate-bounce" />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                         {currentStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                    </Button>
+                    </button>
+
+                    {/* EMI (conditional) */}
                     {product.emi_enabled === 1 && (
-                        <Button
-                            className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md shadow-emerald-600/20 transition-all active:scale-[0.98]"
-                            onClick={() => router.push(`/emi/applyemi?product=${product.id}`)}
+                        <button
+                            title="apply-emi"
+                            onClick={() => { }}
+                            className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP1)]/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                         >
-                            <CreditCard className="w-5 h-5 mr-2" />
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
                             Apply EMI
-                        </Button>
+                        </button>
                     )}
 
-                    <Button
-                        variant="outline"
-                        className="flex-1 h-11 border-[var(--colour-fsP2)]/30 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/5 text-[var(--colour-fsP2)] text-xs sm:text-sm font-semibold rounded-xl transition-all"
-                        onClick={() => {
-                            const ids = compareItems?.map((i: any) => i.id) || [];
-                            const newIds = Array.from(new Set([...ids, product.id])).join(',');
-                            router.push(`/compare?ids=${newIds}`);
-                        }}
+                    {/* Compare */}
+                    <button
+                        onClick={() => {/* your compare logic */ }}
+                        className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-gray-200 hover:bg-gray-300 text-black font-medium rounded-lg border border-gray-300 hover:border-gray-400 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                        title="Compare Product"
                     >
-                        <Scale className="w-4 h-4 mr-1.5" /> Compare
-                    </Button>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Compare
+                    </button>
+
+
                 </div>
             </div>
 
@@ -291,61 +307,67 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 <ProductCoupons />
             </div>
 
-            {/* REFERRAL CODE GIFT */}
+            {/* REFERRAL CODE GIFT
             <div className="pt-2">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
-                        <Gift className="w-5 h-5" />
+                <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3 group hover:border-[var(--colour-fsP2)] hover:shadow-md transition-all duration-300 w-full">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 bg-[var(--colour-fsP2)]/10 rounded-lg flex items-center justify-center shadow-sm text-[var(--colour-fsP2)] group-hover:scale-110 transition-transform duration-300">
+                            <Gift className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-700 group-hover:text-[var(--colour-fsP2)] transition-colors truncate">Referral Code?</p>
+                            <p className="text-[11px] text-slate-500 truncate">Unlock extra bonuses</p>
+                        </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-xs font-bold text-indigo-900 leading-tight">Have a Referral Code?</h3>
-                        <p className="text-[10px] text-indigo-700/80 truncate">Enter code to unlock extra gifts</p>
-                    </div>
-                    <div className="flex bg-white rounded-lg border border-indigo-200 overflow-hidden h-8 w-28 shrink-0">
-                        <input type="text" placeholder="CODE" className="w-full px-2 text-[10px] outline-none text-slate-700 font-bold placeholder:text-gray-300 uppercase" />
+                    <div className="flex bg-slate-50 rounded-lg border border-slate-200 overflow-hidden h-9 w-32 shrink-0 focus-within:border-[var(--colour-fsP2)] focus-within:ring-1 focus-within:ring-[var(--colour-fsP2)]/20 transition-all shadow-inner">
+                        <input
+                            type="text"
+                            placeholder="ENTER CODE"
+                            className="w-full px-3 text-[11px] outline-none text-slate-700 font-bold placeholder:text-gray-400 uppercase bg-transparent tracking-wide"
+                        />
                     </div>
                 </div>
-            </div>
+            </div> */}
 
-            {/* PARTNER GIFTS BANNER (Small Banner below) */}
+            {/* PARTNER GIFTS BANNER (Small Banner below)
             {freeGifts.length > 0 && (
                 <div className="pt-2">
-                    <div className="bg-slate-900 rounded-xl p-3 relative overflow-hidden group cursor-pointer">
-                        <div className="absolute inset-0 bg-[url('/imgfile/pattern-geo.svg')] opacity-10"></div>
+                    <div className="bg-[#1a1c23] rounded-xl p-3.5 relative overflow-hidden group cursor-pointer shadow-lg shadow-black/5">
+                        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_50%,transparent_75%,transparent_100%)] bg-[length:250%_250%] animate-[shimmer_3s_infinite]"></div>
                         <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                {/* Show first gift image as a teaser */}
-                                <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/20 overflow-hidden">
+                                <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center border border-white/10 shrink-0">
                                     {freeGifts[0].image ? (
-                                        <Image src={freeGifts[0].image.thumb || freeGifts[0].image.full} alt="Partner Gift" width={32} height={32} className="object-cover" />
+                                        <Image src={freeGifts[0].image.thumb || freeGifts[0].image.full} alt="Gift" width={32} height={32} className="object-cover rounded-sm" />
                                     ) : (
-                                        <Gift className="w-5 h-5 text-white" />
+                                        <Gift className="w-5 h-5 text-amber-400" />
                                     )}
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold text-white leading-tight">Partner Exclusive Gift</h3>
-                                    <p className="text-[10px] text-blue-200">Get {freeGifts[0].name.substring(0, 20)}... with this order</p>
+                                    <h3 className="text-xs font-bold text-white leading-tight flex items-center gap-1.5">
+                                        <span className="text-amber-400">★</span> Partner Gift
+                                    </h3>
+                                    <p className="text-[10px] text-gray-400">Include {freeGifts[0].name.substring(0, 15)}...</p>
                                 </div>
                             </div>
-                            <div className="bg-[var(--colour-fsP2)] text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg">
+                            <div className="bg-white text-slate-900 text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm hover:scale-105 transition-transform">
                                 CLAIM
                             </div>
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
+
 
             {/* HIGHLIGHTS */}
             {
                 highlightBullets.length > 0 && (
-                    <div className="pt-2 border-t border-gray-100">
-                        <ul className="space-y-2">
+                    <div className="pt-4 border-t border-gray-100">
+                        <ul className="space-y-2.5">
                             {highlightBullets.map((item, idx) => (
-                                <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-600 leading-relaxed">
-                                    <div className="mt-1 w-4 h-4 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                                        <Check className="w-2.5 h-2.5 text-emerald-600" />
-                                    </div>
-                                    <span>{item}</span>
+                                <li key={idx} className="flex items-start gap-3 text-sm text-slate-600">
+                                    <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                                    <span className="leading-snug">{item}</span>
                                 </li>
                             ))}
                         </ul>
@@ -353,44 +375,43 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 )
             }
 
-            {/* FREE GIFTS SECTION (Real Data) */}
+            {/* FREE GIFTS SECTION (Real Data) - REDESIGNED */}
             {
                 freeGifts.length > 0 && (
-                    <div className="relative overflow-hidden p-4 rounded-xl border border-[var(--colour-fsP2)]/20 shadow-sm mt-3 bg-gradient-to-br from-[var(--colour-fsP2)]/5 to-white">
-                        <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none">
-                            <Gift className="w-24 h-24 text-[var(--colour-fsP2)]" />
+                    <div className="mt-4 border-t border-gray-100 pt-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-[var(--colour-fsP2)]/10 p-1.5 rounded-lg text-[var(--colour-fsP2)]">
+                                    <Gift className="w-4 h-4" />
+                                </div>
+                                <h3 className="text-sm font-bold text-slate-900">Free Gifts Included</h3>
+                            </div>
+                            <span className="text-[10px] font-bold text-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 px-2 py-1 rounded-md border border-[var(--colour-fsP2)]/10">Limited Offer</span>
                         </div>
 
-                        <div className="relative z-10 flex items-center gap-2.5 mb-3">
-                            <div className="w-8 h-8 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center text-[var(--colour-fsP2)] shadow-inner">
-                                <Gift className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-[var(--colour-fsP2)] leading-tight">
-                                    Free {product.categories?.[0]?.title || "Gifts"} Included
-                                </h3>
-                                <p className="text-[10px] text-[var(--colour-fsP2)]/70 font-medium">Exclusive limited time offer</p>
-                            </div>
-                        </div>
-
-                        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-3">
                             {freeGifts.map((gift, i) => (
-                                <div key={i} className="flex gap-3 bg-white/80 backdrop-blur-sm p-2.5 rounded-xl border border-[var(--colour-fsP2)]/20 shadow-sm hover:shadow-md hover:border-[var(--colour-fsP2)]/40 transition-all group cursor-pointer" onClick={() => router.push(`/products/${product.slug}`)}>
-                                    {/* Gift Image Placeholder */}
-                                    <div className="w-12 h-12 bg-white rounded-lg flex-shrink-0 flex items-center justify-center border border-[var(--colour-fsP2)]/10 overflow-hidden group-hover:scale-105 transition-transform relative">
+                                <div key={i} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 bg-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:border-[var(--colour-fsP2)]/30 transition-all group relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--colour-fsP2)]/5 rounded-bl-[40px] -mr-8 -mt-8 z-0"></div>
+
+                                    <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 border border-slate-100 relative overflow-hidden z-10">
                                         {gift.image ? (
                                             <Image src={gift.image.thumb || gift.image.full} alt={gift.name} fill className="object-cover" />
                                         ) : (
-                                            <Gift className="w-6 h-6 text-[var(--colour-fsP2)]" />
+                                            <Gift className="w-7 h-7 text-slate-300" />
                                         )}
                                     </div>
-
-                                    <div className="flex flex-col justify-center min-w-0 flex-1">
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">{gift.reason}</span>
-                                        <h4 className="text-xs font-bold text-slate-800 leading-tight truncate group-hover:text-[var(--colour-fsP2)] transition-colors">{gift.name}</h4>
-                                        <div className="mt-1 flex items-center gap-1.5">
-                                            <span className="text-[10px] text-slate-400 line-through">Rs. {gift.price}</span>
-                                            <span className="text-[10px] font-bold text-white bg-[var(--colour-fsP2)] px-1.5 py-0.5 rounded-md shadow-sm shadow-[var(--colour-fsP2)]/20">FREE</span>
+                                    <div className="flex-1 min-w-0 z-10">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="bg-[var(--colour-fsP2)] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider shadow-sm">Free</span>
+                                            <span className="text-[10px] text-slate-400 line-through font-medium">Rs. {gift.price.toLocaleString()}</span>
+                                        </div>
+                                        <p className="text-sm font-bold text-slate-800 truncate group-hover:text-[var(--colour-fsP2)] transition-colors">{gift.name}</p>
+                                        <p className="text-[10px] text-slate-500 font-medium">Worth Rs. {gift.price.toLocaleString()}</p>
+                                    </div>
+                                    <div className="mr-1 z-10">
+                                        <div className="w-7 h-7 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center text-[var(--colour-fsP2)] border border-[var(--colour-fsP2)]/10">
+                                            <Check className="w-4 h-4" />
                                         </div>
                                     </div>
                                 </div>
