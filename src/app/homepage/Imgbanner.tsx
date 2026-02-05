@@ -257,34 +257,25 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
 
                                 {/* Bottom Two Banners */}
                                 <div className="flex gap-3 flex-1">
-                                    <Link
-                                        href={sideImages[1].link || '#'}
-                                        className="relative flex-1  rounded overflow-hidden group"
-                                    >
-                                        <Image
-                                            src={sideImages[1].default}
-                                            alt={sideImages[1].name}
-                                            fill
-                                            className="object-contain w-full  aspect-[16/9] transition-transform duration-500"
-                                            sizes="(max-width: 1024px) 0vw, 20vw"
-                                            unoptimized={true}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                    </Link>
-                                    <Link
-                                        href={sideImages[2].link || '#'}
-                                        className="relative flex-1  rounded overflow-hidden group"
-                                    >
-                                        <Image
-                                            src={sideImages[2].default}
-                                            alt={sideImages[2].name}
-                                            fill
-                                            className="object-contain aspect-[16/9] transition-transform duration-500"
-                                            sizes="(max-width: 1024px) 0vw, 20vw"
-                                            unoptimized={true}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                    </Link>
+                                    {
+                                        [1, 2].map((image, index) => (
+                                            <Link
+                                                href={sideImages[1].link || '#'}
+                                                className="relative flex-1  rounded overflow-hidden group"
+                                            >
+                                                <Image
+                                                    src={sideImages[1].default}
+                                                    alt={sideImages[1].name}
+                                                    fill
+                                                    className="object-contain w-full  aspect-[16/9] transition-transform duration-500"
+                                                    sizes="(max-width: 1024px) 0vw, 20vw"
+                                                    unoptimized={true}
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                            </Link>
+                                        ))
+                                    }
+
                                 </div>
                             </div>
                         </div>
