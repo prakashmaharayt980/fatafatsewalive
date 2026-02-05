@@ -258,14 +258,15 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                 {/* Bottom Two Banners */}
                                 <div className="flex gap-3 flex-1">
                                     {
-                                        [1, 2].map((image, index) => (
+                                        sideImages.slice(1, 3).map((image, index) => (
                                             <Link
-                                                href={sideImages[1].link || '#'}
+                                                key={`side-bottom-${image.id}-${index}`}
+                                                href={image.link || '#'}
                                                 className="relative flex-1  rounded overflow-hidden group"
                                             >
                                                 <Image
-                                                    src={sideImages[1].default}
-                                                    alt={sideImages[1].name}
+                                                    src={image.default}
+                                                    alt={image.name}
                                                     fill
                                                     className="object-contain w-full  aspect-[16/9] transition-transform duration-500"
                                                     sizes="(max-width: 1024px) 0vw, 20vw"

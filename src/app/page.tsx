@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: 'https://fatafatsewa.com',
       images: [
         {
-          url: '/og-image.jpg', // Ensure this image exists or use a remote URL
+          url: '/favicon.png', // Ensure this image exists or use a remote URL
           width: 1200,
           height: 630,
           alt: 'Fatafat Sewa',
@@ -34,32 +34,6 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// Helper function to retry API calls with exponential backoff
-async function fetchWithRetry<T>(
-  fetchFn: () => Promise<T>,
-  retries = 3,
-  delay = 1000
-): Promise<T | null> {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await fetchFn();
-    } catch (error: any) {
-      const isLastAttempt = i === retries - 1;
-      const isDNSError = error?.code === 'EAI_AGAIN' || error?.code === 'ENOTFOUND';
-
-      if (isLastAttempt || !isDNSError) {
-        console.error(`Failed to fetch after ${i + 1} attempts:`, error);
-        return null;
-      }
-
-      // Wait before retrying with exponential backoff
-      const waitTime = delay * Math.pow(2, i);
-      console.log(`DNS error, retrying in ${waitTime}ms... (attempt ${i + 1}/${retries})`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-  }
-  return null;
-}
 
 // Server Component
 async function page() {
@@ -145,7 +119,7 @@ async function page() {
         "@type": "Organization",
         "name": "Fatafat Sewa",
         "url": "https://fatafatsewa.com",
-        "logo": "https://fatafatsewa.com/logo.png",
+        "logo": "https://fatafatsewa.com/favicon.png",
         "sameAs": [
           "https://www.facebook.com/fatafatsewa",
           "https://www.instagram.com/fatafatsewa",

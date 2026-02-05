@@ -19,7 +19,6 @@ import WishList from '@/app/emi/Wishlist';
 import { Inter } from 'next/font/google'
 import { EmiProvider } from '@/app/emi/emiContext';
 import { GoogleOAuthProvider } from "@react-oauth/google";
-
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -42,6 +41,9 @@ export const metadata = {
     siteName: 'Fatafat Sewa',
     locale: 'en_US',
     type: 'website',
+  },
+  icons: {
+    icon: '/favicon.png',
   },
   robots: {
     index: true,
