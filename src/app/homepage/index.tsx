@@ -18,7 +18,7 @@ const OfferBanner = dynamic(() => import('./OfferBanner'));
 const OurArticles = dynamic(() => import('./OurArticles'));
 const CategoryProductSection = dynamic(() => import('./BasketCardwithImage'));
 const TwoImageBanner = dynamic(() => import('./Banner2'));
-const OneImageBanner = dynamic(() => import('./Bannertop'));
+const OneImageBanner = dynamic(() => import('./Bannerfooter'));
 
 // Demo category data - Replace with API fetch later
 const demoCategories = [

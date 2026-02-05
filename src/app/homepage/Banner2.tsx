@@ -45,8 +45,8 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
             href={img.link}
             className={cn(
               'min-w-[90%] sm:min-w-0 flex-shrink-0 snap-center',
-              'relative overflow-hidden rounded-xl sm:rounded-2xl group cursor-pointer border-none', // Removed border
-              'aspect-[16/9] sm:aspect-[18/6]', // Standard Aspect Ratio
+              'relative overflow-hidden rounded sm:rounded group cursor-pointer border-none', // Removed border
+              'aspect-[24/9] sm:aspect-[4.9/1.8] ', // Standard Aspect Ratio
               'transition-all duration-300 ', // Attractive lift effect
               'shadow-sm hover:shadow-xl' // Stronger shadow on hover
             )}

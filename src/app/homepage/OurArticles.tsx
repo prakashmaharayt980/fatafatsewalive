@@ -82,15 +82,15 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
             className={cn(
               "group cursor-pointer flex flex-col bg-white overflow-hidden transition-all duration-300",
               isSidebar
-                ? "rounded-xl hover:bg-gray-50 border-0 border-b last:border-0 hover:border-transparent py-2"
+                ? "rounded hover:bg-gray-50 border-0 border-b last:border-0 hover:border-transparent py-2"
                 : isProductPage
                   ? "rounded-xl border border-gray-100 hover:shadow-lg hover:-translate-y-0.5"
-                  : "rounded-2xl border border-gray-100 hover:shadow-2xl hover:-translate-y-1"
+                  : "rounded border border-gray-100 hover:shadow-2xl hover:-translate-y-1"
             )}
           >
             {isSidebar ? (
               <div className="flex gap-3 items-center">
-                <div className="relative w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                <div className="relative w-20 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                   <Image
                     src={article.thumbnail_image?.thumb || article.thumbnail_image?.full || imglogo}
                     alt={article.title}
@@ -143,10 +143,10 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
                 {/* Full card for homepage */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                   <Image
-                    src={article.thumbnail_image?.full || imglogo}
+                    src={article.thumbnail_image?.full}
                     alt={article.title}
                     fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="object-cover transition-transform duration-700 "
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />

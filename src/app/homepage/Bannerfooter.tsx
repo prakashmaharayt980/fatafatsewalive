@@ -34,8 +34,8 @@ const TopBanner = ({ data }: TopBannerProps) => {
   const BannerContent = (
     <div
       className={cn(
-        'w-full relative overflow-hidden rounded-xl sm:rounded-2xl cursor-pointer group',
-        'aspect-[16/7] sm:aspect-[100/10]', // Taller on mobile
+        'w-full relative overflow-hidden rounded sm:rounded-xl cursor-pointer group',
+        'aspect-[16/9] sm:aspect-[16/2] ', // Responsive full-width banner ratios
         'transition-premium hover-premium shadow-premium-sm'
       )}
     >
@@ -43,13 +43,9 @@ const TopBanner = ({ data }: TopBannerProps) => {
         src={bannerImage.src}
         alt={bannerImage.name}
         fill
-        className="object-contain transition-transform duration-700 "
+        className="object-fill w-full  transition-transform duration-700 "
         priority
-        fetchPriority="high"
-        decoding="sync"
-        // sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 90vw"
-        quality={85}
-        unoptimized={bannerImage.src === ''}
+
       />
 
       {/* Subtle overlay on hover */}

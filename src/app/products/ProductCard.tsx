@@ -69,8 +69,8 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                 <Heart className="h-4 w-4 stroke-[2.5]" />
             </button>
 
-            {/* Image Container - Aspect Square (1:1) */}
-            <div className="relative aspect-square w-full bg-white p-2">
+            {/* Image Container - Aspect 5:4 */}
+            <div className="relative aspect-[5/4] w-full bg-white p-2">
                 {/* Badges - Top Left */}
                 <div className="absolute top-0 left-0 z-10 flex flex-col gap-1">
                     {/* Refined Best Seller Tag - Gold (Only if NOT New) */}
@@ -94,7 +94,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                         src={imageUrl || '/placeholder-product.png'}
                         alt={product.name || 'Product'}
                         fill
-                        className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                        className="object-contain aspect-auto mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                         priority={priority}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />

@@ -5,7 +5,7 @@ import RemoteServices from './api/remoteservice'
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import BannerFetcher from './components/BannerFetcher'
-import OneImageBanner from './homepage/Bannertop'
+import OneImageBanner from './homepage/Bannerfooter'
 // import TwoImageBanner from './homepage/Banner2' // Removed static import
 // import OfferBanner from './homepage/OfferBanner' // Removed static import
 import dynamic from 'next/dynamic'
@@ -65,9 +65,9 @@ async function fetchWithRetry<T>(
 async function page() {
   // 1. Fetch Critical Data in Parallel
   const criticalSlugs = {
-    main: 'main-banner',
-    side: 'home-banner-3-images', // Corrected slug for side
-    category: 'right-slider-thumbnail',
+    main: 'main-banner-test',
+    side: 'test-slug-banner', // Corrected slug for side
+    category: 'right-slider-thumbnail-test',
     // Side banner is also used in section three, so we fetch it once here
   };
 
@@ -88,7 +88,7 @@ async function page() {
   }, {} as Record<string, any>);
 
   // 2. Define Suspense/Streaming slots
-  const OneImageBanner = dynamic(() => import('./homepage/Bannertop'));
+  const OneImageBanner = dynamic(() => import('./homepage/Bannerfooter'));
   const OfferBanner = dynamic(() => import('./homepage/OfferBanner'));
   const TwoImageBanner = dynamic(() => import('./homepage/Banner2'));
 
@@ -123,7 +123,7 @@ async function page() {
   const SectionThree = (
     <Suspense fallback={<div className="bg-gray-100  rounded-xl" />}>
       <BannerFetcher
-        slug={'home-banner-third'}
+        slug={'home-banner-third-test'}
         Component={TwoImageBanner}
       />
     </Suspense>
@@ -132,7 +132,7 @@ async function page() {
   const SectionFour = (
     <Suspense fallback={<div className=" bg-gray-100  rounded-xl" />}>
       <BannerFetcher
-        slug="home-banner-fourth"
+        slug="home-banner-fourth-test"
         Component={OneImageBanner}
       />
     </Suspense>

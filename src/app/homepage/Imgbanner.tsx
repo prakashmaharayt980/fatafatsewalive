@@ -114,7 +114,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
     }, [isAutoPlaying, nextSlide, mainImages.length]);
 
     // Check if side images should be shown
-    const showSideImages = sideImages.length >= 3;
+    const showSideImages = sideImages.length >= 2;
 
     return (
         <section className="w-full px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8">
@@ -125,7 +125,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                     {/* Main Carousel */}
                     <div className={`w-full ${showSideImages ? 'lg:w-[60%]' : 'lg:w-full'}`}>
                         <div
-                            className="relative group overflow-hidden rounded-lg sm:rounded-xl md:rounded-2xl bg-gray-100"
+                            className="relative group overflow-hidden rounded sm:rounded md:rounded-xl bg-gray-100"
                             onMouseEnter={() => setIsAutoPlaying(false)}
                             onMouseLeave={() => setIsAutoPlaying(true)}
                             onTouchStart={onTouchStart}
@@ -133,7 +133,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                             onTouchEnd={onTouchEnd}
                         >
                             {/* Aspect Ratio Container - Responsive heights */}
-                            <div className="relative w-full aspect-[16/9] sm:aspect-[16/8] md:aspect-[16/7] lg:aspect-[16/9]">
+                            <div className="relative w-full aspect-[24/9] sm:aspect-[24/8] md:aspect-[24/7] lg:aspect-[24/9]">
                                 {/* Slides Container */}
                                 <div
                                     className="absolute inset-0 flex transition-transform duration-500 ease-out"
@@ -153,10 +153,10 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     src={image.default}
                                                     alt={image.name}
                                                     fill
-                                                    className="object-fill"
+                                                    className="object-contain  "
                                                     priority={index === 0}
                                                     fetchPriority={index === 0 ? "high" : "auto"}
-                                                    decoding={index === 0 ? "sync" : "async"}
+
                                                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 60vw"
                                                     quality={85}
                                                 />
@@ -209,27 +209,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                     </>
                                 )}
 
-                                {/* Dots Indicator */}
-                                {mainImages.length > 1 && (
-                                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 p-1 rounded-full bg-black/20 backdrop-blur-sm pointer-events-auto">
-                                        {mainImages.map((_, index) => (
-                                            <button
-                                                key={`dot-${index}`}
-                                                onClick={() => goToSlide(index)}
-                                                className="group p-2 cursor-pointer focus:outline-none"
-                                                aria-label={`Go to slide ${index + 1}`}
-                                                aria-current={index === currentIndex ? 'true' : 'false'}
-                                            >
-                                                <div
-                                                    className={`rounded-full transition-all duration-300 ${index === currentIndex
-                                                        ? 'bg-white w-4 sm:w-5 md:w-6 h-1.5 sm:h-2'
-                                                        : 'bg-white/50 group-hover:bg-white/70 w-1.5 sm:w-2 h-1.5 sm:h-2'
-                                                        }`}
-                                                />
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+
                             </div>
                         </div>
                     </div>
@@ -243,13 +223,13 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                     <Link
                                         key={`side-mobile-${image.id}-${index}`}
                                         href={image.link || '#'}
-                                        className="relative flex-shrink-0 w-[45%] sm:w-[32%] aspect-[4/3] snap-start rounded-lg sm:rounded-xl overflow-hidden"
+                                        className="relative flex-shrink-0 w-full  snap-start rounded sm:rounded-xl overflow-hidden"
                                     >
                                         <Image
                                             src={image.default}
                                             alt={image.name}
                                             fill
-                                            className="object-fill transition-transform duration-300"
+                                            className="object-contain w-full aspect-[24/9] transition-transform duration-300"
                                             sizes="(max-width: 640px) 45vw, 32vw"
                                             quality={80}
                                         />
@@ -262,30 +242,30 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                 {/* Top Banner - Takes more space */}
                                 <Link
                                     href={sideImages[0].link || '#'}
-                                    className="relative flex-[1.2] rounded-xl overflow-hidden group"
+                                    className="relative flex-[1.2] w-full  rounded-xl overflow-hidden group"
                                 >
                                     <Image
                                         src={sideImages[0].default}
                                         alt={sideImages[0].name}
                                         fill
-                                        className="object-fill transition-transform duration-500"
+                                        className="object-contain aspect-[16/9] rounded-xl  transition-transform duration-500"
                                         sizes="(max-width: 1024px) 0vw, 40vw"
                                         quality={80}
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </Link>
 
                                 {/* Bottom Two Banners */}
                                 <div className="flex gap-3 flex-1">
                                     <Link
                                         href={sideImages[1].link || '#'}
-                                        className="relative flex-1 rounded-xl overflow-hidden group"
+                                        className="relative flex-1  rounded overflow-hidden group"
                                     >
                                         <Image
                                             src={sideImages[1].default}
                                             alt={sideImages[1].name}
                                             fill
-                                            className="object-fill transition-transform duration-500"
+                                            className="object-contain w-full  aspect-[16/9] transition-transform duration-500"
                                             sizes="(max-width: 1024px) 0vw, 20vw"
                                             quality={80}
                                         />
@@ -293,13 +273,13 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                     </Link>
                                     <Link
                                         href={sideImages[2].link || '#'}
-                                        className="relative flex-1 rounded-xl overflow-hidden group"
+                                        className="relative flex-1  rounded overflow-hidden group"
                                     >
                                         <Image
                                             src={sideImages[2].default}
                                             alt={sideImages[2].name}
                                             fill
-                                            className="object-fill transition-transform duration-500"
+                                            className="object-contain aspect-[16/9] transition-transform duration-500"
                                             sizes="(max-width: 1024px) 0vw, 20vw"
                                             quality={80}
                                         />

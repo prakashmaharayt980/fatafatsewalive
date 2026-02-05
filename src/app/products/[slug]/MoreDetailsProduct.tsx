@@ -149,6 +149,55 @@ export default function MoreDetailsProduct({
     }, 1500);
   };
 
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [isSpecsExpanded, setIsSpecsExpanded] = useState(false);
+
+  // Ref for the desktop unified button
+  const desktopButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const toggleDesc = () => {
+    if (isDescExpanded) {
+      setIsDescExpanded(false);
+      // Wait for collapse transition to start/finish roughly, then scroll
+      setTimeout(() => {
+        descriptionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    } else {
+      setIsDescExpanded(true);
+    }
+  };
+
+  const toggleSpecs = () => {
+    if (isSpecsExpanded) {
+      setIsSpecsExpanded(false);
+      setTimeout(() => {
+        specsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    } else {
+      setIsSpecsExpanded(true);
+    }
+  };
+
+  // Desktop unified toggle
+  const toggleBoth = () => {
+    const shouldExpand = !isDescExpanded || !isSpecsExpanded;
+
+    if (!shouldExpand) {
+      // We are collapsing both
+      setIsDescExpanded(false);
+      setIsSpecsExpanded(false);
+      setTimeout(() => {
+        desktopButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    } else {
+      // Expanding both
+      setIsDescExpanded(true);
+      setIsSpecsExpanded(true);
+    }
+  };
+
+  const isBothExpanded = isDescExpanded && isSpecsExpanded;
+
   return (
     <div className="w-full  mx-auto py-4 bg-white" id="specifications">
       {/* Description + Specifications Grid */}
@@ -156,22 +205,43 @@ export default function MoreDetailsProduct({
 
         {/* Product Description Section (2/3 width on desktop) */}
         <div className="lg:col-span-2">
-          <section ref={descriptionRef} className="bg-white rounded-2xl p-5 sm:p-6 lg:p-8 shadow-sm h-full ">
+          <section ref={descriptionRef} className="bg-white rounded-2xl p-5 sm:p-6 lg:p-8 shadow-sm h-full flex flex-col">
             <div className="pb-4 mb-6 flex items-center gap-3 ">
               <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Product Description</h2>
             </div>
 
             <div className={cn(
-              "prose prose-sm sm:prose-base prose-slate max-w-none",
-              "prose-headings:font-bold prose-headings:text-gray-900",
-              "prose-p:text-gray-600 prose-p:leading-7 prose-p:mb-4",
-              "prose-li:text-gray-600 prose-li:marker:text-[var(--colour-fsP2)]",
-              "prose-img:rounded-xl prose-img:shadow-md prose-img:my-6",
-              "prose-strong:text-gray-900 prose-strong:font-semibold",
-              "prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
+              "prose prose-sm sm:prose-base prose-slate max-w-none relative transition-all duration-500 ease-in-out",
+              !isDescExpanded && "max-h-[500px] overflow-hidden"
             )}>
-              <ParsedContent description={productDesciption} className="" />
+              <div className={cn(
+                "prose-headings:font-bold prose-headings:text-gray-900",
+                "prose-p:text-gray-600 prose-p:leading-7 prose-p:mb-4",
+                "prose-li:text-gray-600 prose-li:marker:text-[var(--colour-fsP2)]",
+                "prose-img:rounded-xl prose-img:shadow-md prose-img:my-6",
+                "prose-strong:text-gray-900 prose-strong:font-semibold",
+                "prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
+              )}>
+                <ParsedContent description={productDesciption} className="" />
+              </div>
+
+              {/* Gradient Overlay for Description */}
+              {!isDescExpanded && (
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+              )}
+            </div>
+
+            {/* Mobile Toggle Button - Description */}
+            <div className="mt-4 lg:hidden">
+              <Button
+                variant="outline"
+                onClick={toggleDesc}
+                className="w-full border-gray-200 text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
+              >
+                {isDescExpanded ? 'Show Less' : 'Show More'}
+                <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isDescExpanded && "rotate-180")} />
+              </Button>
             </div>
           </section>
         </div>
@@ -180,7 +250,7 @@ export default function MoreDetailsProduct({
         <div className="lg:col-span-1">
           {hasAnyFeatures && (
             <section ref={specsRef} className="lg:sticky lg:top-24 space-y-6">
-              <div>
+              <div className='relative'>
                 <div className="pb-3 mb-4 border-b border-gray-100">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
                     <div className="p-1.5 bg-[var(--colour-fsP2)]/10 rounded-lg">
@@ -190,7 +260,10 @@ export default function MoreDetailsProduct({
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className={cn(
+                  "grid grid-cols-1 gap-3 relative transition-all duration-500 ease-in-out",
+                  !isSpecsExpanded && "max-h-[500px] overflow-hidden"
+                )}>
                   {Object.entries(specsData).map(([key, value], index) => (
                     <div
                       key={`spec-${index}`}
@@ -205,6 +278,23 @@ export default function MoreDetailsProduct({
                       </div>
                     </div>
                   ))}
+
+                  {/* Gradient Overlay for Specifications */}
+                  {!isSpecsExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+                  )}
+                </div>
+
+                {/* Mobile Toggle Button - Specifications */}
+                <div className="mt-4 lg:hidden">
+                  <Button
+                    variant="outline"
+                    onClick={toggleSpecs}
+                    className="w-full border-gray-200 text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
+                  >
+                    {isSpecsExpanded ? 'Show Less' : 'Show More'}
+                    <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isSpecsExpanded && "rotate-180")} />
+                  </Button>
                 </div>
               </div>
 
@@ -217,6 +307,19 @@ export default function MoreDetailsProduct({
           )}
         </div>
 
+      </div>
+
+      {/* Desktop Unified Toggle Button */}
+      <div className="hidden lg:flex justify-center mt-8">
+        <Button
+          ref={desktopButtonRef}
+          variant="outline"
+          onClick={toggleBoth}
+          className="px-8 border-gray-200 text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-white"
+        >
+          {isBothExpanded ? 'Show Less' : 'Show More'}
+          <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isBothExpanded && "rotate-180")} />
+        </Button>
       </div>
 
       {/* Reviews Section — Rating Summary + Review Cards */}

@@ -48,17 +48,17 @@ const OfferBanner = () => {
   ];
 
   return (
-    <div className="w-full bg-gradient-to-r from-[var(--colour-fsP2)]/50 via-[var(--colour-fsP2)]/10 to-yellow-50 py-10 sm:py-14 lg:py-20 px-4 sm:px-6 min-h-[500px] sm:min-h-[550px] lg:min-h-[600px]">
+    <div className="w-full bg-gradient-to-r from-[var(--colour-fsP2)]/50 via-[var(--colour-fsP2)]/10 to-yellow-50 py-6 sm:py-10 px-4 sm:px-6 min-h-[400px] sm:min-h-[500px] lg:min-h-[500px]">
       <div className="max-w-7xl mx-auto h-full">
         {/* Main Content Section */}
         <div className="flex flex-col lg:flex-row justify-between items-center gap-8 lg:gap-12 mb-8">
 
           {/* Left Content */}
-          <div className="flex flex-col items-center lg:items-start gap-6 w-full lg:w-1/2 text-center lg:text-left">
+          <div className="flex flex-col items-center lg:items-start gap-3 w-full lg:w-1/2 text-center lg:text-left">
 
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-[var(--colour-fsP2)] pl-1.5 pr-4 py-1.5 rounded-full shadow-xl">
-              <span className="bg-[var(--colour-fsP1)] p-1.5 rounded-full animate-pulse">
+              <span className="bg-[var(--colour-fsP1)] p-1.5 rounded-full ">
                 <Flame className="w-3.5 h-3.5 text-white" />
               </span>
               <span className="text-white text-xs font-bold uppercase tracking-wider">
@@ -67,7 +67,7 @@ const OfferBanner = () => {
             </div>
 
             {/* Title */}
-            <div className="space-y-4">
+            <div className="space-y-2">
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[var(--colour-fsP2)] tracking-tight leading-[1.1]">
                 Apple
                 <span className="block">Shopping</span>
@@ -110,7 +110,7 @@ const OfferBanner = () => {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mt-2">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mt-1">
               <Button
                 className={cn(
                   "relative overflow-hidden",
@@ -138,26 +138,26 @@ const OfferBanner = () => {
           </div>
 
           {/* Right Image */}
-          <div className="relative w-full lg:w-1/2 flex justify-center py-6">
+          <div className="relative w-full lg:w-1/2 flex justify-center py-2">
             <div className="absolute inset-0 bg-[var(--colour-fsP2)]/20 rounded-full blur-3xl scale-75" />
             <Image
               src={productimg}
               alt="Apple Product"
-              width={420}
-              height={420}
+              width={620}
+              height={620}
               sizes="(max-width: 640px) 65vw, (max-width: 1024px) 50vw, 420px"
-              className="relative object-contain z-10 drop-shadow-2xl transition-transform duration-500"
+              className="relative object-contain aspect-square z-10 drop-shadow-2xl transition-transform duration-500"
               priority
             />
           </div>
         </div>
 
         {/* Product Cards */}
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 pt-2">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
           {products.map((product, index) => (
             <div
               key={index}
-              className="group bg-white cursor-pointer flex items-center gap-3 p-2.5 rounded-xl border border-white/50 hover:border-[var(--colour-fsP2)]/30 hover:shadow-lg transition-all duration-300 flex-shrink-0 min-w-[160px] sm:min-w-[180px]"
+              className="group bg-white cursor-pointer flex items-center gap-3 p-2 rounded-xl border border-white/50 hover:border-[var(--colour-fsP2)]/30 hover:shadow-lg transition-all duration-300 flex-shrink-0 min-w-[160px] sm:min-w-[180px]"
             >
               {/* Product Image */}
               <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-slate-50 rounded-lg overflow-hidden flex-shrink-0">
