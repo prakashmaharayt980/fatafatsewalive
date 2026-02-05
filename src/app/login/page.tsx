@@ -32,7 +32,7 @@ export default function LoginPage() {
     socialComplete: { phone: '', address: '', password: '', confirmPassword: '' },
   });
 
-  // ... (existing errors state)
+
   const [errors, setErrors] = useState({
     login: {},
     register: {},
@@ -42,7 +42,7 @@ export default function LoginPage() {
   });
 
   const [showPassword, setShowPassword] = useState({
-    // ... existing
+  
     loginPassword: false,
     registerPassword: false,
     registerConfirmPassword: false,
