@@ -45,6 +45,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
         fill
         className="object-fill w-full  transition-transform duration-700 "
         priority
+        unoptimized={true}
 
       />
 

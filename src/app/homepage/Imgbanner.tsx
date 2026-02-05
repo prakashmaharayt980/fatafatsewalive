@@ -156,9 +156,9 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     className="object-contain  "
                                                     priority={index === 0}
                                                     fetchPriority={index === 0 ? "high" : "auto"}
-
+                                                    unoptimized={true}
                                                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 60vw"
-                                                    quality={85}
+
                                                 />
                                             </Link>
                                         </div>
@@ -231,7 +231,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             fill
                                             className="object-contain w-full aspect-[24/9] transition-transform duration-300"
                                             sizes="(max-width: 640px) 45vw, 32vw"
-                                            quality={80}
+                                            unoptimized={true}
                                         />
                                     </Link>
                                 ))}
@@ -250,7 +250,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                         fill
                                         className="object-contain aspect-[16/9] rounded-xl  transition-transform duration-500"
                                         sizes="(max-width: 1024px) 0vw, 40vw"
-                                        quality={80}
+                                        unoptimized={true}
                                     />
                                     <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </Link>
@@ -267,7 +267,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             fill
                                             className="object-contain w-full  aspect-[16/9] transition-transform duration-500"
                                             sizes="(max-width: 1024px) 0vw, 20vw"
-                                            quality={80}
+                                            unoptimized={true}
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     </Link>
@@ -281,7 +281,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             fill
                                             className="object-contain aspect-[16/9] transition-transform duration-500"
                                             sizes="(max-width: 1024px) 0vw, 20vw"
-                                            quality={80}
+                                            unoptimized={true}
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     </Link>
