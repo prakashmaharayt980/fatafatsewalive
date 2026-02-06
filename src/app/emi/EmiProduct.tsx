@@ -5,10 +5,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-// import { CreditCard, Search, X } from "lucide-react"; // X not exported from here usually
-import { CreditCard, Search, X, Smartphone, Loader2, ChevronRight, Check } from "lucide-react";
+import { Search, X, Smartphone, Loader2, ChevronRight, Check, RefreshCw } from "lucide-react";
 import RemoteServices from "../api/remoteservice";
-import emptyboxIcon from '../../../public/svgfile/emptybox.png'
 import { useContextEmi } from "./emiContext";
 import { ProductDetails } from "../types/ProductDetailsTypes";
 
@@ -20,7 +18,6 @@ interface ProductEMIUIProps {
 
 export default function ProductEMIUI({ chooseProduct, setProductPrice, product }: ProductEMIUIProps) {
   const [selectedColor, setSelectedColor] = useState<string>("");
-
   const [selectItems, setSelectItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { setEmiContextInfo } = useContextEmi();
@@ -77,274 +74,231 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
     <div className="w-full">
       {/* Drawer for Product Search */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="h-[85vh] max-w-4xl mx-auto rounded-t-3xl bg-white flex flex-col">
-
-          {/* Header */}
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white rounded-t-3xl">
-            <DrawerTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Search className="w-5 h-5 text-gray-500" />
+        <DrawerContent className="h-[80vh] max-w-5xl mx-auto p-1  rounded-t-2xl bg-white flex flex-col">
+          {/* Compact Header */}
+          <DrawerHeader className="px-4 border-b border-gray-100">
+            <DrawerTitle className="text-lg font-semibold text-[var(--colour-fsP2)] flex items-center gap-2">
+              <Search className="w-4 h-4 text-[var(--colour-fsP2)]" />
               Search Products
             </DrawerTitle>
-            {/* Close button usually handled by Drawer overlay, but nice to have explicit one if needed, relying on default behavior for now */}
-          </div>
+          </DrawerHeader>
 
-          <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden bg-gray-50/50">
-            {/* Search Input - Updated to match Header & Fix Space Key */}
-            {/* Search Input - Sleek & Premium Design */}
-            <div className="relative w-full max-w-2xl mx-auto group">
+          <div className="flex-1 flex flex-col p-2 gap-3 overflow-hidden">
+            {/* Compact Search Input */}
+            <div className="relative">
               <div className={cn(
-                "flex items-center rounded-2xl bg-gray-100 transition-all duration-300 overflow-hidden",
-                "focus-within:bg-white focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-gray-200"
+                "flex items-center rounded-xl bg-gray-50 transition-all",
+                "focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-[var(--colour-fsP2)]/20"
               )}>
-                <div className="pl-4 text-gray-400 group-focus-within:text-[var(--colour-fsP1)] transition-colors">
-                  <Search className="w-5 h-5" />
-                </div>
+                <Search className="ml-3 w-4 h-4 text-[var(--colour-fsP2)]" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.stopPropagation()}
-                  placeholder="Search for mobiles, laptops..."
-                  className="w-full px-4 py-4 bg-transparent border-none focus:outline-none text-base font-medium text-gray-900 placeholder-gray-400"
+                  placeholder="Search mobiles, laptops..."
+                  className="w-full px-3 py-2.5 bg-transparent border-none focus:outline-none text-sm text-gray-900 placeholder-gray-400"
                   autoFocus
                 />
                 {searchQuery && (
                   <button
                     onClick={() => { setSearchQuery(""); setSelectItems([]); }}
-                    className="pr-4 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="mr-2 p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
                   >
-                    <div className="bg-gray-200 hover:bg-gray-300 rounded-full p-1 transition-colors">
-                      <X className="w-4 h-4" />
-                    </div>
+                    <X className="w-3 h-3" />
                   </button>
                 )}
-                {loading && (
-                  <div className="pr-4">
-                    <Loader2 className="h-5 w-5 text-[var(--colour-fsP1)] animate-spin" />
-                  </div>
-                )}
+                {loading && <Loader2 className="mr-3 h-4 w-4 text-[var(--colour-fsP2)] animate-spin" />}
               </div>
             </div>
 
-            {/* Results List */}
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar mt-4">
+            {/* Compact Results List */}
+            <div className="flex-1 overflow-y-auto -mx-4 px-4 custom-scrollbar">
               {selectItems.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-2">
                   {selectItems.map((product: any) => (
                     <div
                       key={product.id}
                       onClick={() => handleProductSelect(product.slug)}
-                      className="flex items-center gap-4 p-3 bg-white rounded-xl hover:shadow-md cursor-pointer transition-all duration-200 group"
+                      className="flex items-center gap-3 p-2.5 bg-gray-50 hover:bg-[var(--colour-fsP2)]/5 rounded-lg cursor-pointer transition-colors group border border-transparent hover:border-[var(--colour-fsP2)]/20"
                     >
-                      <div className="relative w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="relative w-12 h-12 bg-white rounded-md overflow-hidden flex-shrink-0">
                         {product.image && (product.image.thumb || typeof product.image === 'string') ? (
-                          <div className="relative w-full h-full">
-                            <Image
-                              src={typeof product.image === 'string' ? product.image : product.image.thumb || ""}
-                              alt={product.name}
-                              fill
-                              className="object-contain p-1 group-hover:scale-110 transition-transform duration-300"
-                            />
-                          </div>
+                          <Image
+                            src={typeof product.image === 'string' ? product.image : product.image.thumb || ""}
+                            alt={product.name}
+                            fill
+                            className="object-contain p-1"
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <Smartphone className="w-6 h-6" />
+                            <Smartphone className="w-5 h-5" />
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 truncate group-hover:text-[var(--colour-fsP1)] transition-colors">
+                        <h4 className="text-sm font-medium text-gray-900 truncate">
                           {product.name}
                         </h4>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-sm font-bold text-gray-500">Rs {Number(product.price).toLocaleString()}</span>
-                        </div>
+                        <span className="text-xs font-bold text-[var(--colour-fsP2)]">
+                          Rs {Number(product.price).toLocaleString()}
+                        </span>
                       </div>
 
-                      <div className="p-2 text-gray-300 group-hover:text-[var(--colour-fsP1)] transition-colors">
-                        <ChevronRight className="w-5 h-5" />
-                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[var(--colour-fsP2)]" />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-60">
+                <div className="h-full flex flex-col items-center justify-center text-gray-400">
                   {searchQuery ? (
                     <>
-                      <Search className="w-16 h-16 mb-4 stroke-1" />
-                      <p className="text-lg font-medium">No products found</p>
-                      <p className="text-sm">Try searching for something else</p>
+                      <Search className="w-12 h-12 mb-3 stroke-[1.5]" />
+                      <p className="text-sm font-medium">No products found</p>
+                      <p className="text-xs mt-1">Try different keywords</p>
                     </>
                   ) : (
                     <>
-                      <Smartphone className="w-16 h-16 mb-4 stroke-1" />
-                      <p className="text-lg font-medium">Start typing to search</p>
-                      <p className="text-sm">Find mobiles, laptops, and more</p>
+                      <Smartphone className="w-12 h-12 mb-3 stroke-[1.5]" />
+                      <p className="text-sm font-medium">Start searching</p>
+                      <p className="text-xs mt-1">Find your product</p>
                     </>
                   )}
                 </div>
               )}
             </div>
           </div>
-
-          {/* Footer space if needed, or simple padding */}
-          {/* <div className="h-4 bg-gray-50/50 rounded-b-3xl"></div> */}
         </DrawerContent>
       </Drawer>
 
       {/* Main Content Area */}
       {product ? (
-        <div className="flex flex-col md:flex-row gap-6 items-start">
-          {/* Product Image Card */}
-          <div className="w-full md:w-1/3 bg-white p-6 rounded-2xl flex items-center justify-center relative group">
-            <div className="relative w-48 h-48 sm:w-64 sm:h-64">
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          {/* Compact Product Image Card */}
+          <div className="w-full md:w-4/5 bg-white p-4 rounded relative group ">
+            <div className="relative w-full aspect-square max-w-[200px] mx-auto">
               <Image
                 src={typeof product.image === 'string' ? product.image : product.image?.full || ""}
-                alt={product.name || "Product Image"}
+                alt={product.name || "Product"}
                 fill
-                className="object-contain transition-transform duration-500 group-hover:scale-110"
+                className="object-contain"
                 priority
+                unoptimized
               />
             </div>
-            <div className="absolute top-4 right-4">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="rounded-full bg-gray-50 hover:bg-gray-100 text-gray-500"
-                onClick={() => setIsDrawerOpen(true)}
-                title="Change Product"
-              >
-                <RefreshCcw className="w-4 h-4" />
-              </Button>
-            </div>
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="absolute top-2 right-2 p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+              title="Change Product"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Product Info */}
-          <div className="w-full md:w-2/3 space-y-6 px-4 sm:px-0">
+          {/* Compact Product Info */}
+          <div className="w-full md:w-3/5 space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-lg font-bold text-gray-900 mb-1.5 leading-tight">
                 {product.name}
               </h2>
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-[var(--colour-fsP1)] font-bold text-lg">
+              <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] font-bold text-base">
                 Rs. {(product.discounted_price || product.price).toLocaleString()}
               </div>
             </div>
 
-            {/* Color Selection */}
+            {/* Compact Color Selection */}
             {uniqueColors.length > 0 && (
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700">Available Colors:</label>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Colors</label>
                 <div className="flex flex-wrap gap-2">
-                  <div className="flex flex-wrap gap-3">
-                    {uniqueColors.map((color: any) => {
-                      const colorImage = product.images?.find((img) => img.color === color || img.custom_properties?.color === color);
-                      const variantImage = colorImage?.thumb || colorImage?.url || (typeof product.image === 'string' ? product.image : product.image?.full || "");
+                  {uniqueColors.map((color: any) => {
+                    const colorImage = product.images?.find((img) => img.color === color || img.custom_properties?.color === color);
+                    const variantImage = colorImage?.thumb || colorImage?.url || (typeof product.image === 'string' ? product.image : product.image?.full || "");
 
-                      return (
-                        <button
-                          key={color}
-                          onClick={() => {
-                            setSelectedColor(color);
-                            chooseProduct(color);
-                          }}
-                          className="group flex flex-col items-center gap-1 focus:outline-none relative"
-                          title={color}
-                        >
-                          <div className={cn(
-                            "relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden transition-all duration-200 border",
-                            selectedColor === color
-                              ? "border-[var(--colour-fsP1)] ring-1 ring-[var(--colour-fsP1)] ring-offset-1" // removed scale to keep layout stable, relying on ring/icon
-                              : "border-gray-200 hover:border-gray-300"
-                          )}>
-                            <Image
-                              src={variantImage}
-                              alt={color}
-                              fill
-                              className="object-cover"
-                            />
-                            {/* Selected Overlay */}
-                            {selectedColor === color && (
-                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                <Check className="w-5 h-5 text-white drop-shadow-md" strokeWidth={3} />
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => {
+                          setSelectedColor(color);
+                          chooseProduct(color);
+                        }}
+                        className="relative focus:outline-none group/color"
+                        title={color}
+                      >
+                        <div className={cn(
+                          "relative w-11 h-11 rounded-lg overflow-hidden transition-all border-2",
+                          selectedColor === color
+                            ? "border-[var(--colour-fsP2)] shadow-md shadow-[var(--colour-fsP2)]/20"
+                            : "border-gray-200 hover:border-[var(--colour-fsP2)]/50"
+                        )}>
+                          <Image
+                            src={variantImage}
+                            alt={color}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                          {selectedColor === color && (
+                            <div className="absolute inset-0 bg-[var(--colour-fsP2)]/15 flex items-center justify-center">
+                              <div className="w-5 h-5 rounded-full bg-[var(--colour-fsP2)] flex items-center justify-center shadow-sm">
+                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
                               </div>
-                            )}
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             <Button
               variant="outline"
-              className="w-full sm:w-auto border-gray-200 hover:bg-gray-50 text-gray-700 gap-2"
+              size="sm"
+              className="border-[var(--colour-fsP2)]/30 hover:bg-[var(--colour-fsP2)]/5 hover:border-[var(--colour-fsP2)]/50 text-[var(--colour-fsP2)] gap-1.5 text-sm font-medium"
               onClick={() => setIsDrawerOpen(true)}
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-3.5 h-3.5" />
               Find Another Product
             </Button>
           </div>
         </div>
       ) : (
-        /* Empty State */
+
         <div
           onClick={() => setIsDrawerOpen(true)}
-          className="group cursor-pointer bg-white rounded-2xl hover:bg-[var(--colour-fsP1)]/5 transition-all duration-300 min-h-[300px] flex flex-col items-center justify-center p-8 text-center relative overflow-hidden"
+          className="group overflow-hidden  border-none cursor-pointer   hover:shadow-[var(--colour-fsP2)]/10 transition-all duration-300 min-h-[240px] flex flex-col items-center justify-center p-6 text-center border border-[var(--colour-fsP2)]/20 hover:border-[var(--colour-fsP2)]/40"
         >
-          <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <Search className="w-10 h-10 text-[var(--colour-fsP1)]" />
+          <div className="w-16 h-16 bg-[var(--colour-fsP2)]/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-[var(--colour-fsP2)]/15 transition-all">
+            <Search className="w-7 h-7 text-[var(--colour-fsP2)]" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Select a Product</h3>
-          <p className="text-gray-500 max-w-sm mx-auto mb-8">
-            Search and select a product to calculate exact monthly details, including down payments and bank interest rates.
+          <h3 className="text-xl font-bold text-gray-900 mb-1.5">Select a Product</h3>
+          <p className="text-sm text-gray-500 max-w-xs mx-auto mb-5">
+            Search and select to calculate EMI details with bank rates
           </p>
-          <Button className="bg-[var(--colour-fsP1)] hover:bg-blue-700 text-white rounded-full px-8 py-6 font-semibold shadow-lg shadow-blue-200 group-hover:shadow-blue-300 transition-all">
+          <Button className="bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white rounded-lg px-6 py-2 font-semibold shadow-md shadow-[var(--colour-fsP2)]/25 hover:shadow-lg hover:shadow-[var(--colour-fsP2)]/30 text-sm transition-all">
             Search Products
           </Button>
-
-          {/* Decoration */}
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gray-50 rounded-full blur-3xl group-hover:bg-blue-100 transition-colors"></div>
         </div>
       )}
 
       <style jsx global>{`
-            .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #e2e8f0;
-            border-radius: 20px;
-            }
-        `}</style>
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #e2e8f0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #cbd5e1;
+        }
+      `}</style>
     </div>
   );
-}
-
-// Add RefreshCcw import since it was used but not imported in previous view options
-function RefreshCcw(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-      <path d="M3 3v5h5" />
-      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-      <path d="M16 16h5v5" />
-    </svg>
-  )
 }

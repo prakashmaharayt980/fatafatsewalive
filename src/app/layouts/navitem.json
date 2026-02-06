@@ -486,5 +486,115 @@
     "name": "Blog",
     "slug": "/blogs",
     "children": []
+  },
+  {
+    "id": "5",
+    "name": "Serivce",
+    "slug": "",
+    "children": [
+      {
+        "id": "3-1",
+        "name": "Emi Calculator",
+        "slug": "/emi",
+        "children": [
+          {
+            "id": "3-1-1",
+            "name": "Emi Calculator",
+            "slug": "/emi",
+            "children": []
+          },
+          {
+            "id": "3-1-2",
+            "name": "Emi Calculator",
+            "slug": "/emi",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3-2",
+        "name": "Exchange Products",
+        "slug": "/ExchangeProducts",
+        "children": [
+          {
+            "id": "3-2-1",
+            "name": "Docs & Guidelines",
+            "slug": "/ExchangeProducts",
+            "children": []
+          },
+          {
+            "id": "3-2-2",
+            "name": "Exchange Form",
+            "slug": "/ExchnageProducts",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3-3",
+        "name": "Review",
+        "slug": "/reviews",
+        "children": [
+          {
+            "id": "3-3-1",
+            "name": "Review",
+            "slug": "/reviews",
+            "children": []
+          },
+          {
+            "id": "3-3-2",
+            "name": "Review Form",
+            "slug": "/reviews",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "3-4",
+        "name": "Repairs",
+        "slug": "/repairs",
+        "children": [
+          {
+            "id": "3-4-1",
+            "name": "Repairs",
+            "slug": "/repairs",
+            "children": [
+              {}
+            ]
+          },
+          {
+            "id": "3-4-2",
+            "name": "Repairs",
+            "slug": "/repairs",
+            "children": [
+              {}
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3-5",
+        "name": "blogs",
+        "slug": "/blogs",
+        "children": [
+          {
+            "id": "3-5-1",
+            "name": "blogs",
+            "slug": "/blogs",
+            "children": [
+              {}
+            ]
+          },
+          {
+            "id": "3-5-2",
+            "name": "blogs",
+            "slug": "/blogs",
+            "children": [
+              {}
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

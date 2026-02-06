@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { X, Loader2, Trash2, Plus, Check, RotateCcw } from 'lucide-react';
+import { X, Loader2, Trash2, Plus, Check, RotateCcw, ArrowLeft } from 'lucide-react';
 import RemoteServices from '../api/remoteservice';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { toast } from 'sonner';
@@ -15,8 +15,9 @@ function CompareContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const idsString = searchParams.get('ids') || '';
-    const initialIds = idsString ? idsString.split(',').filter(Boolean) : [];
+    // Use slugs instead of IDs for SEO-friendly URLs
+    const slugsString = searchParams.get('slugs') || '';
+    const initialSlugs = slugsString ? slugsString.split(',').filter(Boolean) : [];
 
     const [products, setProducts] = useState<ProductDetails[]>([]);
     const [loading, setLoading] = useState(true);
@@ -24,7 +25,7 @@ function CompareContent() {
 
     useEffect(() => {
         const fetchProducts = async () => {
-            if (initialIds.length === 0) {
+            if (initialSlugs.length === 0) {
                 setProducts([]);
                 setLoading(false);
                 return;
@@ -33,12 +34,13 @@ function CompareContent() {
             setLoading(true);
             try {
                 const fetched = await Promise.all(
-                    initialIds.map(async (id) => {
+                    initialSlugs.map(async (slug) => {
                         try {
-                            const response = await RemoteServices.searchProducts({ search: id });
-                            return response.data?.[0] || null;
+                            // Use getProductBySlug for more reliable fetching
+                            const product = await RemoteServices.getProductBySlug(slug);
+                            return product || null;
                         } catch (e) {
-                            console.error(`Failed to load product ${id}`, e);
+                            console.error(`Failed to load product with slug: ${slug}`, e);
                             return null;
                         }
                     })
@@ -53,16 +55,17 @@ function CompareContent() {
         };
 
         fetchProducts();
-    }, [idsString]);
+    }, [slugsString]);
 
     const handleAddProduct = (product: ProductDetails) => {
-        const newIds = [...initialIds, String(product.id)].join(',');
-        router.push(`/compare?ids=${newIds}`);
+        // Use product slug for the URL
+        const newSlugs = [...initialSlugs, product.slug].join(',');
+        router.push(`/compare?slugs=${newSlugs}`);
     };
 
-    const handleRemoveProduct = (productId: number) => {
-        const newIds = initialIds.filter(id => id !== String(productId)).join(',');
-        router.push(newIds ? `/compare?ids=${newIds}` : '/compare');
+    const handleRemoveProduct = (productSlug: string) => {
+        const newSlugs = initialSlugs.filter(slug => slug !== productSlug).join(',');
+        router.push(newSlugs ? `/compare?slugs=${newSlugs}` : '/compare');
     };
 
     const handleClearAll = () => {
@@ -77,7 +80,7 @@ function CompareContent() {
         'General': [
             { label: 'Brand', render: (p) => p.brand?.name || '-' },
             { label: 'Model', render: (p) => p.name || '-' },
-            { label: 'Price', render: (p) => <span className="font-bold text-[var(--colour-fsP1)]">Rs. {p.discounted_price?.toLocaleString()}</span> },
+            { label: 'Price', render: (p) => <span className="font-bold text-[var(--colour-fsP2)]">Rs. {p.discounted_price?.toLocaleString()}</span> },
             { label: 'Status', render: (p) => p.quantity > 0 ? <span className="text-green-600 font-medium">In Stock</span> : <span className="text-red-500">Out of Stock</span> },
             { label: 'Warranty', render: (p) => p.warranty_description || 'Standard' },
         ],
@@ -112,10 +115,12 @@ function CompareContent() {
     const maxSlots = 3;
     const showAddSlot = products.length < maxSlots;
 
-    if (loading && products.length === 0 && initialIds.length > 0) {
+    if (loading && products.length === 0 && initialSlugs.length > 0) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gray-50">
-                <Loader2 className="w-10 h-10 animate-spin text-[var(--colour-fsP1)]" />
+                <div className="w-16 h-16 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center animate-pulse">
+                    <Loader2 className="w-8 h-8 animate-spin text-[var(--colour-fsP2)]" />
+                </div>
                 <p className="text-gray-500 font-medium">Loading comparison...</p>
             </div>
         );
@@ -124,41 +129,44 @@ function CompareContent() {
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
             <div className="container mx-auto px-4 max-w-[1400px]">
-                {/* Breadcrumb & Header */}
-                <div className="py-6">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                        <Link href="/" className="hover:text-[var(--colour-fsP1)] transition cursor-pointer">Home</Link>
-                        <span>/</span>
-                        <span className="text-gray-800 font-medium">Compare</span>
+                {/* Breadcrumb & Header - Enhanced Design */}
+                <div className="py-8">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+                        <Link href="/" className="hover:text-[var(--colour-fsP2)] transition cursor-pointer flex items-center gap-1">
+                            <ArrowLeft className="w-4 h-4" />
+                            Home
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[var(--colour-fsP2)] font-medium">Compare Products</span>
                     </div>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-[var(--colour-fsP1)]">
-                                Compare {products.length > 0 ? products[0].categories?.[0]?.title || 'Products' : 'Products'}
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                                Compare <span className="text-[var(--colour-fsP2)]">{products.length > 0 ? products[0].categories?.[0]?.title || 'Products' : 'Products'}</span>
                             </h1>
-                            <p className="text-gray-500 mt-1">Find the perfect product by comparing features side by side</p>
+                            <p className="text-gray-500">Find the perfect product by comparing features side by side</p>
                         </div>
                         {products.length > 0 && (
                             <Button
                                 variant="outline"
                                 onClick={handleClearAll}
-                                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 cursor-pointer transition-all"
                             >
                                 <RotateCcw className="w-4 h-4 mr-2" />
-                                Clear
+                                Clear All
                             </Button>
                         )}
                     </div>
                 </div>
 
-                {/* Product Cards Section - Dark Theme Header */}
-                <div className="bg-gray-800 rounded-t-2xl p-6">
+                {/* Product Cards Section - Premium Dark Theme Header */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-t-3xl p-6 md:p-8 shadow-xl">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Existing Products */}
                         {products.map((product) => (
                             <div key={product.id} className="relative bg-gray-700/50 backdrop-blur rounded-xl p-4 group">
                                 <button
-                                    onClick={() => handleRemoveProduct(product.id)}
+                                    onClick={() => handleRemoveProduct(product.slug)}
                                     className="absolute top-2 right-2 p-2 bg-gray-600/50 hover:bg-red-500 text-white rounded-full transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 z-10 cursor-pointer"
                                     title="Remove"
                                 >
@@ -187,7 +195,7 @@ function CompareContent() {
                                     </p>
                                     <Link
                                         href={`/products/${product.slug}`}
-                                        className="w-full py-2.5 px-4 bg-[var(--colour-fsP1)] hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition cursor-pointer text-center block"
+                                        className="w-full py-2.5 px-4 bg-[var(--colour-fsP2)] hover:bg-blue-800 text-white text-sm font-bold rounded-lg transition cursor-pointer text-center block shadow-lg shadow-[var(--colour-fsP2)]/20"
                                     >
                                         Buy Now
                                     </Link>
@@ -198,10 +206,10 @@ function CompareContent() {
 
                         {/* Add Product Slot */}
                         {showAddSlot && (
-                            <div className="bg-gray-700/30 border-2 border-dashed border-gray-600 rounded-xl p-4 min-h-[350px]">
+                            <div className="bg-gray-700/20 border-2 border-dashed border-[var(--colour-fsP2)]/30 rounded-2xl p-4 min-h-[350px]">
                                 <AddProductSearch
                                     onSelect={handleAddProduct}
-                                    excludeIds={products.map(p => p.id)}
+                                    excludeSlugs={products.map(p => p.slug)}
                                 />
                             </div>
                         )}
@@ -209,14 +217,14 @@ function CompareContent() {
                 </div>
 
                 {/* Spec Category Tabs */}
-                <div className="bg-white border-x border-gray-200 px-4 py-3 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                <div className="bg-white border-x border-gray-200 px-5 py-4 flex items-center gap-2 overflow-x-auto scrollbar-none">
                     {specCategories.map((cat) => (
                         <button
                             key={cat}
                             onClick={() => setActiveSpecTab(cat)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${activeSpecTab === cat
-                                ? 'bg-[var(--colour-fsP1)] text-white shadow-md'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeSpecTab === cat
+                                ? 'bg-[var(--colour-fsP2)] text-white shadow-lg shadow-[var(--colour-fsP2)]/20'
+                                : 'bg-gray-100 text-gray-600 hover:bg-[var(--colour-fsP2)]/10 hover:text-[var(--colour-fsP2)]'
                                 }`}
                         >
                             {cat}
@@ -225,14 +233,14 @@ function CompareContent() {
                 </div>
 
                 {/* Specs Table */}
-                <div className="bg-white rounded-b-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-b-3xl shadow-lg border border-gray-200 overflow-hidden">
                     {products.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <tbody className="divide-y divide-gray-100">
                                     {/* Active Tab Title */}
-                                    <tr className="bg-[var(--colour-fsP1)]/10">
-                                        <td colSpan={products.length + 1} className="p-3 pl-5 font-bold text-[var(--colour-fsP1)] text-sm uppercase tracking-wide">
+                                    <tr className="bg-[var(--colour-fsP2)]/10">
+                                        <td colSpan={products.length + 1} className="p-4 pl-6 font-bold text-[var(--colour-fsP2)] text-sm uppercase tracking-wide">
                                             {activeSpecTab}
                                         </td>
                                     </tr>
@@ -255,10 +263,12 @@ function CompareContent() {
                             </table>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                            <Plus className="w-16 h-16 mb-4 opacity-30" />
-                            <p className="text-lg font-medium">No products selected for comparison</p>
-                            <p className="text-sm mt-1">Add products using the search above</p>
+                        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+                            <div className="w-24 h-24 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center mb-6">
+                                <Plus className="w-12 h-12 text-[var(--colour-fsP2)]" />
+                            </div>
+                            <p className="text-xl font-semibold text-gray-600">No products selected for comparison</p>
+                            <p className="text-sm mt-2 text-gray-400">Add products using the search above to get started</p>
                         </div>
                     )}
                 </div>

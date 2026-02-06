@@ -4,19 +4,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Calculator, CheckCircle, ChevronDown, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import img2 from '../../../public/imgfile/banner2.jpeg'
 import ProductEMIUI from './EmiProduct';
-import { Label } from '@/components/ui/label';
 import { useContextEmi } from './emiContext';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
+import { BannerItem } from '@/app/types/BannerTypes';
 
 interface ClientEmiPageProps {
     initialProduct: ProductDetails | null;
+    emiBanner: BannerItem | null;
 }
 
-const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct }) => {
+const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct, emiBanner }) => {
     const router = useRouter();
     const { emiCalculation, AvailablebankProvider, emiContextInfo } = useContextEmi();
 
@@ -168,23 +169,25 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct }) => {
                                     Down Payment <span className="text-gray-400 normal-case">(Min. Rs 0)</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 font-bold">Rs.</span>
+                                    <div className="flex items-center">
+                                        <div className="absolute inset-y-0 left-0 bottom-8 pl-4 flex items-center pointer-events-none">
+                                            <span className="text-gray-500 font-bold">Rs.</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={productPrice}
+                                            value={downPaymentOption === 0 && typeof downPaymentOption !== 'string' ? '' : downPaymentOption}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                if (val >= 0 && val <= productPrice) {
+                                                    setDownPaymentOption(val);
+                                                }
+                                            }}
+                                            placeholder="Enter down payment amount"
+                                            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--colour-fsP1)] text-gray-900 font-semibold"
+                                        />
                                     </div>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max={productPrice}
-                                        value={downPaymentOption === 0 && typeof downPaymentOption !== 'string' ? '' : downPaymentOption}
-                                        onChange={(e) => {
-                                            const val = Number(e.target.value);
-                                            if (val >= 0 && val <= productPrice) {
-                                                setDownPaymentOption(val);
-                                            }
-                                        }}
-                                        placeholder="Enter down payment amount"
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--colour-fsP1)] text-gray-900 font-semibold"
-                                    />
                                     {/* Quick helper for 0% and 40% */}
                                     <div className="flex gap-2 mt-2">
                                         <button
@@ -231,6 +234,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct }) => {
                                                     alt={bank.name}
                                                     fill
                                                     className="object-contain p-1"
+                                                    unoptimized
                                                 />
                                             </div>
                                             <div>
@@ -323,6 +327,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct }) => {
                                             width={64}
                                             height={64}
                                             className="object-contain"
+                                            unoptimized
                                         />
                                     </div>
                                     <div>
@@ -339,7 +344,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct }) => {
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-dashed border-gray-200">
                                         <span className="text-gray-600">Down Payment</span>
-                                        <span className="font-semibold text-green-600">
+                                        <span className="font-semibold flex items-center align-middle gap-2 text-green-600">
                                             - Rs {emiData ? emiData.downPayment.toLocaleString() : '0'}
                                         </span>
                                     </div>
@@ -373,7 +378,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct }) => {
                                     onClick={() => {
                                         if (!product) return;
                                         const queryParams = new URLSearchParams({
-                                            id: product.id.toString(),
+                                            slug: product.slug,
                                             bank: selectedBank.name,
                                             tenure: tenure.toString(),
                                             downPayment: emiData?.downPayment.toString() || '0'
@@ -416,16 +421,41 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct }) => {
                             </ul>
                         </div>
 
-                        {/* Promo Banner */}
-                        <div className="rounded-2xl overflow-hidden shadow-lg group cursor-pointer relative aspect-video">
-                            <Image
-                                src={img2}
-                                alt="Promo Banner"
-                                fill
-                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                        </div>
+                        {/* Promo Banner - Banner2 Style */}
+                        {emiBanner && emiBanner.images && emiBanner.images.length > 0 ? (
+                            <Link
+                                href={emiBanner.images[0]?.link || '#'}
+                                className={cn(
+                                    'block relative overflow-hidden rounded-xl group cursor-pointer',
+                                    'aspect-[21/9]',
+                                    'transition-all duration-300',
+                                    'shadow-lg hover:shadow-xl'
+                                )}
+                            >
+                                <Image
+                                    src={emiBanner.images[0]?.image?.full || ''}
+                                    alt={emiBanner.images[0]?.content || 'EMI Promo Banner'}
+                                    fill
+                                    className="object-contain transition-transform duration-700 "
+                                    sizes="(max-width: 768px) 100vw, 40vw"
+                                    unoptimized
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </Link>
+                        ) : (
+                            <div className={cn(
+                                'relative overflow-hidden rounded-2xl',
+                                'aspect-[4.9/1.8]',
+                                'bg-gradient-to-br from-[var(--colour-fsP2)]/10 to-[var(--colour-fsP1)]/10',
+                                'flex items-center justify-center',
+                                'shadow-lg'
+                            )}>
+                                <div className="text-center p-6">
+                                    <h3 className="text-lg font-bold text-gray-700 mb-2">Easy EMI Options</h3>
+                                    <p className="text-sm text-gray-500">Get your favorite products on affordable EMI plans</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

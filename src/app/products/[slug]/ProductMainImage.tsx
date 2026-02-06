@@ -53,7 +53,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
 
     return (
         <div className="space-y-2 sticky top-24">
-            <div className="relative w-full aspect-[4/4] max-h-[420px] bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group">
+            <div className="relative w-full aspect-[4/4] max-h-[420px] bg-white rounded overflow-hidden border border-gray-100 shadow-sm group">
                 {/* Image counter */}
                 {currentImages.length > 1 && (
                     <div className="absolute top-3 left-3 z-10 bg-black/50 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
@@ -88,12 +88,12 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                 </button>
 
                 {/* Main Image */}
-                <div className="relative w-full h-full p-3 sm:p-4">
+                <div className="relative  w-full h-full p-3 sm:p-4">
                     <Image
                         src={selectedImage || fallbackImage}
                         alt={productName}
                         className={cn(
-                            "object-contain transition-transform duration-500 drop-shadow-sm",
+                            "object-contain transition-transform duration-500",
                             isZoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"
                         )}
                         fill
@@ -121,9 +121,9 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                         <Image
                             src={image}
                             alt={`${productName} thumbnail ${idx + 1}`}
-                            className="object-contain p-1"
+                            className="object-contain "
                             fill
-                            sizes="56px"
+                            sizes="60px"
                             unoptimized={true}
                         />
                     </button>

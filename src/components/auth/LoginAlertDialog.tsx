@@ -12,6 +12,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/app/context/AuthContext";
+import { UserLock } from "lucide-react";
 
 export default function LoginAlertDialog() {
     const { showLoginAlert, setShowLoginAlert, setloginDailogOpen } = useAuth();
@@ -26,7 +27,7 @@ export default function LoginAlertDialog() {
             <AlertDialogContent className='bg-white border-none'>
                 <AlertDialogHeader>
                     <AlertDialogTitle className='text-[var(--colour-fsP2)] items-center w-full flex justify-start text-lg gap-4'>
-                        <span>Please Login</span>
+                        <UserLock className="w-6 h-6 fill-current " /> <span>Please Login</span>
                     </AlertDialogTitle>
                     <AlertDialogDescription className='text-base'>
                         You need to be logged in to continue. Would you like to login now?
@@ -35,7 +36,7 @@ export default function LoginAlertDialog() {
                 <AlertDialogFooter className="flex-row gap-2 justify-center sm:justify-end">
                     <AlertDialogCancel className='flex-1 sm:flex-none cursor-pointer border-gray-200 hover:bg-gray-100/50 rounded-xl h-10'>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                        className='flex-1 sm:flex-none cursor-pointer h-10 bg-gradient-to-r from-[var(--colour-fsP2)] to-[var(--colour-fsP1)] hover:from-[var(--colour-fsP1)] hover:to-[var(--colour-fsP2)] text-white shadow-md hover:shadow-lg transition-all rounded-xl border-none'
+                        className='flex-1 sm:flex-none cursor-pointer h-10 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white shadow-md hover:shadow-lg transition-all rounded-xl border-none'
                         onClick={handleLoginConfirm}
                     >
                         Login

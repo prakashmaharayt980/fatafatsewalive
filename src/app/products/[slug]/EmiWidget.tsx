@@ -19,7 +19,7 @@ export default function EmiWidget({ price }: { price: number }) {
     ];
 
     return (
-        <div className="bg-white rounded-xl border border-blue-100 shadow-premium-sm p-4 space-y-4 relative overflow-hidden group/widget hover:shadow-premium-md transition-all duration-300">
+        <div className="bg-white rounded border border-blue-100 shadow-premium-sm p-4 space-y-4 relative overflow-hidden group/widget hover:shadow-premium-md transition-all duration-300">
             {/* Header */}
 
             <div className="space-y-3">

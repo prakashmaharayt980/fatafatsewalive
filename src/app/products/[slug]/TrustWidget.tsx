@@ -23,7 +23,7 @@ export default function TrustWidget() {
     ];
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white rounded border border-gray-100 shadow-sm p-4">
             <h3 className="text-sm font-bold text-slate-800 mb-3 px-1">Service & Warranty</h3>
             <div className="space-y-4">
                 {items.map((item, idx) => (

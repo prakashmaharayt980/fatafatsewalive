@@ -3,30 +3,41 @@ import React from 'react';
 import RemoteServices from '@/app/api/remoteservice';
 import ClientEmiPage from './ClientEmiPage';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
+import { BannerItem } from '@/app/types/BannerTypes';
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-const getProduct = async (id: string) => {
+const getProductBySlug = async (slug: string): Promise<ProductDetails | null> => {
     try {
-        const response = await RemoteServices.searchProducts({ search: id });
-        return response.data?.[0] || null;
+        const product = await RemoteServices.getProductBySlug(slug);
+        return product || null;
     } catch (error) {
         console.error("Failed to fetch product for EMI Metadata:", error);
         return null;
     }
 };
 
+const getEmiBanner = async (): Promise<BannerItem | null> => {
+    try {
+        const res = await RemoteServices.getBannerSlug('emi-banner-test');
+        return res.data?.[0] || null;
+    } catch (error) {
+        console.error("Failed to fetch EMI banner:", error);
+        return null;
+    }
+};
+
 export async function generateMetadata({ searchParams }: PageProps) {
     const resolvedSearchParams = await searchParams;
-    const productId = resolvedSearchParams?.id;
+    const productSlug = resolvedSearchParams?.slug;
 
     let title = "EMI Calculator | Fatafat Sewa";
     let description = "Calculate your monthly EMI including down payments and bank interest rates.";
 
-    if (productId && typeof productId === 'string') {
-        const product = await getProduct(productId);
+    if (productSlug && typeof productSlug === 'string') {
+        const product = await getProductBySlug(productSlug);
         if (product) {
             title = `Buy ${product.name} on EMI | Fatafat Sewa`;
             description = `Calculate EMI for ${product.name}. Price: Rs ${product.price}. Check down payment options and monthly installments.`;
@@ -45,15 +56,16 @@ export async function generateMetadata({ searchParams }: PageProps) {
 
 const Page = async ({ searchParams }: PageProps) => {
     const resolvedSearchParams = await searchParams;
-    const productId = resolvedSearchParams?.id;
-    let initialProduct: ProductDetails | null = null;
+    const productSlug = resolvedSearchParams?.slug;
 
-    if (productId && typeof productId === 'string') {
-        initialProduct = await getProduct(productId);
-    }
+    // Fetch product and banner in parallel
+    const [initialProduct, emiBanner] = await Promise.all([
+        productSlug && typeof productSlug === 'string' ? getProductBySlug(productSlug) : Promise.resolve(null),
+        getEmiBanner()
+    ]);
 
     return (
-        <ClientEmiPage initialProduct={initialProduct} />
+        <ClientEmiPage initialProduct={initialProduct} emiBanner={emiBanner} />
     );
 };
 

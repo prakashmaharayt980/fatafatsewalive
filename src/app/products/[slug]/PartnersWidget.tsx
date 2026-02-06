@@ -16,7 +16,7 @@ export default function PartnersWidget() {
     );
 
     return (
-        <div className="bg-white rounded-2xl border border-blue-100 shadow-premium-sm p-6 space-y-2 relative overflow-hidden">
+        <div className="bg-white rounded border border-blue-100 shadow-premium-sm p-6 space-y-2 relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full blur-3xl -z-10 translate-x-12 -translate-y-12"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-3xl -z-10 -translate-x-12 translate-y-12"></div>
@@ -36,8 +36,8 @@ export default function PartnersWidget() {
                             className="h-11 pr-4 pl-3 bg-white border border-slate-100 rounded-xl flex items-center justify-center gap-3 shadow-sm hover:border-[var(--colour-fsP2)] hover:shadow-premium-md transition-all duration-300 cursor-default group hover:-translate-y-0.5"
                             title={p.description}
                         >
-                            <div className="relative w-8 h-8 rounded-full bg-slate-50 overflow-hidden shrink-0 group-hover:scale-110 transition-transform duration-300 border border-slate-100">
-                                <Image src={p.img} alt={p.name} fill className="object-cover" />
+                            <div className="relative w-8 h-8 rounded bg-slate-50 overflow-hidden shrink-0 group-hover:scale-110 transition-transform duration-300 border border-slate-100">
+                                <Image src={p.img} alt={p.name} fill className="object-contain" />
                             </div>
                             <span className="text-xs font-bold text-slate-700 group-hover:text-[var(--colour-fsP2)] transition-colors">{p.name}</span>
                         </div>

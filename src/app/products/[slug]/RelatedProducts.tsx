@@ -62,7 +62,16 @@ const RelatedProducts = ({ title, slug, id, brandSlug, minPrice, maxPrice }: Rel
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-
+  // Loading state
+  if (!productList && inView) {
+    return (
+      <div ref={ref} className="w-full bg-gray-50/50 py-6 sm:py-10 border-t border-gray-100">
+        <div className="mx-auto px-2 sm:px-6 lg:px-8">
+          <SkeltonCard />
+        </div>
+      </div>
+    );
+  }
 
   // Error state
   if (error) {

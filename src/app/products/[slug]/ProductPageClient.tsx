@@ -294,7 +294,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                 </nav>
 
                 {/* === MAIN CONTENT: 3-Column Layout (Gallery | Info | Sidebar) === */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 md:gap-3 lg:gap-3 mb-6">
                     {/* Column 1: Gallery (Image + Thumbs) - 3 cols */}
                     <div className="md:col-span-1 lg:col-span-3 relative">
                         <ProductMainImage
@@ -337,7 +337,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                 </div>
 
                 {/* === BELOW ROW: Details, Specifications, Full Reviews === */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-2 py-3 sm:p-6 mb-8">
+                <div className="bg-white rounded shadow-sm border border-gray-100 px-2 py-3 sm:p-6 mb-8">
                     <MoreDetailsProduct
                         productDesciption={productDetails.description || productDetails.highlights || ''}
                         keyFeatures={productDetails.attributes?.product_attributes || {}}
@@ -351,25 +351,21 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                 {/* Related Products */}
                 {relatedCategory.id && (
                     <section className="space-y-6">
-                        <LazyLoadSection fallback={<SkeltonCard />}>
-                            <RelatedProducts
-                                title={`More from ${productDetails.brand?.name || 'Brand'}`}
-                                slug={relatedCategory.slug}
-                                id={relatedCategory.id}
-                                brandSlug={productDetails.brand?.slug}
-                            />
-                        </LazyLoadSection>
+                        <RelatedProducts
+                            title={`More from ${productDetails.brand?.name || 'Brand'}`}
+                            slug={relatedCategory.slug}
+                            id={relatedCategory.id}
+                            brandSlug={productDetails.brand?.slug}
+                        />
 
                         {priceRange && (
-                            <LazyLoadSection fallback={<SkeltonCard />}>
-                                <RelatedProducts
-                                    title="Similar Price Range"
-                                    slug={relatedCategory.slug}
-                                    id={relatedCategory.id}
-                                    minPrice={priceRange.min}
-                                    maxPrice={priceRange.max}
-                                />
-                            </LazyLoadSection>
+                            <RelatedProducts
+                                title="Similar Price Range"
+                                slug={relatedCategory.slug}
+                                id={relatedCategory.id}
+                                minPrice={priceRange.min}
+                                maxPrice={priceRange.max}
+                            />
                         )}
                     </section>
                 )}

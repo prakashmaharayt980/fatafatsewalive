@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Star, MessageCircle, Send, ChevronDown, Scale, Check, Camera, X } from 'lucide-react';
+import { Star, MessageCircle, Send, ChevronDown, Scale, Check, Camera, X, MessageCircleMore } from 'lucide-react';
 import ParsedContent from '../ParsedContent';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -230,7 +230,7 @@ export default function MoreDetailsProduct({
               <Button
                 variant="outline"
                 onClick={toggleDesc}
-                className="w-full rounded border-none text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
+                className="w-full rounded border-none cursor-pointer text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
               >
                 {isDescExpanded ? 'Show Less' : 'Show More'}
                 <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isDescExpanded && "rotate-180")} />
@@ -308,7 +308,7 @@ export default function MoreDetailsProduct({
           ref={desktopButtonRef}
           variant="outline"
           onClick={toggleBoth}
-          className="px-8 rounded border-none text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-white"
+          className="px-8 rounded border-none cursor-pointer text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-white"
         >
           {isBothExpanded ? 'Show Less' : 'Show More'}
           <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isBothExpanded && "rotate-180")} />
@@ -318,7 +318,7 @@ export default function MoreDetailsProduct({
       {/* Reviews Section — Rating Summary + Review Cards */}
       <div className="mt-8" id="reviews">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-1 h-8 bg-[var(--colour-fsP1)] rounded-full"></div>
+          <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Ratings & Reviews</h2>
           {reviews?.meta?.total ? (
             <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
@@ -331,10 +331,10 @@ export default function MoreDetailsProduct({
 
           {/* LEFT: Rating Summary Card */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6 lg:sticky lg:top-24 shadow-sm">
+            <div className="bg-white  rounded border border-gray-200 p-6 space-y-6 lg:sticky lg:top-24 shadow-sm">
               {/* Overall Rating */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-amber-50 text-amber-500 text-2xl font-bold border-4 border-white shadow-sm ring-1 ring-amber-100">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full p-0 m-0 bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] text-2xl font-bold border-4 border-white shadow-sm ring-1 ring-[var(--colour-fsP2)]/10">
                   {reviews?.meta?.average_rating?.toFixed(1) || product?.average_rating?.toFixed(1) || '0.0'}
                 </div>
                 <div>
@@ -346,7 +346,7 @@ export default function MoreDetailsProduct({
                           key={i}
                           size={16}
                           className={cn(
-                            i < Math.round(avg) ? 'fill-amber-400 text-amber-400' : 'text-gray-200'
+                            i < Math.round(avg) ? 'fill-[var(--colour-fsP2)] text-[var(--colour-fsP2)]' : 'text-gray-200'
                           )}
                         />
                       );
@@ -391,9 +391,9 @@ export default function MoreDetailsProduct({
               {!Rating.commentOpen && (
                 <Button
                   onClick={handleWriteReviewClick}
-                  className="w-full h-11 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold rounded-xl shadow-sm text-sm transition-all active:scale-[0.98]"
+                  className="w-full h-11 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold rounded shadow-sm text-sm transition-all active:scale-[0.98]"
                 >
-                  Write a Review
+                  <MessageCircleMore className="w-6 sm:w-10 h-6 sm:h-10 mr-2" /> Write a Review
                 </Button>
               )}
             </div>
@@ -415,7 +415,7 @@ export default function MoreDetailsProduct({
                         <button
                           key={star}
                           type="button"
-                          className="focus:outline-none transition-transform hover:scale-110"
+                          className="focus:outline-none cursor-pointer transition-transform hover:scale-110"
                           onClick={() => setRating({ ...Rating, newRating: star })}
                           onMouseEnter={() => setRating({ ...Rating, hoverRating: star })}
                           onMouseLeave={() => setRating({ ...Rating, hoverRating: 0 })}
@@ -462,7 +462,7 @@ export default function MoreDetailsProduct({
                           <button
                             type="button"
                             onClick={() => removeImage(index)}
-                            className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute cursor-pointer top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <X size={12} />
                           </button>
@@ -472,7 +472,7 @@ export default function MoreDetailsProduct({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-colors bg-gray-50"
+                          className="w-20 h-20 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-colors bg-gray-50"
                         >
                           <Camera size={20} />
                           <span className="text-[10px] font-medium">Add</span>
@@ -499,7 +499,7 @@ export default function MoreDetailsProduct({
                       onClick={() =>
                         setRating({ ...Rating, commentOpen: false, newRating: 0, newReview: '', images: [] })
                       }
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 cursor-pointer hover:text-gray-700"
                     >
                       Cancel
                     </Button>
@@ -507,7 +507,7 @@ export default function MoreDetailsProduct({
                       type="submit"
                       size="sm"
                       disabled={!Rating.newReview.trim() || Rating.newRating === 0}
-                      className="bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-semibold px-5 rounded-lg"
+                      className="bg-[var(--colour-fsP2)] cursor-pointer hover:bg-[var(--colour-fsP2)]/90 text-white font-semibold px-5 rounded-lg"
                     >
                       <Send className="w-3.5 h-3.5 mr-1.5" />
                       Submit Review
@@ -600,7 +600,7 @@ export default function MoreDetailsProduct({
                     variant="outline"
                     size="sm"
                     onClick={handleWriteReviewClick}
-                    className="rounded-lg border-gray-300 text-gray-700 font-medium"
+                    className="rounded-lg cursor-pointer border-gray-300 text-gray-700 font-medium"
                   >
                     Write First Review
                   </Button>
@@ -615,7 +615,7 @@ export default function MoreDetailsProduct({
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors",
+                    "w-8 h-8 rounded-lg flex cursor-pointer items-center justify-center text-sm transition-colors",
                     currentPage === 1
                       ? "text-gray-300 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"
@@ -635,7 +635,7 @@ export default function MoreDetailsProduct({
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={cn(
-                          "w-8 h-8 rounded-lg text-sm font-medium transition-all",
+                          "w-8 h-8 rounded-lg cursor-pointer text-sm font-medium transition-all",
                           page === currentPage
                             ? "bg-[var(--colour-fsP2)] text-white shadow-sm"
                             : "text-gray-600 hover:bg-gray-100"
@@ -658,7 +658,7 @@ export default function MoreDetailsProduct({
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === reviews.meta.last_page}
                   className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors",
+                    "w-8 h-8 rounded-lg flex cursor-pointer items-center justify-center text-sm transition-colors",
                     currentPage === reviews.meta.last_page
                       ? "text-gray-300 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"

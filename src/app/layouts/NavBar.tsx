@@ -147,7 +147,7 @@ const NavBar = ({ navbaritems }: {
                                                         {innerItem.children?.map((child, childIndex) => (
                                                             <Link
                                                                 key={childIndex}
-                                                                href={`/category/${child.slug}`}
+                                                                href={child.slug}
                                                                 className="flex items-center cursor-pointer gap-2 px-2 py-1.5 text-sm text-gray-600 hover:text-orange-500 hover:bg-orange-50/50 rounded-md transition-all duration-200 group"
                                                             >
                                                                 <span className="group-hover:translate-x-0.5 transition-transform">
@@ -163,101 +163,102 @@ const NavBar = ({ navbaritems }: {
                                 </HoverCard>
                             ) : (
 
-                                <div className='flex flex-row gap-2'>
+                                <></>
+                                // <div className='flex flex-row gap-2'>
 
 
-                                    <button
-                                        aria-label='blog'
-                                        onClick={() => handlerouter('/blogs')}
-                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
-                                    >
+                                //     <button
+                                //         aria-label='blog'
+                                //         onClick={() => handlerouter('/blogs')}
+                                //         className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                //     >
 
-                                        <Image
-                                            src={imglist.blog}
-                                            alt='blog icon'
-                                            height={20}
-                                            width={20}
-                                            priority
-                                        />
-                                        <span className={" font-medium items-center "}>Blog</span>
-                                    </button>
-                                    <button
-                                        aria-label='emi-calculator'
-                                        onClick={() => handlerouter('/emi')}
+                                //         <Image
+                                //             src={imglist.blog}
+                                //             alt='blog icon'
+                                //             height={20}
+                                //             width={20}
+                                //             priority
+                                //         />
+                                //         <span className={" font-medium items-center "}>Blog</span>
+                                //     </button>
+                                //     <button
+                                //         aria-label='emi-calculator'
+                                //         onClick={() => handlerouter('/emi')}
 
-                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
-                                    >
-                                        <Image
-                                            src={imglist.emiCalcultorIocn}
-                                            alt='emi-calculator icon'
-                                            height={20}
-                                            width={20}
-                                            priority
-                                        />
-                                        <span className={" font-medium items-center "}>Emi Calcultor</span>
-
-
-
-                                    </button>
-
-                                    <button
-                                        aria-label='exchange'
-                                        onClick={() => handlerouter('/ExchangeProducts')}
-
-                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
-                                    >
-                                        <Image
-                                            src={imglist.emiCalcultorIocn}
-                                            alt='exchange icon'
-                                            height={20}
-                                            width={20}
-                                            priority
-                                        />
-                                        <span className={" font-medium items-center "}>Exchange</span>
+                                //         className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                //     >
+                                //         <Image
+                                //             src={imglist.emiCalcultorIocn}
+                                //             alt='emi-calculator icon'
+                                //             height={20}
+                                //             width={20}
+                                //             priority
+                                //         />
+                                //         <span className={" font-medium items-center "}>Emi Calcultor</span>
 
 
 
-                                    </button>
+                                //     </button>
 
-                                    <button
-                                        aria-label='reviews'
-                                        onClick={() => handlerouter('/reviews')}
+                                //     <button
+                                //         aria-label='exchange'
+                                //         onClick={() => handlerouter('/ExchangeProducts')}
 
-                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
-                                    >
-                                        <Image
-                                            src={imglist.emiCalcultorIocn}
-                                            alt='exchange icon'
-                                            height={20}
-                                            width={20}
-                                            priority
-                                        />
-                                        <span className={" font-medium items-center "}>Reviews</span>
-
-
-
-                                    </button>
-
-                                    <button
-                                        aria-label='reviews'
-                                        onClick={() => handlerouter('/reviews')}
-
-                                        className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
-                                    >
-                                        <Image
-                                            src={imglist.emiCalcultorIocn}
-                                            alt='exchange icon'
-                                            height={20}
-                                            width={20}
-                                            priority
-                                        />
-                                        <span className={" font-medium items-center "}>Repairs</span>
+                                //         className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                //     >
+                                //         <Image
+                                //             src={imglist.emiCalcultorIocn}
+                                //             alt='exchange icon'
+                                //             height={20}
+                                //             width={20}
+                                //             priority
+                                //         />
+                                //         <span className={" font-medium items-center "}>Exchange</span>
 
 
 
-                                    </button>
+                                //     </button>
 
-                                </div>
+                                //     <button
+                                //         aria-label='reviews'
+                                //         onClick={() => handlerouter('/reviews')}
+
+                                //         className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                //     >
+                                //         <Image
+                                //             src={imglist.emiCalcultorIocn}
+                                //             alt='exchange icon'
+                                //             height={20}
+                                //             width={20}
+                                //             priority
+                                //         />
+                                //         <span className={" font-medium items-center "}>Reviews</span>
+
+
+
+                                //     </button>
+
+                                //     <button
+                                //         aria-label='reviews'
+                                //         onClick={() => handlerouter('/reviews')}
+
+                                //         className={`px-3 py-2 gap-1 cursor-pointer rounded-full text-sm items-center font-medium flex flex-row transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50`}
+                                //     >
+                                //         <Image
+                                //             src={imglist.emiCalcultorIocn}
+                                //             alt='exchange icon'
+                                //             height={20}
+                                //             width={20}
+                                //             priority
+                                //         />
+                                //         <span className={" font-medium items-center "}>Repairs</span>
+
+
+
+                                //     </button>
+
+                                // </div>
                             )}
                         </div>
                     ))}

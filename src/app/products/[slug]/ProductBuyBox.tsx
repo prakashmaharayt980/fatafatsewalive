@@ -104,8 +104,12 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
         reason: "BUNDLE" // Dynamic reason could be added if available
     })) || [];
 
+    const handleroute = (paths: string) => {
+        router.push(paths);
+    }
+
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-3">
+        <div className="bg-white rounded shadow-sm border border-gray-100 p-4 sm:p-6 space-y-3">
 
             {/* 1. HEADER: Brand, Title, Share */}
             <div className="space-y-1">
@@ -287,7 +291,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
                     {/* Compare */}
                     <button
-                        onClick={() => {/* your compare logic */ }}
+                        onClick={() => handleroute(`/compare/${product.slug}`)}
                         className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-gray-200 hover:bg-gray-300 text-black font-medium rounded-lg border border-gray-300 hover:border-gray-400 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                         title="Compare Product"
                     >

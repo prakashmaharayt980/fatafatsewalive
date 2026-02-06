@@ -2,16 +2,17 @@ import React from 'react';
 import { Metadata } from 'next';
 import ApplyEmiClient from './ApplyEmiClient';
 import RemoteServices from '@/app/api/remoteservice';
+import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 
 // Define SearchParams type (async in Next 15)
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-// Fetch product helper
-async function getProduct(id: string) {
-  if (!id) return null;
+// Fetch product by slug helper
+async function getProductBySlug(slug: string): Promise<ProductDetails | null> {
+  if (!slug) return null;
   try {
-    const response = await RemoteServices.searchProducts({ search: id });
-    return response.data?.[0] || null;
+    const product = await RemoteServices.getProductBySlug(slug);
+    return product || null;
   } catch (error) {
     console.error("Error fetching product for EMI:", error);
     return null;
@@ -20,8 +21,8 @@ async function getProduct(id: string) {
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
   const resolvedSearchParams = await searchParams;
-  const id = resolvedSearchParams?.id as string;
-  const product = id ? await getProduct(id) : null;
+  const slug = resolvedSearchParams?.slug as string;
+  const product = slug ? await getProductBySlug(slug) : null;
 
   return {
     title: product ? `Apply EMI for ${product.name} | Fatafat Sewa` : 'Apply for EMI | Fatafat Sewa',
@@ -31,10 +32,9 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
 
 export default async function ApplyEmiPage({ searchParams }: { searchParams: SearchParams }) {
   const resolvedSearchParams = await searchParams;
-  const id = resolvedSearchParams?.id as string;
-  // We can also grab slug if needed, but ID is sufficient for fetching
+  const slug = resolvedSearchParams?.slug as string;
 
-  const product = id ? await getProduct(id) : null;
+  const product = slug ? await getProductBySlug(slug) : null;
 
   return (
     <ApplyEmiClient initialProduct={product} />
