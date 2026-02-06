@@ -47,7 +47,7 @@ export default function EmiWidget({ price }: { price: number }) {
                         </button>
                         <div className="flex items-start gap-2">
                             <HandCoins className="w-4 h-4 text-[var(--colour-fsP2)]" />
-                            <span className="text-[10px] font-bold text-black bg-[var(--colour-fsP2)]/20 px-1.5 py-0.5 rounded-md">Estimated Exchange  up to 50% of product value</span>
+                            <span className="text-[10px] font-bold text-black bg-[var(--colour-fsP2)]/20 px-1.5 py-0.5 rounded-md">Estimated Amount of Exchange</span>
                         </div>
                     </div>
                 </div>

@@ -148,6 +148,7 @@ const OfferBanner = () => {
               sizes="(max-width: 640px) 65vw, (max-width: 1024px) 50vw, 420px"
               className="relative object-contain aspect-square z-10 drop-shadow-2xl transition-transform duration-500"
               priority
+              unoptimized
             />
           </div>
         </div>
@@ -168,6 +169,7 @@ const OfferBanner = () => {
                   sizes="56px"
                   className="object-contain p-1.5 transition-transform duration-300"
                   loading="lazy"
+                  unoptimized
                 />
               </div>
 

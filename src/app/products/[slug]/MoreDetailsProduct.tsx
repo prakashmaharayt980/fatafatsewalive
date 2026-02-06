@@ -205,8 +205,8 @@ export default function MoreDetailsProduct({
 
         {/* Product Description Section (2/3 width on desktop) */}
         <div className="lg:col-span-2">
-          <section ref={descriptionRef} className="bg-white rounded-2xl  sm:p-2 lg:p-3 shadow-sm h-full flex flex-col">
-            <div className=" flex items-center gap-3 ">
+          <section ref={descriptionRef} className="bg-white sm:p-2 lg:p-3  sm:border-r sm:border-gray-200 h-full flex flex-col">
+            <div className=" flex items-center gap-3 mb-4 ">
               <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Product Description</h2>
             </div>
@@ -230,7 +230,7 @@ export default function MoreDetailsProduct({
               <Button
                 variant="outline"
                 onClick={toggleDesc}
-                className="w-full border-gray-200 text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
+                className="w-full rounded border-none text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
               >
                 {isDescExpanded ? 'Show Less' : 'Show More'}
                 <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isDescExpanded && "rotate-180")} />
@@ -283,7 +283,7 @@ export default function MoreDetailsProduct({
                   <Button
                     variant="outline"
                     onClick={toggleSpecs}
-                    className="w-full border-gray-200 text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
+                    className="w-full border-none text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
                   >
                     {isSpecsExpanded ? 'Show Less' : 'Show More'}
                     <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isSpecsExpanded && "rotate-180")} />
@@ -308,7 +308,7 @@ export default function MoreDetailsProduct({
           ref={desktopButtonRef}
           variant="outline"
           onClick={toggleBoth}
-          className="px-8 border-gray-200 text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-white"
+          className="px-8 rounded border-none text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-white"
         >
           {isBothExpanded ? 'Show Less' : 'Show More'}
           <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isBothExpanded && "rotate-180")} />

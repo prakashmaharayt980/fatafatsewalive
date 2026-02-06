@@ -79,17 +79,12 @@ const HomePage = ({
 
           <BasketCard title={demoCategories[1].title} slug={demoCategories[1].slug} id={demoCategories[1].id} />
 
-
-          <LazyLoadSection fallback={<SkeltonCard />}>
-            <Suspense fallback={<SkeltonCard />}>
-              <CategoryProductSection
-                title={demoCategories[2].title}
-                slug={demoCategories[2].slug}
-                id={demoCategories[2].id}
-                imageUrl={categorySectionImage}
-              />
-            </Suspense>
-          </LazyLoadSection>
+          <CategoryProductSection
+            title={demoCategories[2].title}
+            slug={demoCategories[2].slug}
+            id={demoCategories[2].id}
+            imageUrl={categorySectionImage}
+          />
         </div>
         {offerSection}
         <div className="sm:px-2 md:px-4">
@@ -105,11 +100,7 @@ const HomePage = ({
 
           {sectionFour}
 
-          <LazyLoadSection fallback={<SkeltonCard />}>
-            <Suspense fallback={<SkeltonCard />}>
-              <OurArticles blogpage="blog" />
-            </Suspense>
-          </LazyLoadSection>
+          <OurArticles blogpage="blog" />
 
         </div>
       </div>

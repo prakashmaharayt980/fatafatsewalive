@@ -42,7 +42,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
           const tbody = (table[1] as TableElement)?.children || [];
 
           return (
-            <div className="overflow-x-auto my-6 rounded-md border border-gray-200">
+            <div className="overflow-x-auto my-1 border-none outline-none shadow-none">
               <table className="w-full border-collapse bg-white text-base text-gray-700">
                 <thead>
                   <tr className="bg-gray-50">
