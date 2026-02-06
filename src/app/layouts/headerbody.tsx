@@ -178,7 +178,7 @@ const HeaderComponent = () => {
         )}>
             {state.isSearching ? (
                 <div className="p-6 text-center w-full sm:min-w-xl text-gray-500">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--colour-fsP2)] mx-auto mb-2"></div>
                     <p>Searching...</p>
                 </div>
             ) : state.searchResults.length > 0 ? (
@@ -208,7 +208,7 @@ const HeaderComponent = () => {
                                     in {product.categories?.[0]?.category_full_name}
                                 </p> */}
                                 <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-sm font-semibold text-blue-600">
+                                    <span className="text-sm font-semibold text-[var(--colour-fsP2)]">
                                         Rs {product.discounted_price}.
                                     </span>
                                     {product.discounted_price !== product.price && (
@@ -254,7 +254,7 @@ const HeaderComponent = () => {
                         {/* Desktop Search Bar */}
                         <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-6" ref={searchRef}>
                             <div className="relative w-full">
-                                <div className="flex rounded-full border border-gray-300 bg-gray-50 hover:bg-white hover:border-blue-300 transition-all duration-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-500">
+                                <div className="flex rounded-full border border-gray-300 bg-gray-50 hover:bg-white hover:border-[var(--colour-fsP2)] transition-all duration-200 overflow-hidden focus-within:ring-2 focus-within:ring-[var(--colour-fsP2)] focus-within:border-[var(--colour-fsP2)]">
                                     <input
                                         type="text"
                                         placeholder="Search products, brands..."
@@ -265,7 +265,7 @@ const HeaderComponent = () => {
                                     <button
                                         aria-label="Search"
 
-                                        className="bg-blue-600 text-white px-4 py-2.5 m-0.5 hover:bg-blue-700 transition-colors rounded-full duration-200 flex items-center justify-center">
+                                        className="bg-[var(--colour-fsP2)] text-white px-4 py-2.5 m-0.5 hover:opacity-90 transition-colors rounded-full duration-200 flex items-center justify-center">
                                         <Search className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -280,7 +280,7 @@ const HeaderComponent = () => {
                             <button
                                 onClick={toggleMobileSearch}
                                 aria-label="Toggle mobile search"
-                                className="lg:hidden p-2 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200"
+                                className="lg:hidden p-2 rounded-full border border-gray-200 text-gray-600 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-gray-50 transition-all duration-200"
                             >
                                 <Search className="h-4 w-4" />
                             </button>
@@ -292,7 +292,7 @@ const HeaderComponent = () => {
                                         <button
                                             onClick={toggleAccountMenu}
                                             aria-label="Account menu"
-                                            className="hidden sm:flex items-center space-x-1 p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                                            className="hidden sm:flex items-center space-x-1 p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-gray-50 transition-all"
                                         >
                                             <User className="h-4 w-4" />
                                             <ChevronDown className="h-3 w-3" />
@@ -341,7 +341,7 @@ const HeaderComponent = () => {
                                     <button
                                         onClick={() => setIsCartOpen(true)}
                                         aria-label="Open cart"
-                                        className="relative p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                                        className="relative p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-gray-50 transition-all"
                                     >
                                         <ShoppingCart className="h-4 w-4" />
                                         {/* Cart badge */}
@@ -358,7 +358,7 @@ const HeaderComponent = () => {
                                     <button
                                         onClick={() => setIsWishlistOpen(true)}
                                         aria-label="Open wishlist"
-                                        className="relative p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                                        className="relative p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-gray-50 transition-all"
                                     >
                                         <Heart className="h-4 w-4" />
                                     </button>
@@ -367,7 +367,7 @@ const HeaderComponent = () => {
                                 (
                                     <button
                                         onClick={() => setloginDailogOpen(true)}
-                                        className="px-5 py-2 bg-[#2563EB] hover:bg-blue-700 text-white rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+                                        className="px-5 py-2 bg-[var(--colour-fsP2)] hover:opacity-90 text-white rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
                                     >
                                         <span>Sign In</span>
                                         <div className="bg-white/20 p-1 rounded-full">
@@ -387,7 +387,7 @@ const HeaderComponent = () => {
                             <button
                                 onClick={toggleMobileMenu}
                                 aria-label="Toggle mobile menu"
-                                className="sm:hidden p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                                className="sm:hidden p-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-gray-50 transition-all"
                             >
                                 {state.isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                             </button>
