@@ -205,8 +205,8 @@ export default function MoreDetailsProduct({
 
         {/* Product Description Section (2/3 width on desktop) */}
         <div className="lg:col-span-2">
-          <section ref={descriptionRef} className="bg-white rounded-2xl p-5 sm:p-6 lg:p-8 shadow-sm h-full flex flex-col">
-            <div className="pb-4 mb-6 flex items-center gap-3 ">
+          <section ref={descriptionRef} className="bg-white rounded-2xl  sm:p-2 lg:p-3 shadow-sm h-full flex flex-col">
+            <div className=" flex items-center gap-3 ">
               <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Product Description</h2>
             </div>
@@ -215,14 +215,7 @@ export default function MoreDetailsProduct({
               "prose prose-sm sm:prose-base prose-slate max-w-none relative transition-all duration-500 ease-in-out",
               !isDescExpanded && "max-h-[500px] overflow-hidden"
             )}>
-              <div className={cn(
-                "prose-headings:font-bold prose-headings:text-gray-900",
-                "prose-p:text-gray-600 prose-p:leading-7 prose-p:mb-4",
-                "prose-li:text-gray-600 prose-li:marker:text-[var(--colour-fsP2)]",
-                "prose-img:rounded-xl prose-img:shadow-md prose-img:my-6",
-                "prose-strong:text-gray-900 prose-strong:font-semibold",
-                "prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
-              )}>
+              <div >
                 <ParsedContent description={productDesciption} className="" />
               </div>
 

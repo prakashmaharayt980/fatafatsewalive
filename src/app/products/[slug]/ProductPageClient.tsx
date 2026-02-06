@@ -281,7 +281,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
         <div className="min-h-screen bg-gray-50 pb-20">
 
 
-            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="max-w-8xl mx-auto px-1 sm:px-2 lg:px-8 py-4">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm mb-6 overflow-x-auto pb-1 scrollbar-hide">
                     <Link href="/" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">Home</Link>

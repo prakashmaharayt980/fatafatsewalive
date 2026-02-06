@@ -77,6 +77,7 @@ export default function ShareDialog({
                                     alt={productName}
                                     fill
                                     className="object-contain"
+                                    unoptimized={true}
                                 />
                             ) : (
                                 <Share2 className="w-10 h-10 text-slate-300" />

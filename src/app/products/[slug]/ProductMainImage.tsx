@@ -100,12 +100,13 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                         priority
                         sizes="(max-width: 768px) 100vw, 35vw"
                         onClick={() => setIsZoomed(!isZoomed)}
+                        unoptimized={true}
                     />
                 </div>
             </div>
 
             {/* Thumbnails Strip */}
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 px-3">
                 {currentImages.map((image, idx) => (
                     <button
                         key={`thumb-${idx}`}
@@ -123,6 +124,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                             className="object-contain p-1"
                             fill
                             sizes="56px"
+                            unoptimized={true}
                         />
                     </button>
                 ))}
