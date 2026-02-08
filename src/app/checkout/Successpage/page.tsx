@@ -49,7 +49,7 @@ export default function OrderConfirmation() {
     return (
         <div className="min-h-screen p-3 sm:p-4">
             <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 border border-white/20">
-                <div className="grid lg:grid-cols-5 gap-3 sm:gap-6">
+                <div className="flex flex-col-reverse lg:grid lg:grid-cols-5 gap-3 sm:gap-6">
                     {/* Left Column */}
                     <div className="lg:col-span-2">
                         {/* Success Icon */}

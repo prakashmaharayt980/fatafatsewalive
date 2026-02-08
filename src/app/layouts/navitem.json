@@ -558,17 +558,13 @@
             "id": "3-4-1",
             "name": "Repairs",
             "slug": "/repairs",
-            "children": [
-              {}
-            ]
+            "children": []
           },
           {
             "id": "3-4-2",
             "name": "Repairs",
             "slug": "/repairs",
-            "children": [
-              {}
-            ]
+            "children": []
           }
         ]
       },
@@ -581,17 +577,13 @@
             "id": "3-5-1",
             "name": "blogs",
             "slug": "/blogs",
-            "children": [
-              {}
-            ]
+            "children": []
           },
           {
             "id": "3-5-2",
             "name": "blogs",
             "slug": "/blogs",
-            "children": [
-              {}
-            ]
+            "children": []
           }
         ]
       }

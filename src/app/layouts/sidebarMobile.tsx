@@ -18,7 +18,7 @@ export interface navitem {
   id: string;
   slug: string;
   name: string;
-  children: navitem[]
+  children?: navitem[]
 }
 export interface navsection {
   result: navitem[];

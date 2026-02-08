@@ -13,6 +13,7 @@ import {
 
 } from 'lucide-react';
 import Image from 'next/image';
+import imglogo from '@/app/assets/CompanyLogo.webp';
 
 const FooterBody = () => {
   const QuickLinks = [
@@ -73,10 +74,10 @@ const FooterBody = () => {
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="mb-4 flex justify-center lg:justify-start">
               <Image
-                src="/imgfile/footerlogo.png"
+                src={imglogo}
                 alt="FatafatSewa Logo"
-                width={160}
-                height={70}
+                width={480}
+                height={120}
                 className="rounded-lg object-contain"
               />
             </div>

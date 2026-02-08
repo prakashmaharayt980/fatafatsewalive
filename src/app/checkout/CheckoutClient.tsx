@@ -1,124 +1,119 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { useContextCart } from './CartContext1';
-import Image from 'next/image';
-import { PaymentMethodsOptions } from '../CommonVue/Payment';
-import AddressSelectionUI from './AddressSectionUi';
-import CheckoutProduct from './CheckoutProduct';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-// import { useRouter } from 'next/navigation'; // Not currently used directly for nav but maybe later
 import RemoteServices from '../api/remoteservice';
 import { useAuth } from '../context/AuthContext';
-// import { toast } from 'sonner';
+import {
+    CheckoutState,
+    CheckoutStep,
+    CHECKOUT_STEPS,
+    initialCheckoutState,
+    ShippingAddress,
+    RecipientInfo,
+    DeliverySelection,
+    isStepComplete,
+    STEP_LABELS,
+} from './checkoutTypes';
+
+// Step Components
+import StepProgress from './steps/StepProgress';
+import AddressStep from './steps/AddressStep';
+import RecipientStep from './steps/RecipientStep';
+import DeliveryStep from './steps/DeliveryStep';
+import PaymentStep from './steps/PaymentStep';
+import OrderReviewStep from './steps/OrderReviewStep';
+import CheckoutProduct from './CheckoutProduct';
 
 export default function CheckoutClient() {
-    const [address, setAddress] = useState({
-        street: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        country: '',
-    });
     const { cartItems } = useContextCart();
     const { authState, isLoading, triggerLoginAlert } = useAuth();
     const userInfo = authState.user;
-    // const router = useRouter();
 
-    // Protect the route
+    // Checkout state
+    const [checkoutState, setCheckoutState] = useState<CheckoutState>(initialCheckoutState);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [shippingCost, setShippingCost] = useState(0);
+    const [promoCode, setPromoCode] = useState('');
+    const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
+
+    // Auth protection
     useEffect(() => {
         if (!isLoading && !authState.user) {
             triggerLoginAlert();
         }
     }, [isLoading, authState.user, triggerLoginAlert]);
 
-    const [openSections, setOpenSections] = useState({
-        address: true,
-        customer: false,
-        paymentmethod: false,
-        deliveryDate: false,
-    });
-
-    const subtotal = cartItems?.cart_total || 0;
-
-    const [selectedMethod, setSelectedMethod] = useState<number | null>(null);
-    const [submittedvaluelist, setsubmittedvaluelist] = useState({
-        paymentmethod: '',
-        address: address,
-        receiverNO: '',
-        promoCode: '',
-        productsID: cartItems?.items || [],
-        totalpayment: cartItems?.cart_total || 0,
-        appliedPromo: null as { code: string; discount: number } | null,
-        deliveryDate: '',
-    });
-
-    // --- Distance & Shipping Logic ---
-    const FATAFAT_LOCATION = { lat: 27.7172, lng: 85.3240 }; // Kathmandu (Approx)
-
-    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371; // km
-        const dLat = (lat2 - lat1) * (Math.PI / 180);
-        const dLon = (lon2 - lon1) * (Math.PI / 180);
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * (Math.PI / 180)) *
-            Math.cos(lat2 * (Math.PI / 180)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    };
-
-    const [shippingCost, setShippingCost] = useState(0);
-    const [distance, setDistance] = useState<number | null>(null);
-
-    // Recalculate shipping when address changes (if it has coordinates)
+    // Calculate shipping based on address
     useEffect(() => {
-        // Note: The Address interface from AddressSectionUi currently doesn't strictly enforce lat/lng 
-        // being passed back in the main object, but we might rely on the user "saving" it.
-        // However, AddressSelectionUI mostly passes back the object.
-        // If we want precise distance, we need the stored address to have coordinates.
-        // Current Address interface in AddressSectionUi doesn't show lat/lng columns.
-        // FALLBACK: Use city/district for rough estimate OR request user to "Pinpoint" which is in GoogleMapAddress.
-        // Let's check: AddressSectionUi passes `selectedAddress`.
-        // If we can't get lat/lng, we default to standard shipping.
+        // Free Shipping Policy - All over Nepal
+        setShippingCost(0);
+    }, [checkoutState.address]);
 
-        // For MOCK/DEMO purposes as requested:
-        // If user is selecting a saved address, we simulate distance.
-        if (submittedvaluelist.address) {
-            // Ideally: const { lat, lng } = submittedvaluelist.address;
-            // Mocking distance for now based on city to show dynamic change
-            const city = (submittedvaluelist.address as any).city || '';
-            let mockDist = 5;
-            if (city.toLowerCase().includes("kathmandu")) mockDist = 3;
-            else if (city.toLowerCase().includes("lalitpur")) mockDist = 7;
-            else if (city.toLowerCase().includes("bhaktapur")) mockDist = 12;
-            else mockDist = 500; // Out of valley
+    // Navigation helpers
+    const goToStep = useCallback((step: CheckoutStep) => {
+        setCheckoutState((prev) => ({ ...prev, currentStep: step }));
+    }, []);
 
-            setDistance(mockDist);
-
-            if (mockDist < 5) setShippingCost(0); // Free delivery close by
-            else if (mockDist < 10) setShippingCost(50);
-            else if (mockDist < 20) setShippingCost(100);
-            else setShippingCost(150); // Standard far delivery
+    const nextStep = useCallback(() => {
+        const { currentStep } = checkoutState;
+        if (currentStep < CHECKOUT_STEPS.REVIEW && isStepComplete(currentStep, checkoutState)) {
+            setCheckoutState((prev) => ({ ...prev, currentStep: (currentStep + 1) as CheckoutStep }));
         }
-    }, [submittedvaluelist.address]);
+    }, [checkoutState]);
 
+    const prevStep = useCallback(() => {
+        const { currentStep } = checkoutState;
+        if (currentStep > CHECKOUT_STEPS.ADDRESS) {
+            setCheckoutState((prev) => ({ ...prev, currentStep: (currentStep - 1) as CheckoutStep }));
+        }
+    }, [checkoutState]);
 
-    // --- Payment Handler ---
-    // eSewa Test Credentials
-    // SCD: EPAYTEST
-    // URL: https://rc-epay.esewa.com.np/api/epay/main/v2/form (Use V2 or V1? User said UAT)
-    // Standard UAT Form: https://uat.esewa.com.np/epay/main
+    // State update handlers
+    const handleAddressSelect = useCallback((address: ShippingAddress) => {
+        setCheckoutState((prev) => ({ ...prev, address }));
+    }, []);
 
+    const handleLocationPermissionChange = useCallback((granted: boolean) => {
+        setCheckoutState((prev) => ({ ...prev, locationPermissionGranted: granted }));
+    }, []);
+
+    const handleRecipientChange = useCallback((recipient: RecipientInfo) => {
+        setCheckoutState((prev) => ({ ...prev, recipient }));
+    }, []);
+
+    const handleDeliveryChange = useCallback((delivery: DeliverySelection) => {
+        setCheckoutState((prev) => ({ ...prev, delivery }));
+    }, []);
+
+    const handlePaymentMethodChange = useCallback((paymentMethod: string) => {
+        setCheckoutState((prev) => ({ ...prev, paymentMethod }));
+    }, []);
+
+    // Promo handling
+    const handleApplyPromo = useCallback(() => {
+        const code = promoCode.trim().toUpperCase();
+        if (!code) return;
+
+        const subtotal = cartItems?.cart_total || 0;
+        if (code === 'SAVE10') {
+            const discountAmount = Math.round(subtotal * 0.1);
+            setAppliedPromo({ code: 'SAVE10', discount: discountAmount });
+        } else if (code === 'FLAT500') {
+            setAppliedPromo({ code: 'FLAT500', discount: 500 });
+        } else {
+            alert('Invalid promo code');
+            setAppliedPromo(null);
+        }
+    }, [promoCode, cartItems]);
+
+    // Payment handler
     const handlePayment = async (orderId: string, amount: number) => {
-        const paymentMethodName = submittedvaluelist.paymentmethod.toLowerCase();
+        const paymentMethodName = checkoutState.paymentMethod.toLowerCase();
 
         if (paymentMethodName.includes('esewa')) {
-            // Create hidden form and submit
             const params = {
                 amt: amount,
                 psc: 0,
@@ -131,148 +126,74 @@ export default function CheckoutClient() {
                 fu: `${window.location.origin}/checkout/failed`,
             };
 
-            const form = document.createElement("form");
-            form.setAttribute("method", "POST");
-            form.setAttribute("action", "https://uat.esewa.com.np/epay/main");
+            const form = document.createElement('form');
+            form.setAttribute('method', 'POST');
+            form.setAttribute('action', 'https://uat.esewa.com.np/epay/main');
 
             for (const key in params) {
-                const hiddenField = document.createElement("input");
-                hiddenField.setAttribute("type", "hidden");
-                hiddenField.setAttribute("name", key);
-                hiddenField.setAttribute("value", (params as any)[key]);
+                const hiddenField = document.createElement('input');
+                hiddenField.setAttribute('type', 'hidden');
+                hiddenField.setAttribute('name', key);
+                hiddenField.setAttribute('value', (params as any)[key]);
                 form.appendChild(hiddenField);
             }
             document.body.appendChild(form);
             form.submit();
-        }
-        else if (paymentMethodName.includes('khalti')) {
-            // Khalti logic (usually requires client-side SDK or redirection)
-            alert("Khalti Test Mode Integration: Redirecting to mock success.");
-            // Mock success
+        } else if (paymentMethodName.includes('khalti')) {
+            alert('Khalti Test Mode Integration: Redirecting to mock success.');
             window.location.href = `/checkout/Successpage?oid=${orderId}`;
-        }
-        else {
-            // Cash on Delivery or others
+        } else {
             window.location.href = `/checkout/Successpage?oid=${orderId}`;
         }
     };
 
-
-    const handlesubmit = () => {
+    // Order submission
+    const handlePlaceOrder = async () => {
         try {
+            setIsSubmitting(true);
             const currentItems = cartItems?.items || [];
-            // Total = Cart + Shipping - Promo
-            const finalTotal = subtotal + shippingCost - (submittedvaluelist.appliedPromo?.discount || 0);
-
-            setsubmittedvaluelist((prev) => ({ ...prev, productsID: currentItems }));
+            const subtotal = cartItems?.cart_total || 0;
+            const finalTotal = subtotal + shippingCost - (appliedPromo?.discount || 0);
 
             const payload = {
-                phone: submittedvaluelist.receiverNO || userInfo?.phone,
+                phone: userInfo?.phone,
                 full_name: userInfo?.name,
-                // Only pass product IDs with quantities, not full product objects
                 products: currentItems.map((item: any) => ({
                     product_id: item.product?.id || item.id,
-                    quantity: item.quantity || 1
+                    quantity: item.quantity || 1,
                 })),
-                shipping_address_id: (submittedvaluelist.address as any).id,
+                shipping_address_id: checkoutState.address?.id,
                 total_amount: finalTotal,
-                payment_type: submittedvaluelist.paymentmethod.toLowerCase().replace(/\s+/g, '_'),
-                promo_code: submittedvaluelist.appliedPromo?.code || null,
-                delivery_date: submittedvaluelist.deliveryDate,
+                payment_type: checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'),
+                promo_code: appliedPromo?.code || null,
+                delivery_partner: checkoutState.delivery.partner?.name,
+                delivery_partner_user_id: checkoutState.delivery.userId || null,
+                recipient_type: checkoutState.recipient.type,
+                gift_recipient_name: checkoutState.recipient.name || null,
+                gift_recipient_phone: checkoutState.recipient.phone || null,
+                gift_message: checkoutState.recipient.message || null,
                 shipping_cost: shippingCost,
             };
 
             console.log('Submitting Order Payload:', payload);
 
-            RemoteServices.CreateOrder(payload).then((res) => {
-                console.log('Order Response:', res);
-                if (res?.id || res?.data?.id) {
-                    const oid = res.id || res.data.id;
-                    handlePayment(oid, finalTotal);
-                }
-            });
-
+            const res = await RemoteServices.CreateOrder(payload);
+            console.log('Order Response:', res);
+            if (res?.id || res?.data?.id) {
+                const oid = res.id || res.data.id;
+                await handlePayment(oid, finalTotal);
+            }
         } catch (error) {
-            console.log('Order Error', error);
+            console.error('Order Error', error);
+            setIsSubmitting(false);
         }
     };
 
-    const isAddressComplete =
-        submittedvaluelist.address && Object.keys(submittedvaluelist.address).length > 0; // Better check needed usually
-
-    const sectionStatus = {
-        address: isAddressComplete,
-        customer: submittedvaluelist.receiverNO.trim() !== '',
-        paymentmethod: submittedvaluelist.paymentmethod !== '',
-        deliveryDate: submittedvaluelist.deliveryDate !== '',
-    };
-
-    // Sync receiverNO with address contact if available
-    useEffect(() => {
-        if (submittedvaluelist.address && (submittedvaluelist.address as any).phone) {
-            setsubmittedvaluelist(prev => ({ ...prev, receiverNO: (submittedvaluelist.address as any).phone }));
-        }
-    }, [submittedvaluelist.address]);
-
-    // Payment method options
-    const PaymentMethodsOption = [
-        ...PaymentMethodsOptions,
-        {
-            name: 'Cash on Delivery',
-            img: '/imgfile/handshakeIcon.webp',
-            id: 6,
-            description: 'Pay on delivery',
-        },
-    ];
-
-    const handleApplyPromo = () => {
-        // Mock Promo Logic
-        const code = submittedvaluelist.promoCode.trim().toUpperCase();
-
-        if (!code) return;
-
-        // Simulate API check
-        if (code === 'SAVE10') {
-            const discountAmount = Math.round(subtotal * 0.10); // 10%
-            setsubmittedvaluelist((prev) => ({
-                ...prev,
-                appliedPromo: { code: 'SAVE10', discount: discountAmount },
-            }));
-            // toast.success("Coupon Applied: SAVE10 (10% Off)");
-        }
-        else if (code === 'FLAT500') {
-            setsubmittedvaluelist((prev) => ({
-                ...prev,
-                appliedPromo: { code: 'FLAT500', discount: 500 },
-            }));
-        }
-        else {
-            alert('Invalid promo code');
-            setsubmittedvaluelist(prev => ({ ...prev, appliedPromo: null }));
-        }
-    };
-
-    const [minDate, setMinDate] = useState('');
-    useEffect(() => {
-        setMinDate(new Date().toISOString().split('T')[0]);
-    }, []);
-
-    const handleMethodSelect = (method: any) => {
-        setSelectedMethod(method.id);
-        setsubmittedvaluelist((prev) => ({ ...prev, paymentmethod: method.name }));
-    };
-
-    const toggleSection = (section: string) => {
-        setOpenSections((prev: any) => ({
-            ...prev,
-            [section]: !prev[section],
-        }));
-    };
-
+    // Loading state
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--colour-fsP1)]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--colour-fsP1)]" />
             </div>
         );
     }
@@ -285,225 +206,135 @@ export default function CheckoutClient() {
         );
     }
 
-    const steps = [
-        { key: 'address', label: 'Address', done: sectionStatus.address },
-        { key: 'deliveryDate', label: 'Delivery', done: sectionStatus.deliveryDate },
-        { key: 'paymentmethod', label: 'Payment', done: sectionStatus.paymentmethod },
-    ];
+    // Render current step
+    const renderStep = () => {
+        switch (checkoutState.currentStep) {
+            case CHECKOUT_STEPS.ADDRESS:
+                return (
+                    <AddressStep
+                        state={checkoutState}
+                        onAddressSelect={handleAddressSelect}
+                        onLocationPermissionChange={handleLocationPermissionChange}
+                        onNext={nextStep}
+                    />
+                );
+            case CHECKOUT_STEPS.RECIPIENT:
+                return (
+                    <RecipientStep
+                        state={checkoutState}
+                        onRecipientChange={handleRecipientChange}
+                        onNext={nextStep}
+                        onBack={prevStep}
+                    />
+                );
+            case CHECKOUT_STEPS.DELIVERY:
+                return (
+                    <DeliveryStep
+                        state={checkoutState}
+                        onDeliveryChange={handleDeliveryChange}
+                        onNext={nextStep}
+                        onBack={prevStep}
+                    />
+                );
+            case CHECKOUT_STEPS.PAYMENT:
+                return (
+                    <PaymentStep
+                        state={checkoutState}
+                        onPaymentMethodChange={handlePaymentMethodChange}
+                        onNext={nextStep}
+                        onBack={prevStep}
+                    />
+                );
+            case CHECKOUT_STEPS.REVIEW:
+                return (
+                    <OrderReviewStep
+                        state={checkoutState}
+                        onGoToStep={goToStep}
+                        onBack={prevStep}
+                        onPlaceOrder={handlePlaceOrder}
+                        isSubmitting={isSubmitting}
+                        shippingCost={shippingCost}
+                        discount={appliedPromo?.discount || 0}
+                    />
+                );
+            default:
+                return null;
+        }
+    };
+
+    const subtotal = cartItems?.cart_total || 0;
+    const discount = appliedPromo?.discount || 0;
+    const total = subtotal + shippingCost - discount;
 
     return (
         <div className="bg-gray-50 py-4 sm:py-8 min-h-screen">
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-                {/* Header & Stepper */}
-                <div className="mb-6 sm:mb-8">
-                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Checkout</h1>
+                {/* Breadcrumb Navigation */}
+                <nav className="flex items-center gap-1.5 text-sm mb-4 overflow-x-auto pb-1 scrollbar-hide">
+                    <Link href="/" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
+                        Home
+                    </Link>
+                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Link href="/cart" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
+                        Cart
+                    </Link>
+                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-slate-800 font-semibold text-sm">
+                        Checkout
+                    </span>
+                    {checkoutState.currentStep > 0 && (
+                        <>
+                            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span className="text-[var(--colour-fsP2)] font-medium text-sm">
+                                {STEP_LABELS[checkoutState.currentStep]}
+                            </span>
+                        </>
+                    )}
+                </nav>
 
-                    {/* Progress Stepper */}
-                    <div className="flex items-center gap-1 sm:gap-2 bg-white rounded-xl p-3 sm:p-4 border border-gray-100 shadow-sm">
-                        {steps.map((step, idx) => (
-                            <div key={step.key} className="flex items-center flex-1">
-                                <div className="flex items-center gap-2 flex-1">
-                                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-colors ${
-                                        step.done
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-gray-100 text-gray-500'
-                                    }`}>
-                                        {step.done ? '✓' : idx + 1}
-                                    </div>
-                                    <span className={`text-xs sm:text-sm font-medium hidden sm:block ${step.done ? 'text-green-700' : 'text-gray-500'}`}>
-                                        {step.label}
-                                    </span>
-                                </div>
-                                {idx < steps.length - 1 && (
-                                    <div className={`h-0.5 flex-1 mx-2 rounded-full transition-colors ${step.done ? 'bg-green-400' : 'bg-gray-200'}`} />
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                {/* Header */}
+                <div className="mb-4 sm:mb-6">
+
+                    <StepProgress
+                        currentStep={checkoutState.currentStep}
+                        state={checkoutState}
+                        onStepClick={goToStep}
+                    />
                 </div>
 
-                <div className="flex flex-col lg:flex-row lg:gap-8">
-                    {/* LEFT COLUMN: Main Details */}
-                    <div className="flex-1 space-y-4 sm:space-y-5">
-                        {/* 1. Shipping Address */}
-                        <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <button
-                                onClick={() => toggleSection('address')}
-                                className="w-full p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50/50 transition-colors"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
-                                        sectionStatus.address ? 'bg-green-500 text-white' : 'bg-blue-50 text-blue-600'
-                                    }`}>
-                                        {sectionStatus.address ? '✓' : '1'}
-                                    </div>
-                                    <div className="text-left">
-                                        <h2 className="text-base sm:text-lg font-bold text-gray-900">Shipping Address</h2>
-                                        {submittedvaluelist.address && !openSections.address && (
-                                            <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[250px]">
-                                                {(submittedvaluelist.address as any)?.full_name}, {(submittedvaluelist.address as any)?.city}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                {openSections.address ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                            </button>
-
-                            {openSections.address && (
-                                <div className="p-4 sm:p-5">
-                                    <AddressSelectionUI setsubmittedvaluelist={setsubmittedvaluelist} />
-                                </div>
-                            )}
-                        </section>
-
-                        {/* 2. Delivery Date */}
-                        <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <button
-                                onClick={() => toggleSection('deliveryDate')}
-                                className="w-full p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50/50 transition-colors"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
-                                        sectionStatus.deliveryDate ? 'bg-green-500 text-white' : 'bg-blue-50 text-blue-600'
-                                    }`}>
-                                        {sectionStatus.deliveryDate ? '✓' : '2'}
-                                    </div>
-                                    <div className="text-left">
-                                        <h2 className="text-base sm:text-lg font-bold text-gray-900">Delivery Preference</h2>
-                                        {submittedvaluelist.deliveryDate && !openSections.deliveryDate && (
-                                            <p className="text-xs text-gray-500 mt-0.5">{submittedvaluelist.deliveryDate}</p>
-                                        )}
-                                    </div>
-                                </div>
-                                {openSections.deliveryDate ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                            </button>
-
-                            {openSections.deliveryDate && (
-                                <div className="p-4 sm:p-5">
-                                    <div className="flex flex-col gap-3">
-                                        <label className="text-sm font-semibold text-gray-700">Preferred Delivery Date</label>
-                                        <div className="relative">
-                                            <Input
-                                                type="date"
-                                                min={minDate}
-                                                value={submittedvaluelist.deliveryDate}
-                                                onChange={(e) => setsubmittedvaluelist(prev => ({ ...prev, deliveryDate: e.target.value }))}
-                                                className="pl-10 h-11 border-gray-200 rounded-lg"
-                                            />
-                                            <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                        </div>
-                                        <p className="text-xs text-gray-500">Select when you'd like to receive your order.</p>
-                                    </div>
-                                </div>
-                            )}
-                        </section>
-
-                        {/* 3. Payment Method */}
-                        <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <button
-                                onClick={() => toggleSection('paymentmethod')}
-                                className="w-full p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50/50 transition-colors"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
-                                        sectionStatus.paymentmethod ? 'bg-green-500 text-white' : 'bg-blue-50 text-blue-600'
-                                    }`}>
-                                        {sectionStatus.paymentmethod ? '✓' : '3'}
-                                    </div>
-                                    <div className="text-left">
-                                        <h2 className="text-base sm:text-lg font-bold text-gray-900">Payment Method</h2>
-                                        {submittedvaluelist.paymentmethod && !openSections.paymentmethod && (
-                                            <p className="text-xs text-gray-500 mt-0.5">{submittedvaluelist.paymentmethod}</p>
-                                        )}
-                                    </div>
-                                </div>
-                                {openSections.paymentmethod ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                            </button>
-
-                            {openSections.paymentmethod && (
-                                <div className="p-4 sm:p-5">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {PaymentMethodsOption.map((method) => (
-                                            <label
-                                                key={method.id}
-                                                className={`relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-sm ${selectedMethod === method.id
-                                                    ? 'border-blue-600 bg-blue-50/50'
-                                                    : 'border-gray-200 bg-white hover:border-blue-200'
-                                                    }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="payment"
-                                                    value={method.id}
-                                                    checked={selectedMethod === method.id}
-                                                    onChange={() => handleMethodSelect(method)}
-                                                    className="sr-only"
-                                                />
-
-                                                <div className="flex items-center gap-3 w-full">
-                                                    <div className="relative w-10 h-7 flex-shrink-0 bg-gray-50 rounded p-0.5">
-                                                        <Image
-                                                            src={method.img}
-                                                            alt={method.name}
-                                                            fill
-                                                            sizes="40px"
-                                                            className="object-contain"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-semibold text-sm text-gray-900">{method.name}</div>
-                                                        <div className="text-xs text-gray-500 mt-0.5">{method.description}</div>
-                                                    </div>
-
-                                                    <div
-                                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${selectedMethod === method.id
-                                                            ? 'border-blue-600 bg-blue-600'
-                                                            : 'border-gray-300'
-                                                            }`}
-                                                    >
-                                                        {selectedMethod === method.id && (
-                                                            <div className="w-2 h-2 rounded-full bg-white" />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </section>
+                {/* Two Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    {/* Left Column - Step Content */}
+                    <div className="lg:col-span-2">
+                        {renderStep()}
                     </div>
 
-                    {/* RIGHT COLUMN: Order Summary (Sticky) */}
-                    <div className="lg:w-[400px] lg:flex-shrink-0 mt-5 lg:mt-0">
-                        <div className="lg:sticky lg:top-8 space-y-4">
+                    {/* Right Column - Order Summary (Sticky) */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-24">
                             <CheckoutProduct
-                                setsubmittedvaluelist={setsubmittedvaluelist}
-                                submittedvaluelist={submittedvaluelist}
+                                setsubmittedvaluelist={(updater: any) => {
+                                    if (typeof updater === 'function') {
+                                        const result = updater({ promoCode });
+                                        if (result.promoCode !== undefined) {
+                                            setPromoCode(result.promoCode);
+                                        }
+                                    }
+                                }}
+                                submittedvaluelist={{
+                                    promoCode,
+                                    appliedPromo,
+                                    totalpayment: total,
+                                    paymentmethod: checkoutState.paymentMethod,
+                                    address: checkoutState.address,
+                                    productsID: cartItems?.items || [],
+                                    receiverNO: userInfo?.phone,
+
+                                }}
                                 handleApplyPromo={handleApplyPromo}
                             />
 
-                            {/* Shipping Info */}
-                            {shippingCost > 0 && (
-                                <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 p-4 text-sm">
-                                    <span className="text-gray-600">Shipping</span>
-                                    <span className="font-semibold text-gray-900">Rs. {shippingCost.toFixed(2)}</span>
-                                </div>
-                            )}
 
-                            <Button
-                                onClick={handlesubmit}
-                                size="lg"
-                                disabled={!sectionStatus.address || !sectionStatus.paymentmethod}
-                                className="w-full bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white shadow-lg shadow-blue-200 transition-all duration-200 h-13 text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Place Order <span className="mx-1.5 opacity-60">•</span> Rs. {(subtotal + shippingCost).toLocaleString()}
-                            </Button>
-
-                            <div className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                Secure SSL Encrypted Transaction
-                            </div>
                         </div>
                     </div>
                 </div>

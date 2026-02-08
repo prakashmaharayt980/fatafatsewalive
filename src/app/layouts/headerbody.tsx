@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ShoppingCart, User, Heart, Menu, X, ChevronDown, User2Icon, LayoutDashboard, Package, Settings, LogOut } from 'lucide-react';
 import Image from 'next/image';
-import imglogo from '../assets/logoimg.png';
+import imglogo from '@/app/assets/CompanyLogo.webp';
 
 import RemoteServices from '../api/remoteservice';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ import MobileSidebar from './sidebarMobile';
 import { deleteCookie, getCookie } from 'cookies-next';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { useAuth } from '../context/AuthContext';
+
 
 
 
@@ -245,7 +246,7 @@ const HeaderComponent = () => {
                                 src={imglogo}
                                 alt="Fatafatsewa Logo"
                                 width={120}
-                                height={40}
+                                height={30}
                                 priority
                                 className="rounded-lg w-auto h-7 sm:h-8 lg:h-9 transition-transform duration-200 hover:scale-105"
                             />
