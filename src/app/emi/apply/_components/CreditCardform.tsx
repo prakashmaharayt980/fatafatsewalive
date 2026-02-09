@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useContextEmi } from "../emiContext";
+import { useContextEmi } from "@/app/emi/_components/emiContext";
 import { Input } from "@/components/ui/input";
 
 export default function CreditCardComponent({ cardinfofield, errors }) {
@@ -44,9 +44,8 @@ export default function CreditCardComponent({ cardinfofield, errors }) {
                         onValueChange={(value) => field.onChange({ target: { value } })}
                       >
                         <SelectTrigger
-                          className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${
-                            errors[field.name] ? 'border-red-500' : ''
-                          }`}
+                          className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${errors[field.name] ? 'border-red-500' : ''
+                            }`}
                         >
                           <SelectValue placeholder={`Select ${field.label}`} className="text-yellow-400" />
                           <Image
@@ -91,9 +90,8 @@ export default function CreditCardComponent({ cardinfofield, errors }) {
                           placeholder={field.placeholder}
                           maxLength={field.maxLength}
                           max={field.maxvalue}
-                          className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-transparent focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${
-                            errors[field.name] ? 'border-red-500' : ''
-                          }`}
+                          className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-transparent focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${errors[field.name] ? 'border-red-500' : ''
+                            }`}
                         />
                         <Image
                           src={field.svgicon}
@@ -123,9 +121,8 @@ export default function CreditCardComponent({ cardinfofield, errors }) {
                         onChange={expiryField.onChange}
                         placeholder={expiryField.placeholder}
                         maxLength={expiryField.maxLength}
-                        className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-transparent focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${
-                          errors[expiryField.name] ? 'border-red-500' : ''
-                        }`}
+                        className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-transparent focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${errors[expiryField.name] ? 'border-red-500' : ''
+                          }`}
                       />
                       <Image
                         src={expiryField.svgicon}
@@ -151,9 +148,8 @@ export default function CreditCardComponent({ cardinfofield, errors }) {
                         onChange={limitField.onChange}
                         placeholder={limitField.placeholder}
                         maxLength={limitField.maxLength}
-                        className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${
-                          errors[limitField.name] ? 'border-red-500' : ''
-                        }`}
+                        className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all duration-150 ${errors[limitField.name] ? 'border-red-500' : ''
+                          }`}
                       />
                       <Image
                         src={limitField.svgicon}

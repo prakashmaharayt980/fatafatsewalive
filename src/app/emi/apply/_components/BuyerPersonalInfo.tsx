@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useContextEmi } from "../emiContext";
+import { useContextEmi } from "@/app/emi/_components/emiContext";
 import { Input } from "@/components/ui/input";
 
 export default function BuyerPersonalInfo({ cardinfofield, errors }) {
