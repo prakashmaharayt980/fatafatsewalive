@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Search, ArrowLeft, Calculator, Percent, ArrowRight, Calendar } from 'lucide-react';
-import { useContextEmi } from '../emi/emiContext';
-import RemoteServices from '../api/remoteservice';
+import { useContextEmi } from '@/app/emi/_components/emiContext';
+import RemoteServices from '@/app/api/remoteservice';
 import Image from 'next/image';
-import { ProductDetails } from '../types/ProductDetailsTypes';
+import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 
 export default function EMICalculator() {
   const { emiContextInfo, setEmiContextInfo, AvailablebankProvider } = useContextEmi();
