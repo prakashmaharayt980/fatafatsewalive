@@ -65,10 +65,11 @@ export default function CheckoutProduct({
                 {/* Image - Increased Size & Aspect Ratio */}
                 <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 shadow-sm group-hover:shadow-md transition-all duration-300">
                   <Image
-                    src={product.image?.thumb || product.image?.full || '/placeholder-image.jpg'}
+                    src={product.image?.thumb || product.image?.full}
                     alt={product.name || 'Product'}
                     fill
                     className="object-contain  group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                    unoptimized
                   />
                 </div>
 
