@@ -14,10 +14,10 @@ import CheckoutDrawer from '@/app/checkout/CheckoutDrawer';
 import { CompareProvider } from '@/app/context/CompareContext';
 import LoginPage from '@/app/login/page';
 import { AuthProvider } from '@/app/context/AuthContext';
-import WishList from '@/app/emi/Wishlist';
+import WishList from '@/app/emi/_components/Wishlist';
 
 import { Inter } from 'next/font/google'
-import { EmiProvider } from '@/app/emi/emiContext';
+import { EmiProvider } from '@/app/emi/_components/emiContext';
 import { GoogleOAuthProvider } from "@react-oauth/google";
 const inter = Inter({
   subsets: ['latin'],
@@ -69,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider1>
               <CompareProvider>
                 <HeaderBody />
-                <main className="flex-1 w-full mx-auto bg-gray-50">
+                <main className="flex-1  w-full mx-auto bg-gray-50">
                   <EmiProvider>
                     {children}
                     <LoginPage />

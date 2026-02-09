@@ -21,18 +21,11 @@ const recipientSchema = yup.object({
         otherwise: (schema) => schema.nullable().optional(),
     }),
     phone: yup.string().when('type', {
-        is: RECIPIENT_TYPES.GIFT,
-        then: (schema) => schema.required('Recipient phone is required for gifts'),
+        is: (type: string) => type === RECIPIENT_TYPES.GIFT || type === RECIPIENT_TYPES.SELF,
+        then: (schema) => schema.required('Contact number is required').min(10, 'Phone number must be at least 10 digits'),
         otherwise: (schema) => schema.nullable().optional(),
     }),
     message: yup.string().nullable().optional(),
-});
-
-const deliverySchema = yup.object({
-    partner: yup.object().shape({ // partner is an object or null
-        id: yup.number().required(),
-        name: yup.string().required(),
-    }).nullable().required('Please select a delivery method'),
 });
 
 const paymentSchema = yup.string().required('Please select a payment method');
@@ -40,6 +33,5 @@ const paymentSchema = yup.string().required('Please select a payment method');
 export const checkoutReviewSchema = yup.object({
     address: shippingAddressSchema,
     recipient: recipientSchema,
-    delivery: deliverySchema,
     paymentMethod: paymentSchema,
 });

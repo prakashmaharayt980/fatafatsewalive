@@ -279,7 +279,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     {product.emi_enabled === 1 && (
                         <button
                             title="apply-emi"
-                            onClick={() => { }}
+                            onClick={() => handleroute(selectedVariant?.color ? `/emi/apply/${product.slug}?selectedcolor=${selectedVariant.color}` : `/emi/apply/${product.slug}`)}
                             className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP1)]/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,56 +312,6 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 <ProductCoupons />
             </div>
 
-            {/* REFERRAL CODE GIFT
-            <div className="pt-2">
-                <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3 group hover:border-[var(--colour-fsP2)] hover:shadow-md transition-all duration-300 w-full">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 bg-[var(--colour-fsP2)]/10 rounded-lg flex items-center justify-center shadow-sm text-[var(--colour-fsP2)] group-hover:scale-110 transition-transform duration-300">
-                            <Gift className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-sm font-bold text-slate-700 group-hover:text-[var(--colour-fsP2)] transition-colors truncate">Referral Code?</p>
-                            <p className="text-[11px] text-slate-500 truncate">Unlock extra bonuses</p>
-                        </div>
-                    </div>
-                    <div className="flex bg-slate-50 rounded-lg border border-slate-200 overflow-hidden h-9 w-32 shrink-0 focus-within:border-[var(--colour-fsP2)] focus-within:ring-1 focus-within:ring-[var(--colour-fsP2)]/20 transition-all shadow-inner">
-                        <input
-                            type="text"
-                            placeholder="ENTER CODE"
-                            className="w-full px-3 text-[11px] outline-none text-slate-700 font-bold placeholder:text-gray-400 uppercase bg-transparent tracking-wide"
-                        />
-                    </div>
-                </div>
-            </div> */}
-
-            {/* PARTNER GIFTS BANNER (Small Banner below)
-            {freeGifts.length > 0 && (
-                <div className="pt-2">
-                    <div className="bg-[#1a1c23] rounded-xl p-3.5 relative overflow-hidden group cursor-pointer shadow-lg shadow-black/5">
-                        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_50%,transparent_75%,transparent_100%)] bg-[length:250%_250%] animate-[shimmer_3s_infinite]"></div>
-                        <div className="relative z-10 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center border border-white/10 shrink-0">
-                                    {freeGifts[0].image ? (
-                                        <Image src={freeGifts[0].image.thumb || freeGifts[0].image.full} alt="Gift" width={32} height={32} className="object-cover rounded-sm" />
-                                    ) : (
-                                        <Gift className="w-5 h-5 text-amber-400" />
-                                    )}
-                                </div>
-                                <div>
-                                    <h3 className="text-xs font-bold text-white leading-tight flex items-center gap-1.5">
-                                        <span className="text-amber-400">★</span> Partner Gift
-                                    </h3>
-                                    <p className="text-[10px] text-gray-400">Include {freeGifts[0].name.substring(0, 15)}...</p>
-                                </div>
-                            </div>
-                            <div className="bg-white text-slate-900 text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm hover:scale-105 transition-transform">
-                                CLAIM
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )} */}
 
 
             {/* HIGHLIGHTS */}

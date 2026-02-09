@@ -68,7 +68,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
                 {file ? (
                   /* Uploaded State */
-                  <div className="relative h-48 w-full rounded-xl overflow-hidden border border-[var(--colour-fsP1)]/20 shadow-sm bg-gray-50 flex items-center justify-center group-hover:shadow-md transition-all">
+                  <div className="relative h-48 w-full rounded-xl overflow-hidden border border-[var(--colour-fsP2)]/20 shadow-sm bg-gray-50 flex items-center justify-center group-hover:shadow-md transition-all">
                     <Image
                       src={previews[previewKey] || ''}
                       alt={label || 'document img'}
@@ -80,7 +80,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-9 w-9 bg-white/90 text-[var(--colour-fsP1)] hover:bg-white hover:text-[var(--colour-fsP1)] rounded-full">
+                          <Button size="icon" variant="ghost" className="h-9 w-9 bg-white/90 text-[var(--colour-fsP2)] hover:bg-white hover:text-[var(--colour-fsP2)] rounded-full">
                             <Eye className="w-4 h-4" />
                           </Button>
                         </DialogTrigger>
@@ -115,18 +115,18 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   </div>
                 ) : (
                   /* Empty State */
-                  <label htmlFor={previewKey} className="cursor-pointer h-48 w-full rounded-xl border-2 border-dashed border-gray-200 hover:border-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP1)]/5 transition-all flex flex-col items-center justify-center gap-3 group">
-                    <div className="h-12 w-12 rounded-full bg-[var(--colour-fsP1)]/10 flex items-center justify-center group-hover:scale-110 transition-transform text-[var(--colour-fsP1)]">
+                  <label htmlFor={previewKey} className="cursor-pointer h-48 w-full rounded-xl border-2 border-dashed border-gray-200 hover:border-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/5 transition-all flex flex-col items-center justify-center gap-3 group">
+                    <div className="h-12 w-12 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center group-hover:scale-110 transition-transform text-[var(--colour-fsP2)]">
                       <UploadCloud className="w-6 h-6" />
                     </div>
-                    <span className="text-xs font-semibold text-gray-500 group-hover:text-[var(--colour-fsP1)] uppercase tracking-wide px-4 text-center">
+                    <span className="text-xs font-semibold text-gray-500 group-hover:text-[var(--colour-fsP2)] uppercase tracking-wide px-4 text-center">
                       Upload {label?.replace('Citizenship', '')}
                     </span>
                   </label>
                 )}
 
                 {file && (
-                  <div className="mt-2 flex items-center justify-center gap-1.5 text-[var(--colour-fsP1)]">
+                  <div className="mt-2 flex items-center justify-center gap-1.5 text-[var(--colour-fsP2)]">
                     <FileCheck className="w-4 h-4" />
                     <span className="text-xs font-medium text-gray-700 truncate max-w-[150px]">
                       {file.name}

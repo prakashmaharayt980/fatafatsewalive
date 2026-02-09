@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Search, X, Smartphone, Loader2, ChevronRight, Check, RefreshCw } from "lucide-react";
-import RemoteServices from "../api/remoteservice";
+import RemoteServices from "@/app/api/remoteservice";
 import { useContextEmi } from "./emiContext";
-import { ProductDetails } from "../types/ProductDetailsTypes";
+import { ProductDetails } from "@/app/types/ProductDetailsTypes";
 
 interface ProductEMIUIProps {
   chooseProduct: (col: string) => void;
@@ -205,6 +205,11 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
               <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] font-bold text-base">
                 Rs. {(product.discounted_price || product.price).toLocaleString()}
               </div>
+              {selectedColor && (
+                <div className="mt-2 text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full inline-block">
+                  Selected Color: <span className="text-gray-900 font-bold">{selectedColor}</span>
+                </div>
+              )}
             </div>
 
             {/* Compact Color Selection */}

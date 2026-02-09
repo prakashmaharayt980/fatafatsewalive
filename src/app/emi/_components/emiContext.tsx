@@ -10,7 +10,7 @@ import {
   SetStateAction,
   useMemo,
 } from "react";
-import { ProductDetails } from "../types/ProductDetailsTypes";
+import { ProductDetails } from "@/app/types/ProductDetailsTypes";
 
 
 interface UserInfo {

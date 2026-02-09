@@ -205,40 +205,7 @@ export default function OrderReviewStep({
                             </div>
                         </ReviewWell>
 
-                        {/* 3. Delivery Well */}
-                        <ReviewWell
-                            icon={Truck}
-                            title="Delivery"
-                            step={CHECKOUT_STEPS.DELIVERY}
-                            errorId="delivery"
-                            errorMessage={errors['delivery']}
-                        >
-                            {delivery.partner ? (
-                                <div className="flex items-center gap-4">
-                                    <div className="relative w-12 h-12 rounded-lg bg-white border border-gray-200 p-1 flex-shrink-0">
-                                        <Image
-                                            src={delivery.partner.img}
-                                            alt={delivery.partner.name}
-                                            fill
-                                            className="object-contain p-1"
-                                        />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-900 leading-tight">{delivery.partner.name}</p>
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <Clock className="w-3.5 h-3.5 text-gray-400" />
-                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">
-                                                {delivery.partner.estimatedDays || 'Standard Shipping'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-gray-400 text-sm italic">
-                                    No delivery method selected
-                                </p>
-                            )}
-                        </ReviewWell>
+
 
                         {/* 4. Payment Well */}
                         <ReviewWell

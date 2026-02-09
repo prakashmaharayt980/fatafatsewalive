@@ -59,7 +59,7 @@ export default function CheckoutClient() {
 
     const nextStep = useCallback(() => {
         const { currentStep } = checkoutState;
-        if (currentStep < CHECKOUT_STEPS.REVIEW && isStepComplete(currentStep, checkoutState)) {
+        if (currentStep < CHECKOUT_STEPS.PAYMENT && isStepComplete(currentStep, checkoutState)) {
             setCheckoutState((prev) => ({ ...prev, currentStep: (currentStep + 1) as CheckoutStep }));
         }
     }, [checkoutState]);
@@ -153,10 +153,10 @@ export default function CheckoutClient() {
             setIsSubmitting(true);
             const currentItems = cartItems?.items || [];
             const subtotal = cartItems?.cart_total || 0;
-            const finalTotal = subtotal + shippingCost - (appliedPromo?.discount || 0);
+            const finalTotal = subtotal - (appliedPromo?.discount || 0);
 
             const payload = {
-                phone: userInfo?.phone,
+
                 full_name: userInfo?.name,
                 products: currentItems.map((item: any) => ({
                     product_id: item.product?.id || item.id,
@@ -166,13 +166,16 @@ export default function CheckoutClient() {
                 total_amount: finalTotal,
                 payment_type: checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'),
                 promo_code: appliedPromo?.code || null,
-                delivery_partner: checkoutState.delivery.partner?.name,
-                delivery_partner_user_id: checkoutState.delivery.userId || null,
-                recipient_type: checkoutState.recipient.type,
-                gift_recipient_name: checkoutState.recipient.name || null,
-                gift_recipient_phone: checkoutState.recipient.phone || null,
-                gift_message: checkoutState.recipient.message || null,
-                shipping_cost: shippingCost,
+
+                recipient: {
+                    self_phone: checkoutState.recipient.type === 'self' ? checkoutState.recipient.phone : null,
+                    gift_recipient_name: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : null,
+                    gift_recipient_phone: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.phone : null,
+                    gift_message: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.message : null,
+                },
+
+
+
             };
 
             console.log('Submitting Order Payload:', payload);
@@ -227,36 +230,18 @@ export default function CheckoutClient() {
                         onBack={prevStep}
                     />
                 );
-            case CHECKOUT_STEPS.DELIVERY:
-                return (
-                    <DeliveryStep
-                        state={checkoutState}
-                        onDeliveryChange={handleDeliveryChange}
-                        onNext={nextStep}
-                        onBack={prevStep}
-                    />
-                );
+
             case CHECKOUT_STEPS.PAYMENT:
                 return (
                     <PaymentStep
                         state={checkoutState}
                         onPaymentMethodChange={handlePaymentMethodChange}
-                        onNext={nextStep}
-                        onBack={prevStep}
-                    />
-                );
-            case CHECKOUT_STEPS.REVIEW:
-                return (
-                    <OrderReviewStep
-                        state={checkoutState}
-                        onGoToStep={goToStep}
-                        onBack={prevStep}
                         onPlaceOrder={handlePlaceOrder}
+                        onBack={prevStep}
                         isSubmitting={isSubmitting}
-                        shippingCost={shippingCost}
-                        discount={appliedPromo?.discount || 0}
                     />
                 );
+
             default:
                 return null;
         }

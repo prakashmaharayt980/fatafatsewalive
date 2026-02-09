@@ -27,13 +27,8 @@ const recipientOptions = [
         icon: Gift,
         title: 'Gift for Someone',
         description: 'Send as a gift with a personal message',
-    },
-    {
-        type: RECIPIENT_TYPES.ANONYMOUS,
-        icon: EyeOff,
-        title: 'Anonymous',
-        description: 'Hide your identity from the recipient',
-    },
+    }
+
 ];
 
 export default function RecipientStep({ state, onRecipientChange, onNext, onBack }: RecipientStepProps) {
@@ -45,9 +40,9 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
         onRecipientChange({
             ...recipient,
             type,
-            // Reset fields when switching types
+            // Only reset name for SELF, keep phone as it might be needed
             name: type === RECIPIENT_TYPES.SELF ? '' : recipient.name,
-            phone: type === RECIPIENT_TYPES.SELF ? '' : recipient.phone,
+            phone: recipient.phone,
             message: type === RECIPIENT_TYPES.GIFT ? recipient.message : '',
             recipientPhoto: undefined,
             senderPhoto: undefined,
@@ -84,7 +79,10 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
     };
 
     const isComplete = () => {
-        if (recipient.type === RECIPIENT_TYPES.SELF) return true;
+        // For Self, we need phone number now
+        if (recipient.type === RECIPIENT_TYPES.SELF) {
+            return !!recipient.phone?.trim() && recipient.phone.length >= 10;
+        }
 
         // For Gift AND Anonymous, we need recipient details to deliver!
         if (recipient.type === RECIPIENT_TYPES.GIFT || recipient.type === RECIPIENT_TYPES.ANONYMOUS) {
@@ -144,8 +142,8 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
     );
 
     return (
-        <div className="animate-fade-in-premium space-y-6">
-            <div className="bg-white rounded-2xl shadow-[var(--shadow-premium-sm)] border border-gray-100 overflow-hidden">
+        <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center gap-3 bg-white">
                     <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -168,14 +166,14 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                                 <button
                                     key={option.type}
                                     onClick={() => handleTypeSelect(option.type)}
-                                    className={`relative p-4 rounded-xl border-2 text-left transition-all duration-300 group flex flex-col justify-between h-full ${isSelected
-                                        ? 'border-[var(--colour-fsP2)] bg-blue-50/30 ring-1 ring-[var(--colour-fsP2)] ring-opacity-20'
-                                        : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md'
+                                    className={`relative p-4 rounded-xl border-2 text-left transition-all duration-200 group flex flex-col justify-between h-full ${isSelected
+                                        ? 'border-[var(--colour-fsP2)] bg-blue-50/30 shadow-sm'
+                                        : 'border-gray-200 bg-white hover:border-[var(--colour-fsP2)]/30 hover:bg-blue-50/20'
                                         }`}
                                 >
                                     <div>
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors ${isSelected
-                                            ? 'bg-[var(--colour-fsP2)] text-white shadow-md'
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${isSelected
+                                            ? 'bg-[var(--colour-fsP2)] text-white'
                                             : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
                                             }`}>
                                             <Icon className="w-5 h-5" />
@@ -204,22 +202,40 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                     <div className="min-h-[100px]">
                         {/* SELF RECIPIENT MSG */}
                         {recipient.type === RECIPIENT_TYPES.SELF && (
-                            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex items-start gap-4 animate-fade-in-up">
-                                <div className="p-2 bg-white rounded-full shadow-sm">
-                                    <User className="w-5 h-5 text-[var(--colour-fsP2)]" />
+                            <div className="bg-blue-50/30 rounded p-6 border border-blue-100 flex flex-col gap-6 animate-fade-in-up">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-2.5 bg-white rounded-full shadow-sm border border-blue-100">
+                                        <User className="w-5 h-5 text-[var(--colour-fsP2)]" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 text-sm">You are the recipient</h4>
+                                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                            Please verify your contact number. This will be used by our delivery partner to contact you.
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900 text-sm">You are the recipient</h4>
-                                    <p className="text-xs text-gray-600 mt-1">
-                                        We will use your account details for delivery contact.
-                                    </p>
+
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1">Contact Number <span className="text-red-500">*</span></Label>
+                                    <div className="relative group">
+                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5  rounded-md ">
+                                            <Phone className="w-4 h-4 text-gray-400 group-focus-within:text-[var(--colour-fsP2)] transition-colors" />
+                                        </div>
+                                        <Input
+                                            placeholder="98XXXXXXXX"
+                                            value={recipient.phone || ''}
+                                            onChange={(e) => handleFieldChange('phone', e.target.value.replace(/\D/g, ''))}
+                                            maxLength={10}
+                                            className="pl-12 h-12 border-2 bg-white border-gray-200 focus:border-[var(--colour-fsP2)] focus:ring-6 focus:ring-blue-50/50 rounded-xl text-sm font-bold tracking-widest  text-gray-700 placeholder:text-gray-300  transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {/* GIFT FORM */}
                         {recipient.type === RECIPIENT_TYPES.GIFT && (
-                            <div className="space-y-6 animate-fade-in-up bg-pink-50/30 p-6 rounded-xl border border-pink-100">
+                            <div className="space-y-6 animate-fade-in-up bg-gradient-to-br from-pink-50/50 to-blue-50/30 p-6 rounded-xl border border-gray-200">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
                                     <h4 className="font-bold text-gray-900 text-sm">Gift Details</h4>
@@ -234,7 +250,7 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                                                 placeholder="e.g. John Doe"
                                                 value={recipient.name || ''}
                                                 onChange={(e) => handleFieldChange('name', e.target.value)}
-                                                className="pl-10 h-11 bg-white border-gray-200 focus:border-pink-500 focus:ring-pink-100 rounded-lg text-sm"
+                                                className="pl-10 border-2 h-11 bg-white border-gray-200 focus:border-pink-500 focus:ring-pink-100 rounded-lg text-sm"
                                             />
                                         </div>
                                     </div>
@@ -247,7 +263,7 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                                                 value={recipient.phone || ''}
                                                 onChange={(e) => handleFieldChange('phone', e.target.value.replace(/\D/g, ''))}
                                                 maxLength={10}
-                                                className="pl-10 h-11 bg-white border-gray-200 focus:border-pink-500 focus:ring-pink-100 rounded-lg text-sm tracking-widest font-mono"
+                                                className="pl-10  border-2 h-11 bg-white border-gray-200 focus:border-pink-500 focus:ring-pink-100 rounded-lg text-sm tracking-widest font-mono"
                                             />
                                         </div>
                                     </div>
@@ -277,85 +293,13 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                                             value={recipient.message || ''}
                                             onChange={(e) => handleFieldChange('message', e.target.value)}
                                             rows={3}
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:border-pink-500 focus:ring-4 focus:ring-pink-50 outline-none text-sm transition-all resize-none"
+                                            className="w-full border-2 pl-10 pr-4 py-3 bg-white  border-gray-200 rounded-lg focus:border-pink-500 focus:ring-4 focus:ring-pink-50 outline-none text-sm transition-all resize-none"
                                         />
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* ANONYMOUS FORM - DARK THEME */}
-                        {recipient.type === RECIPIENT_TYPES.ANONYMOUS && (
-                            <div className="space-y-6 animate-fade-in-up bg-gray-900 p-6 rounded-xl border border-gray-800 text-gray-200 shadow-xl">
-                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 shadow-sm flex items-start gap-4 mb-4">
-                                    <div className="p-2 bg-gray-700/50 rounded-full">
-                                        <EyeOff className="w-5 h-5 text-gray-400" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-white text-sm">Secret Delivery Mode</h4>
-                                        <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                                            Please provide recipient details for our delivery partner. <br />
-                                            <span className="font-bold text-gray-300">NOTE: These details will NOT be revealed to the recipient. We will only use them to successfully deliver the package.</span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="grid gap-5 sm:grid-cols-2">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-xs font-bold text-gray-400 uppercase tracking-wide">Recipient Name <span className="text-red-500">*</span></Label>
-                                        <div className="relative">
-                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                            <Input
-                                                placeholder="e.g. Jane Doe"
-                                                value={recipient.name || ''}
-                                                onChange={(e) => handleFieldChange('name', e.target.value)}
-                                                className="pl-10 h-11 bg-gray-800 border-gray-700 focus:border-gray-500 focus:ring-gray-700 rounded-lg text-sm text-white placeholder:text-gray-600"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-xs font-bold text-gray-400 uppercase tracking-wide">Recipient Phone <span className="text-red-500">*</span></Label>
-                                        <div className="relative">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                            <Input
-                                                placeholder="98XXXXXXXX"
-                                                value={recipient.phone || ''}
-                                                onChange={(e) => handleFieldChange('phone', e.target.value.replace(/\D/g, ''))}
-                                                maxLength={10}
-                                                className="pl-10 h-11 bg-gray-800 border-gray-700 focus:border-gray-500 focus:ring-gray-700 rounded-lg text-sm tracking-widest font-mono text-white placeholder:text-gray-600"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wide">Secret Message <span className="text-gray-500 font-normal normal-case">(Optional)</span></Label>
-                                    <div className="relative">
-                                        <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                                        <textarea
-                                            placeholder="Add a covert message..."
-                                            value={recipient.message || ''}
-                                            onChange={(e) => handleFieldChange('message', e.target.value)}
-                                            rows={2}
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-gray-500 focus:ring-4 focus:ring-gray-800 outline-none text-sm transition-all resize-none text-white placeholder:text-gray-600"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="p-4 border border-dashed border-gray-700 rounded-xl bg-gray-800/30">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <Label className="text-xs font-bold text-gray-400 uppercase tracking-wide">Recipient Photo <span className="text-gray-500 font-normal normal-case">(Optional)</span></Label>
-                                        <span className="text-[10px] text-gray-500 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">For Delivery ID Only</span>
-                                    </div>
-                                    <PhotoUpload
-                                        label=""
-                                        photo={recipient.recipientPhoto}
-                                        field="recipientPhoto"
-                                        inputRef={fileInputRefRecipient}
-                                    />
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
@@ -373,7 +317,7 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                 <Button
                     onClick={onNext}
                     disabled={!isComplete()}
-                    className="h-11 px-8 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="h-11 px-8 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm"
                 >
                     Continue
                     <ChevronRight className="w-4 h-4 ml-1" />

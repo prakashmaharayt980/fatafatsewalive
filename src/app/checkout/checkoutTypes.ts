@@ -7,9 +7,7 @@
 export const CHECKOUT_STEPS = {
     ADDRESS: 0,
     RECIPIENT: 1,
-    DELIVERY: 2,
-    PAYMENT: 3,
-    REVIEW: 4,
+    PAYMENT: 2,
 } as const;
 
 export type CheckoutStep = (typeof CHECKOUT_STEPS)[keyof typeof CHECKOUT_STEPS];
@@ -17,9 +15,7 @@ export type CheckoutStep = (typeof CHECKOUT_STEPS)[keyof typeof CHECKOUT_STEPS];
 export const STEP_LABELS: Record<CheckoutStep, string> = {
     [CHECKOUT_STEPS.ADDRESS]: 'Shipping',
     [CHECKOUT_STEPS.RECIPIENT]: 'Recipient',
-    [CHECKOUT_STEPS.DELIVERY]: 'Delivery',
     [CHECKOUT_STEPS.PAYMENT]: 'Payment',
-    [CHECKOUT_STEPS.REVIEW]: 'Order Review',
 };
 
 // ========================
@@ -70,14 +66,23 @@ export interface ShippingAddress {
     id?: number;
 
     address: string;
-    city: string;
-    state: string;
+    city: string; // Keep for backward compatibility or display
+    state: string; // Keep for backward compatibility or display
     postal_code: string;
     country: string;
     is_default: boolean;
     label?: string;
     lat?: number;
     lng?: number;
+
+    // Nepal Specific Fields
+    province?: string;
+    district?: string;
+    // municipality removed in favor of city
+    ward?: number;
+    tole?: string;
+    house_no?: string;
+    landmark?: string;
 }
 
 // ========================
@@ -126,17 +131,17 @@ export function isStepComplete(step: CheckoutStep, state: CheckoutState): boolea
         case CHECKOUT_STEPS.ADDRESS:
             return state.address !== null && !!state.address.id;
         case CHECKOUT_STEPS.RECIPIENT:
-            if (state.recipient.type === RECIPIENT_TYPES.SELF) return true;
+            if (state.recipient.type === RECIPIENT_TYPES.SELF) {
+                return !!state.recipient.phone?.trim() && state.recipient.phone.length >= 10;
+            }
             if (state.recipient.type === RECIPIENT_TYPES.GIFT) {
                 return !!state.recipient.name && !!state.recipient.phone;
             }
             return true; // Anonymous is always valid
-        case CHECKOUT_STEPS.DELIVERY:
-            return state.delivery.partner !== null;
+
         case CHECKOUT_STEPS.PAYMENT:
             return state.paymentMethod !== '';
-        case CHECKOUT_STEPS.REVIEW:
-            return true; // Always "complete" once reached
+
         default:
             return false;
     }

@@ -47,20 +47,11 @@ export default function CheckoutProduct({
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl shadow-blue-900/5 border border-white overflow-hidden sticky top-24">
+    <div className="bg-white rounded-xl shadow shadow-blue-900/5 border border-white overflow-hidden sticky top-24">
 
-      {/* Header */}
-      <div className="bg-[var(--colour-fsP2)] p-5 text-white flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShoppingBag className="w-5 h-5 text-blue-200" />
-          <span className="font-bold text-lg">Order Summary</span>
-        </div>
-        <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
-          {items.length} Items
-        </span>
-      </div>
 
-      <div className="p-6 space-y-8 bg-white">
+
+      <div className="p-2 space-y-4 bg-white">
         {/* Products List - Enhanced Size */}
         <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           {items.map((item, index) => {
@@ -77,7 +68,7 @@ export default function CheckoutProduct({
                     src={product.image?.thumb || product.image?.full || '/placeholder-image.jpg'}
                     alt={product.name || 'Product'}
                     fill
-                    className="object-contain p-2 group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                    className="object-contain  group-hover:scale-110 transition-transform duration-500 ease-in-out"
                   />
                 </div>
 
@@ -144,13 +135,13 @@ export default function CheckoutProduct({
                   value={submittedvaluelist.promoCode}
                   onChange={(e) => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: e.target.value }))}
                   placeholder="Enter discount code"
-                  className="pl-10 h-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)] rounded-xl text-sm transition-all"
+                  className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)] rounded text-sm transition-all"
                 />
               </div>
               <Button
                 onClick={handleApplyPromo}
                 disabled={!submittedvaluelist.promoCode}
-                className="h-12 px-6 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:shadow-none active:scale-95"
+                className="h-10 px-4 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white rounded font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:shadow-none active:scale-95"
               >
                 Apply
               </Button>

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import RemoteServices from '@/app/api/remoteservice';
-import ClientEmiPage from './ClientEmiPage';
+import ClientEmiPage from './_components/ClientEmiPage';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import { BannerItem } from '@/app/types/BannerTypes';
 

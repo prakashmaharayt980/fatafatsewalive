@@ -83,6 +83,7 @@ const CheckoutDrawer = () => {
                       alt={item.product.name}
                       fill
                       sizes="80px"
+                      unoptimized
                       className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>

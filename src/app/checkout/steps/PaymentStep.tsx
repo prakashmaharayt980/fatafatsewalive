@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Wallet, Check, Shield, CircleDollarSign, ChevronLeft } from 'lucide-react';
+import { Wallet, Check, Shield, CircleDollarSign, ChevronLeft, Loader2, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { CheckoutState } from '../checkoutTypes';
@@ -10,8 +10,9 @@ import { PaymentMethodsOptions } from '../../CommonVue/Payment';
 interface PaymentStepProps {
     state: CheckoutState;
     onPaymentMethodChange: (method: string) => void;
-    onNext: () => void;
+    onPlaceOrder: () => void;
     onBack: () => void;
+    isSubmitting: boolean;
 }
 
 // Combine all methods into one structured list
@@ -26,7 +27,7 @@ const allPaymentMethods = [
     },
 ];
 
-export default function PaymentStep({ state, onPaymentMethodChange, onNext, onBack }: PaymentStepProps) {
+export default function PaymentStep({ state, onPaymentMethodChange, onPlaceOrder, onBack, isSubmitting }: PaymentStepProps) {
     const { paymentMethod } = state;
 
     const isComplete = paymentMethod !== '';
@@ -80,6 +81,7 @@ export default function PaymentStep({ state, onPaymentMethodChange, onNext, onBa
                                                 fill
                                                 sizes="56px"
                                                 className="object-contain p-1"
+                                                unoptimized
                                             />
                                         </div>
 
@@ -112,16 +114,27 @@ export default function PaymentStep({ state, onPaymentMethodChange, onNext, onBa
                     onClick={onBack}
                     variant="outline"
                     className="h-11 px-6 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 text-sm"
+                    disabled={isSubmitting}
                 >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
                     Back
                 </Button>
                 <Button
-                    onClick={onNext}
-                    disabled={!isComplete}
-                    className="h-11 px-8 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2"
+                    onClick={onPlaceOrder}
+                    disabled={!isComplete || isSubmitting}
+                    className="flex-1 sm:flex-none h-12 px-8 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-base flex items-center justify-center gap-2"
                 >
-
-                    Review Order
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Processing...
+                        </>
+                    ) : (
+                        <>
+                            <ShoppingBag className="w-5 h-5" />
+                            Buy Now
+                        </>
+                    )}
                 </Button>
             </div>
         </div>

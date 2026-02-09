@@ -12,7 +12,7 @@ import {
 
 
 import Image from 'next/image';
-import { useContextCart } from '../checkout/CartContext1';
+import { useContextCart } from '@/app/checkout/CartContext1';
 
 
 const WishList = () => {
