@@ -7,6 +7,7 @@ import { WishlistService } from '../api/services/wishlist';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { getCookie } from 'cookies-next';
 import { useAuth } from '../context/AuthContext';
+import { trackAddToCart } from '@/lib/Analytic';
 
 
 interface CartResponse {
@@ -148,6 +149,7 @@ export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ childre
         if (existingItem) {
             CartUpdateQuantity(existingItem.id, existingItem.quantity + quantity)
             setIsCartOpen(true)
+            trackAddToCart(existingItem.product, quantity);
             return
         } else {
 
@@ -157,6 +159,11 @@ export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ childre
             }).then(res => {
                 setCartItems(res.data)
                 setIsCartOpen(true)
+                // We need to find the product in the returned cart items or use a fallback
+                const newProduct = res.data?.items?.find((item: any) => item.product_id === id)?.product;
+                if (newProduct) {
+                    trackAddToCart(newProduct, quantity);
+                }
             }).catch(err => {
 
                 fetchCart();

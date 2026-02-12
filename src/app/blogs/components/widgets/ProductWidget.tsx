@@ -18,38 +18,43 @@ const ProductWidget = () => {
     if (!products || products.length === 0) return null;
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 font-heading flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-blue-600" />
+        <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-md hover:shadow-xl transition-shadow">
+            <h3 className="text-xl font-bold text-gray-900 mb-5 font-heading flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--colour-fsP2)] to-blue-700 flex items-center justify-center">
+                    <Smartphone className="w-4 h-4 text-white" />
+                </div>
                 Trending Products
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {products.map((product: any) => (
                     <Link
                         key={product.id}
                         href={`/products/${product.slug}`}
-                        className="flex gap-3 group items-center"
+                        className="flex gap-3 group items-center p-2 rounded-lg hover:bg-gradient-to-r hover:from-[var(--colour-fsP2)]/5 hover:to-transparent transition-all"
                     >
-                        <div className="relative w-14 h-14 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 group-hover:border-blue-200 transition-colors">
+                        <div className="relative w-16 h-16 bg-gradient-to-br from-gray-50 to-white rounded-xl overflow-hidden flex-shrink-0 border-2 border-gray-100 group-hover:border-[var(--colour-fsP2)] transition-all group-hover:shadow-md">
                             <Image
                                 src={product.image?.thumb || product.image?.full || '/placeholder.png'}
                                 alt={product.name}
                                 fill
-                                className="object-contain p-1 group-hover:scale-110 transition-transform duration-500"
+                                className="object-contain p-2 group-hover:scale-110 transition-transform duration-500"
                             />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-gray-900 text-sm leading-tight group-hover:text-blue-600 transition-colors mb-1 line-clamp-2">
+                            <h4 className="font-bold text-gray-900 text-sm leading-tight group-hover:text-[var(--colour-fsP2)] transition-colors mb-1.5 line-clamp-2">
                                 {product.name}
                             </h4>
-                            <div className="text-blue-600 font-bold text-xs">
+                            <div className="text-[var(--colour-fsP2)] font-bold text-sm">
                                 Rs. {formatPrice(product.price)}
                             </div>
                         </div>
                     </Link>
                 ))}
-                <Link href="/category/smartphones?id=1" className="block w-full mt-4 py-2.5 border border-gray-100 text-gray-500 font-semibold rounded-xl hover:bg-gray-50 hover:text-blue-600 transition-colors text-xs text-center">
-                    View All Products
+                <Link
+                    href="/category/smartphones?id=1"
+                    className="block w-full mt-5 py-3 bg-gradient-to-r from-[var(--colour-fsP2)] to-blue-700 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-[var(--colour-fsP2)]/30 transition-all text-sm text-center hover:-translate-y-0.5"
+                >
+                    View All Products →
                 </Link>
             </div>
         </div>

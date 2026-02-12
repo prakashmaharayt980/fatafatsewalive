@@ -15,9 +15,11 @@ const CategoryWidget = () => {
     if (!categories || categories.length === 0) return null;
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 font-heading flex items-center gap-2">
-                <Layers className="w-5 h-5 text-blue-600" />
+        <div className="bg-white rounded-2xl p-5 border-2 border-gray-100 shadow-md hover:shadow-xl transition-shadow">
+            <h3 className="text-xl font-bold text-gray-900 mb-5 font-heading flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--colour-fsP2)] to-blue-700 flex items-center justify-center">
+                    <Layers className="w-4 h-4 text-white" />
+                </div>
                 Categories
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -25,7 +27,7 @@ const CategoryWidget = () => {
                     <Link
                         key={cat.id}
                         href={`/category/${cat.slug}?id=${cat.id}`}
-                        className="px-3 py-1.5 bg-gray-50 text-gray-600 text-xs font-medium rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-100"
+                        className="px-4 py-2 bg-gradient-to-br from-gray-50 to-white text-gray-700 text-xs font-bold rounded-lg hover:bg-gradient-to-r hover:from-[var(--colour-fsP2)] hover:to-blue-700 hover:text-white transition-all border-2 border-gray-100 hover:border-[var(--colour-fsP2)] hover:shadow-md"
                     >
                         {cat.title}
                     </Link>

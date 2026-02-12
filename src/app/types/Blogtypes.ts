@@ -55,6 +55,7 @@ export interface Article {
     thumb: string;
     preview: string;
   };
+  reading_time: string;
 }
 
 export interface ApiResponse {

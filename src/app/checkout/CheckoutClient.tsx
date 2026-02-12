@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useContextCart } from './CartContext1';
 import RemoteServices from '../api/remoteservice';
 import { useAuth } from '../context/AuthContext';
+import { trackInitiateCheckout } from '@/lib/Analytic';
 import {
     CheckoutState,
     CheckoutStep,
@@ -26,6 +27,11 @@ import DeliveryStep from './steps/DeliveryStep';
 import PaymentStep from './steps/PaymentStep';
 import OrderReviewStep from './steps/OrderReviewStep';
 import CheckoutProduct from './CheckoutProduct';
+import NicAsiaPayment from '../PaymentsBox/NicAsiaPayment';
+import EeswaPayment from '../PaymentsBox/EeswaPayment';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+
 
 export default function CheckoutClient() {
     const { cartItems } = useContextCart();
@@ -38,13 +44,23 @@ export default function CheckoutClient() {
     const [shippingCost, setShippingCost] = useState(0);
     const [promoCode, setPromoCode] = useState('');
     const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
+    const [processingPaymentOrder, setProcessingPaymentOrder] = useState<string | null>(null);
 
+
+    const router = useRouter();
     // Auth protection
     useEffect(() => {
         if (!isLoading && !authState.user) {
             triggerLoginAlert();
         }
     }, [isLoading, authState.user, triggerLoginAlert]);
+
+    // Track Initiate Checkout
+    useEffect(() => {
+        if (cartItems && cartItems.items.length > 0) {
+            trackInitiateCheckout(cartItems);
+        }
+    }, [cartItems]);
 
     // Calculate shipping based on address
     useEffect(() => {
@@ -114,36 +130,16 @@ export default function CheckoutClient() {
         const paymentMethodName = checkoutState.paymentMethod.toLowerCase();
 
         if (paymentMethodName.includes('esewa')) {
-            const params = {
-                amt: amount,
-                psc: 0,
-                pdc: 0,
-                txAmt: 0,
-                tAmt: amount,
-                pid: orderId,
-                scd: 'EPAYTEST',
-                su: `${window.location.origin}/checkout/Successpage?oid=${orderId}`,
-                fu: `${window.location.origin}/checkout/failed`,
-            };
-
-            const form = document.createElement('form');
-            form.setAttribute('method', 'POST');
-            form.setAttribute('action', 'https://uat.esewa.com.np/epay/main');
-
-            for (const key in params) {
-                const hiddenField = document.createElement('input');
-                hiddenField.setAttribute('type', 'hidden');
-                hiddenField.setAttribute('name', key);
-                hiddenField.setAttribute('value', (params as any)[key]);
-                form.appendChild(hiddenField);
-            }
-            document.body.appendChild(form);
-            form.submit();
+            // Set state to render the EeswaPayment component
+            setProcessingPaymentOrder(orderId);
         } else if (paymentMethodName.includes('khalti')) {
             alert('Khalti Test Mode Integration: Redirecting to mock success.');
-            window.location.href = `/checkout/Successpage?oid=${orderId}`;
+            window.location.href = `/checkout/Successpage/${orderId}`;
+        } else if (paymentMethodName.includes('nic-asia')) {
+            // Set state to render the NicAsiaPayment component which handles the redirection
+            setProcessingPaymentOrder(orderId);
         } else {
-            window.location.href = `/checkout/Successpage?oid=${orderId}`;
+            window.location.href = `/checkout/Successpage/${orderId}`;
         }
     };
 
@@ -178,14 +174,22 @@ export default function CheckoutClient() {
 
             };
 
-            console.log('Submitting Order Payload:', payload);
 
             const res = await RemoteServices.CreateOrder(payload);
-            console.log('Order Response:', res);
-            if (res?.id || res?.data?.id) {
-                const oid = res.id || res.data.id;
-                await handlePayment(oid, finalTotal);
+
+            if (res) {
+
+                setIsSubmitting(false);
+                if (res.payment_type === 'cash' && res.order_status === 'Placed') {
+                    toast.success('Order placed successfully');
+                    router.push(`/checkout/Successpage/${res.data.id}`);
+                } else {
+                    handlePayment(res.data.id, res.data.total_amount);
+
+                }
+
             }
+
         } catch (error) {
             console.error('Order Error', error);
             setIsSubmitting(false);
@@ -232,6 +236,18 @@ export default function CheckoutClient() {
                 );
 
             case CHECKOUT_STEPS.PAYMENT:
+                // If we are processing a NIC Asia payment, show the loading component
+                if (processingPaymentOrder) {
+                    if (checkoutState.paymentMethod.toLowerCase().includes('esewa')) {
+                        // Calculate total amount (subtotal + shipping - discount)
+                        const subtotal = cartItems?.cart_total || 0;
+                        const shipping = shippingCost;
+                        const discount = appliedPromo?.discount || 0;
+                        const totalAmount = subtotal + shipping - discount;
+                        return <EeswaPayment orderId={processingPaymentOrder} amount={totalAmount} />;
+                    }
+                    return <NicAsiaPayment orderId={processingPaymentOrder} />;
+                }
                 return (
                     <PaymentStep
                         state={checkoutState}
@@ -317,6 +333,7 @@ export default function CheckoutClient() {
 
                                 }}
                                 handleApplyPromo={handleApplyPromo}
+                                Stepstate={checkoutState}
                             />
 
 

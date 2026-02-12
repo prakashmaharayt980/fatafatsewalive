@@ -9,6 +9,7 @@ import { AddressService } from './address.service';
 import { ProfileService } from './profile.service';
 import { BlogService } from './blog.service';
 import { MiscService } from './misc.service';
+import { PaymentService } from './payments.service';
 
 // Combined RemoteServices object for backward compatibility
 const RemoteServices = {
@@ -38,6 +39,9 @@ const RemoteServices = {
 
     // Misc (Navbar, Banner, Chatbot, EMI)
     ...MiscService,
+
+    // Payment
+    ...PaymentService,
 };
 
 export { apiPublic, apiPrivate, n8nApi };

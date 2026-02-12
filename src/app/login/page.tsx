@@ -42,7 +42,7 @@ export default function LoginPage() {
   });
 
   const [showPassword, setShowPassword] = useState({
-  
+
     loginPassword: false,
     registerPassword: false,
     registerConfirmPassword: false,
@@ -114,7 +114,7 @@ export default function LoginPage() {
       const res = await RemoteServices.Login(trimmedData);
       if (res) {
         toast.success("Login successful!");
-        router.push('/');
+        // router.push('/');
         window.location.reload();
       }
     } catch (error: any) {
@@ -128,23 +128,16 @@ export default function LoginPage() {
     const id_token = credentialResponse.credential;
     setSocialToken(id_token);
     setSocialProvider('google');
-    const address = 'http://127.0.0.1:8000/api/'
 
     try {
-      const response = await fetch(`${address}accounts/social/google/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_token }),
-      });
 
-      const data = await response.json()
 
-      if (response.ok) {
+      const res = await RemoteServices.GoogleLogin(id_token)
+
+      if (res) {
         toast.success("Login successful!");
         setActiveSection('login');
-        router.push('/');
-      } else {
-        toast.error(data.error || "Google login failed");
+        // router.push('/');
       }
     } catch (error) {
       console.log('err', error)
@@ -153,29 +146,18 @@ export default function LoginPage() {
   };
 
   const handleFacebookLogin = async (response) => {
-    // ... (keep implementation)
+
     const access_token = response.accessToken;
     setSocialToken(access_token);
     setSocialProvider('facebook');
-    const address = 'http://127.0.0.1:8000/api/';
 
     try {
-      const apiResponse = await fetch(`${address}accounts/social/facebook/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ access_token }),
-      });
+      const res = await RemoteServices.FacebookLogin(access_token)
 
-      const data = await apiResponse.json();
-
-      if (apiResponse.ok) {
+      if (res) {
         toast.success("Login successful!");
         setActiveSection('login');
-        router.push('/');
-      } else {
-        toast.error(data.error || "Facebook login failed");
+        // router.push('/');
       }
     } catch (error) {
       toast.error("Network error during Facebook login");
@@ -183,7 +165,6 @@ export default function LoginPage() {
   };
 
   const handleRegister = async (e) => {
-    // ... (keep implementation)
     e.preventDefault();
     const trimmedData = trimFormData('register');
     const isValid = await validateForm('register', trimmedData);

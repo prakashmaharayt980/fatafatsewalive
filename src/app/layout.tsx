@@ -19,6 +19,8 @@ import WishList from '@/app/emi/_components/Wishlist';
 import { Inter } from 'next/font/google'
 import { EmiProvider } from '@/app/emi/_components/emiContext';
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleAnalytics } from '@next/third-parties/google';
+import FacebookPixel from '@/app/layouts/FacebookPixels'
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -79,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ChatBot />
                 <Toaster richColors position="top-right" />
                 <CheckoutDrawer />
+                <FacebookPixel />
 
                 <WishList />
               </CompareProvider>
@@ -90,6 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 
       </body>
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
     </html>
   );
 }

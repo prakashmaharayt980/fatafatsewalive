@@ -17,7 +17,7 @@ import { deleteCookie, getCookie } from 'cookies-next';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { useAuth } from '../context/AuthContext';
 
-
+import { trackSearch } from '@/lib/Analytic'
 
 
 
@@ -100,6 +100,7 @@ const HeaderComponent = () => {
                         searchResults: res.data || [],
                         isSearching: false
                     });
+                    trackSearch(value);
                 } catch (error) {
                     updateState({
                         searchResults: [],

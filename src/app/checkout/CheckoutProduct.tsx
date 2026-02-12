@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShoppingBag, Tag, Ticket, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { CheckoutState } from './checkoutTypes';
 
 interface CheckoutProduct {
   setsubmittedvaluelist: Dispatch<SetStateAction<CheckoutProduct['submittedvaluelist']>>;
@@ -20,12 +21,14 @@ interface CheckoutProduct {
     productsID: any[];
   };
   handleApplyPromo: () => void;
+  Stepstate: CheckoutState
 }
 
 export default function CheckoutProduct({
   setsubmittedvaluelist,
   submittedvaluelist,
   handleApplyPromo,
+  Stepstate
 }: CheckoutProduct) {
   const { cartItems } = useContextCart();
   const items = cartItems?.items || [];
@@ -102,53 +105,56 @@ export default function CheckoutProduct({
         <Separator className="bg-dashed border-t border-gray-200" />
 
         {/* Promo Code Section - Ticket Style */}
-        <div className="space-y-3">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-            <Ticket className="w-3 h-3" /> Have a Promo Code?
-          </label>
+        {Stepstate.currentStep !== 2 && (
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+              <Ticket className="w-3 h-3" /> Have a Promo Code?
+            </label>
 
-          {submittedvaluelist.appliedPromo ? (
-            <div className="relative bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between overflow-hidden group">
-              <div className="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl -mr-8 -mt-8"></div>
+            {submittedvaluelist.appliedPromo ? (
+              <div className="relative bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between overflow-hidden group">
+                <div className="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl -mr-8 -mt-8"></div>
 
-              <div className="relative flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-emerald-600">
-                  <Tag className="w-5 h-5" />
+                <div className="relative flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-emerald-600">
+                    <Tag className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-emerald-700 text-sm">{submittedvaluelist.appliedPromo.code}</p>
+                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Discount Applied</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-emerald-700 text-sm">{submittedvaluelist.appliedPromo.code}</p>
-                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Discount Applied</p>
-                </div>
-              </div>
 
-              <button
-                onClick={() => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: '', appliedPromo: null }))}
-                className="relative z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  value={submittedvaluelist.promoCode}
-                  onChange={(e) => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: e.target.value }))}
-                  placeholder="Enter discount code"
-                  className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)] rounded text-sm transition-all"
-                />
+                <button
+                  onClick={() => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: '', appliedPromo: null }))}
+                  className="relative z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <Button
-                onClick={handleApplyPromo}
-                disabled={!submittedvaluelist.promoCode}
-                className="h-10 px-4 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white rounded font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:shadow-none active:scale-95"
-              >
-                Apply
-              </Button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={submittedvaluelist.promoCode}
+                    onChange={(e) => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: e.target.value }))}
+                    placeholder="Enter discount code"
+                    className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)] rounded text-sm transition-all"
+                  />
+                </div>
+                <Button
+                  onClick={handleApplyPromo}
+                  disabled={!submittedvaluelist.promoCode}
+                  className="h-10 px-4 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white rounded font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:shadow-none active:scale-95"
+                >
+                  Apply
+                </Button>
+              </div>
+            )}
+          </div>
+
+        )}
 
         {/* Breakdown Panel */}
         <div className="bg-gray-50 rounded-2xl p-5 space-y-3 border border-gray-100">

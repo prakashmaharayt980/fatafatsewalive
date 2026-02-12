@@ -73,8 +73,8 @@ function ProfilePageContent() {
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Mobile Profile Header */}
                     <div className="lg:hidden bg-white p-6 pb-8 flex flex-col items-center text-center border-b border-slate-100">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 p-0.5 mb-4 relative overflow-hidden shadow-lg ring-4 ring-blue-50">
-                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-blue-600 text-3xl font-bold overflow-hidden">
+                        <div className="w-24 h-24 rounded-full bg-[var(--colour-fsP2)] p-0.5 mb-4 relative overflow-hidden">
+                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[var(--colour-fsP2)] text-3xl font-bold overflow-hidden">
                                 {authState.user?.avatar_image?.thumb ? (
                                     <Image src={authState.user.avatar_image.thumb} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
                                 ) : (
@@ -87,15 +87,15 @@ function ProfilePageContent() {
                     </div>
 
                     {/* Mobile Navigation (Sticky) */}
-                    <div className="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 overflow-x-auto scrollbar-hide">
+                    <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 py-3 overflow-x-auto scrollbar-hide">
                         <div className="flex px-4 space-x-3 min-w-max">
                             {menuItems.map(item => (
                                 <Link
                                     key={item.id}
                                     href={`/profile?tab=${item.id}`}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${currentTab === item.id
-                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-200 ring-1 ring-blue-600'
-                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${currentTab === item.id
+                                        ? 'bg-[var(--colour-fsP2)] text-white'
+                                        : 'bg-white text-slate-600 border border-slate-200'
                                         }`}
                                 >
                                     <item.icon className={`w-4 h-4 ${currentTab === item.id ? 'text-white' : 'text-slate-500'}`} />
@@ -107,12 +107,12 @@ function ProfilePageContent() {
 
                     {/* Sidebar (Desktop Only) */}
                     <aside className="hidden lg:block w-60 flex-shrink-0">
-                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-24 shadow-sm">
+                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-24">
 
                             {/* User Profile Summary */}
-                            <div className="p-5 border-b border-slate-100 flex flex-col items-center text-center bg-gradient-to-b from-slate-50 to-white">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 p-0.5 mb-3 relative overflow-hidden shadow-lg">
-                                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-bold">
+                            <div className="p-5 border-b border-slate-100 flex flex-col items-center text-center bg-gray-50">
+                                <div className="w-16 h-16 rounded-full bg-[var(--colour-fsP2)] p-0.5 mb-3 relative overflow-hidden">
+                                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[var(--colour-fsP2)] text-lg font-bold">
                                         {authState.user?.avatar_image?.thumb ? (
                                             <Image src={authState.user.avatar_image.thumb} alt="Profile" width={64} height={64} className="w-full h-full object-cover rounded-full" />
                                         ) : (
@@ -130,12 +130,12 @@ function ProfilePageContent() {
                                     <Link
                                         key={item.id}
                                         href={`/profile?tab=${item.id}`}
-                                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${currentTab === item.id
-                                            ? 'bg-slate-100 text-slate-800'
-                                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium ${currentTab === item.id
+                                            ? 'bg-gray-50 text-slate-800'
+                                            : 'text-slate-500'
                                             }`}
                                     >
-                                        <item.icon className={`w-4 h-4 ${currentTab === item.id ? 'text-blue-600' : 'text-slate-400'}`} />
+                                        <item.icon className={`w-4 h-4 ${currentTab === item.id ? 'text-[var(--colour-fsP2)]' : 'text-slate-400'}`} />
                                         {item.label}
                                     </Link>
                                 ))}
@@ -143,7 +143,7 @@ function ProfilePageContent() {
                                 <div className="pt-2 mt-2 border-t border-slate-100">
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 text-left transition-colors"
+                                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 text-left"
                                     >
                                         <LogOut className="w-4 h-4" />
                                         Sign Out
@@ -155,14 +155,14 @@ function ProfilePageContent() {
 
                     {/* Main Content */}
                     <main className="flex-1 min-w-0">
-                        <div className="bg-white lg:rounded-xl lg:border lg:border-slate-200 p-4 sm:p-6 min-h-[400px] lg:shadow-sm">
+                        <div className="bg-white lg:rounded-xl lg:border lg:border-slate-200 p-4 sm:p-6 min-h-[400px]">
                             {renderContent()}
 
                             {/* Mobile Logout Button (Bottom of Content) */}
                             <div className="lg:hidden mt-8 pt-8 border-t border-slate-100">
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-colors"
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-medium"
                                 >
                                     <LogOut className="w-5 h-5" />
                                     Sign Out
@@ -178,7 +178,7 @@ function ProfilePageContent() {
 
 export default function ProfilePage() {
     return (
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>}>
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--colour-fsP2)]"></div></div>}>
             <ProfilePageContent />
         </React.Suspense>
     );

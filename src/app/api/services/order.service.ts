@@ -12,4 +12,11 @@ export const OrderService = {
 
     BuyProduct: (data: any) =>
         apiPrivate.post(`/v1/orders/direct-buy`, data).then(res => res.data),
+
+    OrderDetails: (id: number, token?: string) => {
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        return apiPrivate.get(`/v1/orders/${id}`, config).then(res => res.data);
+    },
+    OrderCancel: (id: number) =>
+        apiPrivate.delete(`/v1/orders/${id}/cancel`).then(res => res.data),
 };

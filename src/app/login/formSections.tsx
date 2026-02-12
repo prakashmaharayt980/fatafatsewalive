@@ -146,7 +146,7 @@ export const formSections = {
           </div>
 
           <FacebookLogin
-            appId="1124436536357494"
+            appId={process.env.NEXT_PUBLIC_FB_APP_ID}
             onSuccess={(response) => {
               props.handleFacebookSuccess(response);
             }}

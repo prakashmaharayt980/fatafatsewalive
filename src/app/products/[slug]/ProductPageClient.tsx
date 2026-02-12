@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { CustomVariantGroup, ProductDetails, ProductDisplayState } from "@/app/types/ProductDetailsTypes";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { trackViewContent } from "@/lib/Analytic";
 
 interface ProductPageClientProps {
     productDetails: ProductDetails;
@@ -81,6 +82,7 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
 
     useEffect(() => {
         if (productDetails) {
+            trackViewContent(productDetails);
             setSelectedImage(productDetails.image?.full);
 
             const managedVariants: CustomVariantGroup[] = productDetails.variants.map((variant) => {
