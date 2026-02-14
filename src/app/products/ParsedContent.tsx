@@ -1,3 +1,4 @@
+"use client";
 import React, { useMemo } from 'react';
 import parse, { domToReact, HTMLReactParserOptions, Element, DOMNode } from 'html-react-parser';
 import DOMPurify from 'dompurify';
@@ -26,6 +27,22 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
     if (!description.trim()) {
       return <p className={`text-gray-500 text-base italic ${className}`}>No description available.</p>;
     }
+
+    const cleanHTML = DOMPurify.sanitize(description, {
+      ADD_TAGS: ["iframe"],
+      ADD_ATTR: [
+        "allow",
+        "allowfullscreen",
+        "frameborder",
+        "scrolling",
+        "src",
+        "style",
+        "width",
+        "height",
+        "referrerpolicy",
+        "loading",
+      ],
+    });
 
     const options: HTMLReactParserOptions = {
       replace: (domNode: DOMNode) => {
@@ -83,6 +100,27 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
           );
         }
 
+        if (element.name === "iframe") {
+          const src = element.attribs.src || "";
+          // Optional: Verify it's actually a map service to avoid unsafe iframes
+          if (src.includes("google.com/maps") || src.includes("maps.google.com")) {
+            return (
+              <div className="my-6 overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                <iframe
+                  src={src}
+                  width="100%"
+                  height="450" // You can set a fixed height or use aspect-ratio
+                  style={{ border: 0, display: "block" }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="aspect-video w-full" // responsive aspect ratio
+                />
+              </div>
+            );
+          }
+        }
+
         if (element.name === 'h2') {
           return (
             <h2 className={`text-xl font-semibold text-gray-900 mt-6 mb-4 ${className}`}>
@@ -111,7 +149,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
       },
     };
 
-    return parse(DOMPurify.sanitize(description), options);
+    return parse(cleanHTML, options);
   }, [description, className]);
 
   return <div className={className}>{parsedContent}</div>;

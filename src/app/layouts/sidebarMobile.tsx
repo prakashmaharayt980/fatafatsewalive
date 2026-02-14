@@ -13,39 +13,34 @@ import Image from 'next/image';
 import { CompanyLogo } from '../CommonVue/Payment';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { navitems } from '@/app/context/GlobalData';
 
-export interface navitem {
-  id: string;
-  slug: string;
-  name: string;
-  children?: navitem[]
-}
-export interface navsection {
-  result: navitem[];
-}
 
-const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitemlist, openCart, openWishlist }: {
+const MobileSidebar = ({ open, toggleMobileMenu, initialNavItems, openCart, openWishlist }: {
   open: boolean;
   toggleMobileMenu: () => void;
-  IsUserLogin: boolean;
-  loginNeed: () => void;
-  nvaitemlist: navsection['result'];
+  initialNavItems: navitems[];
   openCart: () => void;
   openWishlist: () => void;
 }) => {
   const router = useRouter();
-  const { authState, logout } = useAuth();
+  const { user, isLoggedIn, logout, setloginDailogOpen, isLoading } = useAuth();
+
+  const loginNeed = () => {
+    toggleMobileMenu();
+    setloginDailogOpen(true);
+  };
 
   const handlerouter = (path: string) => {
     router.push(path);
     toggleMobileMenu();
   };
 
-  const handleCategoryClick = (item: navitem) => {
+  const handleCategoryClick = (item) => {
     // Navigate to category page with slug only, matching NavBar
     // Ensure no double slashes if slug starts with /
     const cleanSlug = item.slug.startsWith('/') ? item.slug.substring(1) : item.slug;
-    router.push(`/category/${cleanSlug}`);
+    router.push(`/categorys/${cleanSlug}`);
     toggleMobileMenu();
   };
 
@@ -82,7 +77,7 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
 
           {/* User Section */}
           <div className="px-4 py-3 bg-slate-50/50">
-            {!IsUserLogin ? (
+            {!isLoggedIn ? (
               <Button
                 onClick={loginNeed}
                 className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-lg h-10 cursor-pointer shadow-sm"
@@ -100,10 +95,10 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-800 truncate">
-                    {authState.user?.name || 'My Account'}
+                    {user?.name || 'My Account'}
                   </p>
                   <p className="text-xs text-slate-500 truncate">
-                    {authState.user?.email || 'View your profile'}
+                    {user?.email || 'View your profile'}
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -135,19 +130,19 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
               </p>
             </div>
             <div className="px-3 space-y-0.5">
-              {nvaitemlist.map((category, index) => (
+              {(Array.isArray(initialNavItems) ? initialNavItems : []).map((category, index) => (
                 <div key={index}>
                   {category.children?.length > 0 ? (
                     <Accordion type="single" collapsible>
                       <AccordionItem value={`item-${index}`} className="border-none">
                         <AccordionTrigger className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 rounded-lg text-[13px] font-medium text-slate-700 [&[data-state=open]]:bg-slate-50 [&[data-state=open]]:text-slate-900">
-                          {category.name}
+                          {category.title}
                         </AccordionTrigger>
                         <AccordionContent className="pb-1 pl-2">
                           {category.children.map((section, sectionIndex) => (
                             <div key={sectionIndex} className="mb-2">
                               <p className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
-                                {section.name}
+                                {section.title}
                               </p>
                               <div className="space-y-0.5">
                                 {section.children?.map((item, itemIndex) => (
@@ -156,7 +151,7 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
                                     onClick={() => handleCategoryClick(item)}
                                     className="w-full text-left block px-3 py-1.5 text-[12px] text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors cursor-pointer"
                                   >
-                                    {item.name}
+                                    {item.title}
                                   </button>
                                 ))}
                               </div>
@@ -170,7 +165,7 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
                       onClick={() => handleCategoryClick(category)}
                       className="w-full text-left px-3 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
                     >
-                      {category.name}
+                      {category.title}
                     </button>
                   )}
                 </div>
@@ -178,7 +173,7 @@ const MobileSidebar = ({ open, toggleMobileMenu, IsUserLogin, loginNeed, nvaitem
             </div>
 
             {/* Account Links for Logged In Users */}
-            {IsUserLogin && (
+            {isLoggedIn && (
               <div className="px-3 mt-4 pt-3 border-t border-slate-100">
                 <p className="px-4 py-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                   Account

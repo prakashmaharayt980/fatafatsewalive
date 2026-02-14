@@ -10,30 +10,30 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 import NavBar from './NavBar';
-import nvaitemlist from './navitem.json';
 import { useContextCart } from '../checkout/CartContext1';
 import MobileSidebar from './sidebarMobile';
-import { deleteCookie, getCookie } from 'cookies-next';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { useAuth } from '../context/AuthContext';
 
 import { trackSearch } from '@/lib/Analytic'
+import { navitems } from '@/app/context/GlobalData';
 
+interface HeaderComponentProps {
+    initialNavItems: navitems[]
+}
 
-
-
-const HeaderComponent = () => {
+const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
     const { cartItems, setIsCartOpen, setIsWishlistOpen } = useContextCart()
-    const { authState, logout, setloginDailogOpen } = useAuth();
+    const { user, isLoggedIn, logout, setloginDailogOpen, isLoading } = useAuth();
     const [mounted, setMounted] = useState(false);
-    const IsUserLogin = mounted && (!!authState.access_token || !!authState.user || !!getCookie('access_token'));
 
     const router = useRouter();
     const searchRef = useRef(null);
     const [searchTimeout, setSearchTimeout] = useState(null);
     const [badgeCount, setBadgeCount] = useState(0); // Initial match server (0)
     const [isBadgeVisible, setIsBadgeVisible] = useState(false); // Initial hidden
-    const [nabrItems, setnabrItems] = useState(nvaitemlist)
+
+    console.log("cartItems", initialNavItems);
 
     useEffect(() => {
         setMounted(true);
@@ -64,13 +64,7 @@ const HeaderComponent = () => {
         activeTab: 'home' // for mobile navigation
     });
 
-    useEffect(() => {
-        if (nabrItems.length === 0) {
-            RemoteServices.getNavbarItems().then((data) => {
-                setnabrItems(data)
-            })
-        }
-    }, [nabrItems]);
+
 
     // Helper function to update state
     const updateState = (updates) => {
@@ -288,7 +282,7 @@ const HeaderComponent = () => {
                             </button>
 
 
-                            {IsUserLogin ? (
+                            {isLoggedIn ? (
                                 <>
                                     <div className="relative account-menu">
                                         <button
@@ -305,10 +299,10 @@ const HeaderComponent = () => {
                                             <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                                 <div className="px-4 py-3 border-b border-gray-100">
                                                     <p className="text-sm font-semibold text-gray-900 truncate">
-                                                        {authState.user?.name || 'User'}
+                                                        {(user?.name || 'User')}
                                                     </p>
                                                     <p className="text-xs text-gray-500 truncate mt-0.5">
-                                                        {authState.user?.email || 'email@example.com'}
+                                                        {(user?.email || 'email@example.com')}
                                                     </p>
                                                 </div>
                                                 <div className="py-1">
@@ -402,9 +396,7 @@ const HeaderComponent = () => {
                 <MobileSidebar
                     open={state.isMobileMenuOpen}
                     toggleMobileMenu={toggleMobileMenu}
-                    IsUserLogin={IsUserLogin}
-                    loginNeed={() => setloginDailogOpen(true)}
-                    nvaitemlist={nabrItems}
+                    initialNavItems={initialNavItems}
                     openCart={() => setIsCartOpen(true)}
                     openWishlist={() => setIsWishlistOpen(true)}
                 />
@@ -440,7 +432,7 @@ const HeaderComponent = () => {
                 )}
 
                 {/* Navigation Bar - Desktop Only */}
-                <NavBar navbaritems={nabrItems} />
+                <NavBar navbaritems={initialNavItems} />
             </header>
         </>
     );

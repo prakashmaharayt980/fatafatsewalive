@@ -22,6 +22,7 @@ import ProductDeals from './ProductDeals';
 import BasketCard from '@/app/homepage/BasketCard';
 import RelatedProducts from '@/app/products/[slug]/RelatedProducts';
 import ProductWidget from './widgets/ProductWidget';
+import BlogProductBasket from './BlogProductBasket';
 
 
 interface BlogListingClientProps {
@@ -61,8 +62,8 @@ export default function BlogListingClient({ initialArticles, initialBannerData, 
     }, [articles, activeFilter]);
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans selection:bg-[var(--colour-fsP2)]/10 selection:text-[var(--colour-fsP2)] ">
-            <div className="container mx-auto px-1 lg:px-2 max-w-8xl pt-4">
+        <div className="min-h-screen container mx-auto  bg-gray-50 font-sans selection:bg-[var(--colour-fsP2)]/10 selection:text-[var(--colour-fsP2)] w-full ">
+            <div className=" w-full px-1 lg:px-2  pt-4">
 
                 {/* Hero Banner */}
                 <HeroBanner data={bannerData?.data?.[0]} />
@@ -126,11 +127,12 @@ export default function BlogListingClient({ initialArticles, initialBannerData, 
                         {/* <BasketCard title={'featured products'} slug={'featured-products'} id={'1'} /> */}
                         <div className='w-full flex gap-3'>
                             <div className='w-3/4'>
-                                <RelatedProducts
+                                <BlogProductBasket
+
                                     title={`More from `}
                                     slug={'related-category'}
                                     id={'1'}
-                                    brandSlug={'brand-slug'}
+
                                 />
                             </div>
                             <div className='w-1/4'>

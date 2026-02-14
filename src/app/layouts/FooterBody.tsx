@@ -14,14 +14,16 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import imglogo from '@/app/assets/CompanyLogo.webp';
+import Link from 'next/link';
 
 const FooterBody = () => {
   const QuickLinks = [
-    { title: "About Us", url: "#" },
-    { title: "Contact Us", url: "#" },
-    { title: "Terms & Conditions", url: "#" },
-    { title: "Privacy Policy", url: "#" },
-    { title: "Return Policy", url: "#" },
+    { title: "About Us", url: "/pages/about-us" },
+    { title: "Contact Us", url: "/pages/contact-us" },
+    { title: "Terms & Conditions", url: "/pages/terms-and-conditions" },
+    { title: "Privacy Policy", url: "/pages/privacy-policy" },
+    { title: "Return Policy", url: "/pages/return-policy" },
+    { title: "Location", url: "/pages/location" },
 
   ];
 
@@ -112,14 +114,14 @@ const FooterBody = () => {
             <ul className="space-y-3 flex flex-col justify-center lg:justify-start items-center sm:items-start">
               {QuickLinks.map((link, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     href={link.url}
                     className="text-gray-600 hover:text-[var(--colour-fsP1)] transition-colors duration-200 font-normal flex items-center group text-center sm:text-left"
                   >
                     <span className="group-hover:translate-x-1 transition-transform duration-200">
                       {link.title}
                     </span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -133,14 +135,14 @@ const FooterBody = () => {
             <ul className="space-y-3 flex flex-col justify-center lg:justify-start items-center sm:items-start">
               {Categories.map((category, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     href={category.url}
                     className="text-gray-600 hover:text-[var(--colour-fsP1)] transition-colors duration-200 font-normal flex items-center group text-center sm:text-left"
                   >
                     <span className="group-hover:translate-x-1 transition-transform duration-200">
                       {category.title}
                     </span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

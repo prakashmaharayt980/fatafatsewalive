@@ -36,6 +36,7 @@ interface HomePageProps {
   mainBannerData: any;
   sideBannerData: any;
   categorySectionImage: string;
+  mobilePhoneData: any; // Added prop for initial product data
   sectionOne: React.ReactNode;
   offerSection: React.ReactNode;
   sectionTwo: React.ReactNode;
@@ -47,6 +48,7 @@ const HomePage = ({
   mainBannerData,
   sideBannerData,
   categorySectionImage,
+  mobilePhoneData,
   sectionOne,
   offerSection,
   sectionTwo,
@@ -55,14 +57,14 @@ const HomePage = ({
 }: HomePageProps) => {
 
   return (
-    <div className="mx-auto h-full m-0 p-0 sm:py-2 space-y-2 sm:space-y-3 bg-[#f8f9fa] relative overflow-hidden">
+    <div className="mx-auto h-full m-0 p-0 sm:py-1 space-y-1  bg-[#f8f9fa] relative overflow-hidden">
       {/* Woodmart-Inspired Texture: Subtle Background Orbs */}
       <div className="absolute top-0 left-[-10%] w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none mix-blend-multiply z-0" />
       <div className="absolute top-[300px] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none mix-blend-multiply z-0" />
       <div className="absolute top-[800px] left-[20%] w-[700px] h-[700px] bg-indigo-50/50 rounded-full blur-[130px] pointer-events-none z-0" />
 
       <div className="relative z-10">
-        <div className="sm:px-2 md:px-4">
+        <div className="sm:px-2 ">
           {/* Index 0 (Scroll) and Index 1 (Side Grid) */}
           <Imgbanner
             mainBanner={mainBannerData}
@@ -71,7 +73,12 @@ const HomePage = ({
 
           {/* Removed BannerProductGrid as per request */}
 
-          <BasketCard title={demoCategories[0].title} slug={demoCategories[0].slug} id={demoCategories[0].id} />
+          <BasketCard
+            title={demoCategories[0].title}
+            slug={demoCategories[0].slug}
+            id={demoCategories[0].id}
+            initialData={mobilePhoneData}
+          />
 
 
 
@@ -90,7 +97,7 @@ const HomePage = ({
         <div className="sm:px-2 md:px-4">
           <BasketCard title={demoCategories[3].title} slug={demoCategories[3].slug} id={demoCategories[3].id} />
 
-          {sectionTwo}
+          {sectionOne}
 
           <BasketCard title={demoCategories[4].title} slug={demoCategories[4].slug} id={demoCategories[4].id} />
 

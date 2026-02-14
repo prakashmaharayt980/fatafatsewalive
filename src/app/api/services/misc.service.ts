@@ -3,7 +3,7 @@ import { apiPublic, apiPrivate, n8nApi } from './client';
 export const MiscService = {
     // Get category tree for navbar
     getNavbarItems: () =>
-        apiPublic.get(`/v1/categories/tree`).then(res => res.data),
+        apiPublic.get(`/v1/categorys/navbarItems`).then(res => res.data),
 
     // Get homepage banners
     getHomeBanners: () =>
@@ -11,13 +11,7 @@ export const MiscService = {
 
     // Get banner by slot/slug
     getBannerBySlug: (slug: string) =>
-        apiPublic.get(`/v1/banners?slot=${slug}`).then(res => res.data),
-
-    // Get all active banners
-    getAllBanners: () =>
-        apiPublic.get(`/v1/banners`).then(res => res.data),
-    getBannerSlug: (slug: string) =>
-        apiPublic.get(`/v1/banners?slug=${slug}`).then(res => res.data),
+        apiPublic.get(`/v1/banners/${slug}`).then(res => res.data),
 
     // AI Chatbot query
     chatBotQuery: (data: { message: string; sessionId?: string | number }) =>

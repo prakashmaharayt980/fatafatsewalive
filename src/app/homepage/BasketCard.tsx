@@ -15,14 +15,15 @@ interface BasketCardProps {
   title?: string;
   slug: string;
   id: string;
+  initialData?: CategorySlug_ID;
 }
 
 const fetcher = async (id: string) => {
-  const response = await CategoryService.getCategoryProducts({ id });
+  const response = await CategoryService.getCategoryProducts({ id, per_page: 10 });
   return response;
 };
 
-const BasketCard = ({ title, slug, id }: BasketCardProps) => {
+const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { ref, inView } = useInView({
@@ -34,11 +35,14 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
 
   // Fetch data with SWR
   const { data: productList, error } = useSWR<CategorySlug_ID>(
-    inView ? id : null,
+    (initialData || inView) ? id : null,
     fetcher,
     {
-      dedupingInterval: 60000,
+      fallbackData: initialData,
+      dedupingInterval: 3600000, // 1 hour cache on client (matching server)
       revalidateOnFocus: false,
+      revalidateOnMount: !initialData, // Don't fetch on mount if we have initialData
+      revalidateOnReconnect: false
     }
   );
 
@@ -112,7 +116,7 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
   };
 
   return (
-    <div ref={ref} className="w-full py-4 sm:py-6 bg-transparent">
+    <div ref={ref} className="w-full py-2 sm:py-3 bg-transparent">
       {/* Header Section - Clean & Minimal */}
       <div className="flex items-center justify-between px-4 sm:px-6 mb-3">
         <div className="flex items-center gap-3">
@@ -133,13 +137,13 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
       </div>
 
       {/* Product List */}
-      <div className="relative group/list px-2 sm:px-8">
+      <div className="relative group/list px-4 sm:px-6">
         <div
           ref={scrollContainerRef}
           className={cn(
             'flex overflow-x-auto overflow-y-visible scrollbar-hide snap-x',
-            'gap-3 sm:gap-4 pb-4 mt-2 pt-4',
-            'px-2 sm:px-4'
+            'pb-2 mt-2 ',
+            // Removed horizontal padding to ensure strict 20% width calculation
           )}
           style={{
             scrollbarWidth: 'none',
@@ -151,8 +155,8 @@ const BasketCard = ({ title, slug, id }: BasketCardProps) => {
             <div
               key={`${product.slug}-${index}`}
               className={cn(
-                'flex-shrink-0 snap-start',
-                'w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-13px)]'
+                'flex-shrink-0 snap-start px-1.5', // Added padding for spacing
+                'w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5' // Strict percentage widths
               )}
             >
               <ProductCard product={product} index={index} />

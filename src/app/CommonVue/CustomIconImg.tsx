@@ -1,4 +1,4 @@
-import { Battery, BatteryCharging, Bluetooth, CardSim, Cpu, Database, EthernetPort, Gpu, HandCoins, MemoryStick, Microchip, Monitor, PaintBucket, Shield, ShieldUser, Tv, Video, VideoOff, Wifi, Truck, RotateCcw } from "lucide-react";
+import { Battery, BatteryCharging, Bluetooth, CardSim, Cpu, Database, EthernetPort, Gpu, HandCoins, MemoryStick, Microchip, Monitor, PaintBucket, Shield, ShieldUser, Tv, Video, VideoOff, Wifi, Truck, RotateCcw, Smartphone, Tablet, Watch, Camera, WashingMachine, Refrigerator, Headphones, Printer, Plane, Drone, Laptop } from "lucide-react";
 
 const iconMap = {
   battery: Battery,
@@ -27,6 +27,23 @@ const iconMap = {
   resolution: Tv,
   delivery: Truck,
   return: RotateCcw,
+  // Categories
+  laptop: Laptop,
+  mobilephone: Smartphone,
+  smartphone: Smartphone,
+  tablet: Tablet,
+  watch: Watch,
+  smartwatch: Watch,
+  camera: Camera,
+  tv: Tv,
+
+  homeappliances: WashingMachine,
+  refrigerator: Refrigerator,
+  washingmachine: WashingMachine,
+  accessories: Headphones,
+  audio: Headphones,
+  printer: Printer,
+  drone: Drone,
 };
 
 

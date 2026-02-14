@@ -12,7 +12,7 @@ export interface CategoryQueryParams {
 export const CategoryService = {
     // Get all categories (flat list)
     getAllCategories: () =>
-        apiPublic.get(`/v1/categories`).then(res => res.data),
+        apiPublic.get(`/categorys/navbarItems`).then(res => res.data),
 
     // Get category tree for navigation
     getCategoryTree: () =>

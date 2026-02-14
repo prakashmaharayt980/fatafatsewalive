@@ -125,7 +125,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                     {/* Main Carousel */}
                     <div className={`w-full ${showSideImages ? 'lg:w-[60%]' : 'lg:w-full'}`}>
                         <div
-                            className="relative group overflow-hidden rounded sm:rounded md:rounded-xl bg-gray-100"
+                            className="relative group overflow-hidden rounded sm:rounded md:rounded bg-gray-100"
                             onMouseEnter={() => setIsAutoPlaying(false)}
                             onMouseLeave={() => setIsAutoPlaying(true)}
                             onTouchStart={onTouchStart}
@@ -133,7 +133,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                             onTouchEnd={onTouchEnd}
                         >
                             {/* Aspect Ratio Container - Responsive heights */}
-                            <div className="relative w-full aspect-[24/9] sm:aspect-[24/8] md:aspect-[24/7] lg:aspect-[24/9]">
+                            <div className="relative w-full aspect-[16/8] ">
                                 {/* Slides Container */}
                                 <div
                                     className="absolute inset-0 flex transition-transform duration-500 ease-out"
@@ -152,12 +152,14 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                 <Image
                                                     src={image.default}
                                                     alt={image.name}
-                                                    fill
-                                                    className="object-contain  "
-                                                    priority={index === 0}
-                                                    fetchPriority={index === 0 ? "high" : "auto"}
+
+                                                    className="object-fill aspect-[16/8] "
+                                                    priority
+                                                    fetchPriority={"high"}
                                                     unoptimized={true}
-                                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 60vw"
+                                                    width={1920}
+                                                    height={1080}
+
 
                                                 />
                                             </Link>
@@ -228,10 +230,11 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                         <Image
                                             src={image.default}
                                             alt={image.name}
-                                            fill
-                                            className="object-contain w-full aspect-[24/9] transition-transform duration-300"
-                                            sizes="(max-width: 640px) 45vw, 32vw"
-                                            unoptimized={true}
+
+                                            className="object-fill w-full aspect-[24/9] transition-transform duration-300"
+                                            height={1000}
+                                            width={1000}
+
                                         />
                                     </Link>
                                 ))}
@@ -242,15 +245,16 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                 {/* Top Banner - Takes more space */}
                                 <Link
                                     href={sideImages[0].link || '#'}
-                                    className="relative flex-[1.2] w-full  rounded-xl overflow-hidden group"
+                                    className="relative flex-[1.2] w-full  rounded overflow-hidden group"
                                 >
                                     <Image
                                         src={sideImages[0].default}
                                         alt={sideImages[0].name}
-                                        fill
-                                        className="object-contain aspect-[16/9] rounded-xl  transition-transform duration-500"
-                                        sizes="(max-width: 1024px) 0vw, 40vw"
-                                        unoptimized={true}
+
+                                        className="object-fill aspect-[16/4] rounded  transition-transform duration-500"
+
+                                        height={500}
+                                        width={1000}
                                     />
                                     <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </Link>

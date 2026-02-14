@@ -1,14 +1,11 @@
-
 import React from 'react'
 import HomePage from './homepage'
 import RemoteServices from './api/remoteservice'
 import { Metadata } from 'next'
-import { Suspense } from 'react'
 import BannerFetcher from './components/BannerFetcher'
-import OneImageBanner from './homepage/Bannerfooter'
-// import TwoImageBanner from './homepage/Banner2' // Removed static import
-// import OfferBanner from './homepage/OfferBanner' // Removed static import
-import dynamic from 'next/dynamic'
+import { CategoryService } from './api/services/category.service'
+import { getHomepageData } from './context/HomepageData'
+
 // Generate Metadata for SEO
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -24,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: 'https://fatafatsewa.com',
       images: [
         {
-          url: '/favicon.png', // Ensure this image exists or use a remote URL
+          url: '/favicon.png',
           width: 1200,
           height: 630,
           alt: 'Fatafat Sewa',
@@ -34,82 +31,68 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+// Server Action to fetch banner data
+async function getBannerData(slug: string) {
+  'use server';
+  try {
+    const res = await RemoteServices.getBannerBySlug(slug);
+    return res.data || null;
+  } catch (error) {
+    console.error(`Failed to fetch banner data for slug: ${slug}`, error);
+    return null;
+  }
+}
 
 // Server Component
 async function page() {
-  // 1. Fetch Critical Data in Parallel
-  const criticalSlugs = {
-    main: 'main-banner-test',
-    side: 'test-slug-banner', // Corrected slug for side
-    category: 'right-slider-thumbnail-test',
-    // Side banner is also used in section three, so we fetch it once here
-  };
+  // 1. Fetch Critical Data (Cached for 1 hour)
+  const { criticalData, mobilePhoneData } = await getHomepageData();
 
-  const promises = Object.entries(criticalSlugs).map(async ([key, slug]) => {
-    try {
-      const res = await RemoteServices.getBannerSlug(slug);
-      return { key, data: res.data?.[0] || null };
-    } catch (e) {
-      console.error(`Failed to fetch critical banner: ${slug}`, e);
-      return { key, data: null };
-    }
-  });
-
-  const results = await Promise.all(promises);
-  const criticalData = results.reduce((acc, { key, data }) => {
-    acc[key] = data;
-    return acc;
-  }, {} as Record<string, any>);
-
-  // 2. Define Suspense/Streaming slots
-  const OneImageBanner = dynamic(() => import('./homepage/Bannerfooter'));
-  const OfferBanner = dynamic(() => import('./homepage/OfferBanner'));
-  const TwoImageBanner = dynamic(() => import('./homepage/Banner2'));
+  // 2. Client-side Lazy Loaded Sections using BannerFetcher
 
   const SectionOne = (
-    <Suspense fallback={<div className="bg-gray-100  rounded-xl" />}>
-      <BannerFetcher
-        slug="home-banner-secound"
-        Component={OneImageBanner}
-      />
-    </Suspense>
+    <BannerFetcher
+      slug="home-banner-fourth-test"
+      variant="footer"
+      fetchAction={getBannerData}
+      className="mt-4"
+    />
   );
 
   const OfferSection = (
-    <Suspense fallback={<div className="bg-gray-100 " />}>
-      <BannerFetcher
-        slug="offer-banner"
-        Component={OfferBanner}
-      />
-    </Suspense>
+    <BannerFetcher
+      slug="offer-banner"
+      variant="offer"
+      fetchAction={getBannerData}
+      className="mt-4"
+    />
   );
 
   const SectionTwo = (
-    <Suspense fallback={<div className="  bg-gray-100  rounded-xl" />}>
-      <BannerFetcher
-        slug="home-banner-secound"
-        Component={OneImageBanner}
-      />
-    </Suspense>
+    <BannerFetcher
+      slug="home-banner-fourth-test"
+      variant="footer"
+      fetchAction={getBannerData}
+      className="mt-4"
+    />
   );
 
-  // Section Three now uses BannerFetcher for consistency
   const SectionThree = (
-    <Suspense fallback={<div className="bg-gray-100  rounded-xl" />}>
-      <BannerFetcher
-        slug={'home-banner-third-test'}
-        Component={TwoImageBanner}
-      />
-    </Suspense>
+    <BannerFetcher
+      slug="home-banner-third-test"
+      variant="two-image"
+      fetchAction={getBannerData}
+      className="mt-4"
+    />
   );
 
   const SectionFour = (
-    <Suspense fallback={<div className=" bg-gray-100  rounded-xl" />}>
-      <BannerFetcher
-        slug="home-banner-fourth-test"
-        Component={OneImageBanner}
-      />
-    </Suspense>
+    <BannerFetcher
+      slug="home-banner-fourth-test"
+      variant="footer"
+      fetchAction={getBannerData}
+      className="mt-4"
+    />
   );
 
   const jsonLd = {
@@ -149,9 +132,10 @@ async function page() {
         mainBannerData={criticalData.main}
         sideBannerData={criticalData.side}
         categorySectionImage={criticalData.category?.images?.[0]?.image?.full}
+        mobilePhoneData={mobilePhoneData}
         sectionOne={SectionOne}
         offerSection={OfferSection}
-        sectionTwo={SectionTwo}
+        sectionTwo={SectionOne}
         sectionThree={SectionThree}
         sectionFour={SectionFour}
       />

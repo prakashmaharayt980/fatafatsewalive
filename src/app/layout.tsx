@@ -21,6 +21,7 @@ import { EmiProvider } from '@/app/emi/_components/emiContext';
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import FacebookPixel from '@/app/layouts/FacebookPixels'
+import { getGlobalData } from '@/app/context/GlobalData';
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -60,17 +61,18 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { navItems, isLoggedIn, accessToken, user } = await getGlobalData();
   return (
     <html lang="en" className={inter.className}>
       <body className="flex flex-col min-h-screen">
 
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
 
-          <AuthProvider>
+          <AuthProvider initialState={{ isLoggedIn, user, accessToken }}>
             <CartProvider1>
               <CompareProvider>
-                <HeaderBody />
+                <HeaderBody initialNavItems={navItems} />
                 <main className="flex-1  w-full mx-auto bg-gray-50">
                   <EmiProvider>
                     {children}

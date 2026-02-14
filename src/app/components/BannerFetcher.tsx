@@ -1,40 +1,77 @@
-import React from 'react';
-import RemoteServices from '../api/remoteservice';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
+import dynamic from 'next/dynamic';
+
+// Dynamic imports for banner variants to save bundle size
+const OneImageBanner = dynamic(() => import('../homepage/Bannerfooter'), {
+    loading: () => <div className="w-full aspect-[16/6] bg-gray-100 animate-pulse rounded-xl" />
+});
+const TwoImageBanner = dynamic(() => import('../homepage/Banner2'), {
+    loading: () => <div className="w-full aspect-[16/6] bg-gray-100 animate-pulse rounded-xl" />
+});
+const OfferBanner = dynamic(() => import('../homepage/OfferBanner'), {
+    loading: () => <div className="w-full h-64 bg-gray-100 animate-pulse rounded-xl" />
+});
 
 interface BannerFetcherProps {
     slug: string;
-    Component: any;
-    propName?: string; // Optional: name of the prop to pass data to (default: 'data')
+    variant?: 'footer' | 'two-image' | 'offer';
+    fetchAction: (slug: string) => Promise<any>;
     className?: string;
-    // Allow passing additional props to the Component
-    [key: string]: any;
 }
 
-const BannerFetcher = async ({
+const BannerFetcher = ({
     slug,
-    Component,
-    propName = 'data',
+    variant = 'footer',
+    fetchAction,
     className,
-    ...rest
 }: BannerFetcherProps) => {
-    let data = null;
-    try {
-        const res = await RemoteServices.getBannerSlug(slug);
-        data = res.data?.[0] || null;
-    } catch (error) {
-        console.error(`Failed to fetch banner for slug: ${slug}`, error);
+    const [data, setData] = useState<any>(null);
+    const [hasFetched, setHasFetched] = useState(false);
+
+    // Trigger when 10% of the component is visible
+    const { ref, inView } = useInView({
+        triggerOnce: true,
+        threshold: 0.1,
+        rootMargin: '200px 0px', // Start fetching 200px before it comes into view
+    });
+
+    useEffect(() => {
+        if (inView && !hasFetched) {
+            setHasFetched(true);
+            fetchAction(slug)
+                .then((res) => {
+                    if (res) setData(res);
+                })
+                .catch((err) => console.error(`Error loading banner ${slug}:`, err));
+        }
+    }, [inView, hasFetched, slug, fetchAction]);
+
+    // Component selection logic
+    let Component;
+    switch (variant) {
+        case 'two-image':
+            Component = TwoImageBanner;
+            break;
+        case 'offer':
+            Component = OfferBanner;
+            break;
+        case 'footer':
+        default:
+            Component = OneImageBanner;
+            break;
     }
 
-    if (!data) return null;
-
-    const componentProps = {
-        [propName]: data,
-        ...rest
-    };
-
     return (
-        <div className={className}>
-            <Component {...componentProps} />
+        <div ref={ref} className={`min-h-[100px] w-full ${className || ''}`}>
+            {data ? (
+                <Component data={data} />
+            ) : (
+                // Placeholder while waiting for inView or data fetch
+                <div className="w-full h-full bg-gray-50/50 rounded-xl" />
+            )}
         </div>
     );
 };
