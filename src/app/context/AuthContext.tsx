@@ -20,7 +20,9 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
     login: (token: string, user: User) => void;
+    triggerLoginAlert: () => void;
     logout: () => void;
+    authState: AuthState;
     loginDailogOpen: boolean;
     setloginDailogOpen: React.Dispatch<React.SetStateAction<boolean>>;
     showLoginAlert: boolean;
@@ -73,6 +75,11 @@ export const AuthProvider = ({
         router.refresh();
     }, [router]);
 
+    const triggerLoginAlert = useCallback(() => {
+        setShowLoginAlert(true);
+        setTimeout(() => setShowLoginAlert(false), 3000);
+    }, []);
+
     const syncSession = useCallback((session: { user: User; access_token: string; refresh_token?: string | null }) => {
         // This can be used to update the context from a client component that receives props
         setAuthState({
@@ -92,6 +99,8 @@ export const AuthProvider = ({
             setShowLoginAlert,
             isLoading,
             syncSession,
+            triggerLoginAlert,
+            authState
         }}>
             {children}
         </AuthContext.Provider>
