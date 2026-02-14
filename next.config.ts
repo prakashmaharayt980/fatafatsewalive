@@ -32,7 +32,7 @@ const nextConfig = {
     qualities: [75, 80, 90, 100],
   },
   reactStrictMode: true,
-  devIndicators: true,
+  devIndicators: false,
   experimental: {
     optimizeCss: true,
   },
