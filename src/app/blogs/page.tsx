@@ -51,7 +51,7 @@ export default async function BlogPage() {
     // Handling error gracefully or ensuring API response structure matches
     let bannerData = { data: [], meta: {} };
     try {
-        const bannerRes = await RemoteServices.getBannerSlug("blog-banner-test");
+        const bannerRes = await RemoteServices.getBannerBySlug("blog-banner-test");
         bannerData = { data: bannerRes.data || [], meta: bannerRes.meta || {} };
     } catch (e) {
         console.error("Banner fetch failed", e);
