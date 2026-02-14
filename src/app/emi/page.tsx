@@ -21,8 +21,8 @@ const getProductBySlug = async (slug: string): Promise<ProductDetails | null> =>
 
 const getEmiBanner = async (): Promise<BannerItem | null> => {
     try {
-        const res = await RemoteServices.getBannerSlug('emi-banner-test');
-        return res.data?.[0] || null;
+        const res = await RemoteServices.getBannerBySlug('emi-banner-test');
+        return res.data|| null;
     } catch (error) {
         console.error("Failed to fetch EMI banner:", error);
         return null;
