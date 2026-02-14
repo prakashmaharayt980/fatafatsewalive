@@ -86,7 +86,7 @@ export default function MoreDetailsProduct({
   }, [productID, currentPage]);
 
   const handleWriteReviewClick = () => {
-    if (!authState.access_token) {
+    if (!authState.isLoggedIn) {
       triggerLoginAlert();
     } else {
       setRating({ ...Rating, commentOpen: !Rating.commentOpen });
