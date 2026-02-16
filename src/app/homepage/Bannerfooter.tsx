@@ -35,15 +35,16 @@ const TopBanner = ({ data }: TopBannerProps) => {
     <div
       className={cn(
         'w-full relative overflow-hidden rounded sm:rounded cursor-pointer group',
-        'aspect-[1600/240]  ', // Responsive full-width banner ratios
+        'aspect-auto  ', // Responsive full-width banner ratios
         'transition-premium '
       )}
     >
       <Image
         src={bannerImage.src}
         alt={bannerImage.name}
-        fill
-        className="object-contaion w-full  transition-transform duration-700 "
+        width={1600}
+        height={240}
+        className="object-contain w-full  transition-transform duration-700 "
         priority
 
 
