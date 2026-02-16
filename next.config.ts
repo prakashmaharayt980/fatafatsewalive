@@ -3,7 +3,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'fatafatsewa.com',
+        hostname: 'www.fatafatsewa.com',
         pathname: '/**',
       },
       {
