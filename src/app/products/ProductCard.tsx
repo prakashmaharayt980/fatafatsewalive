@@ -63,7 +63,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
             </button>
 
             {/* Image Container - Aspect 5:4 */}
-            <div className="relative aspect-[5/4] w-full bg-white p-2">
+            <div className="relative aspect-auto w-full bg-white p-2">
                 {/* Badges - Top Left */}
                 <div className="absolute top-0 left-0 z-10 flex flex-col gap-1">
                     {/* Refined Best Seller Tag - Gold (Only if NOT New) */}
@@ -82,11 +82,12 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     )}
                 </div>
 
-                <div className="relative w-full h-full aspect-auto">
+                <div className="relative w-full h-full ">
                     <Image
                         src={imageUrl || '/placeholder-product.png'}
                         alt={product.name || 'Product'}
-                        fill
+                        width={500}
+                        height={500}
                         className="object-contain  mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                         priority={priority}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

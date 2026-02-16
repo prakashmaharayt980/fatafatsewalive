@@ -159,7 +159,7 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
                 'w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5' // Strict percentage widths
               )}
             >
-              <ProductCard product={product} index={index} />
+              <ProductCard product={product} priority={index < 5 ? true : false} index={index} />
             </div>
           ))}
         </div>

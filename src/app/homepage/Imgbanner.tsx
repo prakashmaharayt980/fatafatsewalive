@@ -234,7 +234,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                 {/* Top Banner - Takes more space */}
                                 <Link
                                     href={sideImages[0].link || '#'}
-                                    className="relative flex-1 w-full aspect-[16/7]  rounded overflow-hidden group"
+                                    className="relative flex-1 w-full aspect-[16/7.2]  rounded overflow-hidden group"
                                 >
                                     <Image
                                         src={sideImages[0].default}
