@@ -231,22 +231,20 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
 
                             {/* Desktop: Grid Layout */}
                             <div className="hidden lg:flex flex-col gap-1 h-full">
-                                {/* Top Banner - Takes more space */}
                                 <Link
                                     href={sideImages[0].link || '#'}
-                                    className="relative flex-1 w-full aspect-[16/7.2]  rounded overflow-hidden group"
+                                    className="relative flex-1 w-full rounded overflow-hidden group"
                                 >
                                     <Image
                                         src={sideImages[0].default}
                                         alt={sideImages[0].name}
                                         fill
-                                        className="object-contain   rounded  transition-transform duration-500"
+                                        className="object-contain aspect-auto  rounded  transition-transform duration-500"
 
                                     />
                                     <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </Link>
 
-                                {/* Bottom Two Banners */}
                                 <div className="flex gap-1 flex-1">
                                     {
                                         sideImages.slice(1, 3).map((image, index) => (
