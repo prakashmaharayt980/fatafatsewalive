@@ -39,7 +39,7 @@ const BannerFetcher = ({
     });
 
     useEffect(() => {
-        if (inView && !hasFetched) {
+        if (inView) {
             setHasFetched(true);
             fetchAction(slug)
                 .then((res) => {

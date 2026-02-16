@@ -138,7 +138,7 @@ const OfferBanner = () => {
           </div>
 
           {/* Right Image */}
-          <div className="relative w-full lg:w-1/2 flex justify-center py-2">
+          <div className="relative w-full lg:w-1/2 flex justify-center py-2 aspect-auto">
             <div className="absolute inset-0 bg-[var(--colour-fsP2)]/20 rounded-full blur-3xl scale-75" />
             <Image
               src={productimg}
@@ -148,7 +148,7 @@ const OfferBanner = () => {
               sizes="(max-width: 640px) 65vw, (max-width: 1024px) 50vw, 420px"
               className="relative object-contain aspect-square z-10 drop-shadow-2xl transition-transform duration-500"
               priority
-              unoptimized
+
             />
           </div>
         </div>

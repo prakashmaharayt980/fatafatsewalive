@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Heart, Star, CreditCard, Truck, Zap, Gift } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
 import { useContextCart } from "@/app/checkout/CartContext1";
 
 interface ProductCardProps {
@@ -12,7 +12,6 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
-    const router = useRouter();
     const { addToWishlist } = useContextCart();
 
     if (!product || !product.id) {
@@ -21,6 +20,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
 
     const originalPrice = typeof product.price === 'string' ? parseInt(product.price) : product.price;
     const discountedPrice = typeof product.discounted_price === 'string' ? parseInt(product.discounted_price) : product.discounted_price;
+    const pricedisplay = originalPrice > discountedPrice ? discountedPrice : originalPrice;
 
     const discountPercent = originalPrice > discountedPrice
         ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
@@ -29,13 +29,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
     // Calculate EMI (assuming 12 months for now)
     const emiPrice = Math.round(discountedPrice / 12);
 
-    const handleProductClick = () => {
-        if (!product.slug || !product.id) {
-            console.warn('Missing slug or id');
-            return;
-        }
-        router.push(`/products/${product.slug}`);
-    };
+    const productUrl = product?.slug ? `/products/${product.slug}` : '#';
 
     const imageUrl = product.image?.preview;
 
@@ -54,8 +48,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
 
     return (
         <div
-            onClick={handleProductClick}
-            className="group relative cursor-pointer w-full flex flex-col bg-white h-full shadow-sm hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] hover:border-[var(--colour-fsP2)]/30 hover:-translate-y-1 transition-all duration-300 rounded-[12px] overflow-hidden border border-gray-100"
+            className="group relative w-full flex flex-col bg-white h-full shadow-sm hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] hover:border-[var(--colour-fsP2)]/30 hover:-translate-y-1 transition-all duration-300 rounded-[12px] overflow-hidden border border-gray-100"
         >
             {/* Wishlist Button - Absolute Top Right */}
             <button
@@ -89,15 +82,15 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     )}
                 </div>
 
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full aspect-auto">
                     <Image
                         src={imageUrl || '/placeholder-product.png'}
                         alt={product.name || 'Product'}
                         fill
-                        className="object-contain aspect-auto mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                        className="object-contain  mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                         priority={priority}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        unoptimized={true}
+
                     />
                 </div>
             </div>
@@ -106,7 +99,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
             <div className="p-2 flex flex-col gap-0.5 flex-grow">
                 {/* Brand Name */}
                 <div className="flex justify-between items-start">
-                    <div className="text-[11px] text-gray-500 font-bold uppercase tracking-wide">
+                    <div className="text-[11px] text-gray-700 font-bold uppercase tracking-wide">
                         {product.brand?.name || "Brand Name"}
                     </div>
                     {/* Ratings Row - Compact */}
@@ -115,7 +108,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                             <span className="text-[10px] font-extrabold">{rating}</span>
                             <Star className="w-2 h-2 fill-current" />
                         </div>
-                        <span className="text-[10px] text-gray-400 font-medium">({ratingCount}) • 1.2k+ sold</span>
+                        <span className="text-[10px] text-gray-600 font-medium">({ratingCount}) • 1.2k+ sold</span>
                     </div>
                 </div>
 
@@ -124,7 +117,10 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     className="text-[13px] sm:text-[14px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.6em] group-hover:text-[var(--colour-fsP2)] transition-colors mt-0.5"
                     title={product.name}
                 >
-                    {product.name}
+                    <Link href={productUrl} className="focus:outline-none">
+                        <span aria-hidden="true" className="absolute inset-0 z-10" />
+                        {product.name}
+                    </Link>
                 </h3>
 
                 {/* Price Section */}
@@ -132,13 +128,13 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     <div className="mt-1 space-y-0.5">
                         <div className="flex items-baseline gap-2">
                             <span className="text-base sm:text-lg font-extrabold text-[#1f2937]">
-                                Rs. {(discountedPrice || originalPrice)?.toLocaleString()}
+                                Rs. {(pricedisplay)?.toLocaleString()}
                             </span>
                         </div>
 
                         {(
                             <div className="flex items-center gap-2 text-[14px]">
-                                <span className="text-gray-400 line-through decoration-gray-400 font-medium">
+                                <span className="text-gray-500 line-through decoration-gray-500 font-medium">
                                     Rs. {originalPrice?.toLocaleString()}
                                 </span>
                                 <span className="text-[var(--colour-fsP2)] font-bold bg-blue-50 px-1 py-0.5 rounded-sm">

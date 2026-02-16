@@ -34,18 +34,18 @@ const TopBanner = ({ data }: TopBannerProps) => {
   const BannerContent = (
     <div
       className={cn(
-        'w-full relative overflow-hidden rounded sm:rounded-xl cursor-pointer group',
-        'aspect-[16/9] sm:aspect-[16/2] ', // Responsive full-width banner ratios
-        'transition-premium hover-premium shadow-premium-sm'
+        'w-full relative overflow-hidden rounded sm:rounded cursor-pointer group',
+        'aspect-[1600/240]  ', // Responsive full-width banner ratios
+        'transition-premium '
       )}
     >
       <Image
         src={bannerImage.src}
         alt={bannerImage.name}
         fill
-        className="object-fill w-full  transition-transform duration-700 "
+        className="object-contaion w-full  transition-transform duration-700 "
         priority
-        unoptimized={true}
+
 
       />
 
@@ -53,14 +53,14 @@ const TopBanner = ({ data }: TopBannerProps) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0  transition-opacity duration-300" />
 
       {/* Ads Indicator */}
-      <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-medium text-white/90 border border-white/10 z-10">
+      <div className="absolute top-2 right-2 bg-[var(--colour-fsP2)]/30  px-2 py-0.5 rounded text-[10px] font-medium text-black border border-white/10 z-10">
         Ads
       </div>
     </div>
   );
 
   return (
-    <div className="w-full mx-auto px-2 sm:px-6 py-2 sm:py-6 animate-fade-in-premium">
+    <div className="w-full mx-auto px-2 sm:px-6 py-2 sm:py-6 animate-fade-in">
       {bannerImage.link ? (
         <Link href={bannerImage.link}>
           {BannerContent}

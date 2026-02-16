@@ -33,7 +33,7 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
     const [badgeCount, setBadgeCount] = useState(0); // Initial match server (0)
     const [isBadgeVisible, setIsBadgeVisible] = useState(false); // Initial hidden
 
-    console.log("cartItems", initialNavItems);
+
 
     useEffect(() => {
         setMounted(true);

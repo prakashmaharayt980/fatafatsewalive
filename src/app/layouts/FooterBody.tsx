@@ -69,6 +69,7 @@ const FooterBody = () => {
   return (
     <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 font-[Inter,sans-serif]">
       {/* Main Footer Content */}
+      <h1 className='hidden'>Fatafatsewa footer</h1>
       <div className="py-8 lg:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
 
@@ -90,7 +91,7 @@ const FooterBody = () => {
 
             {/* Social Media */}
             <div className="mb-6">
-              <h4 className="text-[var(--colour-fsP2)] font-semibold text-lg mb-4 text-center lg:text-left">Follow Us</h4>
+              <h2 className="text-[var(--colour-fsP2)] font-semibold text-lg mb-4 text-center lg:text-left">Follow Us</h2>
               <div className="flex gap-3 justify-center lg:justify-start">
                 {socialIcons.map(({ name, Icon, url, color }, index) => (
                   <a
@@ -108,9 +109,9 @@ const FooterBody = () => {
 
           {/* Quick Links */}
           <div className="sm:col-span-1">
-            <h3 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center sm:text-left">
+            <h2 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center sm:text-left">
               Quick Links
-            </h3>
+            </h2>
             <ul className="space-y-3 flex flex-col justify-center lg:justify-start items-center sm:items-start">
               {QuickLinks.map((link, index) => (
                 <li key={index}>
@@ -129,9 +130,9 @@ const FooterBody = () => {
 
           {/* Categories */}
           <div className="sm:col-span-1">
-            <h3 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center sm:text-left">
+            <h2 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center sm:text-left">
               Categories
-            </h3>
+            </h2>
             <ul className="space-y-3 flex flex-col justify-center lg:justify-start items-center sm:items-start">
               {Categories.map((category, index) => (
                 <li key={index}>
@@ -150,9 +151,9 @@ const FooterBody = () => {
 
           {/* Contact Information & Payment Methods */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center lg:text-left">
+            <h2 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center lg:text-left">
               Contact Info
-            </h3>
+            </h2>
             <ul className="space-y-3 flex flex-col justify-center lg:justify-start sm:items-start mb-6">
               {ContactInfo.map((info, index) => (
                 <li key={index} className="flex items-start gap-3 text-center lg:text-left">

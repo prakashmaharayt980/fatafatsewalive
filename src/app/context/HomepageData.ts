@@ -4,7 +4,7 @@ import { CategoryService } from '../api/services/category.service';
 
 export const getHomepageData = unstable_cache(
     async () => {
-        console.log('Fetching homepage data from API (Cache Miss)...');
+
 
         // 1. Fetch Critical Banners
         const criticalSlugs = {
@@ -47,7 +47,7 @@ export const getHomepageData = unstable_cache(
     },
     ['homepage-data'], // Cache Key
     {
-        revalidate: 3600, // Cache lifetime in seconds (1 hour)
+        revalidate: 1, // Cache lifetime in seconds (1 hour)
         tags: ['homepage'] // Tag for manual invalidation
     }
 );

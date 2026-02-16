@@ -137,12 +137,12 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
       </div>
 
       {/* Product List */}
-      <div className="relative group/list px-4 sm:px-6">
+      <div className="relative group/list px-1 sm:px-6">
         <div
           ref={scrollContainerRef}
           className={cn(
             'flex overflow-x-auto overflow-y-visible scrollbar-hide snap-x',
-            'pb-2 mt-2 ',
+            'pb-2 mt-2 pt-2',
             // Removed horizontal padding to ensure strict 20% width calculation
           )}
           style={{
@@ -155,7 +155,7 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
             <div
               key={`${product.slug}-${index}`}
               className={cn(
-                'flex-shrink-0 snap-start px-1.5', // Added padding for spacing
+                'flex-shrink-0 snap-start px-1 sm:px-1.5', // Added padding for spacing
                 'w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5' // Strict percentage widths
               )}
             >

@@ -4,8 +4,8 @@
 
 
 'use client'
-import React, { useState, useMemo, useEffect } from 'react'; // Added useState, useEffect
-import { ChevronDown, ChevronRight, Globe, Telescope } from 'lucide-react'; // Added ChevronRight
+import React, { useState, useMemo, useEffect } from 'react';
+import { ChevronDown, ChevronRight, Globe, Telescope } from 'lucide-react';
 import Link from 'next/link';
 import {
     HoverCard,
@@ -16,8 +16,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { navitems } from '@/app/context/GlobalData';
 
-import Image from 'next/image'; // Added Image import
-import { imglist } from '../CommonVue/Image'; // Added imglist import
+import Image from 'next/image';
+import { imglist } from '../CommonVue/Image';
 
 // Mock Data
 const mockBrandLogos = [
@@ -85,7 +85,7 @@ const NavBar = ({ navbaritems }: {
                         >
                             <div className="flex h-[520px]">
                                 {/* Sidebar Categories */}
-                                <div className="w-[220px] bg-slate-100 border-r border-slate-100 overflow-y-auto py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
+                                <div className="w-[220px] bg-white border-r border-blue-50 overflow-y-auto py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-100 hover:[&::-webkit-scrollbar-thumb]:bg-blue-200">
                                     {navbaritems.map((category) => (
                                         <div
                                             key={category.id}
@@ -94,23 +94,24 @@ const NavBar = ({ navbaritems }: {
                                             className={`
                                                 flex items-center justify-between px-2 py-2.5 cursor-pointer transition-all mx-1 rounded-lg group mb-1
                                                 ${activeCategory?.id === category.id
-                                                    ? 'bg-white  ring-1 ring-slate-100'
-                                                    : 'hover:bg-white '}
+                                                    ? 'bg-blue-50  ring-1 ring-blue-100'
+                                                    : 'hover:bg-blue-50/50 '}
                                             `}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={`
                                                     p-1.5 rounded-md transition-colors overflow-hidden
                                                     ${activeCategory?.id === category.id
-                                                        ? 'bg-blue-50'
-                                                        : 'bg-slate-100 group-hover:bg-blue-50'}
+                                                        ? 'bg-white'
+                                                        : 'bg-gray-50 group-hover:bg-white'}
                                                 `}>
                                                     <Image
                                                         src={category.image ? category.image : imglist.blog}
                                                         alt={category.title}
                                                         width={20}
                                                         height={20}
-                                                        className="object-contain"
+                                                        className="object-contain aspect-auto"
+                                                        unoptimized
                                                     />
                                                 </div>
                                                 <span className={`
@@ -130,7 +131,7 @@ const NavBar = ({ navbaritems }: {
                                 </div>
 
                                 {/* Main Content Area */}
-                                <div className="flex-1 bg-slate-200 flex flex-col">
+                                <div className="flex-1 bg-[#f0f9ff] flex flex-col">
                                     {activeCategory && (
                                         <div className="flex-1 flex flex-col h-full animate-in fade-in duration-300">
 
@@ -138,11 +139,11 @@ const NavBar = ({ navbaritems }: {
                                             <div className="flex-1 p-8 flex gap-10 min-h-0 overflow-hidden">
 
                                                 {/* Left: Sub-Categories */}
-                                                <div className="flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
+                                                <div className="flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-200 hover:[&::-webkit-scrollbar-thumb]:bg-blue-300">
                                                     <div className="flex items-center justify-between mb-6">
                                                         <h2
                                                             onClick={() => handlerouter(activeCategory.slug)}
-                                                            className="text-xl font-bold text-slate-800 flex items-center gap-2 cursor-pointer hover:text-[var(--colour-fsP2)] transition-colors"
+                                                            className="text-xl font-bold text-[#1e293b] flex items-center gap-2 cursor-pointer hover:text-[var(--colour-fsP2)] transition-colors"
                                                         >
                                                             {activeCategory.title}
                                                             <ChevronRight className="h-5 w-5 text-gray-300" />
@@ -167,7 +168,7 @@ const NavBar = ({ navbaritems }: {
                                                 </div>
 
                                                 {/* Right: Price Range */}
-                                                <div className="w-[260px] h-full flex flex-col gap-8 border-l border-slate-100 pl-8">
+                                                <div className="w-[260px] h-full flex flex-col gap-8 border-l border-blue-100 pl-8">
 
                                                     {/* Price Range */}
                                                     <div className="space-y-4">
@@ -178,7 +179,7 @@ const NavBar = ({ navbaritems }: {
                                                             {mockPriceRanges.map((range, idx) => (
                                                                 <span
                                                                     key={idx}
-                                                                    className="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-[var(--colour-fsP2)] hover:text-white transition-all cursor-pointer rounded-md px-3 py-2.5 border border-slate-100 hover:border-transparent text-center"
+                                                                    className="text-xs font-medium text-slate-600 bg-white hover:bg-[var(--colour-fsP2)] hover:text-white transition-all cursor-pointer rounded-md px-3 py-2.5 border border-blue-100 hover:border-transparent text-center shadow-sm"
                                                                 >
                                                                     {range}
                                                                 </span>
@@ -189,16 +190,16 @@ const NavBar = ({ navbaritems }: {
                                             </div>
 
                                             {/* Bottom Section: Top Brands */}
-                                            <div className="border-t border-slate-100 p-6 bg-slate-100/50">
+                                            <div className="border-t border-blue-100 p-6 bg-blue-50/50">
                                                 <div className="flex items-center gap-2 mb-4">
                                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Top Brands</span>
-                                                    <div className="h-[1px] flex-1 bg-slate-200"></div>
+                                                    <div className="h-[1px] flex-1 bg-blue-100"></div>
                                                 </div>
                                                 <div className="grid grid-cols-8 gap-4">
                                                     {mockBrandLogos.map((brand, idx) => (
                                                         <div
                                                             key={idx}
-                                                            className="group flex flex-col items-center justify-center gap-2 p-2 bg-white rounded-lg border border-slate-100 hover:border-[var(--colour-fsP2)]/30 hover:shadow-md transition-all cursor-pointer h-16"
+                                                            className="group flex flex-col items-center justify-center gap-2 p-2 bg-white rounded-lg border border-blue-50 hover:border-[var(--colour-fsP2)]/30 hover:shadow-md transition-all cursor-pointer h-16"
                                                         >
                                                             {/* Placeholder for actual brand logo - using stylized text for "face data" */}
                                                             <span className={`text-sm font-black ${brand.color} group-hover:scale-110 transition-transform`}>

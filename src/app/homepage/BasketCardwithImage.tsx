@@ -114,7 +114,7 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
               fill
               className="object-contain w-full h-full aspect-[190/940] transition-transform duration-700 p-0 m-0"
               sizes="(max-width: 1024px) 30vw, 20vw"
-              unoptimized={true}
+
             />
             <div className="absolute inset-0  group-hover:bg-transparent transition-colors duration-300" />
           </div>

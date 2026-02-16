@@ -117,10 +117,10 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
     const showSideImages = sideImages.length >= 2;
 
     return (
-        <section className="w-full px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8">
+        <section className="w-full px-3 py-4 sm:px-4 sm:py-4">
             <div className=" mx-auto">
                 {/* Main Container - Responsive Flex Layout */}
-                <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
+                <div className="flex flex-col lg:flex-row gap-1 sm:gap-2">
 
                     {/* Main Carousel */}
                     <div className={`w-full ${showSideImages ? 'lg:w-[60%]' : 'lg:w-full'}`}>
@@ -133,34 +133,23 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                             onTouchEnd={onTouchEnd}
                         >
                             {/* Aspect Ratio Container - Responsive heights */}
-                            <div className="relative w-full aspect-[16/8] ">
+                            <div className="relative w-full  aspect-[1920/700]   ">
                                 {/* Slides Container */}
                                 <div
                                     className="absolute inset-0 flex transition-transform duration-500 ease-out"
                                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                                 >
                                     {mainImages.map((image, index) => (
-                                        <div
-                                            key={`main-${image.id}-${index}`}
-                                            className="relative w-full h-full flex-shrink-0"
-                                        >
-                                            <Link
-                                                href={image.link || '#'}
-                                                className="block w-full h-full"
-                                                aria-label={image.name}
-                                            >
+                                        <div key={image.id} className="relative w-full h-full flex-shrink-0">
+                                            <Link href={image.link || '#'} className="block w-full h-full">
                                                 <Image
                                                     src={image.default}
                                                     alt={image.name}
-
-                                                    className="object-fill aspect-[16/8] "
-                                                    priority
-                                                    fetchPriority={"high"}
-                                                    unoptimized={true}
-                                                    width={1920}
-                                                    height={1080}
-
-
+                                                    fill
+                                                    priority={index === 0}
+                                                    // sizes tells the browser exactly how much space it takes
+                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 65vw, 1000px"
+                                                    className="object-contain mx-auto" // Ensures no stretching
                                                 />
                                             </Link>
                                         </div>
@@ -216,11 +205,10 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                         </div>
                     </div>
 
-                    {/* Side Images Grid */}
                     {showSideImages && (
                         <div className="w-full lg:w-[40%]">
                             {/* Mobile/Tablet: Horizontal scroll */}
-                            <div className="flex lg:hidden gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+                            {/* <div className="flex  aspect-[1920/704] lg:hidden gap-2 sm:gap-3 overflow-x-auto  scrollbar-hide snap-x snap-mandatory">
                                 {sideImages.slice(0, 3).map((image, index) => (
                                     <Link
                                         key={`side-mobile-${image.id}-${index}`}
@@ -231,42 +219,41 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                             src={image.default}
                                             alt={image.name}
 
-                                            className="object-fill w-full aspect-[24/9] transition-transform duration-300"
-                                            height={1000}
-                                            width={1000}
+                                            className="object-contain    transition-transform duration-300"
+                                            fill
+                                            sizes="(max-width: 1024px) 0vw, 100vw"
+
 
                                         />
                                     </Link>
                                 ))}
-                            </div>
+                            </div> */}
 
                             {/* Desktop: Grid Layout */}
-                            <div className="hidden lg:flex flex-col gap-3 h-full">
+                            <div className="hidden lg:flex flex-col gap-1 h-full">
                                 {/* Top Banner - Takes more space */}
                                 <Link
                                     href={sideImages[0].link || '#'}
-                                    className="relative flex-[1.2] w-full  rounded overflow-hidden group"
+                                    className="relative flex-1 w-full aspect-[16/7]  rounded overflow-hidden group"
                                 >
                                     <Image
                                         src={sideImages[0].default}
                                         alt={sideImages[0].name}
+                                        fill
+                                        className="object-contain   rounded  transition-transform duration-500"
 
-                                        className="object-fill aspect-[16/4] rounded  transition-transform duration-500"
-
-                                        height={500}
-                                        width={1000}
                                     />
                                     <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </Link>
 
                                 {/* Bottom Two Banners */}
-                                <div className="flex gap-3 flex-1">
+                                <div className="flex gap-1 flex-1">
                                     {
                                         sideImages.slice(1, 3).map((image, index) => (
                                             <Link
                                                 key={`side-bottom-${image.id}-${index}`}
                                                 href={image.link || '#'}
-                                                className="relative flex-1  rounded overflow-hidden group"
+                                                className="relative flex-1 p-0 m-0 rounded overflow-hidden group"
                                             >
                                                 <Image
                                                     src={image.default}
