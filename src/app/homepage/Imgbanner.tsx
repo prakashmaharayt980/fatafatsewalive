@@ -141,7 +141,11 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                 >
                                     {mainImages.map((image, index) => (
                                         <div key={image.id} className="relative w-full h-full flex-shrink-0">
-                                            <Link href={image.link || '#'} className="block w-full h-full">
+                                            <Link
+                                                href={image.link || '#'}
+                                                className="block w-full h-full"
+                                                data-track={`banner-main-${index}`}
+                                            >
                                                 <Image
                                                     src={image.default}
                                                     alt={image.name}
@@ -234,6 +238,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                 <Link
                                     href={sideImages[0].link || '#'}
                                     className="relative flex-1 w-full rounded overflow-hidden group"
+                                    data-track="banner-side-0"
                                 >
                                     <Image
                                         src={sideImages[0].default}
@@ -252,6 +257,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                 key={`side-bottom-${image.id}-${index}`}
                                                 href={image.link || '#'}
                                                 className="relative flex-1 p-0 m-0 rounded overflow-hidden group"
+                                                data-track={`banner-side-${index + 1}`}
                                             >
                                                 <Image
                                                     src={image.default}

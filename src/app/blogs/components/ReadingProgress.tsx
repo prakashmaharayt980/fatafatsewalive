@@ -18,7 +18,7 @@ const ReadingProgress = () => {
     return (
         <div className="fixed top-0 left-0 w-full h-1 z-50 bg-transparent">
             <div
-                className="h-full bg-blue-600 transition-all duration-100 ease-out"
+                className="h-full bg-[var(--colour-fsP2)] transition-all duration-100 ease-out"
                 style={{ width: `${width}%` }}
             />
         </div>

@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import RemoteServices from '../api/remoteservice';
 import BlogListingClient from './components/BlogListingClient';
 import { Article } from '../types/Blogtypes';
+import { getBlogPageData } from '@/app/context/BlogPageData';
 import { getBannerData } from '../api/CachedHelper/getBannerData';
 import BannerFetcher from '../CommonVue/BannerFetcher';
 
@@ -44,35 +45,26 @@ export const metadata: Metadata = {
 
 export default async function BlogPage() {
     // Fetch all data in parallel on the server
-    const [blogRes, brandRes, bannerResult, categoriesResult, dealsResult, trendingResult] = await Promise.allSettled([
-        // 1. Main Blog List
-        RemoteServices.getBlogList({ page: 1, per_page: 12 }),
+    // Fetch cached data
+    const { bannerData, dealProducts, latestArticles } = await getBlogPageData();
+
+    // Fetch other specific data in parallel
+    const [brandRes, categoriesResult, trendingResult] = await Promise.allSettled([
         // 2. Brand Articles
         RemoteServices.getBlogList(),
-        // 3. Banner Data
-        RemoteServices.getBannerBySlug("blog-banner-test"),
         // 4. Categories
         RemoteServices.getBlogCategories(),
-        // 5. Product Deals (was client-side in ProductDeals)
-        RemoteServices.searchProducts({ search: 'Pro', page: 1, per_page: 10 }),
         // 6. Trending Products (was client-side in ProductWidget)
         RemoteServices.searchProducts({ search: 'smartphones', page: 1, per_page: 10 }),
     ]);
 
     // Process articles
-    const articles: Article[] = blogRes.status === 'fulfilled'
-        ? (Array.isArray(blogRes.value) ? blogRes.value : blogRes.value.data || [])
-        : [];
+    const articles: Article[] = latestArticles;
 
     // Process brand articles
     const brandArticles: Article[] = brandRes.status === 'fulfilled'
         ? (Array.isArray(brandRes.value) ? brandRes.value : brandRes.value.data || []).reverse().slice(0, 4)
         : [];
-
-    // Process banner
-    const bannerData = bannerResult.status === 'fulfilled'
-        ? bannerResult.value.data || undefined
-        : undefined;
 
     // Process categories
     let categories: any[] = categoriesResult.status === 'fulfilled'
@@ -81,11 +73,6 @@ export default async function BlogPage() {
     if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
         categories.unshift({ id: 'all', title: 'All', slug: 'all' });
     }
-
-    // Process deal products
-    const dealProducts = dealsResult.status === 'fulfilled'
-        ? dealsResult.value.data || []
-        : [];
 
     // Process trending products
     const trendingProducts = trendingResult.status === 'fulfilled'

@@ -5,18 +5,24 @@ import Image from 'next/image';
 import Imgbanner from './Imgbanner';
 
 
-import SkeltonCard from './SkeltonCard';
-import SkeltonBanner from './SkeltonBanner';
+import SkeletonCard from '@/app/skeleton/SkeletonCard';
+import SkeletonBanner from '@/app/skeleton/SkeletonBanner';
 import LazyLoadSection from '@/components/LazyLoadSection';
 import { BannerTypes } from '@/app/types/BannerTypes';
 
 
+import BasketCard from './BasketCard';
+
 // Lazy-loaded components
 import dynamic from 'next/dynamic';
-const BasketCard = dynamic(() => import('./BasketCard'));
-const OfferBanner = dynamic(() => import('./OfferBanner'));
+
+const OfferBanner = dynamic(() => import('./OfferBanner'), {
+  loading: () => <SkeletonBanner />
+});
 const OurArticles = dynamic(() => import('./OurArticles'));
-const CategoryProductSection = dynamic(() => import('./BasketCardwithImage'));
+const CategoryProductSection = dynamic(() => import('./BasketCardwithImage'), {
+  loading: () => <SkeletonCard />
+});
 const TwoImageBanner = dynamic(() => import('./Banner2'));
 const OneImageBanner = dynamic(() => import('./Bannerfooter'));
 
@@ -98,7 +104,7 @@ const HomePage = ({
         <div className="sm:px-2 md:px-4">
           <BasketCard title={demoCategories[3].title} slug={demoCategories[3].slug} id={demoCategories[3].id} />
 
-          {sectionOne}
+          {sectionTwo}
 
           <BasketCard title={demoCategories[4].title} slug={demoCategories[4].slug} id={demoCategories[4].id} />
 

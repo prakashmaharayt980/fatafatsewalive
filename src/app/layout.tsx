@@ -22,6 +22,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import FacebookPixel from '@/app/layouts/FacebookPixels'
 import { getGlobalData } from '@/app/context/GlobalData';
+import UserActivityTracker from '@/components/UserActivityTracker';
+import GlobalCompareDrawer from '@/components/GlobalCompareDrawer';
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -86,6 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <FacebookPixel />
 
                 <WishList />
+                <GlobalCompareDrawer />
               </CompareProvider>
             </CartProvider1>
           </AuthProvider>
@@ -96,6 +99,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
       </body>
       <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
+      <UserActivityTracker />
     </html>
   );
 }

@@ -7,7 +7,7 @@ import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 import Image from 'next/image';
 import ProductCard from '../products/ProductCard';
-import SkeltonCard from './SkeltonCard';
+import SkeltonCard from '@/app/skeleton/SkeletonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
 import { CategoryService } from '../api/services/category.service';
@@ -75,7 +75,11 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
 
   // No data yet
   if (!productList) {
-    return <div ref={ref} className="min-h-[200px] bg-white" />;
+    return (
+      <div ref={ref} className="w-full">
+        <SkeltonCard />
+      </div>
+    );
   }
 
   // Responsive logic

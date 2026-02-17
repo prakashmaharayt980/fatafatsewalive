@@ -6,6 +6,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useContextCart } from "@/app/checkout/CartContext1";
 import { PaymentMethodsOptions } from "@/app/CommonVue/Payment";
+import { useCompare } from "@/app/context/CompareContext";
 import { useRouter } from "next/navigation";
 import { ProductDetails, ProductDisplayState } from "@/app/types/ProductDetailsTypes";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,8 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
     colorImages = [],
     actionRef,
 }) => {
-    const { addToCart, compareItems } = useContextCart();
+    const { addToCart, wishlistItems, addToWishlist, removeFromWishlist } = useContextCart();
+    const { addToCompare, removeFromCompare, compareList } = useCompare();
     const router = useRouter();
 
     const currentPrice = selectedVariant?.discounted_price || product.discounted_price || product.price;
@@ -53,11 +55,10 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
     const currentStock = selectedVariant ? selectedVariant.quantity : product.quantity;
     const discountPercentage = originalPrice ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : 0;
 
-
+    const isCompare = compareList?.some(p => p.id === product.id);
 
     const [isShareOpen, setIsShareOpen] = React.useState(false);
     const [isReviewOpen, setIsReviewOpen] = React.useState(false);
-    const { wishlistItems, addToWishlist, removeFromWishlist } = useContextCart();
     const isInWishlist = wishlistItems.some((item) => item.id === product.id);
 
     const toggleWishlist = (e: React.MouseEvent) => {
@@ -290,15 +291,27 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     )}
 
                     {/* Compare */}
+                    {/* Compare */}
+                    {/* Compare */}
                     <button
-                        onClick={() => handleroute(`/compare/${product.slug}`)}
-                        className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-gray-200 hover:bg-gray-300 text-black font-medium rounded-lg border border-gray-300 hover:border-gray-400 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                        title="Compare Product"
+                        onClick={() => {
+                            const isIn = compareList?.some(i => i.id === product.id);
+                            if (isIn) {
+                                removeFromCompare(product.id);
+                            } else {
+                                addToCompare(product);
+                            }
+                        }}
+                        className={cn(
+                            "col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 font-medium rounded-lg border transition-all active:scale-[0.98] flex items-center justify-center gap-2",
+                            compareList?.some(i => i.id === product.id)
+                                ? "bg-white text-[var(--colour-fsP2)] border-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/5"
+                                : "bg-gray-200 hover:bg-gray-300 text-black border-gray-300 hover:border-gray-400"
+                        )}
+                        title={compareList?.some(i => i.id === product.id) ? "Remove from Compare" : "Add to Compare"}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Compare
+                        <Scale className={cn("w-5 h-5", compareList?.some(i => i.id === product.id) && "fill-current")} />
+                        {compareList?.some(i => i.id === product.id) ? "Added" : "Compare"}
                     </button>
 
 

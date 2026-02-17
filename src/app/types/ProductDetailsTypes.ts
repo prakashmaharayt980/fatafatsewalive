@@ -105,6 +105,8 @@ export interface ProductDetails {
     };
     created_at: string;
     updated_at: string;
+    rating_count?: number;
+    colors?: string[];
 }
 
 
@@ -125,5 +127,37 @@ export interface CustomVariantGroup {
 export interface ProductDisplayState {
     mainImage: string;
     variantsByColor: CustomVariantGroup[];
+}
+
+export interface ProductSummary {
+    id: number | string;
+    name: string;
+    slug: string;
+    image: {
+        full: string;
+        thumb: string;
+        preview: string;
+    };
+    price: number | string;
+    discounted_price: number | string;
+    average_rating: number;
+    created_at: string;
+    brand?: {
+        name: string;
+    };
+    // Optional compatibility fields
+    original_price?: number | null;
+    sku?: string | null;
+    short_description?: string | null;
+    description?: string;
+    quantity?: number;
+    unit?: string | null;
+    weight?: string | null;
+    status?: number;
+    is_featured?: number;
+    emi_enabled?: number;
+    highlights?: string;
+    rating_count?: number;
+    colors?: string[];
 }
 

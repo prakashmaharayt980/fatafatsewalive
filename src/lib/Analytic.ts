@@ -102,4 +102,71 @@ export const trackPurchase = async (order: any) => {
         currency: 'NPR',
         num_items: order.items.length
     })
+    const ReactPixelPurchase = await getPixel()
+    ReactPixelPurchase.track('Purchase', {
+        content_ids: order.items.map((item: any) => item.id),
+        content_type: 'product',
+        value: order.total,
+        currency: 'NPR',
+        num_items: order.items.length
+    })
+}
+
+// ─── User Activity Tracking ───
+
+export const trackScroll = async (depth: number, path: string) => {
+    // GA4 Event
+    sendGAEvent('event', 'scroll', {
+        percent_scrolled: depth,
+        page_path: path
+    })
+
+    // Meta Pixel Custom Event
+    const ReactPixel = await getPixel()
+    ReactPixel.trackCustom('ScrollDepth', {
+        depth: `${depth}%`,
+        path: path
+    })
+}
+
+export const trackClick = async (elementId: string, text: string, path: string) => {
+    sendGAEvent('event', 'click', {
+        element_id: elementId,
+        element_text: text,
+        page_path: path
+    })
+
+    const ReactPixel = await getPixel()
+    ReactPixel.trackCustom('ElementClick', {
+        element_id: elementId,
+        element_text: text,
+        path: path
+    })
+}
+
+export const trackHover = async (elementId: string, duration: number, path: string) => {
+    // Only track meaningful hovers (> 2 seconds maybe, or as passed)
+    if (duration < 1000) return;
+
+    sendGAEvent('event', 'hover', {
+        element_id: elementId,
+        duration_ms: duration,
+        page_path: path
+    })
+
+    const ReactPixel = await getPixel()
+    ReactPixel.trackCustom('ElementHover', {
+        element_id: elementId,
+        duration: duration,
+        path: path
+    })
+}
+
+export const trackPageView = async (path: string) => {
+    sendGAEvent('event', 'page_view', {
+        page_path: path
+    })
+
+    const ReactPixel = await getPixel()
+    ReactPixel.pageView()
 }

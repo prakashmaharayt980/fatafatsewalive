@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 import ProductCard from '../products/ProductCard';
-import SkeltonCard from './SkeltonCard';
+import SkeltonCard from '@/app/skeleton/SkeletonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug, CategorySlug_ID } from '@/app/types/CategoryTypes';
 import { CategoryService } from '../api/services/category.service';
@@ -39,12 +39,15 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
     fetcher,
     {
       fallbackData: initialData,
-      dedupingInterval: 3600000, // 1 hour cache on client (matching server)
+      dedupingInterval: 3600000,
       revalidateOnFocus: false,
-      revalidateOnMount: !initialData, // Don't fetch on mount if we have initialData
+      revalidateOnMount: !initialData,
       revalidateOnReconnect: false
     }
   );
+
+  const displayData = productList || initialData;
+
 
   // Handle window resize
   useEffect(() => {
@@ -57,8 +60,10 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Loading state
-  if (!productList && inView) {
+  // Loading state - Prioritize initialData to prevent double-loading flash
+  const showSkeleton = !displayData && inView;
+
+  if (showSkeleton) {
     return (
       <div ref={ref} className="w-full">
         <SkeltonCard />
@@ -76,12 +81,12 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
   }
 
   // No data yet
-  if (!productList) {
+  if (!displayData) {
     return <div ref={ref} className="min-h-[200px] bg-white" />;
   }
 
   // Empty products
-  const products = productList?.data || [];
+  const products = displayData?.data || [];
   if (!products.length) {
     return (
       <div ref={ref} className="w-full bg-white text-gray-600 text-center p-4">

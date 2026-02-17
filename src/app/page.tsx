@@ -43,6 +43,7 @@ async function page() {
 
   const SectionOne = (
     <BannerFetcher
+      key="section-one"
       slug="home-banner-fourth-test"
       variant="footer"
       fetchAction={getBannerData}
@@ -52,6 +53,7 @@ async function page() {
 
   const OfferSection = (
     <BannerFetcher
+      key="offer-section"
       slug="offer-banner"
       variant="offer"
       fetchAction={getBannerData}
@@ -61,6 +63,7 @@ async function page() {
 
   const SectionTwo = (
     <BannerFetcher
+      key="section-two"
       slug="home-banner-fourth-test"
       variant="footer"
       fetchAction={getBannerData}
@@ -70,6 +73,7 @@ async function page() {
 
   const SectionThree = (
     <BannerFetcher
+      key="section-three"
       slug="home-banner-third-test"
       variant="two-image"
       fetchAction={getBannerData}
@@ -79,6 +83,7 @@ async function page() {
 
   const SectionFour = (
     <BannerFetcher
+      key="section-four"
       slug="home-banner-fourth-test"
       variant="footer"
       fetchAction={getBannerData}
@@ -126,7 +131,7 @@ async function page() {
         mobilePhoneData={mobilePhoneData}
         sectionOne={SectionOne}
         offerSection={OfferSection}
-        sectionTwo={SectionOne}
+        sectionTwo={SectionTwo}
         sectionThree={SectionThree}
         sectionFour={SectionFour}
       />

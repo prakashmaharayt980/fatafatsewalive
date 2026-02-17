@@ -26,26 +26,26 @@ const PriceSpecCard = ({ image, name, price, specs, shopLink, product }: PriceSp
     ] : specs || [];
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sticky top-8">
-            <div className="relative w-full aspect-[4/3] mb-4 bg-gray-50 rounded-xl overflow-hidden">
+        <div className="bg-white rounded-lg border border-[var(--colour-border3)] p-4 sticky top-8">
+            <div className="relative w-full aspect-[4/3] mb-3 bg-[var(--colour-bg4)] rounded-lg overflow-hidden">
                 <Image src={displayImage} alt={displayName} fill className="object-contain p-2" />
             </div>
 
-            <h3 className="font-semibold text-lg text-gray-900 mb-1 leading-snug line-clamp-2">{displayName}</h3>
-            <p className="text-xl font-bold text-blue-600 mb-4">{displayPrice}</p>
+            <h3 className="font-semibold text-sm text-[var(--colour-text2)] mb-1 leading-snug line-clamp-2">{displayName}</h3>
+            <p className="text-base font-bold text-[var(--colour-fsP2)] mb-3">{displayPrice}</p>
 
-            <div className="space-y-2 mb-4 bg-gray-50 rounded-lg p-3">
+            <div className="space-y-2 mb-3 bg-[var(--colour-bg4)] rounded-lg p-3">
                 {displaySpecs.map((spec, index) => (
                     <div key={index} className="flex justify-between items-center text-xs">
-                        <span className="text-gray-500 font-medium">{spec.label}</span>
-                        <span className="text-gray-900 font-semibold">{spec.value}</span>
+                        <span className="text-[var(--colour-text3)] font-medium">{spec.label}</span>
+                        <span className="text-[var(--colour-text2)] font-semibold">{spec.value}</span>
                     </div>
                 ))}
             </div>
 
             <Link
                 href={displayLink}
-                className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all hover:shadow-lg active:scale-95 text-sm"
+                className="block w-full text-center bg-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP2)] text-white font-semibold py-2.5 rounded-lg transition-all active:scale-95 text-sm"
             >
                 View Product
             </Link>

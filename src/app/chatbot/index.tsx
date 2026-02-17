@@ -281,6 +281,12 @@ export default function ChatBot() {
   const [sessionValid, setSessionValid] = useState(true);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [showProducts, setShowProducts] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
 
   useEffect(() => {
     if (activeTab === 'history' && sessionValid) {
@@ -456,6 +462,8 @@ export default function ChatBot() {
     }]);
     setSessionId(Math.floor(Math.random() * 1000000));
   };
+
+  if (!mounted) return null;
 
   return (
     <>

@@ -2,9 +2,12 @@ import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import RemoteServices from '../../api/remoteservice';
+import { getBlogPageData } from '@/app/context/BlogPageData';
+import { BlogService } from '../../api/services/blog.service';
 import BlogDetailsClient from '../components/BlogDetailsClient';
 import { Article } from '../../types/Blogtypes';
 import { ProductDetails } from '../../types/ProductDetailsTypes';
+import { BannerItem } from '@/app/types/BannerTypes';
 import imglogo from '../../assets/logoimg.png';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
@@ -98,18 +101,32 @@ export default async function BlogPostPage({ params }: PageProps) {
         return notFound();
     }
 
-    // Fetch related product if category exists
+    // Fetch cached data
+    const { bannerData, dealProducts, latestArticles } = await getBlogPageData();
+
+    let relatedArticles: Article[] = [];
+    let authorArticles: Article[] = [];
     let relatedProduct: ProductDetails | undefined = undefined;
-    if (article.category?.title) {
-        try {
-            const productRes = await RemoteServices.searchProducts({ search: article.category.title });
-            const products = productRes.data || [];
-            if (products.length > 0) {
-                relatedProduct = products[0];
-            }
-        } catch (e) {
-            console.error("Failed to fetch related product", e);
-        }
+
+    // Use cached dealProducts also for relatedProduct if needed, or just let it be
+    if (dealProducts.length > 0) relatedProduct = dealProducts[0];
+
+    // Process related/author articles from cached latestArticles
+    if (latestArticles.length > 0) {
+        // Related articles (same category first)
+        relatedArticles = latestArticles
+            .filter((a) => a.id !== article.id)
+            .sort((a, b) => {
+                const aMatch = a.category?.id === article.category?.id ? 1 : 0;
+                const bMatch = b.category?.id === article.category?.id ? 1 : 0;
+                return bMatch - aMatch;
+            })
+            .slice(0, 8);
+
+        // Author articles
+        authorArticles = latestArticles
+            .filter((a) => a.id !== article.id && a.author === article.author)
+            .slice(0, 6);
     }
 
     // Generate JSON-LD structured data for article
@@ -180,7 +197,10 @@ export default async function BlogPostPage({ params }: PageProps) {
             />
             <BlogDetailsClient
                 article={article}
-                relatedProduct={relatedProduct}
+                relatedArticles={relatedArticles}
+                authorArticles={authorArticles}
+                dealProducts={dealProducts}
+                bannerData={bannerData}
             />
         </>
     );

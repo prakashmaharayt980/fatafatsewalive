@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import dynamic from 'next/dynamic';
+import SkeletonBanner from '@/app/skeleton/SkeletonBanner';
 
 // Dynamic imports for banner variants to save bundle size
 const OneImageBanner = dynamic(() => import('../homepage/Bannerfooter'), {
-    loading: () => <div className="w-full aspect-[16/6] bg-gray-100 animate-pulse rounded-xl" />
+    loading: () => <SkeletonBanner />
 });
 const TwoImageBanner = dynamic(() => import('../homepage/Banner2'), {
-    loading: () => <div className="w-full aspect-[16/6] bg-gray-100 animate-pulse rounded-xl" />
+    loading: () => <SkeletonBanner />
 });
 const OfferBanner = dynamic(() => import('../homepage/OfferBanner'), {
-    loading: () => <div className="w-full h-64 bg-gray-100 animate-pulse rounded-xl" />
+    loading: () => <div className="w-full h-64 bg-gray-100 animate-pulse rounded-xl" /> // Offer banner might need different height, or use SkeletonBanner with props if adjustable
 });
 
 interface BannerFetcherProps {
@@ -38,7 +39,7 @@ const BannerFetcher = ({
     });
 
     useEffect(() => {
-        if (inView) {
+        if (inView && !hasFetched) {
             setHasFetched(true);
             fetchAction(slug)
                 .then((res) => {
@@ -63,11 +64,11 @@ const BannerFetcher = ({
     }
 
     return (
-        <div ref={ref} className={`min-h-[100px] w-full ${className || ''}`}>
+        <div ref={ref} className={`min-h-[100px] w-full ${className || ''}`} data-track={`banner-${slug}`}>
             {data ? (
                 <Component data={data} />
             ) : (
-                <div className="w-full h-full bg-gray-50/50 rounded-xl" />
+                <SkeletonBanner />
             )}
         </div>
     );

@@ -1,53 +1,50 @@
 import { cn } from "@/lib/utils";
-import { Heart, Star, CreditCard, Truck, Zap, Gift } from "lucide-react";
+import { Heart, Star, CreditCard, Truck, Zap, Gift, Scale } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCompare } from "@/app/context/CompareContext";
 import { useContextCart } from "@/app/checkout/CartContext1";
+import { ProductDetails, ProductSummary } from "@/app/types/ProductDetailsTypes";
+import { trackViewContent } from "@/lib/Analytic";
 
-interface ProductCardProps {
-    product: any;
+export interface ProductCardProps {
+    product: ProductSummary | ProductDetails; // Accept both
     index?: number;
     priority?: boolean;
     hidePrice?: boolean;
 }
 
 const ProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
-    const { addToWishlist } = useContextCart();
+    const { addToWishlist, wishlistItems } = useContextCart();
+    const { addToCompare, removeFromCompare, compareList } = useCompare();
 
     if (!product || !product.id) {
         return null;
     }
 
-    const originalPrice = typeof product.price === 'string' ? parseInt(product.price) : product.price;
-    const discountedPrice = typeof product.discounted_price === 'string' ? parseInt(product.discounted_price) : product.discounted_price;
-    const pricedisplay = originalPrice > discountedPrice ? discountedPrice : originalPrice;
+    // Safely parse ID and Price
+    const productId = Number(product.id);
+    const priceVal = Number(product.price);
+    const discountedPriceVal = Number(product.discounted_price);
+    const displayPrice = discountedPriceVal || priceVal || 0;
 
-    const discountPercent = originalPrice > discountedPrice
-        ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
-        : 0;
 
-    // Calculate EMI (assuming 12 months for now)
-    const emiPrice = Math.round(discountedPrice / 12);
-
-    const productUrl = product?.slug ? `/products/${product.slug}` : '#';
-
-    const imageUrl = product.image?.preview;
-
-    // Mock Data for "Noon" style feel
-    const rating = product.average_rating || 4.5;
-    const ratingCount = product.rating_count || 120;
-    const arrivalDate = "Tomorrow, Feb 4"; // Mock arrival
-    const isBestSeller = true;
-    const hasCoupon = true;
-    const limitedTimeDeal = true;
-
-    // Calculate if product is new (less than 1 month old)
-    const isNew = product.created_at
-        ? (new Date().getTime() - new Date(product.created_at).getTime()) < (30 * 24 * 60 * 60 * 1000)
-        : false;
+    // --- Derived Values & Mocks ---
+    const isNew = product.created_at ? (new Date().getTime() - new Date(product.created_at).getTime()) < (30 * 24 * 60 * 60 * 1000) : false; // Dummy logic or adjust
+    const isBestSeller = index !== undefined && index < 2; // Mock: first 2 items are best sellers
+    const imageUrl = product.image?.full || product.image?.thumb;
+    const rating = product.average_rating || (Math.random() * (5 - 4) + 4).toFixed(1); // Mock rating if missing
+    const ratingCount = Math.floor(Math.random() * 500) + 50; // Mock count
+    const productUrl = `/products/${product.slug}`;
+    const pricedisplay = displayPrice;
+    const originalPrice = priceVal || (pricedisplay * 1.2); // Ensure original is higher if missing
+    const discountPercent = Math.round(((originalPrice - pricedisplay) / originalPrice) * 100) || 0;
+    const hasCoupon = Math.random() > 0.7; // Mock coupon availability
+    const emiPrice = Math.round(pricedisplay / 12); // Simple 12-month EMI approximation
 
     return (
         <div
+            data-track={`product-card-${product.id}`}
             className="group relative w-full flex flex-col bg-white h-full shadow-sm hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] hover:border-[var(--colour-fsP2)]/30 hover:-translate-y-1 transition-all duration-300 rounded-[12px] overflow-hidden border border-gray-100"
         >
             {/* Wishlist Button - Absolute Top Right */}
@@ -55,11 +52,33 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                 className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm text-gray-400 hover:text-red-500 hover:scale-110 transition-all duration-200"
                 onClick={(e) => {
                     e.stopPropagation();
-                    addToWishlist(product.id);
+                    addToWishlist(productId);
                 }}
                 aria-label="Add to wishlist"
             >
-                <Heart className="h-4 w-4 stroke-[2.5]" />
+                <Heart className={cn("h-4 w-4 stroke-[2.5]", wishlistItems.some(i => i.id === productId) && "fill-red-500 text-red-500")} />
+            </button>
+
+            {/* Compare Button - Below Wishlist */}
+            <button
+                className={cn(
+                    "absolute top-10 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-all duration-200",
+                    compareList?.some(i => i.id === productId) ? "text-[var(--colour-fsP2)]" : "text-gray-400 hover:text-[var(--colour-fsP2)]"
+                )}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    const isIn = compareList?.some(i => i.id === productId);
+                    if (isIn) {
+                        removeFromCompare(productId);
+                    } else {
+                        // Cast to ProductDetails as compare expects full details, or update compare context type.
+                        // For now casting as any or specific minimal compatible shape
+                        addToCompare(product as unknown as ProductDetails);
+                    }
+                }}
+                aria-label="Add to compare"
+            >
+                <Scale className="h-4 w-4 stroke-[2.5]" />
             </button>
 
             {/* Image Container - Aspect 5:4 */}
@@ -69,14 +88,12 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     {/* Refined Best Seller Tag - Gold (Only if NOT New) */}
                     {isBestSeller && !isNew && (
                         <div className="bg-[#e9c10e] text-white text-[10px] font-bold px-3 py-1 rounded-tl-[10px] rounded-br-[10px] shadow-sm flex items-center gap-1 z-10">
-                            {/* <Zap className="w-3 h-3 fill-current" /> */}
                             <span>BESTSELLER</span>
                         </div>
                     )}
                     {/* New Tag - Green */}
                     {isNew && (
                         <div className="bg-[var(--colour-fsP2)] text-white text-[10px] font-bold px-3 py-1 rounded-tl-[10px] rounded-br-[10px] shadow-sm flex items-center gap-1 z-10">
-                            {/* <Gift className="w-3 h-3 " /> */}
                             <span>NEW</span>
                         </div>
                     )}
@@ -90,7 +107,6 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                         className="object-contain  mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                         priority={priority}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-
                     />
                 </div>
             </div>
@@ -117,7 +133,11 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     className="text-[13px] sm:text-[14px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.6em] group-hover:text-[var(--colour-fsP2)] transition-colors mt-0.5"
                     title={product.name}
                 >
-                    <Link href={productUrl} className="focus:outline-none">
+                    <Link
+                        href={productUrl}
+                        className="focus:outline-none"
+                        onClick={() => trackViewContent(product)}
+                    >
                         <span aria-hidden="true" className="absolute inset-0 z-10" />
                         {product.name}
                     </Link>
@@ -173,8 +193,6 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                         Fatafat Delivery
                     </span>
                 </div>
-
-
             </div>
         </div>
     );

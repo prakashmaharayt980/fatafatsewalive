@@ -1,19 +1,20 @@
-import { Heart, Star } from "lucide-react";
+import { Heart, Star, Scale } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import { useContextCart } from "@/app/checkout/CartContext1";
+import { useCompare } from "@/app/context/CompareContext";
 import { parseHighlights } from "@/app/CommonVue/highlights";
-
-interface ProductCardProps {
-    product: any;
-    index?: number;
-    priority?: boolean;
-    hidePrice?: boolean;
-}
+import { ProductCardProps } from "../ProductCard";
+import { ProductDetails } from "@/app/types/ProductDetailsTypes";
+import { cn } from "@/lib/utils";
+// ...
 
 const BlogProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
     const router = useRouter();
     const { addToWishlist } = useContextCart();
+    const { addToCompare, removeFromCompare, compareList } = useCompare(); // Use CompareContext
+    const compareItems = compareList; // Alias
+    const isCompared = compareItems?.some(i => i.id === product.id);
 
     if (!product || !product.id) return null;
 
@@ -48,11 +49,30 @@ const BlogProductCard = ({ product, index, priority = false, hidePrice = false }
                 className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm text-[var(--colour-text3)] hover:text-red-500 hover:scale-110 transition-all duration-200"
                 onClick={(e) => {
                     e.stopPropagation();
-                    addToWishlist(product.id);
+                    addToWishlist(Number(product.id));
                 }}
                 aria-label="Add to wishlist"
             >
                 <Heart className="h-3.5 w-3.5 stroke-[2]" />
+            </button>
+
+            {/* Compare Button - Below Wishlist */}
+            <button
+                className={cn(
+                    "absolute top-9 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-all duration-200",
+                    isCompared ? "text-[var(--colour-fsP2)]" : "text-[var(--colour-text3)] hover:text-[var(--colour-fsP2)]"
+                )}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (isCompared) {
+                        removeFromCompare(Number(product.id));
+                    } else {
+                        addToCompare(product as unknown as ProductDetails);
+                    }
+                }}
+                aria-label="Compare"
+            >
+                <Scale className={cn("h-3.5 w-3.5 stroke-[2]", isCompared && "fill-current")} />
             </button>
 
             {/* Image */}
