@@ -2,9 +2,10 @@ import React from 'react'
 import HomePage from './homepage'
 import RemoteServices from './api/remoteservice'
 import { Metadata } from 'next'
-import BannerFetcher from './components/BannerFetcher'
+import BannerFetcher from './CommonVue/BannerFetcher'
 import { CategoryService } from './api/services/category.service'
 import { getHomepageData } from './context/HomepageData'
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
 
 // Generate Metadata for SEO
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,17 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// Server Action to fetch banner data
-async function getBannerData(slug: string) {
-  'use server';
-  try {
-    const res = await RemoteServices.getBannerBySlug(slug);
-    return res.data || null;
-  } catch (error) {
-    console.error(`Failed to fetch banner data for slug: ${slug}`, error);
-    return null;
-  }
-}
+
 
 // Server Component
 async function page() {

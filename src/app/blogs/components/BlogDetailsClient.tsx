@@ -2,11 +2,10 @@
 
 import React from 'react';
 import parse from 'html-react-parser';
-import ReadingProgress from '../components/ReadingProgress';
-import HeroSection from '../components/HeroSection';
+
 import LazyLoadSection from '@/components/LazyLoadSection';
 import VerdictBox from '../components/VerdictBox';
-import BlogSidebar from '../components/BlogSidebar';
+
 import PriceSpecCard from '../components/PriceSpecCard';
 import { Article } from '../../types/Blogtypes';
 import { ProductDetails } from '../../types/ProductDetailsTypes';
@@ -26,18 +25,7 @@ export default function BlogDetailsClient({ article, relatedProduct }: BlogDetai
 
     return (
         <div className="min-h-screen bg-[#F9FAFB] font-sans selection:bg-blue-100 selection:text-blue-900 pb-20">
-            <ReadingProgress />
-            {/* Spacer for fixed nav */}
-            <div className="h-8"></div>
 
-            <HeroSection
-                title={article.title}
-                image={heroImage}
-                category={article.category?.title || 'Review'}
-                date={formatDate(article.publish_date)}
-                author={article.author}
-                readTime="5 min read" // Placeholder or calc from content length
-            />
 
             <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
                 <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
@@ -65,16 +53,7 @@ export default function BlogDetailsClient({ article, relatedProduct }: BlogDetai
                         </div>
                     </div>
 
-                    {/* Sidebar Column (GadgetByte Style) - Visible on all devices */}
-                    <aside className="w-full lg:w-1/3 h-fit lg:sticky lg:top-24 mt-8 lg:mt-0">
-                        <LazyLoadSection delay={100}>
-                            {relatedProduct ? (
-                                <PriceSpecCard product={relatedProduct} />
-                            ) : (
-                                <BlogSidebar />
-                            )}
-                        </LazyLoadSection>
-                    </aside>
+
                 </div>
             </div>
         </div>

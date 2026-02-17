@@ -31,11 +31,10 @@ const BannerFetcher = ({
     const [data, setData] = useState<any>(null);
     const [hasFetched, setHasFetched] = useState(false);
 
-    // Trigger when 10% of the component is visible
     const { ref, inView } = useInView({
         triggerOnce: true,
         threshold: 0.1,
-        rootMargin: '200px 0px', // Start fetching 200px before it comes into view
+        rootMargin: '200px 0px',
     });
 
     useEffect(() => {
@@ -49,8 +48,7 @@ const BannerFetcher = ({
         }
     }, [inView, hasFetched, slug, fetchAction]);
 
-    // Component selection logic
-    let Component;
+    let Component: any;
     switch (variant) {
         case 'two-image':
             Component = TwoImageBanner;
@@ -69,7 +67,6 @@ const BannerFetcher = ({
             {data ? (
                 <Component data={data} />
             ) : (
-                // Placeholder while waiting for inView or data fetch
                 <div className="w-full h-full bg-gray-50/50 rounded-xl" />
             )}
         </div>

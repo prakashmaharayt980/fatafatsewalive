@@ -3,56 +3,25 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import useSWR from 'swr';
 import { BannerItem } from '@/app/types/BannerTypes';
-import { Article } from '@/app/types/Blogtypes';
 import { imglist } from '@/app/CommonVue/Image';
-import RemoteServices from '@/app/api/remoteservice';
 
 interface HeroBannerProps {
     data?: BannerItem;
-    useBlogSlides?: boolean; // If true, fetch and display blog articles
-    blogLimit?: number; // Number of blog articles to show
 }
 
-export default function HeroBanner({ data, useBlogSlides = false, blogLimit = 5 }: HeroBannerProps) {
+export default function HeroBanner({ data }: HeroBannerProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-    // Fetch featured blogs if useBlogSlides is true
-    const { data: blogsData } = useSWR<{ data: Article[] }>(
-        useBlogSlides ? 'featured-blogs-hero' : null,
-        () => RemoteServices.getFeaturedBlogs(blogLimit),
-        {
-            revalidateOnFocus: false,
-            revalidateOnReconnect: false,
-        }
-    );
-
-    // Process slides based on whether we're using blogs or banners
+    // Process slides from banner data passed via props
     const slides = useMemo(() => {
-        // If using blog slides and we have blog data
-        if (useBlogSlides && blogsData?.data) {
-            return blogsData.data.map((article) => ({
-                id: article.id.toString(),
-                name: article.title,
-                src: article.thumbnail_image?.full || imglist.img1,
-                link: `/blogs/${article.slug}`,
-                type: 'blog' as const,
-                description: article.short_desc,
-                category: article.category?.title,
-                author: article.author,
-            }));
-        }
-
-        // Otherwise use banner data
         if (!data?.images || data.images.length === 0) {
             return [{
                 id: '1',
                 name: 'Latest Tech Insights & News',
                 src: imglist.img1,
                 link: '#',
-                type: 'banner' as const,
             }];
         }
 
@@ -63,9 +32,8 @@ export default function HeroBanner({ data, useBlogSlides = false, blogLimit = 5 
                 name: img.content || 'Banner Image',
                 src: img.image.full,
                 link: img.link || '#',
-                type: 'banner' as const,
             }));
-    }, [useBlogSlides, blogsData, data]);
+    }, [data]);
 
     // Auto-slide functionality
     const nextSlide = useCallback(() => {
@@ -87,14 +55,14 @@ export default function HeroBanner({ data, useBlogSlides = false, blogLimit = 5 
     }, [isAutoPlaying, nextSlide, slides.length]);
 
     return (
-        <div className="w-full ">
+        <div className="w-full mb-2">
             <div
                 className="relative overflow-hidden rounded border border-gray-200 group"
                 onMouseEnter={() => setIsAutoPlaying(false)}
                 onMouseLeave={() => setIsAutoPlaying(true)}
             >
                 {/* Responsive Height Container */}
-                <div className="relative w-full min-h-[300px]">
+                <div className="relative w-full  min-h-[300px] aspect-auto">
 
                     {/* Slides Container */}
                     <div
@@ -111,26 +79,22 @@ export default function HeroBanner({ data, useBlogSlides = false, blogLimit = 5 
                                     className="block w-full h-full"
                                     aria-label={slide.name}
                                 >
-                                    {/* Image Container */}
                                     <div className="relative w-full h-full bg-gradient-to-br from-[var(--colour-fsP2)]/5 to-gray-50">
                                         <Image
                                             src={slide.src}
                                             alt={slide.name}
                                             fill
-                                            className={'object-fill aspect-[16/9]'}
-                                            priority={index === 0}
+                                            className={'object-contain '}
+                                            priority={true}
                                             sizes=""
-                                        // unoptimized={true}
                                         />
-
-
                                     </div>
                                 </Link>
                             </div>
                         ))}
                     </div>
 
-                    {/* Navigation Arrows - Show only if multiple slides */}
+                    {/* Navigation Arrows */}
                     {slides.length > 1 && (
                         <>
                             <button
@@ -141,14 +105,7 @@ export default function HeroBanner({ data, useBlogSlides = false, blogLimit = 5 
                                 className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
                                 aria-label="Previous slide"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                    className="w-5 h-5"
-                                >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                                 </svg>
                             </button>
@@ -160,20 +117,12 @@ export default function HeroBanner({ data, useBlogSlides = false, blogLimit = 5 
                                 className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
                                 aria-label="Next slide"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                    className="w-5 h-5"
-                                >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                 </svg>
                             </button>
                         </>
                     )}
-
 
                 </div>
             </div>

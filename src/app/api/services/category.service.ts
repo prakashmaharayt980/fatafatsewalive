@@ -37,7 +37,7 @@ export const CategoryService = {
 
     // Get all brands
     getAllBrands: () =>
-        apiPublic.get(`/v1/brands`).then(res => res.data),
+        apiPublic.get(`/get-all-brands`).then(res => res.data),
 
     // Get brand by slug
     getBrandBySlug: (slug: string) =>

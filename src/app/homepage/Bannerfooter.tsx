@@ -35,18 +35,17 @@ const TopBanner = ({ data }: TopBannerProps) => {
     <div
       className={cn(
         'w-full relative overflow-hidden rounded sm:rounded cursor-pointer group',
-        'aspect-auto  ', // Responsive full-width banner ratios
+        'aspect-[1600/240] ', // Responsive full-width banner ratios
         'transition-premium '
       )}
     >
       <Image
         src={bannerImage.src}
         alt={bannerImage.name}
-        width={1600}
-        height={240}
+        fill
         className="object-contain w-full  transition-transform duration-700 "
         priority
-
+        unoptimized={true}
 
       />
 
@@ -61,7 +60,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
   );
 
   return (
-    <div className="w-full mx-auto px-2 sm:px-6 py-2 sm:py-6 animate-fade-in">
+    <div className="w-full mx-auto px-2 sm:px-6 py-2 sm:py-4 animate-fade-in">
       {bannerImage.link ? (
         <Link href={bannerImage.link}>
           {BannerContent}

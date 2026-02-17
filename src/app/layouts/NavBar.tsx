@@ -5,7 +5,7 @@
 
 'use client'
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Globe, Telescope } from 'lucide-react';
+import { ChevronDown, ChevronRight, Globe, Telescope, HelpCircle, Calculator, Star, BookOpen, ArrowLeftRight, Info, Phone, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import {
     HoverCard,
@@ -40,6 +40,13 @@ const mockPriceRanges = [
 ];
 
 
+interface navitemsExtra {
+    path: string;
+    title: string;
+    icon: React.ReactNode | null;
+}
+
+
 
 const NavBar = ({ navbaritems }: {
     navbaritems: navitems[];
@@ -54,8 +61,51 @@ const NavBar = ({ navbaritems }: {
         }
     }, [navbaritems]);
 
+    const navbarExtradata: navitemsExtra[] = [
+        {
+            path: '/emi',
+            title: 'EMI',
+            icon: <Calculator className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/reviews',
+            title: 'Reviews',
+            icon: <Star className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/blogs',
+            title: 'Blogs',
+            icon: <BookOpen className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/exchangeProducts',
+            title: 'Exchange',
+            icon: <ArrowLeftRight className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/about',
+            title: 'About',
+            icon: <Info className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/contact',
+            title: 'Contact',
+            icon: <Phone className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/Repair',
+            title: 'Repair',
+            icon: <Wrench className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/help',
+            title: 'Help',
+            icon: <HelpCircle className="h-3.5 w-3.5" />,
+        }
+    ]
+
     const handlerouter = (slug: string) => {
-        router.push(`/category/${slug}`)
+        router.push(`${slug}`)
     }
 
     // Early return if no valid navigation items
@@ -64,8 +114,12 @@ const NavBar = ({ navbaritems }: {
     }
 
     return (
-        <nav className="bg-[var(--colour-fsP2)] shadow-md relative hidden md:block border-t border-white/10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="relative shadow-md hidden md:block border-t border-white/10 overflow-hidden">
+            {/* Blue base */}
+            <div className="absolute inset-0 bg-[var(--colour-fsP2)]" />
+            {/* Yellow diagonal slice — starts right after Explore button */}
+            {/* <div className="absolute inset-0 bg-[var(--colour-fsP1)]" style={{ clipPath: 'polygon(24% 0%, 100% 0%, 100% 100%, 22% 100%)' }} /> */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex items-center h-12">
                     {/* Explore Menu Trigger */}
                     <HoverCard openDelay={0} closeDelay={100}>
@@ -90,7 +144,7 @@ const NavBar = ({ navbaritems }: {
                                         <div
                                             key={category.id}
                                             onMouseEnter={() => setActiveCategory(category)}
-                                            onClick={() => handlerouter(category.slug)}
+                                            onClick={() => handlerouter(`/category/${category.slug}`)}
                                             className={`
                                                 flex items-center justify-between px-2 py-2.5 cursor-pointer transition-all mx-1 rounded-lg group mb-1
                                                 ${activeCategory?.id === category.id
@@ -142,7 +196,7 @@ const NavBar = ({ navbaritems }: {
                                                 <div className="flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-200 hover:[&::-webkit-scrollbar-thumb]:bg-blue-300">
                                                     <div className="flex items-center justify-between mb-6">
                                                         <h2
-                                                            onClick={() => handlerouter(activeCategory.slug)}
+                                                            onClick={() => handlerouter(`/category/${activeCategory.slug}`)}
                                                             className="text-xl font-bold text-[#1e293b] flex items-center gap-2 cursor-pointer hover:text-[var(--colour-fsP2)] transition-colors"
                                                         >
                                                             {activeCategory.title}
@@ -155,7 +209,7 @@ const NavBar = ({ navbaritems }: {
                                                             activeCategory.children.map((child, idx) => (
                                                                 <span
                                                                     key={idx}
-                                                                    onClick={() => handlerouter(child.slug)}
+                                                                    onClick={() => handlerouter(`/category/${child.slug}`)}
                                                                     className="text-[13px] font-medium text-slate-600 hover:text-[var(--colour-fsP2)] hover:translate-x-1 transition-all cursor-pointer block py-1"
                                                                 >
                                                                     {child.title}
@@ -221,12 +275,16 @@ const NavBar = ({ navbaritems }: {
 
                     {/* Quick Horizontal Links (Optional - showing first few items as quick access if needed, or just keeping Explore) */}
                     <div className="flex items-center ml-6 gap-6">
-                        {navbaritems.slice(0, 5).map((item, idx) => (
+
+
+
+                        {navbarExtradata.map((item, idx) => (
                             <span
                                 key={idx}
-                                onClick={() => handlerouter(item.slug)}
-                                className="text-sm font-medium text-white/90 hover:text-white cursor-pointer transition-colors"
+                                onClick={() => handlerouter(item.path)}
+                                className="text-sm font-medium text-white/95 hover:text-yellow-300 cursor-pointer transition-colors flex items-center gap-1"
                             >
+                                {item.icon && item.icon}
                                 {item.title}
                             </span>
                         ))}

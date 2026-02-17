@@ -3,18 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import useSWR from 'swr';
-import RemoteServices from '@/app/api/remoteservice';
 import { Smartphone } from 'lucide-react';
 import { formatPrice } from '@/app/category/[slug]/utils';
 
-const ProductWidget = () => {
-    // Fetch generic products to act as "Trending" or "Just For You"
-    const { data: products, isLoading } = useSWR('blog-sidebar-products', () =>
-        RemoteServices.searchProducts({ search: 'smartphones' }).then(res => res.data?.slice(0, 6) || [])
-    );
+interface ProductWidgetProps {
+    products?: any[];
+}
 
-    if (isLoading) return <div className="h-64 bg-gray-100 rounded-2xl animate-pulse"></div>;
+const ProductWidget = ({ products }: ProductWidgetProps) => {
     if (!products || products.length === 0) return null;
 
     return (

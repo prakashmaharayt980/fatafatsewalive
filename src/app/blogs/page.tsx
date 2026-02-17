@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import RemoteServices from '../api/remoteservice';
 import BlogListingClient from './components/BlogListingClient';
 import { Article } from '../types/Blogtypes';
-import BannerFetcher from '../components/BannerFetcher';
-import TwoImageBanner from '../homepage/Banner2';
+import { getBannerData } from '../api/CachedHelper/getBannerData';
+import BannerFetcher from '../CommonVue/BannerFetcher';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
@@ -43,41 +43,54 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-    // 1. Fetch Main Blog List
-    const blogRes = await RemoteServices.getBlogList({ page: 1, per_page: 12 });
-    const articles: Article[] = Array.isArray(blogRes) ? blogRes : blogRes.data || [];
+    // Fetch all data in parallel on the server
+    const [blogRes, brandRes, bannerResult, categoriesResult, dealsResult, trendingResult] = await Promise.allSettled([
+        // 1. Main Blog List
+        RemoteServices.getBlogList({ page: 1, per_page: 12 }),
+        // 2. Brand Articles
+        RemoteServices.getBlogList(),
+        // 3. Banner Data
+        RemoteServices.getBannerBySlug("blog-banner-test"),
+        // 4. Categories
+        RemoteServices.getBlogCategories(),
+        // 5. Product Deals (was client-side in ProductDeals)
+        RemoteServices.searchProducts({ search: 'Pro', page: 1, per_page: 10 }),
+        // 6. Trending Products (was client-side in ProductWidget)
+        RemoteServices.searchProducts({ search: 'smartphones', page: 1, per_page: 10 }),
+    ]);
 
-    // 2. Fetch Banner Data
-    // Handling error gracefully or ensuring API response structure matches
-    let bannerData = { data: [], meta: {} };
-    try {
-        const bannerRes = await RemoteServices.getBannerBySlug("blog-banner-test");
-        bannerData = { data: bannerRes.data || [], meta: bannerRes.meta || {} };
-    } catch (e) {
-        console.error("Banner fetch failed", e);
+    // Process articles
+    const articles: Article[] = blogRes.status === 'fulfilled'
+        ? (Array.isArray(blogRes.value) ? blogRes.value : blogRes.value.data || [])
+        : [];
+
+    // Process brand articles
+    const brandArticles: Article[] = brandRes.status === 'fulfilled'
+        ? (Array.isArray(brandRes.value) ? brandRes.value : brandRes.value.data || []).reverse().slice(0, 4)
+        : [];
+
+    // Process banner
+    const bannerData = bannerResult.status === 'fulfilled'
+        ? bannerResult.value.data || undefined
+        : undefined;
+
+    // Process categories
+    let categories: any[] = categoriesResult.status === 'fulfilled'
+        ? categoriesResult.value.data || []
+        : [];
+    if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
+        categories.unshift({ id: 'all', title: 'All', slug: 'all' });
     }
 
-    // 3. Fetch Brand Articles
-    // Reusing Bloglist fetch logic for now, slicing first 4 reversed as per previous logic
-    const brandRes = await RemoteServices.getBlogList();
-    const brandArticles: Article[] = (Array.isArray(brandRes) ? brandRes : brandRes.data || [])
-        .reverse()
-        .slice(0, 4);
+    // Process deal products
+    const dealProducts = dealsResult.status === 'fulfilled'
+        ? dealsResult.value.data || []
+        : [];
 
-    // 4. Fetch Categories
-    let categories: any[] = [];
-    try {
-        const catRes = await RemoteServices.getBlogCategories();
-        categories = catRes.data || [];
-        // Ensure "All" is present if not returned
-        if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
-            categories.unshift({ id: 'all', title: 'All', slug: 'all' });
-        }
-    } catch (e) {
-        console.error("Category fetch failed", e);
-        // Fallback default
-        categories = [{ id: 'all', title: 'All', slug: 'all' }];
-    }
+    // Process trending products
+    const trendingProducts = trendingResult.status === 'fulfilled'
+        ? (trendingResult.value.data || []).slice(0, 6)
+        : [];
 
     // Generate JSON-LD structured data
     const jsonLd = {
@@ -105,6 +118,43 @@ export default async function BlogPage() {
         })),
     };
 
+    const Categories = [
+        {
+            id: 'all',
+            title: 'All',
+            slug: 'all',
+        },
+        {
+            id: 'news',
+            title: 'News',
+            slug: 'news',
+        },
+        {
+            id: 'mobile',
+            title: 'Mobile',
+            slug: 'mobile',
+        },
+        {
+            id: 'laptop',
+            title: 'Laptop',
+            slug: 'laptop',
+        },
+        {
+            id: 'tablet',
+            title: 'Tablet',
+            slug: 'tablet',
+        },
+    ]
+
+    const SectionOne = (
+        <BannerFetcher
+            slug="home-banner-fourth-test"
+            variant="footer"
+            fetchAction={getBannerData}
+            className="mt-4"
+        />
+    );
+
     return (
         <>
             {/* Structured Data */}
@@ -113,10 +163,14 @@ export default async function BlogPage() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <BlogListingClient
-                initialArticles={articles}
-                initialBannerData={bannerData as any}
-                initialBrandArticles={brandArticles}
-                categories={categories}
+                articles={articles}
+                bannerData={bannerData}
+                brandArticles={brandArticles}
+                categories={Categories}
+                dealProducts={dealProducts}
+                trendingProducts={trendingProducts}
+                SectionOne={SectionOne}
+
             />
         </>
     );

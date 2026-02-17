@@ -78,6 +78,7 @@ const HomePage = ({
             slug={demoCategories[0].slug}
             id={demoCategories[0].id}
             initialData={mobilePhoneData}
+
           />
 
 

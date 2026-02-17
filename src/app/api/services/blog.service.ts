@@ -23,7 +23,4 @@ export const BlogService = {
     getBlogCategories: () =>
         apiPublic.get(`/v1/blog/categories`).then(res => res.data),
 
-    // Get featured blogs
-    getFeaturedBlogs: (limit: number = 3) =>
-        apiPublic.get(`/v1/blogs/featured?limit=${limit}`).then(res => res.data),
 };

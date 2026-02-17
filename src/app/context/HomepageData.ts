@@ -47,7 +47,8 @@ export const getHomepageData = unstable_cache(
     },
     ['homepage-data'], // Cache Key
     {
-        revalidate: 1, // Cache lifetime in seconds (1 hour)
+        revalidate: 3600, // Cache lifetime in seconds (1 hour)
         tags: ['homepage'] // Tag for manual invalidation
     }
+
 );
