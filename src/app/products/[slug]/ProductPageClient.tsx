@@ -9,17 +9,14 @@ import ProductMainImage from "./ProductMainImage";
 import MoreDetailsProduct from "./MoreDetailsProduct";
 import RelatedProducts from "./RelatedProducts";
 
-import SkeltonCard from "@/app/homepage/SkeltonCard";
-import SkeltonBanner from "@/app/homepage/SkeltonBanner";
-import LazyLoadSection from "@/components/LazyLoadSection";
+
 import ProductBuyBox from "./ProductBuyBox";
 import ProductSidebar from "./ProductSidebar";
 
 import { useContextCart } from "@/app/checkout/CartContext1";
 import { useRouter } from "next/navigation";
 import { CustomVariantGroup, ProductDetails, ProductDisplayState } from "@/app/types/ProductDetailsTypes";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
+
 import { trackViewContent } from "@/lib/Analytic";
 
 interface ProductPageClientProps {
