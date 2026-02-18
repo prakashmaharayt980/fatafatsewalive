@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
 import parse from 'html-react-parser';
-import { ChevronRight, Clock, User, Calendar, List, ArrowUpRight, BookOpen } from 'lucide-react';
+import { ChevronRight, Clock, User, Calendar, List, ArrowUpRight, BookOpen, Share2, Tag, TrendingUp, Zap, ShieldCheck, Star, ArrowRight } from 'lucide-react';
 
 import { Article } from '../../types/Blogtypes';
 import { ProductDetails } from '../../types/ProductDetailsTypes';
@@ -20,6 +20,9 @@ import HeroBanner from './HeroBanner';
 import ParsedContent from '@/app/products/ParsedContent';
 import ProductDeals from './ProductDeals';
 import LazyLoadSection from '@/components/LazyLoadSection';
+import SectionHeader from './SectionHeader';
+import FeaturedArticleCard from './FeaturedArticleCard';
+import { YOUTUBE_VIDEOS_SHORT } from './youtubeData';
 
 interface BlogDetailsClientProps {
     article: Article;
@@ -104,18 +107,35 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
 
     const [tocOpen, setTocOpen] = useState(false);
 
+    // Derive next article to read
+    const nextArticle = relatedArticles.length > 0 ? relatedArticles[0] : null;
 
+    // Derive category-specific articles for "Trending in [Category]"
+    const trendingInCategory = relatedArticles.filter(a => a.category?.id === article.category?.id).slice(0, 6);
+
+    // Featured product from deals (the top-rated or first deal product)
+    const featuredProduct = dealProducts.length > 0
+        ? [...dealProducts].sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0))[0]
+        : null;
+
+    // Share handler
+    const handleShare = useCallback(() => {
+        if (navigator.share) {
+            navigator.share({
+                title: article.title,
+                text: article.short_desc || article.title,
+                url: window.location.href,
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+        }
+    }, [article]);
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
 
-
-
             {/* ═══ Single Container ═══ */}
             <div className="max-w-8xl mx-auto px-2 sm:px-4 lg:px-8">
-
-                {/* Breadcrumb */}
-
 
                 {/* Mobile TOC */}
                 {tocItems.length > 0 && (
@@ -195,7 +215,6 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                         {/* Header Card */}
                         <header className=" rounded-xl bg-white  p-4 sm:p-6 mb-3 text-center">
 
-
                             <h1 className="text-lg md:text-xl lg:text-2xl font-extrabold text-[var(--colour-text2)] leading-snug tracking-tight mb-3 mx-auto">
                                 {article.title}
                             </h1>
@@ -241,29 +260,68 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
 
                         {/* Article Prose */}
                         <article className="bg-white rounded-lg border border-gray-100 p-4 sm:p-6 md:p-8">
-                            <div className="prose prose-lg prose-neutral max-w-none
-                                text-[var(--colour-text2)]
-                                leading-relaxed
-                                prose-headings:font-bold prose-headings:text-[var(--colour-text2)] prose-headings:tracking-tight
-                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-3 prose-h2:border-l-4 prose-h2:border-[var(--colour-fsP1)] prose-h2:pl-3
-                                prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-2
-                                prose-p:text-[15px] prose-p:leading-[1.8] prose-p:mb-4 prose-p:text-[var(--colour-text2)]
-                                prose-a:text-[var(--colour-fsP2)] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
-                                prose-img:rounded-lg prose-img:border prose-img:border-gray-100
-                                prose-strong:text-[var(--colour-text2)] prose-strong:font-bold
-                                prose-ul:text-[14px] prose-ol:text-[14px]
-                                prose-li:mb-1 prose-li:text-[var(--colour-text2)]
-                                prose-blockquote:border-l-[var(--colour-fsP1)] prose-blockquote:bg-gray-50 prose-blockquote:rounded-r-lg prose-blockquote:py-1 prose-blockquote:px-4
-                                prose-table:text-[13px]
-                                prose-th:bg-gray-50 prose-th:text-[var(--colour-text2)]
-                                prose-td:border-gray-100 prose-th:border-gray-100
-                                prose-code:text-[var(--colour-fsP2)] prose-code:bg-gray-50 prose-code:px-1 prose-code:rounded
-                            ">
-                                <div className="min-h-[200px]">
-                                    <ParsedContent description={article.content} className="" />
+                            <div className="min-h-[200px]">
+                                <ParsedContent description={article.content} className="" />
+                            </div>
+
+                            {/* ─── Tags & Share Bar ─── */}
+                            <div className="mt-8 pt-5 border-t border-gray-100">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    {/* Tags */}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Tag className="w-3.5 h-3.5 text-[var(--colour-text3)]" />
+                                        <Link
+                                            href={`/blogs?category=${article.category?.slug}`}
+                                            className="text-[10px] font-semibold uppercase tracking-wide bg-[var(--colour-bg4)] text-[var(--colour-text3)] px-2.5 py-1 rounded-full hover:bg-[var(--colour-fsP2)]/10 hover:text-[var(--colour-fsP2)] transition-colors"
+                                        >
+                                            {article.category?.title}
+                                        </Link>
+                                        <span className="text-[10px] font-semibold uppercase tracking-wide bg-[var(--colour-bg4)] text-[var(--colour-text3)] px-2.5 py-1 rounded-full">
+                                            {readTime}
+                                        </span>
+                                    </div>
+
+                                    {/* Share */}
+                                    <button
+                                        onClick={handleShare}
+                                        className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] transition-colors bg-[var(--colour-fsP2)]/5 hover:bg-[var(--colour-fsP2)]/10 px-3 py-1.5 rounded-full"
+                                    >
+                                        <Share2 className="w-3.5 h-3.5" />
+                                        Share Article
+                                    </button>
                                 </div>
                             </div>
                         </article>
+
+                        {/* ─── Read Next CTA (below article, before full-width sections) ─── */}
+                        {nextArticle && (
+                            <Link
+                                href={`/blogs/${nextArticle.slug}`}
+                                className="group mt-3 flex items-center gap-4 bg-gradient-to-r from-[var(--colour-fsP2)]/5 to-[var(--colour-fsP1)]/5 border border-[var(--colour-fsP2)]/15 rounded-xl p-4 hover:border-[var(--colour-fsP2)]/40 hover:shadow-md transition-all duration-300"
+                            >
+                                <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                                    <Image
+                                        src={nextArticle.thumbnail_image?.full || imglogo.src}
+                                        alt={nextArticle.title}
+                                        fill
+                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                        sizes="96px"
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--colour-fsP2)] mb-1 flex items-center gap-1">
+                                        <BookOpen className="w-3 h-3" /> Read Next
+                                    </p>
+                                    <h4 className="text-sm sm:text-base font-bold text-[var(--colour-text2)] line-clamp-2 group-hover:text-[var(--colour-fsP2)] transition-colors leading-snug">
+                                        {nextArticle.title}
+                                    </h4>
+                                    <p className="text-[11px] text-[var(--colour-text3)] mt-1 line-clamp-1">
+                                        {nextArticle.short_desc || `By ${nextArticle.author} · ${formatDate(nextArticle.publish_date)}`}
+                                    </p>
+                                </div>
+                                <ArrowRight className="w-5 h-5 text-[var(--colour-fsP2)] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            </Link>
+                        )}
 
                     </main>
 
@@ -279,20 +337,144 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
             {/* ══════════ Full-Width Sections Below Article ══════════ */}
             <div className="max-w-8xl mx-auto px-2 sm:px-4 lg:px-8 space-y-6 pb-16">
 
+                {/* ─── Related Articles (FeaturedArticleCard grid) ─── */}
+                {relatedArticles.length > 0 && (
+                    <LazyLoadSection
+                        fallback={<div className="h-[300px] bg-gray-100 rounded-lg animate-pulse" />}
+                    >
+                        <section>
+                            <SectionHeader
+                                title="Related Articles"
+                                accentColor="var(--colour-fsP2)"
+                                linkHref={`/blogs?category=${article.category?.slug}`}
+                                linkText="More"
+                            />
+                            {/* Responsive grid: 2 cols mobile → 3 tablet → 4 desktop */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                {relatedArticles.slice(0, 8).map((post) => (
+                                    <FeaturedArticleCard
+                                        key={post.id}
+                                        article={post}
+                                        variant="compact"
+                                        badgeColor={post.category?.id === article.category?.id ? 'var(--colour-fsP2)' : 'var(--colour-fsP1)'}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    </LazyLoadSection>
+                )}
+
+                {/* ─── Featured Product Spotlight ─── */}
+                {featuredProduct && (
+                    <LazyLoadSection
+                        fallback={<div className="h-[200px] bg-gray-100 rounded-lg animate-pulse" />}
+                    >
+                        <section className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5">
+                            <SectionHeader title="Featured Product" accentColor="var(--colour-fsP1)" />
+                            <div className="flex flex-col sm:flex-row gap-4 items-center">
+                                {/* Product Image */}
+                                <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 bg-[var(--colour-bg4)] rounded-xl overflow-hidden">
+                                    <Image
+                                        src={featuredProduct.image?.full || imglogo.src}
+                                        alt={featuredProduct.name}
+                                        fill
+                                        className="object-contain p-3"
+                                        sizes="160px"
+                                    />
+                                </div>
+
+                                {/* Product Info */}
+                                <div className="flex-1 min-w-0 text-center sm:text-left">
+                                    <Link href={`/products/${featuredProduct.slug}`} className="group">
+                                        <h4 className="text-sm sm:text-base font-bold text-[var(--colour-text2)] line-clamp-2 group-hover:text-[var(--colour-fsP2)] transition-colors">
+                                            {featuredProduct.name}
+                                        </h4>
+                                    </Link>
+
+                                    {/* Price */}
+                                    <div className="flex items-baseline gap-2 mt-1.5 justify-center sm:justify-start">
+                                        <span className="text-lg font-bold text-[var(--colour-fsP1)]">
+                                            Rs. {featuredProduct.discounted_price?.toLocaleString()}
+                                        </span>
+                                        {featuredProduct.discounted_price < featuredProduct.price && (
+                                            <span className="text-xs text-gray-400 line-through">
+                                                Rs. {featuredProduct.price?.toLocaleString()}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Quick Specs */}
+                                    <div className="flex flex-wrap gap-2 mt-2.5 justify-center sm:justify-start">
+                                        {featuredProduct.brand?.name && (
+                                            <span className="text-[10px] font-semibold bg-[var(--colour-bg4)] text-[var(--colour-text3)] px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <Tag className="w-2.5 h-2.5" /> {featuredProduct.brand.name}
+                                            </span>
+                                        )}
+                                        {featuredProduct.average_rating > 0 && (
+                                            <span className="text-[10px] font-semibold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <Star className="w-2.5 h-2.5 fill-amber-400" /> {featuredProduct.average_rating.toFixed(1)}
+                                            </span>
+                                        )}
+                                        {featuredProduct.quantity > 0 && (
+                                            <span className="text-[10px] font-semibold bg-green-50 text-green-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <ShieldCheck className="w-2.5 h-2.5" /> In Stock
+                                            </span>
+                                        )}
+                                        {featuredProduct.emi_enabled === 1 && (
+                                            <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <Zap className="w-2.5 h-2.5" /> EMI Available
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* CTA */}
+                                <Link
+                                    href={`/products/${featuredProduct.slug}`}
+                                    className="bg-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP2)] text-white font-bold text-sm px-6 py-2.5 rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0"
+                                >
+                                    View Product <ArrowUpRight className="w-4 h-4" />
+                                </Link>
+                            </div>
+                        </section>
+                    </LazyLoadSection>
+                )}
+
+                {/* ─── Trending in [Category] ─── */}
+                {trendingInCategory.length > 2 && (
+                    <LazyLoadSection
+                        fallback={<div className="h-[250px] bg-gray-100 rounded-lg animate-pulse" />}
+                    >
+                        <section>
+                            <SectionHeader
+                                title={`Trending in ${article.category?.title || 'Tech'}`}
+                                accentColor="var(--colour-yellow1)"
+                                linkHref={`/blogs?category=${article.category?.slug}`}
+                                linkText="View All"
+                                rightElement={
+                                    <span className="text-[10px] font-semibold text-[var(--colour-text3)] bg-[var(--colour-bg4)] px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <TrendingUp className="w-3 h-3" /> {trendingInCategory.length} articles
+                                    </span>
+                                }
+                            />
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                                {trendingInCategory.map((post) => (
+                                    <BlogCard key={post.id} post={post} />
+                                ))}
+                            </div>
+                        </section>
+                    </LazyLoadSection>
+                )}
 
                 {/* ─── More from Author ─── */}
                 {authorArticles.length > 0 && (
                     <LazyLoadSection>
                         <section>
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-1 h-6 bg-[var(--colour-fsP1)] rounded-full" />
-                                    <h2 className="text-base sm:text-lg font-bold text-[var(--colour-text2)]">More from {article.author}</h2>
-                                </div>
-                                <Link href="/blogs" className="text-xs font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] transition-colors flex items-center gap-1">
-                                    View All <span className="text-sm">→</span>
-                                </Link>
-                            </div>
+                            <SectionHeader
+                                title={`More from ${article.author}`}
+                                accentColor="var(--colour-fsP1)"
+                                linkHref="/blogs"
+                            />
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                                 {authorArticles.map((post) => (
                                     <BlogCard key={post.id} post={post} />
@@ -307,15 +489,11 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                 {article.category?.id && (
                     <LazyLoadSection>
                         <section>
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-1 h-6 bg-[var(--colour-fsP2)] rounded-full" />
-                                    <h2 className="text-base sm:text-lg font-bold text-[var(--colour-text2)]">{article.category?.title || 'Related'} Products</h2>
-                                </div>
-                                <Link href={`/products`} className="text-xs font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] transition-colors flex items-center gap-1">
-                                    View All <span className="text-sm">→</span>
-                                </Link>
-                            </div>
+                            <SectionHeader
+                                title={`${article.category?.title || 'Related'} Products`}
+                                accentColor="var(--colour-fsP2)"
+                                linkHref="/products"
+                            />
                             <BlogProductBasket
                                 title={article.category?.title || 'Products'}
                                 slug={article.category?.slug || ''}
@@ -337,19 +515,9 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                 {/* ─── YouTube Content ─── */}
                 <LazyLoadSection>
                     <section>
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-1 h-6 bg-red-500 rounded-full" />
-                                <h2 className="text-base sm:text-lg font-bold text-[var(--colour-text2)]">YouTube Content</h2>
-                            </div>
-                        </div>
+                        <SectionHeader title="YouTube Content" accentColor="#ef4444" />
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-                            {[
-                                { id: 'dQw4w9WgXcQ', title: 'Samsung Galaxy S25 Ultra Review: The Best Phone of 2026?', channel: 'Fatafat Sewa', views: '45K', date: '2 days ago', category: 'Smartphone' },
-                                { id: 'ScMzIvxBSi4', title: 'iPhone 17 Pro Max vs Galaxy S25 Ultra Camera Test', channel: 'Fatafat Sewa', views: '32K', date: '5 days ago', category: 'Comparison' },
-                                { id: '2Vv-BfVoq4g', title: 'Top 5 Budget Laptops Under Rs. 80,000 in Nepal', channel: 'Fatafat Sewa', views: '28K', date: '1 week ago', category: 'Laptops' },
-                                { id: 'jNQXAC9IVRw', title: 'Best TWS Earbuds Under Rs. 5000 — Ranked!', channel: 'Fatafat Sewa', views: '19K', date: '3 days ago', category: 'Audio' },
-                            ].map((video, idx) => (
+                            {YOUTUBE_VIDEOS_SHORT.map((video, idx) => (
                                 <YouTubeVideoCard key={`${video.id}-${idx}`} video={video} />
                             ))}
                         </div>

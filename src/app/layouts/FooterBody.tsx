@@ -1,200 +1,308 @@
 import React from 'react';
 import {
   MapPin,
-
   Facebook,
   Twitter,
   Instagram,
   Youtube,
   Linkedin,
-
   PhoneCall,
   Mail,
-
+  Headphones,
+  Clock,
+  Truck,
+  Shield,
 } from 'lucide-react';
 import Image from 'next/image';
 import imglogo from '@/app/assets/CompanyLogo.webp';
 import Link from 'next/link';
 
 const FooterBody = () => {
+
   const QuickLinks = [
     { title: "About Us", url: "/pages/about-us" },
     { title: "Contact Us", url: "/pages/contact-us" },
+    { title: "Careers", url: "/pages/contact-us" },
+    { title: "Sell with Us", url: "/pages/contact-us" },
     { title: "Terms & Conditions", url: "/pages/terms-and-conditions" },
     { title: "Privacy Policy", url: "/pages/privacy-policy" },
-    { title: "Return Policy", url: "/pages/return-policy" },
-    { title: "Location", url: "/pages/location" },
+  ];
 
+  const CustomerService = [
+    { title: "Return Policy", url: "/pages/return-policy" },
+    { title: "Warranty Policy", url: "/pages/return-policy" },
+    { title: "EMI Payment", url: "/pages/emi" },
+    { title: "Shipping Info", url: "/pages/contact-us" },
+    { title: "FAQs", url: "/pages/contact-us" },
+    { title: "Store Location", url: "/pages/location" },
   ];
 
   const Categories = [
-    { title: "Laptops", url: "#" },
-    { title: "Mobile Phone", url: "#" },
-    { title: "Accessories", url: "#" },
-    { title: "Office Parts", url: "#" },
-    { title: "Emi Payment ", url: "#" },
-
+    { title: "Mobile Phones", url: "/category/mobile" },
+    { title: "Laptops", url: "/category/laptop" },
+    { title: "Tablets", url: "/category/tablet" },
+    { title: "Accessories", url: "/category/accessories" },
+    { title: "Wearables", url: "/category/wearable" },
+    { title: "Audio", url: "/category/audio" },
   ];
 
-  const ContactInfo = [
-    { title: "Sitapaila Road-14, Kathmandu, Nepal", icon: MapPin },
-    { title: "+977 9828757575", icon: PhoneCall },
-    { title: "info@fatafatsewa.com", icon: Mail },
+  const TopBrands = [
+    { title: "Apple", url: "/brand/apple" },
+    { title: "Samsung", url: "/brand/samsung" },
+    { title: "Xiaomi", url: "/brand/xiaomi" },
+    { title: "OnePlus", url: "/brand/oneplus" },
+    { title: "Lenovo", url: "/brand/lenovo" },
+    { title: "HP", url: "/brand/hp" },
+  ];
 
+  const DiscoverMore = [
+    { title: "Blogs", url: "/blogs" },
+    { title: "Trending Products", url: "/products" },
+    { title: "EMI Application", url: "/apply-emi" },
+    { title: "Compare Products", url: "/compare" },
   ];
 
   const socialIcons = [
-    { name: "Facebook", Icon: Facebook, url: "#", color: "hover:text-blue-600" },
-    { name: "Twitter", Icon: Twitter, url: "#", color: "hover:text-sky-500" },
-    { name: "Instagram", Icon: Instagram, url: "#", color: "hover:text-pink-600" },
-    { name: "YouTube", Icon: Youtube, url: "#", color: "hover:text-red-600" },
-    { name: "LinkedIn", Icon: Linkedin, url: "#", color: "hover:text-blue-700" },
+    { name: "Facebook", Icon: Facebook, url: "https://www.facebook.com/fatafatsewa" },
+    { name: "Twitter", Icon: Twitter, url: "https://www.twitter.com/fatafatsewa" },
+    { name: "Instagram", Icon: Instagram, url: "https://www.instagram.com/fatafatsewa" },
+    { name: "YouTube", Icon: Youtube, url: "https://www.youtube.com/fatafatsewa" },
+    { name: "LinkedIn", Icon: Linkedin, url: "https://www.linkedin.com/company/fatafatsewa" },
   ];
 
   const paymentMethods = [
-    { src: "/imgfile/paymentMethod1.svg", alt: "eSewa" },
-    { src: "/imgfile/paymentMethod2.svg", alt: "Khalti" },
-    { src: "/imgfile/paymentMethod4.png", alt: "Payment Method 4" },
-    { src: "/imgfile/paymentMethod3.png", alt: "Payment Method 3" },
-    { src: "/imgfile/paymentMethod6.png", alt: "Payment Method 6" },
+    "/imgfile/esewa.png",
+    "/imgfile/khalti.webp",
+    "/imgfile/paymentMethod1.png",
+    "/imgfile/paymentMethod2.png",
+    "/imgfile/paymentMethod3.png",
+    "/imgfile/paymentMethod4.png",
+    "/imgfile/paymentMethod6.png",
   ];
 
-  const playStoreImages = [
-    { src: "/imgfile/google-play.svg", alt: "Google Play Store", url: "#" },
-    { src: "/imgfile/app-store.svg", alt: "App Store", url: "#" },
+  const bankingPartners = [
+    "/imgfile/bankingPartners1.png",
+    "/imgfile/bankingPartners2.png",
+    "/imgfile/bankingPartners3.png",
+    "/imgfile/bankingPartners4.png",
+    "/imgfile/bankingPartners5.png",
+    "/imgfile/bankingPartners6.png",
+    "/imgfile/bankingPartners7.png",
+    "/imgfile/bankingPartners8.png",
+    "/imgfile/bankingPartners9.png",
+    "/imgfile/bankingPartners10.png",
+    "/imgfile/bankingPartners11.png",
+    "/imgfile/bankingPartners12.png",
+    "/imgfile/bankingPartners17.png",
+    "/imgfile/insurancepartner1.png",
+    "/imgfile/insurancepartner2.png",
   ];
-
-
 
   return (
-    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 font-[Inter,sans-serif]">
-      {/* Main Footer Content */}
-      <h1 className='hidden'>Fatafatsewa footer</h1>
-      <div className="py-8 lg:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+    <footer className="font-[Inter,sans-serif]">
+      <h1 className="hidden">Fatafatsewa footer</h1>
 
-          {/* Logo and Company Info */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <div className="mb-4 flex justify-center lg:justify-start">
-              <Image
-                src={imglogo}
-                alt="FatafatSewa Logo"
-                width={480}
-                height={120}
-                className="rounded-lg object-contain"
-              />
+      {/* ═══ Help Banner ═══ */}
+      <div className="bg-[var(--colour-fsP1)]">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Headphones className="w-5 h-5 text-white" />
+              <div>
+                <p className="text-white font-bold text-sm">We&apos;re Always Here To Help</p>
+                <p className="text-blue-200 text-[11px]">Reach out to us through any of these support channels</p>
+              </div>
             </div>
-            <p className="text-gray-600 text-sm lg:text-base font-normal mb-6 max-w-md text-center lg:text-left leading-relaxed">
-              Nepal&lsquo;s Leading Online Shopping Platform<br />
-              Making Quality Products Accessible to All
-            </p>
-
-            {/* Social Media */}
-            <div className="mb-6">
-              <h2 className="text-[var(--colour-fsP2)] font-semibold text-lg mb-4 text-center lg:text-left">Follow Us</h2>
-              <div className="flex gap-3 justify-center lg:justify-start">
-                {socialIcons.map(({ name, Icon, url, color }, index) => (
-                  <a
-                    key={index}
-                    href={url}
-                    aria-label={name}
-                    className={`w-11 h-11 bg-white rounded-full flex items-center justify-center text-gray-600 ${color} transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 hover:scale-105`}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </a>
-                ))}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 text-white">
+                <PhoneCall className="w-4 h-4 text-blue-200" />
+                <div>
+                  <p className="text-[10px] text-blue-200 uppercase tracking-wider font-semibold">Call Us</p>
+                  <p className="text-sm font-bold">+977 9828757575</p>
+                </div>
+              </div>
+              <div className="hidden sm:block w-px h-8 bg-blue-300/30" />
+              <div className="flex items-center gap-2 text-white">
+                <Mail className="w-4 h-4 text-blue-200" />
+                <div>
+                  <p className="text-[10px] text-blue-200 uppercase tracking-wider font-semibold">Email</p>
+                  <p className="text-sm font-bold">info@fatafatsewa.com</p>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Quick Links */}
-          <div className="sm:col-span-1">
-            <h2 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center sm:text-left">
-              Quick Links
-            </h2>
-            <ul className="space-y-3 flex flex-col justify-center lg:justify-start items-center sm:items-start">
-              {QuickLinks.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    href={link.url}
-                    className="text-gray-600 hover:text-[var(--colour-fsP1)] transition-colors duration-200 font-normal flex items-center group text-center sm:text-left"
-                  >
-                    <span className="group-hover:translate-x-1 transition-transform duration-200">
+      {/* ═══ Main Footer ═══ */}
+      <div className="bg-slate-900 text-gray-300">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
+
+            {/* ── Column 1: Quick Links ── */}
+            <div>
+              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Quick Links</h3>
+              <ul className="space-y-2">
+                {QuickLinks.map((link, i) => (
+                  <li key={i}>
+                    <Link href={link.url} className="text-slate-400 hover:text-blue-300 text-[13px] transition-colors duration-200 block">
                       {link.title}
-                    </span>
-                  </Link>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ── Column 2: Customer Service ── */}
+            <div>
+              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Customer Service</h3>
+              <ul className="space-y-2">
+                {CustomerService.map((link, i) => (
+                  <li key={i}>
+                    <Link href={link.url} className="text-slate-400 hover:text-blue-300 text-[13px] transition-colors duration-200 block">
+                      {link.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ── Column 3: Categories ── */}
+            <div>
+              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Categories</h3>
+              <ul className="space-y-2">
+                {Categories.map((link, i) => (
+                  <li key={i}>
+                    <Link href={link.url} className="text-slate-400 hover:text-blue-300 text-[13px] transition-colors duration-200 block">
+                      {link.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ── Column 4: Top Brands ── */}
+            <div>
+              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Top Brands</h3>
+              <ul className="space-y-2">
+                {TopBrands.map((link, i) => (
+                  <li key={i}>
+                    <Link href={link.url} className="text-slate-400 hover:text-blue-300 text-[13px] transition-colors duration-200 block">
+                      {link.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ── Column 5: Discover ── */}
+            <div>
+              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Discover</h3>
+              <ul className="space-y-2">
+                {DiscoverMore.map((link, i) => (
+                  <li key={i}>
+                    <Link href={link.url} className="text-slate-400 hover:text-blue-300 text-[13px] transition-colors duration-200 block">
+                      {link.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ── Column 6: Contact Info ── */}
+            <div>
+              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Contact Info</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-400 text-[13px] leading-snug">Sitapaila Road-14, Kathmandu, Nepal</span>
                 </li>
-              ))}
-            </ul>
+                <li className="flex items-start gap-2">
+                  <PhoneCall className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-400 text-[13px]">+977 9828757575</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-400 text-[13px]">info@fatafatsewa.com</span>
+                </li>
+              </ul>
+            </div>
           </div>
+        </div>
 
-          {/* Categories */}
-          <div className="sm:col-span-1">
-            <h2 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center sm:text-left">
-              Categories
-            </h2>
-            <ul className="space-y-3 flex flex-col justify-center lg:justify-start items-center sm:items-start">
-              {Categories.map((category, index) => (
-                <li key={index}>
-                  <Link
-                    href={category.url}
-                    className="text-gray-600 hover:text-[var(--colour-fsP1)] transition-colors duration-200 font-normal flex items-center group text-center sm:text-left"
-                  >
-                    <span className="group-hover:translate-x-1 transition-transform duration-200">
-                      {category.title}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+        {/* ═══ Shop on the Go + Connect With Us ═══ */}
+        <div className="border-t border-white/10">
+          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+
+              {/* App Download */}
+              <div className="flex items-center gap-4">
+                <span className="text-white font-bold text-xs uppercase tracking-wider">Shop on the Go</span>
+                <div className="flex gap-2">
+                  <a href="#" className="block hover:opacity-80 transition-opacity">
+                    <Image src="/imgfile/google-play.svg" alt="Google Play Store" width={120} height={36} className="h-9 w-auto" />
+                  </a>
+                  <a href="#" className="block hover:opacity-80 transition-opacity">
+                    <Image src="/imgfile/app-store.svg" alt="App Store" width={120} height={36} className="h-9 w-auto" />
+                  </a>
+                </div>
+              </div>
+
+              {/* USP Badges */}
+              <div className="hidden md:flex items-center gap-5">
+                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                  <Truck className="w-4 h-4 text-blue-400" />
+                  <span>Fast Delivery</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                  <Shield className="w-4 h-4 text-blue-400" />
+                  <span>Genuine Products</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                  <Clock className="w-4 h-4 text-blue-400" />
+                  <span>24/7 Support</span>
+                </div>
+              </div>
+
+              {/* Connect With Us — Social Icons */}
+              <div className="flex items-center gap-3">
+                <span className="text-white font-bold text-xs uppercase tracking-wider">Connect With Us</span>
+                <div className="flex gap-1.5">
+                  {socialIcons.map(({ name, Icon, url }, i) => (
+                    <a
+                      key={i}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={name}
+                      className="w-8 h-8 rounded-full bg-[var(--colour-fsP2)] flex items-center justify-center text-white hover:bg-blue-500 transition-all duration-300 hover:scale-110"
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* Contact Information & Payment Methods */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <h2 className="font-semibold text-[var(--colour-fsP2)] text-lg lg:text-xl mb-4 text-center lg:text-left">
-              Contact Info
-            </h2>
-            <ul className="space-y-3 flex flex-col justify-center lg:justify-start sm:items-start mb-6">
-              {ContactInfo.map((info, index) => (
-                <li key={index} className="flex items-start gap-3 text-center lg:text-left">
-                  <div className="flex-shrink-0 w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center mx-0">
-                    <info.icon className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <span className="text-gray-600 text-sm lg:text-base font-normal leading-relaxed">{info.title}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Payment Methods */}
-            <div className="mt-6">
-              <h4 className="font-semibold text-[var(--colour-fsP2)] text-lg mb-4 text-center lg:text-left">Payment Methods</h4>
-              <div className="grid grid-cols-4 gap-3 justify-center lg:justify-start">
-                {[
-                  "/imgfile/esewa.png",
-                  "/imgfile/khalti.webp",
-                  "/imgfile/paymentMethod1.png",
-                  "/imgfile/paymentMethod2.png",
-                  "/imgfile/paymentMethod3.png",
-                  "/imgfile/paymentMethod4.png",
-                  "/imgfile/bankingPartners1.png",
-                  "/imgfile/bankingPartners2.png",
-                  "/imgfile/bankingPartners3.png",
-                  "/imgfile/bankingPartners4.png",
-                  "/imgfile/bankingPartners5.png",
-                  "/imgfile/bankingPartners6.png",
-                  "/imgfile/bankingPartners7.png",
-                  "/imgfile/bankingPartners8.png"
-                ].map((src, index) => (
+        {/* ═══ Payment Methods — Horizontal Scroll ═══ */}
+        <div className="border-t border-white/10">
+          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+            <div className="flex items-center gap-4">
+              <span className="text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap">Payment Methods</span>
+              <div className="flex overflow-x-auto gap-2 scrollbar-hide pb-1">
+                {paymentMethods.map((src, i) => (
                   <div
-                    key={index}
-                    className="bg-white rounded-md p-1 border border-gray-100 shadow-sm hover:shadow-md transition-all flex items-center justify-center h-10 w-full"
+                    key={i}
+                    className="flex-shrink-0 bg-white rounded-md px-2 py-1.5 flex items-center justify-center h-9 min-w-[56px] hover:shadow-md transition-shadow"
                   >
                     <Image
                       src={src}
-                      alt={`Payment Method ${index + 1}`}
+                      alt={`Payment Method ${i + 1}`}
                       width={40}
                       height={24}
-                      className="object-contain h-6 w-auto"
+                      className="object-contain h-5 w-auto"
                       quality={75}
                     />
                   </div>
@@ -202,25 +310,72 @@ const FooterBody = () => {
               </div>
             </div>
           </div>
-
         </div>
-      </div>
 
-      {/* Copyright Section */}
-      <div className="bg-[var(--colour-fsP2)] text-white py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-            <p className="text-sm">
-              © 2025 FatafatSewa. All rights reserved.
-            </p>
-            <div className="flex flex-wrap gap-4 text-sm justify-center sm:justify-end">
-              <a href="#" className="hover:text-gray-300 transition-colors duration-200">Privacy Policy</a>
-              <a href="#" className="hover:text-gray-300 transition-colors duration-200">Terms of Service</a>
-              <a href="#" className="hover:text-gray-300 transition-colors duration-200">Sitemap</a>
+        {/* ═══ Banking & Insurance Partners — Auto-Scroll Row ═══ */}
+        <div className="border-t border-white/10 overflow-hidden">
+          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+            <div className="flex items-center gap-4">
+              <span className="text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap">Our Partners</span>
+              <div className="overflow-hidden flex-1 partner-scroll-container">
+                <div className="flex gap-4 animate-scroll-x whitespace-nowrap w-max">
+                  {[...bankingPartners, ...bankingPartners].map((src, i) => (
+                    <div
+                      key={i}
+                      className="flex-shrink-0 bg-white/90 rounded-md px-3 py-1.5 flex items-center justify-center h-10 min-w-[72px] hover:bg-white transition-colors"
+                    >
+                      <Image
+                        src={src}
+                        alt={`Partner ${(i % bankingPartners.length) + 1}`}
+                        width={48}
+                        height={28}
+                        className="object-contain h-6 w-auto"
+                        quality={75}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ═══ Copyright Bar ═══ */}
+      <div className="bg-[var(--colour-fsP2)]">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <Image src={imglogo} alt="FatafatSewa Logo" width={100} height={28} className="object-contain brightness-0 invert h-6 w-auto" />
+              <p className="text-blue-100 text-xs">
+                © {new Date().getFullYear()} FatafatSewa. All rights reserved.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <Link href="/pages/privacy-policy" className="text-blue-100 hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/pages/terms-and-conditions" className="text-blue-100 hover:text-white transition-colors">Terms of Service</Link>
+              <Link href="/pages/return-policy" className="text-blue-100 hover:text-white transition-colors">Warranty Policy</Link>
+              <Link href="/sitemap.xml" className="text-blue-100 hover:text-white transition-colors">Sitemap</Link>
+              <Link href="/pages/contact-us" className="text-blue-100 hover:text-white transition-colors">Consumer Rights</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CSS for auto-scroll animation */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes scrollX {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-scroll-x {
+          animation: scrollX 30s linear infinite;
+        }
+        .partner-scroll-container:hover .animate-scroll-x {
+          animation-play-state: paused;
+        }
+      `}} />
     </footer>
   );
 };

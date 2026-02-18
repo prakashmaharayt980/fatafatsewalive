@@ -27,7 +27,7 @@ export const getBlogPageData = unstable_cache(
     },
     ['blog-page-data'],
     {
-        revalidate: 3600, // 1 hour
+        revalidate: 3600,
         tags: ['blog', 'banner', 'products']
     }
 );

@@ -86,7 +86,7 @@ export default function HeroBanner({ data }: HeroBannerProps) {
                                             fill
                                             className={'object-contain '}
                                             priority={true}
-                                            sizes=""
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
                                         />
                                     </div>
                                 </Link>

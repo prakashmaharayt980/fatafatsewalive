@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 
-import SkeltonCard from '@/app/homepage/SkeltonCard';
+
 import { cn } from '@/lib/utils';
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
 import RemoteServices, { CategoryService } from '@/app/api/remoteservice';

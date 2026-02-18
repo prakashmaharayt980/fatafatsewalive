@@ -121,17 +121,59 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
           }
         }
 
+        if (element.name === 'h1') {
+          return (
+            <h1 className={`text-xl font-semibold text-gray-900  my-1 ${className}`}>
+              {domToReact(element.children, options) || 'Untitled Section'}
+            </h1>
+          );
+        }
+
         if (element.name === 'h2') {
           return (
-            <h2 className={`text-xl font-semibold text-gray-900 mt-6 mb-4 ${className}`}>
+            <h2 className={` font-semibold text-gray-900   my-1 ${className}`}>
               {domToReact(element.children, options) || 'Untitled Section'}
             </h2>
           );
         }
 
-        if (element.name === 'ul') {
+        if (element.name === 'h3') {
           return (
-            <ul className={`list-disc pl-6 space-y-2 my-6 text-gray-700 text-base ${className}`}>
+            <h3 className={`font-semibold text-gray-900  my-1 ${className}`}>
+              {domToReact(element.children, options) || 'Untitled Section'}
+            </h3>
+          );
+        }
+
+        if (element.name === 'h4') {
+          return (
+            <h4 className={` font-semibold text-gray-900  my-1 ${className}`}>
+              {domToReact(element.children, options) || 'Untitled Section'}
+            </h4>
+          );
+        }
+
+        if (element.name === 'h5') {
+          return (
+            <h5 className={`text-xl font-semibold text-gray-900  my-1 ${className}`}>
+              {domToReact(element.children, options) || 'Untitled Section'}
+            </h5>
+          );
+        }
+
+
+
+        if (element.name === 'h6') {
+          return (
+            <h6 className={`text-xl font-semibold text-gray-900  my-1 ${className}`}>
+              {domToReact(element.children, options) || 'Untitled Section'}
+            </h6>
+          );
+        }
+
+        if (element.name === 'ol') {
+          return (
+            <ul className={`list-disc pl-6 space-y-2 my-1 text-gray-700 text-base ${className}`}>
               {domToReact(element.children, options)}
             </ul>
           );
@@ -142,6 +184,13 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
             <li className={`text-gray-700 text-base leading-relaxed ${className}`}>
               {domToReact(element.children, options)}
             </li>
+          );
+        }
+
+
+        if (element.name === 'img') {
+          return (
+            <img src={element.attribs.src} alt={element.attribs.alt} className={`w-full h-auto ${className}`} />
           );
         }
 

@@ -6,6 +6,7 @@ import { Article } from '../types/Blogtypes';
 import { getBlogPageData } from '@/app/context/BlogPageData';
 import { getBannerData } from '../api/CachedHelper/getBannerData';
 import BannerFetcher from '../CommonVue/BannerFetcher';
+import { BannerItem } from '../types/BannerTypes';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
@@ -44,27 +45,20 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-    // Fetch all data in parallel on the server
-    // Fetch cached data
+    // Fetch cached data (banner, deals, latest articles — all cached for 1 hour)
     const { bannerData, dealProducts, latestArticles } = await getBlogPageData();
 
-    // Fetch other specific data in parallel
-    const [brandRes, categoriesResult, trendingResult] = await Promise.allSettled([
-        // 2. Brand Articles
-        RemoteServices.getBlogList(),
-        // 4. Categories
+    // Fetch only non-cached data in parallel
+    const [categoriesResult, trendingResult] = await Promise.allSettled([
         RemoteServices.getBlogCategories(),
-        // 6. Trending Products (was client-side in ProductWidget)
         RemoteServices.searchProducts({ search: 'smartphones', page: 1, per_page: 10 }),
     ]);
 
-    // Process articles
+    // Use cached latestArticles directly
     const articles: Article[] = latestArticles;
 
-    // Process brand articles
-    const brandArticles: Article[] = brandRes.status === 'fulfilled'
-        ? (Array.isArray(brandRes.value) ? brandRes.value : brandRes.value.data || []).reverse().slice(0, 4)
-        : [];
+    // Derive brand articles from cached latestArticles (no duplicate fetch)
+    const brandArticles: Article[] = [...latestArticles].reverse().slice(0, 4);
 
     // Process categories
     let categories: any[] = categoriesResult.status === 'fulfilled'
@@ -105,33 +99,7 @@ export default async function BlogPage() {
         })),
     };
 
-    const Categories = [
-        {
-            id: 'all',
-            title: 'All',
-            slug: 'all',
-        },
-        {
-            id: 'news',
-            title: 'News',
-            slug: 'news',
-        },
-        {
-            id: 'mobile',
-            title: 'Mobile',
-            slug: 'mobile',
-        },
-        {
-            id: 'laptop',
-            title: 'Laptop',
-            slug: 'laptop',
-        },
-        {
-            id: 'tablet',
-            title: 'Tablet',
-            slug: 'tablet',
-        },
-    ]
+    // Use API-fetched categories (already has 'All' prepended above)
 
     const SectionOne = (
         <BannerFetcher
@@ -153,11 +121,10 @@ export default async function BlogPage() {
                 articles={articles}
                 bannerData={bannerData}
                 brandArticles={brandArticles}
-                categories={Categories}
+                categories={categories}
                 dealProducts={dealProducts}
                 trendingProducts={trendingProducts}
                 SectionOne={SectionOne}
-
             />
         </>
     );

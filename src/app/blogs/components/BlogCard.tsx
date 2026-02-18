@@ -20,7 +20,7 @@ export default function BlogCard({ post }: BlogCardProps) {
             {/* Image Container */}
             <div className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                 <Image
-                    src={post.thumbnail_image?.full}
+                    src={post.thumbnail_image?.full || imglogo.src}
                     alt={post.title}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     width={500}
