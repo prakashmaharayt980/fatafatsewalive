@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Heart, Star, CreditCard, Truck, Zap, Gift, Scale } from "lucide-react";
+import { Heart, Star, Scale } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCompare } from "@/app/context/CompareContext";
