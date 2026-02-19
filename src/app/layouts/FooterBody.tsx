@@ -63,11 +63,11 @@ const FooterBody = () => {
   ];
 
   const socialIcons = [
-    { name: "Facebook", Icon: Facebook, url: "https://www.facebook.com/fatafatsewa" },
-    { name: "Twitter", Icon: Twitter, url: "https://www.twitter.com/fatafatsewa" },
-    { name: "Instagram", Icon: Instagram, url: "https://www.instagram.com/fatafatsewa" },
-    { name: "YouTube", Icon: Youtube, url: "https://www.youtube.com/fatafatsewa" },
-    { name: "LinkedIn", Icon: Linkedin, url: "https://www.linkedin.com/company/fatafatsewa" },
+    { name: "Facebook", Icon: Facebook, url: "https://www.facebook.com/fatafatsewanpl" },
+    { name: "Twitter", Icon: Twitter, url: "https://www.twitter.com/fatafatsewanp" },
+    { name: "Instagram", Icon: Instagram, url: "https://www.instagram.com/fatafatsewanp" },
+    { name: "YouTube", Icon: Youtube, url: "https://www.youtube.com/@fatafatsewa" },
+    { name: "LinkedIn", Icon: Linkedin, url: "https://www.linkedin.com/company/fatafatsewanp" },
   ];
 
   const paymentMethods = [
@@ -103,7 +103,7 @@ const FooterBody = () => {
       <h1 className="hidden">Fatafatsewa footer</h1>
 
       {/* ═══ Help Banner ═══ */}
-      <div className="bg-[var(--colour-fsP1)]">
+      <div className="bg-[var(--colour-fsP1)] border border-red-500 rounded-t-2xl">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -121,7 +121,7 @@ const FooterBody = () => {
                   <p className="text-sm font-bold">+977 9828757575</p>
                 </div>
               </div>
-              <div className="hidden sm:block w-px h-8 bg-blue-300/30" />
+              <div className="hidden sm:block  h-8 bg-blue-300/30" />
               <div className="flex items-center gap-2 text-white">
                 <Mail className="w-4 h-4 text-blue-200" />
                 <div>

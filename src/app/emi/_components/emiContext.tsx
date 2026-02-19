@@ -11,6 +11,7 @@ import {
   useMemo,
 } from "react";
 import { ProductDetails } from "@/app/types/ProductDetailsTypes";
+import { calculateEMI, BANK_PROVIDERS } from "./_func_emiCalacutor";
 
 
 interface UserInfo {
@@ -194,20 +195,7 @@ export const EmiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 
 
-  const AvailablebankProvider = useMemo(
-    () => [
-      { id: 'nabil', name: 'Nabil Bank', rate: 11.5, img: '/imgfile/bankingPartners7.png', tenureOptions: [12, 18, 24, 36] },
-      { id: 'global', name: 'Global IME Bank', rate: 12, img: '/imgfile/bankingPartners1.png', tenureOptions: [12, 24, 36] },
-      { id: 'nmb', name: 'NMB Bank', rate: 11.75, img: '/imgfile/bankingPartners3.png', tenureOptions: [12, 24, 36] },
-      { id: 'siddhartha', name: 'Siddhartha Bank', rate: 12.25, img: '/imgfile/bankingPartners9.png', tenureOptions: [12, 24, 36] },
-      { id: 'NicAsia', name: 'Nic Asia Bank', rate: 12.25, img: '/imgfile/bankingPartners11.png', tenureOptions: [12, 24, 36] },
-      { id: 'hbl', name: 'Himalayan Bank', rate: 12.25, img: '/imgfile/bankingPartners10.png', tenureOptions: [12, 24, 36] },
-      { id: 'sanimabank', name: 'Sanima Bank', rate: 12.25, img: '/imgfile/bankingPartners8.png', tenureOptions: [12, 24, 36] },
-      { id: 'kumari', name: 'Kumari Bank', rate: 12.25, img: '/imgfile/bankingPartners6.png', tenureOptions: [12, 24, 36] },
-    ],
-    []
-  );
-
+  const AvailablebankProvider = useMemo(() => BANK_PROVIDERS, []);
 
   const emiCalculation = (
     principal: number,
@@ -215,49 +203,14 @@ export const EmiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     downPayment: number | string,
     bankid: string
   ) => {
-    let financeAmount = principal;
-    let paymentpermonth = 0;
-    let finalDownPayment = 0;
-
-    // 1. Calculate Down Payment & Finance Amount
-    if (typeof downPayment === "string" && downPayment.includes("%")) {
-      const percentage = parseFloat(downPayment) || 0;
-      finalDownPayment = (percentage / 100) * principal;
-    } else {
-      finalDownPayment = Number(downPayment) || 0;
-    }
-
-    // Ensure down payment is valid
-    if (finalDownPayment < 0) finalDownPayment = 0;
-    if (finalDownPayment > principal) finalDownPayment = principal;
-
-    financeAmount = principal - finalDownPayment;
-
-    // 2. Calculate EMI only if there's a finance amount
-    if (financeAmount > 0 && tenure > 0) {
-      // Find bank rate
-      const bank = AvailablebankProvider.find((b) => b.id === bankid || b.name === bankid); // Fixed: Lookup by ID or Name
-      // Fallback rate if no bank selected (e.g. 10% or 0% depending on business logic, using 0 for now to avoid confusion until bank selected)
-      const annualRate = bank ? bank.rate : 0;
-
-      if (annualRate > 0) {
-        const monthlyRate = annualRate / 12 / 100;
-        // Formula: P * r * (1+r)^n / ((1+r)^n - 1)
-        const numerator = financeAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure);
-        const denominator = Math.pow(1 + monthlyRate, tenure) - 1;
-        paymentpermonth = numerator / denominator;
-      } else {
-        // 0% Interest Case (if applicable)
-        paymentpermonth = financeAmount / tenure;
-      }
-    }
-
+    const result = calculateEMI({ principal, tenure, downPayment, bankId: bankid });
+    // Keep backward-compatible return shape
     return {
-      principal,
-      tenure,
-      downPayment: finalDownPayment,
-      financeAmount,
-      paymentpermonth,
+      principal: result.principal,
+      tenure: result.tenure,
+      downPayment: result.downPayment,
+      financeAmount: result.financeAmount,
+      paymentpermonth: result.paymentPerMonth,
     };
   }
 
