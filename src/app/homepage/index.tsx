@@ -1,16 +1,8 @@
 'use client';
 
-import React, { Suspense } from 'react';
-import Image from 'next/image';
 import Imgbanner from './Imgbanner';
-
-
 import SkeletonCard from '@/app/skeleton/SkeletonCard';
 import SkeletonBanner from '@/app/skeleton/SkeletonBanner';
-import LazyLoadSection from '@/components/LazyLoadSection';
-import { BannerTypes } from '@/app/types/BannerTypes';
-
-
 import BasketCard from './BasketCard';
 
 // Lazy-loaded components
@@ -63,7 +55,9 @@ const HomePage = ({
 }: HomePageProps) => {
 
   return (
-    <div className="mx-auto h-full m-0 p-0 sm:py-1 space-y-1  bg-[#f8f9fa] relative overflow-hidden">
+    <main className="mx-auto h-full m-0 p-0 sm:py-1 space-y-1  bg-[#f8f9fa] relative overflow-hidden">
+      <h1 className="sr-only">Fatafat Sewa - Best Online Shopping in Nepal</h1>
+
       {/* Woodmart-Inspired Texture: Subtle Background Orbs */}
       <div className="absolute top-0 left-[-10%] w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none mix-blend-multiply z-0" />
       <div className="absolute top-[300px] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none mix-blend-multiply z-0" />
@@ -71,13 +65,10 @@ const HomePage = ({
 
       <div className="relative z-10">
         <div className="sm:px-2 ">
-          {/* Index 0 (Scroll) and Index 1 (Side Grid) */}
           <Imgbanner
             mainBanner={mainBannerData}
             sideBanner={sideBannerData}
           />
-
-          {/* Removed BannerProductGrid as per request */}
 
           <BasketCard
             title={demoCategories[0].title}
@@ -118,7 +109,7 @@ const HomePage = ({
 
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

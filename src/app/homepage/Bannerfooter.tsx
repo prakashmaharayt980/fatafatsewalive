@@ -45,8 +45,8 @@ const TopBanner = ({ data }: TopBannerProps) => {
         fill
         className="object-contain w-full  transition-transform duration-700 "
         priority
+        sizes="100vw"
         unoptimized={true}
-
       />
 
       {/* Subtle overlay on hover */}

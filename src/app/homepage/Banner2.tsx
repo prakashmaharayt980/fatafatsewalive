@@ -57,8 +57,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
               fill
               className="object-contain transition-transform duration-700 " // Ensure object-cover for better fit
               priority={idx === 0}
-              sizes="(max-width: 640px) 90vw, 50vw"
-
+              sizes="(max-width: 639px) 100vw, 50vw" // SEO: explicitly states size hints
             />
 
             {/* Premium Overlay */}

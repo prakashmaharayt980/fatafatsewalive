@@ -152,7 +152,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     fill
                                                     priority={index === 0}
                                                     // sizes tells the browser exactly how much space it takes
-                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 65vw, 1000px"
+                                                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 60vw"
                                                     className="object-contain mx-auto" // Ensures no stretching
                                                 />
                                             </Link>
@@ -211,28 +211,6 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
 
                     {showSideImages && (
                         <div className="w-full lg:w-[40%]">
-                            {/* Mobile/Tablet: Horizontal scroll */}
-                            {/* <div className="flex  aspect-[1920/704] lg:hidden gap-2 sm:gap-3 overflow-x-auto  scrollbar-hide snap-x snap-mandatory">
-                                {sideImages.slice(0, 3).map((image, index) => (
-                                    <Link
-                                        key={`side-mobile-${image.id}-${index}`}
-                                        href={image.link || '#'}
-                                        className="relative flex-shrink-0 w-full  snap-start rounded sm:rounded-xl overflow-hidden"
-                                    >
-                                        <Image
-                                            src={image.default}
-                                            alt={image.name}
-
-                                            className="object-contain    transition-transform duration-300"
-                                            fill
-                                            sizes="(max-width: 1024px) 0vw, 100vw"
-
-
-                                        />
-                                    </Link>
-                                ))}
-                            </div> */}
-
                             {/* Desktop: Grid Layout */}
                             <div className="hidden lg:flex flex-col gap-1 h-full">
                                 <Link
@@ -244,8 +222,9 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                         src={sideImages[0].default}
                                         alt={sideImages[0].name}
                                         fill
+                                        sizes="(max-width: 1024px) 0vw, 40vw"
+                                        priority
                                         className="object-contain aspect-auto  rounded  transition-transform duration-500"
-
                                     />
                                     <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </Link>

@@ -1,9 +1,6 @@
-import React from 'react'
 import HomePage from './homepage'
-import RemoteServices from './api/remoteservice'
 import { Metadata } from 'next'
 import BannerFetcher from './CommonVue/BannerFetcher'
-import { CategoryService } from './api/services/category.service'
 import { getHomepageData } from './context/HomepageData'
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
 
