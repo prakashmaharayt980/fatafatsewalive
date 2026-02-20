@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { ShieldCheck, Truck, RotateCcw } from "lucide-react";
 
 export default function TrustWidget() {
