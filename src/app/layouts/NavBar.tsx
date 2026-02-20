@@ -118,7 +118,7 @@ const NavBar = ({ navbaritems }: {
             {/* Blue base */}
             <div className="absolute inset-0 bg-[var(--colour-fsP2)]" />
             {/* Yellow diagonal slice — starts right after Explore button */}
-            {/* <div className="absolute inset-0 bg-[var(--colour-fsP1)]" style={{ clipPath: 'polygon(24% 0%, 100% 0%, 100% 100%, 22% 100%)' }} /> */}
+            <div className="absolute inset-0 bg-[var(--colour-fsP1)]" style={{ clipPath: 'polygon(24% 0%, 100% 0%, 100% 100%, 22% 100%)' }} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex items-center h-12">
                     {/* Explore Menu Trigger */}
