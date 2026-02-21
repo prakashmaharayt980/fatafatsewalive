@@ -63,7 +63,8 @@ export default function BlogListingClient({
                     onClose={() => setStoryViewerOpen(false)}
                 />
             )}
-            <div className="min-h-screen max-w-8xl mx-auto bg-[var(--colour-bg4)] w-full">
+            <main className="min-h-screen max-w-8xl mx-auto bg-[var(--colour-bg4)] w-full">
+                <h1 className="sr-only">Latest Tech News, Reviews & Buying Guides | Fatafat Sewa Blog</h1>
                 <div className="w-full px-3 sm:px-5 lg:px-6 pt-4 pb-16">
 
                     {/* ─── Hero Banner ─── */}
@@ -351,7 +352,7 @@ export default function BlogListingClient({
 
                     </div>
                 </div>
-            </div>
+            </main>
         </>
     );
 }

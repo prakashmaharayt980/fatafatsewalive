@@ -56,7 +56,7 @@ const HomePage = ({
 
   return (
     <main className="mx-auto h-full m-0 p-0 sm:py-1 space-y-1  bg-[#f8f9fa] relative overflow-hidden">
-      <h1 className="sr-only">Fatafat Sewa - Best Online Shopping in Nepal</h1>
+      <h1 className="sr-only">Fatafat Sewa - Online Shopping in Nepal</h1>
 
       {/* Woodmart-Inspired Texture: Subtle Background Orbs */}
       <div className="absolute top-0 left-[-10%] w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none mix-blend-multiply z-0" />
