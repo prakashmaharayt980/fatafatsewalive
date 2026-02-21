@@ -15,6 +15,7 @@ import { CompareProvider } from '@/app/context/CompareContext';
 import LoginPage from '@/app/login/page';
 import { AuthProvider } from '@/app/context/AuthContext';
 import WishList from '@/app/emi/_components/Wishlist';
+import { AddressProvider } from '@/app/context/AddressContext';
 
 import { Inter } from 'next/font/google'
 import { EmiProvider } from '@/app/emi/_components/emiContext';
@@ -72,25 +73,27 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
 
           <AuthProvider initialState={{ isLoggedIn, user, accessToken }}>
-            <CartProvider1>
-              <CompareProvider>
-                <HeaderBody initialNavItems={navItems} />
-                <main className="flex-1  w-full mx-auto bg-gray-50">
-                  <EmiProvider>
-                    {children}
-                    <LoginPage />
-                  </EmiProvider>
-                </main>
-                <FooterBody />
-                <ChatBot />
-                <Toaster richColors position="top-right" />
-                <CheckoutDrawer />
-                <FacebookPixel />
+            <AddressProvider>
+              <CartProvider1>
+                <CompareProvider>
+                  <HeaderBody initialNavItems={navItems} />
+                  <main className="flex-1 w-full mx-auto bg-gray-50">
+                    <EmiProvider>
+                      {children}
+                      <LoginPage />
+                    </EmiProvider>
+                  </main>
+                  <FooterBody />
+                  <ChatBot />
+                  <Toaster richColors position="top-right" />
+                  <CheckoutDrawer />
+                  <FacebookPixel />
 
-                <WishList />
-                <GlobalCompareDrawer />
-              </CompareProvider>
-            </CartProvider1>
+                  <WishList />
+                  <GlobalCompareDrawer />
+                </CompareProvider>
+              </CartProvider1>
+            </AddressProvider>
           </AuthProvider>
 
 

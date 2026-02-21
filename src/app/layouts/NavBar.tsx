@@ -5,7 +5,7 @@
 
 'use client'
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Globe, Telescope, HelpCircle, Calculator, Star, BookOpen, ArrowLeftRight, Info, Phone, Wrench } from 'lucide-react';
+import { ChevronDown, ChevronRight, Globe, Telescope, HelpCircle, Calculator, Star, BookOpen, ArrowLeftRight, Info, Phone, Wrench, BookCopy, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import {
     HoverCard,
@@ -67,11 +67,7 @@ const NavBar = ({ navbaritems }: {
             title: 'EMI',
             icon: <Calculator className="h-3.5 w-3.5" />,
         },
-        {
-            path: '/reviews',
-            title: 'Reviews',
-            icon: <Star className="h-3.5 w-3.5" />,
-        },
+
         {
             path: '/blogs',
             title: 'Blogs',
@@ -88,12 +84,23 @@ const NavBar = ({ navbaritems }: {
             icon: <Info className="h-3.5 w-3.5" />,
         },
         {
-            path: '/contact',
-            title: 'Contact',
-            icon: <Phone className="h-3.5 w-3.5" />,
+            path: '/Insurance',
+            title: 'Insurance',
+            icon: <BookCopy className="h-3.5 w-3.5" />,
         },
         {
-            path: '/Repair',
+            path: '/EarnInvestReferral',
+            title: 'Earn & Invest',
+            icon: <Star className="h-3.5 w-3.5" />,
+        },
+        {
+            path: '/emi/shop',
+            title: 'Shop by EMI',
+            icon: <ShoppingBag className="h-3.5 w-3.5" />,
+        },
+
+        {
+            path: '/repair',
             title: 'Repair',
             icon: <Wrench className="h-3.5 w-3.5" />,
         },
@@ -144,15 +151,14 @@ const NavBar = ({ navbaritems }: {
                                         <div
                                             key={category.id}
                                             onMouseEnter={() => setActiveCategory(category)}
-                                            onClick={() => handlerouter(`/category/${category.slug}`)}
                                             className={`
-                                                flex items-center justify-between px-2 py-2.5 cursor-pointer transition-all mx-1 rounded-lg group mb-1
+                                                flex items-center justify-between px-2 py-2.5 transition-all mx-1 rounded-lg group mb-1
                                                 ${activeCategory?.id === category.id
                                                     ? 'bg-blue-50  ring-1 ring-blue-100'
                                                     : 'hover:bg-blue-50/50 '}
                                             `}
                                         >
-                                            <div className="flex items-center gap-3">
+                                            <Link href={`/category/${category.slug}`} className="flex items-center gap-3 w-full" onClick={() => setActiveCategory(null)}>
                                                 <div className={`
                                                     p-1.5 rounded-md transition-colors overflow-hidden
                                                     ${activeCategory?.id === category.id
@@ -176,7 +182,7 @@ const NavBar = ({ navbaritems }: {
                                                 `}>
                                                     {category.title}
                                                 </span>
-                                            </div>
+                                            </Link>
                                             {activeCategory?.id === category.id && (
                                                 <ChevronRight className="h-4 w-4 text-[var(--colour-fsP2)]" />
                                             )}
@@ -195,25 +201,25 @@ const NavBar = ({ navbaritems }: {
                                                 {/* Left: Sub-Categories */}
                                                 <div className="flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-200 hover:[&::-webkit-scrollbar-thumb]:bg-blue-300">
                                                     <div className="flex items-center justify-between mb-6">
-                                                        <h2
-                                                            onClick={() => handlerouter(`/category/${activeCategory.slug}`)}
-                                                            className="text-xl font-bold text-[#1e293b] flex items-center gap-2 cursor-pointer hover:text-[var(--colour-fsP2)] transition-colors"
-                                                        >
-                                                            {activeCategory.title}
-                                                            <ChevronRight className="h-5 w-5 text-gray-300" />
-                                                        </h2>
+                                                        <Link href={`/category/${activeCategory.slug}`} onClick={() => setActiveCategory(null)} className="w-full">
+                                                            <h2 className="text-xl font-bold text-[#1e293b] flex items-center gap-2 hover:text-[var(--colour-fsP2)] transition-colors">
+                                                                {activeCategory.title}
+                                                                <ChevronRight className="h-5 w-5 text-gray-300" />
+                                                            </h2>
+                                                        </Link>
                                                     </div>
 
                                                     <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                                                         {activeCategory.children && activeCategory.children.length > 0 ? (
                                                             activeCategory.children.map((child, idx) => (
-                                                                <span
+                                                                <Link
                                                                     key={idx}
-                                                                    onClick={() => handlerouter(`/category/${child.slug}`)}
-                                                                    className="text-[13px] font-medium text-slate-600 hover:text-[var(--colour-fsP2)] hover:translate-x-1 transition-all cursor-pointer block py-1"
+                                                                    href={`/category/${child.slug}`}
+                                                                    onClick={() => setActiveCategory(null)}
+                                                                    className="text-[13px] font-medium text-slate-600 hover:text-[var(--colour-fsP2)] hover:translate-x-1 transition-all block py-1"
                                                                 >
                                                                     {child.title}
-                                                                </span>
+                                                                </Link>
                                                             ))
                                                         ) : (
                                                             <span className="text-sm text-slate-400 italic col-span-2">No sub-categories available</span>
@@ -279,14 +285,14 @@ const NavBar = ({ navbaritems }: {
 
 
                         {navbarExtradata.map((item, idx) => (
-                            <span
+                            <Link
                                 key={idx}
-                                onClick={() => handlerouter(item.path)}
-                                className="text-sm font-medium text-white/95 hover:text-yellow-300 cursor-pointer transition-colors flex items-center gap-1"
+                                href={item.path}
+                                className="text-sm font-medium text-white/95 hover:text-yellow-300 transition-colors flex items-center gap-1"
                             >
                                 {item.icon && item.icon}
                                 {item.title}
-                            </span>
+                            </Link>
                         ))}
                     </div>
                 </div>

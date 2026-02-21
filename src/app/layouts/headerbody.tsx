@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ShoppingCart, User, Heart, Menu, X, ChevronDown, User2Icon, LayoutDashboard, Package, Settings, LogOut } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Menu, X, ChevronDown, User2Icon, LayoutDashboard, Package, Settings, LogOut, TrendingUp, Clock, History } from 'lucide-react';
 import Image from 'next/image';
 import imglogo from '@/app/assets/CompanyLogo.webp';
 
@@ -21,6 +21,25 @@ import { navitems } from '@/app/context/GlobalData';
 interface HeaderComponentProps {
     initialNavItems: navitems[]
 }
+
+const MOCK_TRENDING_SEARCHES = [
+    "iPhone 15 Pro Max",
+    "Gaming Laptops under 1 Lakh",
+    "Samsung S24 Ultra",
+    "MacBook Air M2",
+    "Wireless Earbuds"
+];
+
+const MOCK_SEMANTIC_SUGGESTIONS = [
+    "best gaming laptops in nepal",
+    "latest iphones 2024",
+    "budget smartphones under 20000",
+    "4k smart tv 55 inch",
+    "noise cancelling headphones",
+    "mechanical keyboards for coding",
+    "apple watch series 9",
+    "samsung top load washing machine"
+];
 
 const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
     const { cartItems, setIsCartOpen, setIsWishlistOpen } = useContextCart()
@@ -55,6 +74,8 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
     const [state, setState] = useState({
         search: "",
         searchResults: [] as ProductDetails[],
+        semanticSuggestions: [] as string[],
+        isFocused: false,
         showSearchDropdown: false,
         isSearching: false,
         isMobileMenuOpen: false,
@@ -74,7 +95,18 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
     const handleSearchChange = async (e) => {
         e.stopPropagation();
         const value = e.target.value;
-        updateState({ search: value });
+
+        // Filter semantic suggestions immediately
+        const filteredSemantics = value.trim() ?
+            MOCK_SEMANTIC_SUGGESTIONS.filter(item => item.toLowerCase().includes(value.toLowerCase().trim())).slice(0, 4)
+            : [];
+
+        updateState({
+            search: value,
+            semanticSuggestions: filteredSemantics,
+            showSearchDropdown: true,
+            isFocused: true
+        });
 
         // Clear any existing timeout
         if (searchTimeout) {
@@ -105,8 +137,12 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
 
             setSearchTimeout(timeoutId);
         } else {
-            updateState({ showSearchDropdown: false, searchResults: [] });
+            updateState({ showSearchDropdown: value.length > 0, searchResults: [] });
         }
+    };
+
+    const handleSearchFocus = () => {
+        updateState({ isFocused: true, showSearchDropdown: true });
     };
 
     const handleProductClick = (product: ProductDetails, e?: React.MouseEvent) => {
@@ -137,7 +173,9 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
             mobileSearchVisible: !state.mobileSearchVisible,
             search: "",
             searchResults: [],
-            showSearchDropdown: false
+            semanticSuggestions: [],
+            showSearchDropdown: false,
+            isFocused: false
         });
     };
 
@@ -169,58 +207,109 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
     // Search Results Component
     const SearchResults = ({ isMobile: _isMobile = false }) => (
         <div className={cn(
-            "absolute bg-white border w-full sm:min-w-xl border-gray-200 rounded-lg shadow-lg mt-2 max-h-80 overflow-y-auto z-52",
-
+            "absolute bg-white border w-full sm:min-w-xl border-gray-200 rounded-lg shadow-lg mt-2 max-h-[80vh] overflow-y-auto z-52 flex flex-col pt-1",
         )}>
-            {state.isSearching ? (
-                <div className="p-6 text-center w-full sm:min-w-xl text-gray-500">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--colour-fsP2)] mx-auto mb-2"></div>
-                    <p>Searching...</p>
+            {/* 1. Empty State: Trending Searches */}
+            {!state.search && state.isFocused && (
+                <div className="p-4 flex-col">
+                    <div className="flex items-center gap-2 mb-3 px-2">
+                        <TrendingUp className="w-4 h-4 text-blue-500" />
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Trending Searches</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 px-1">
+                        {MOCK_TRENDING_SEARCHES.map((term, i) => (
+                            <button
+                                key={i}
+                                onClick={(e) => {
+                                    updateState({ search: term, isFocused: true, showSearchDropdown: true });
+                                    handleSearchChange({ target: { value: term }, stopPropagation: () => { } });
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-[var(--colour-fsP2)] hover:text-white text-gray-700 hover:border-transparent text-sm rounded-full transition-colors border border-gray-200"
+                            >
+                                <Search className="w-3 h-3 opacity-50" />
+                                {term}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            ) : state.searchResults.length > 0 ? (
-                <div className="divide-y divide-gray-100">
-                    {state.searchResults.map((product) => (
-                        <div
-                            key={product.id}
-                            onClick={(e) => handleProductClick(product, e)}
-                            className="flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+            )}
+
+            {/* 2. Typing State: Semantic Suggestions */}
+            {state.search && state.semanticSuggestions.length > 0 && (
+                <div className="border-b border-gray-100 py-1">
+                    {state.semanticSuggestions.map((suggestion, i) => (
+                        <button
+                            key={i}
+                            onClick={() => {
+                                updateState({ search: suggestion, isFocused: true, showSearchDropdown: true });
+                                handleSearchChange({ target: { value: suggestion }, stopPropagation: () => { } });
+                            }}
+                            className="w-full flex items-center px-4 py-2 hover:bg-gray-50 transition-colors text-left group"
                         >
-                            {product.image && (
-                                <div className="w-12 h-12 mr-3 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                    <Image
-                                        src={product.image.thumb}
-                                        alt={product.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
-                                    {product.name}
-                                </p>
-                                {/* <p className="text-xs text-gray-500 truncate">
-                                    in {product.categories?.[0]?.category_full_name}
-                                </p> */}
-                                <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-sm font-semibold text-[var(--colour-fsP2)]">
-                                        Rs {product.discounted_price}.
-                                    </span>
-                                    {product.discounted_price !== product.price && (
-                                        <span className="text-xs text-gray-500 line-through">
-                                            Rs {product.price}.
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                            <Search className="w-4 h-4 text-gray-400 mr-3 shrink-0 group-hover:text-[var(--colour-fsP2)]" />
+                            <span className="text-[14px] font-medium text-gray-700">{suggestion}</span>
+                        </button>
                     ))}
                 </div>
-            ) : (
-                <div className="p-6 text-center text-gray-500">
-                    <Search className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p>No products found for &lsquo;{state.search}&lsquo;</p>
+            )}
+
+            {/* 3. Products List */}
+            {state.search && (
+                <div className="flex flex-col">
+                    {(state.searchResults.length > 0 || state.isSearching) && (
+                        <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Products Match</span>
+                        </div>
+                    )}
+
+                    {state.isSearching ? (
+                        <div className="p-8 text-center w-full text-gray-500 flex flex-col items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--colour-fsP2)] mb-3"></div>
+                            <p className="text-sm">Searching the catalog...</p>
+                        </div>
+                    ) : state.searchResults.length > 0 ? (
+                        <div className="divide-y divide-gray-100">
+                            {state.searchResults.slice(0, 5).map((product) => (
+                                <div
+                                    key={product.id}
+                                    onClick={(e) => handleProductClick(product, e)}
+                                    className="flex items-center p-3 sm:px-4 hover:bg-blue-50/50 cursor-pointer transition-colors group"
+                                >
+                                    {product.image && (
+                                        <div className="w-12 h-12 mr-4 bg-white border border-gray-100 rounded-lg overflow-hidden flex-shrink-0 group-hover:border-[var(--colour-fsP2)] transition-colors">
+                                            <Image
+                                                src={product.image.thumb}
+                                                alt={product.name}
+                                                width={48}
+                                                height={48}
+                                                className="w-full h-full object-contain p-1"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-[var(--colour-fsP2)] transition-colors">
+                                            {product.name}
+                                        </p>
+                                        <div className="flex items-center space-x-2 mt-1">
+                                            <span className="text-sm font-bold text-[var(--colour-fsP2)]">
+                                                Rs {product.discounted_price}.
+                                            </span>
+                                            {product.discounted_price !== product.price && (
+                                                <span className="text-xs text-gray-400 line-through">
+                                                    Rs {product.price}.
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : !state.isSearching && state.search.length > 2 && (
+                        <div className="p-8 text-center text-gray-500">
+                            <Search className="h-10 w-10 mx-auto mb-3 text-gray-200" />
+                            <p className="text-sm">No exact product matches found for <br /><span className="font-semibold text-gray-700">"{state.search}"</span></p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -233,9 +322,9 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
                 <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
                     <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
                         {/* Logo */}
-                        <div
+                        <Link
+                            href="/"
                             className="flex items-center space-x-2 cursor-pointer flex-shrink-0"
-                            onClick={() => handleroute('/')}
                         >
                             <Image
                                 src={imglogo}
@@ -243,9 +332,10 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
                                 width={120}
                                 height={30}
                                 priority
+                                sizes="120px"
                                 className="rounded-lg w-auto h-7 sm:h-8 lg:h-9 transition-transform duration-200 hover:scale-105"
                             />
-                        </div>
+                        </Link>
 
                         {/* Desktop Search Bar */}
                         <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-6" ref={searchRef}>
@@ -256,6 +346,7 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
                                         placeholder="Search products, brands..."
                                         value={state.search}
                                         onChange={handleSearchChange}
+                                        onFocus={handleSearchFocus}
                                         className="w-full px-4 py-2.5 bg-transparent border-none focus:outline-none text-sm placeholder-gray-500"
                                     />
                                     <button
@@ -412,6 +503,7 @@ const HeaderComponent = ({ initialNavItems }: HeaderComponentProps) => {
                                         placeholder="Search products..."
                                         value={state.search}
                                         onChange={handleSearchChange}
+                                        onFocus={handleSearchFocus}
                                         className="w-full px-4 py-3 bg-transparent border-none focus:outline-none text-sm"
                                         autoFocus
                                     />

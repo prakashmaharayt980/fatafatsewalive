@@ -78,42 +78,42 @@ export interface ConditionAnswer {
 export const CONDITION_QUESTIONS = [
     {
         key: 'screen' as const,
-        label: 'Screen Condition',
+        label: 'Does the screen have any scratches or cracks?',
         icon: '📱',
         options: [
-            { label: 'Perfect — No scratches', value: 1.0 },
-            { label: 'Minor scratches', value: 0.8 },
-            { label: 'Cracked / Broken', value: 0.3 },
+            { label: 'Perfect — Not a single scratch!', value: 1.0 },
+            { label: 'Just a few minor, barely visible scratches.', value: 0.8 },
+            { label: 'Yes, it is cracked or broken.', value: 0.3 },
         ],
     },
     {
         key: 'body' as const,
-        label: 'Body Condition',
+        label: 'How would you describe the phone\'s body?',
         icon: '🛡️',
         options: [
-            { label: 'Like new', value: 1.0 },
-            { label: 'Minor dents / scratches', value: 0.8 },
-            { label: 'Major damage', value: 0.4 },
+            { label: 'Looks brand new!', value: 1.0 },
+            { label: 'Some minor dents or scratches from normal use.', value: 0.8 },
+            { label: 'It has major damage or dents.', value: 0.4 },
         ],
     },
     {
         key: 'battery' as const,
-        label: 'Battery Health',
+        label: 'How well does the battery hold a charge?',
         icon: '🔋',
         options: [
-            { label: 'Excellent (>80%)', value: 1.0 },
-            { label: 'Average (50–80%)', value: 0.7 },
-            { label: 'Poor (<50%)', value: 0.4 },
+            { label: 'Excellent, lasts all day (>80% health).', value: 1.0 },
+            { label: 'Average, needs a charge sometimes (50-80%).', value: 0.7 },
+            { label: 'Poor, drains very quickly (<50% health).', value: 0.4 },
         ],
     },
     {
         key: 'functional' as const,
-        label: 'Functional Checks',
+        label: 'Does everything on the phone work correctly?',
         icon: '⚙️',
         options: [
-            { label: 'All working', value: 1.0 },
-            { label: 'Some issues', value: 0.7 },
-            { label: 'Major issues', value: 0.3 },
+            { label: 'Yes, everything works flawlessly.', value: 1.0 },
+            { label: 'Mostly, but there are a few minor issues.', value: 0.7 },
+            { label: 'No, there are major functional issues.', value: 0.3 },
         ],
     },
 ]

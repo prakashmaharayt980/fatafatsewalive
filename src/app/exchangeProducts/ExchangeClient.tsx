@@ -15,6 +15,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import RemoteServices from '@/app/api/remoteservice'
 import {
     BrandItem, ProductListItem, FullProduct, ColorOption, ConditionAnswer,
@@ -27,6 +28,7 @@ interface ExchangeClientProps {
 }
 
 export default function ExchangeClient({ brands }: ExchangeClientProps) {
+    const router = useRouter()
     useEffect(() => { window.scrollTo(0, 0) }, [])
 
     // ── State ────────────────────────────────────────────────
@@ -51,7 +53,6 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
     const [serialNumber, setSerialNumber] = useState('')
     const [agreedToTerms, setAgreedToTerms] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [showSuccess, setShowSuccess] = useState(false)
     const [fullName, setFullName] = useState('')
     const [phoneNumber, setPhoneNumber] = useState('')
     const [pickupAddress, setPickupAddress] = useState('')
@@ -59,6 +60,12 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
     const [locationMethod, setLocationMethod] = useState<'geo' | 'manual' | ''>('')
     const [formErrors, setFormErrors] = useState<Record<string, string>>({})
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // Section Refs for Smart Scrolling
+    const colorRef = useRef<HTMLDivElement>(null)
+    const conditionRef = useRef<HTMLDivElement>(null)
+    const pickupOptionRef = useRef<HTMLDivElement>(null)
+    const pickupDetailsRef = useRef<HTMLDivElement>(null)
 
     // IntersectionObserver for form section
     const formSectionRef = useRef<HTMLDivElement>(null)
@@ -220,9 +227,25 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
     }
 
     const handleSubmitExchange = () => {
-        if (!validateForm()) return
+        if (!validateForm() || !selectedProduct) return
         setIsSubmitting(true)
-        setTimeout(() => { setIsSubmitting(false); setShowSuccess(true) }, 2000)
+
+        // Simulate API call then redirect to new Success Page
+        setTimeout(() => {
+            setIsSubmitting(false)
+
+            const params = new URLSearchParams()
+            params.append('name', fullName)
+            params.append('phone', phoneNumber)
+            params.append('device', selectedProduct.name)
+            params.append('value', exchangeValue.toString())
+            if (selectedColor) params.append('color', selectedColor.name)
+            params.append('image', getProductImage(selectedProduct))
+            params.append('address', pickupAddress)
+            if (serialNumber) params.append('serial', serialNumber)
+
+            router.push(`/exchangeProducts/success?${params.toString()}`)
+        }, 1500)
     }
 
     const getProductImage = (p: ProductListItem) => {
@@ -230,9 +253,27 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
         return p.image?.thumb || p.image?.full || '/imgfile/logoimg.png'
     }
 
+    const getNextStepInfo = (): { label: string; action: () => void } => {
+        if (colorOptions.length > 0 && !selectedColor) {
+            return { label: 'Choose Color', action: () => colorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
+        }
+        if (!conditionComplete) {
+            return { label: 'Answer Questions', action: () => conditionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+        }
+        if (!pickupSelected) {
+            return { label: 'Schedule Pickup', action: () => pickupOptionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
+        }
+        if (!fullName || !phoneNumber || !pickupAddress || !agreedToTerms) {
+            return { label: 'Fill Details', action: () => pickupDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+        }
+        return { label: 'Submit Request', action: () => handleSubmitExchange() }
+    }
+
+    const nextStep = selectedProduct ? getNextStepInfo() : null
+
     // ── Render ───────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-[var(--colour-bg4)] font-sans text-[var(--colour-text2)]">
+        <main className="min-h-screen bg-[var(--colour-bg4)] font-sans text-[var(--colour-text2)] pb-24">
 
             {/* ═══ HERO ═══ */}
             <section className="relative overflow-hidden bg-gradient-to-br from-[#E8F0FE] via-[#F0F6FF] to-[#E0ECFA] pt-10 pb-20 md:pt-14 md:pb-28">
@@ -276,7 +317,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                             </h4>
                             <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-3">
                                 {brands.map(brand => (
-                                    <button key={brand.id} onClick={() => handleSelectBrand(brand.slug)}
+                                    <button key={brand.id} onClick={() => handleSelectBrand(brand.slug)} style={{ cursor: 'pointer' }}
                                         className={cn('relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md',
                                             selectedBrand === brand.slug ? 'border-[var(--colour-fsP2)] bg-blue-50 shadow-md' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/40')}>
                                         {selectedBrand === brand.slug && <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[var(--colour-fsP2)] rounded-full flex items-center justify-center"><Check className="h-3 w-3 text-white" /></div>}
@@ -307,7 +348,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                                             const maxVal = getMaxExchangeValue(product.discounted_price || product.price, product.created_at)
                                             const isSelected = selectedProduct?.slug === product.slug
                                             return (
-                                                <button key={product.id} onClick={() => handleSelectProduct(product)}
+                                                <button key={product.id} onClick={() => handleSelectProduct(product)} style={{ cursor: 'pointer' }}
                                                     className={cn('group relative text-left p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-lg',
                                                         isSelected ? 'border-[var(--colour-fsP2)] bg-blue-50/60 shadow-lg' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/40')}>
                                                     {isSelected && <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[var(--colour-fsP2)] rounded-full flex items-center justify-center z-10"><Check className="h-3 w-3 text-white" /></div>}
@@ -339,7 +380,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
 
                         {/* ─── STEP 3: Choose Color Variant ─── */}
                         {selectedProduct && !isLoadingDetail && colorOptions.length > 0 && (
-                            <div className="mb-8 animate-fade-in">
+                            <div ref={colorRef} className="mb-8 animate-fade-in">
                                 <h4 className="text-base font-bold text-[var(--colour-text2)] mb-4 flex items-center gap-2">
                                     <span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">3</span>
                                     Choose Color — {selectedProduct.name}
@@ -347,7 +388,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                                 <div className="bg-[var(--colour-bg4)] rounded-xl p-5 border border-[var(--colour-border3)]">
                                     <div className="flex flex-wrap gap-3">
                                         {colorOptions.map(c => (
-                                            <button key={c.name} onClick={() => handleSelectColor(c)}
+                                            <button key={c.name} onClick={() => handleSelectColor(c)} style={{ cursor: 'pointer' }}
                                                 className={cn('flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all',
                                                     selectedColor?.name === c.name ? 'border-[var(--colour-fsP2)] bg-white shadow-md' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/40')}>
                                                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 relative shrink-0">
@@ -370,7 +411,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
 
                         {/* ─── STEP 4: Condition Assessment ─── */}
                         {selectedProduct && !isLoadingDetail && (colorOptions.length === 0 || selectedColor) && (
-                            <div className="mb-8 animate-fade-in">
+                            <div ref={conditionRef} className="mb-8 animate-fade-in">
                                 <h4 className="text-base font-bold text-[var(--colour-text2)] mb-4 flex items-center gap-2">
                                     <span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">{colorOptions.length > 0 ? '4' : '3'}</span>
                                     Phone Condition Assessment
@@ -383,7 +424,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                                             </p>
                                             <div className="space-y-2">
                                                 {q.options.map(opt => (
-                                                    <button key={opt.label} onClick={() => handleConditionAnswer(q.key, opt.value)}
+                                                    <button key={opt.label} onClick={() => handleConditionAnswer(q.key, opt.value)} style={{ cursor: 'pointer' }}
                                                         className={cn('w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all',
                                                             conditionAnswers[q.key] === opt.value
                                                                 ? 'border-[var(--colour-fsP2)] bg-blue-50 text-[var(--colour-fsP2)]'
@@ -402,7 +443,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                         )}
 
                         {/* ─── Result ─── */}
-                        {showResult && conditionComplete && selectedProduct && !showSuccess && (
+                        {showResult && conditionComplete && selectedProduct && (
                             <div className="mt-5 p-5 bg-green-50 border border-green-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-slide-up">
                                 <div>
                                     <h4 className="text-base font-bold text-[var(--colour-text2)]">Estimated Exchange Value</h4>
@@ -417,13 +458,13 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                         )}
 
                         {/* ─── STEP 5: Pickup Option ─── */}
-                        {showResult && conditionComplete && selectedProduct && !showSuccess && (
-                            <div className="mt-8 animate-fade-in">
+                        {showResult && conditionComplete && selectedProduct && (
+                            <div ref={pickupOptionRef} className="mt-8 animate-fade-in">
                                 <div className="flex items-center gap-3 mb-5">
                                     <span className="bg-[var(--colour-fsP2)] text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold">{colorOptions.length > 0 ? '5' : '4'}</span>
                                     <h4 className="text-base font-bold text-[var(--colour-text2)]">How would you like to proceed?</h4>
                                 </div>
-                                <button onClick={() => setPickupSelected(true)}
+                                <button onClick={() => setPickupSelected(true)} style={{ cursor: 'pointer' }}
                                     className={cn('relative w-full max-w-lg p-6 rounded-2xl border-2 text-left transition-all duration-300 hover:shadow-lg group',
                                         pickupSelected ? 'border-[var(--colour-fsP2)] bg-gradient-to-br from-blue-50 to-[#E8F0FE] shadow-lg' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/50')}>
                                     {pickupSelected && <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--colour-fsP2)] rounded-full flex items-center justify-center shadow-md"><Check className="h-3.5 w-3.5 text-white" /></div>}
@@ -442,8 +483,8 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                         )}
 
                         {/* ─── STEP 6: Pickup Details ─── */}
-                        {showResult && conditionComplete && selectedProduct && !showSuccess && pickupSelected && (
-                            <div className="mt-8 animate-fade-in">
+                        {showResult && conditionComplete && selectedProduct && pickupSelected && (
+                            <div ref={pickupDetailsRef} className="mt-8 animate-fade-in">
                                 <div className="flex items-center gap-2.5 mb-6">
                                     <span className="bg-[var(--colour-fsP2)] text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold">{colorOptions.length > 0 ? '6' : '5'}</span>
                                     <h4 className="text-lg font-bold text-[var(--colour-text2)]">Fill Pickup Details</h4>
@@ -463,11 +504,11 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                                                     {photoPreviewUrls.map((url, i) => (
                                                         <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
                                                             <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                                                            <button onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-3 w-3" /></button>
+                                                            <button onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"><X className="h-3 w-3" /></button>
                                                         </div>
                                                     ))}
                                                     {productPhotos.length < 4 && (
-                                                        <button onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-lg border-2 border-dashed border-[var(--colour-fsP2)] bg-white hover:bg-[var(--colour-fsP2)]/30 transition-all flex flex-col items-center justify-center gap-1">
+                                                        <button onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-lg border-2 border-dashed border-[var(--colour-fsP2)] bg-white hover:bg-[var(--colour-fsP2)]/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer">
                                                             <Upload className="h-5 w-5 text-[var(--colour-fsP2)]" /><span className="text-[10px] text-[var(--colour-fsP2)] font-medium">Add</span>
                                                         </button>
                                                     )}
@@ -490,34 +531,34 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                                             <p className="text-sm font-semibold text-[var(--colour-bg3)]">Pickup & Contact</p>
                                             {/* Address */}
                                             <div>
-                                                <label className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><MapPinned className="h-4 w-4 text-[var(--colour-bg3)]" />Pickup Address</label>
+                                                <label htmlFor="pickupAddress" className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><MapPinned className="h-4 w-4 text-[var(--colour-bg3)]" />Pickup Address</label>
                                                 <div className="flex gap-2 mb-3">
-                                                    <button onClick={handleUseGeoLocation} className={cn('flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-full border-2 transition-all', locationMethod === 'geo' ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white' : 'border-[var(--colour-fsP2)]/30 bg-white text-[var(--colour-fsP2)] hover:bg-green-50')}>
+                                                    <button onClick={handleUseGeoLocation} className={cn('flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-full border-2 transition-all cursor-pointer', locationMethod === 'geo' ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white' : 'border-[var(--colour-fsP2)]/30 bg-white text-[var(--colour-fsP2)] hover:bg-green-50')}>
                                                         {isLocating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LocateFixed className="h-3.5 w-3.5" />}Use GPS
                                                     </button>
-                                                    <button onClick={() => { setLocationMethod('manual'); setPickupAddress('') }} className={cn('flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-full border-2 transition-all', locationMethod === 'manual' ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white' : 'border-[var(--colour-fsP2)]/30 bg-white text-[var(--colour-fsP2)] hover:bg-green-50')}>
+                                                    <button onClick={() => { setLocationMethod('manual'); setPickupAddress('') }} className={cn('flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-full border-2 transition-all cursor-pointer', locationMethod === 'manual' ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white' : 'border-[var(--colour-fsP2)]/30 bg-white text-[var(--colour-fsP2)] hover:bg-green-50')}>
                                                         <Navigation className="h-3.5 w-3.5" />Type Address
                                                     </button>
                                                 </div>
                                                 {locationMethod === 'geo' && pickupAddress && <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 flex items-center gap-2 mb-2 text-xs text-green-700"><Check className="h-3.5 w-3.5 shrink-0" /><span className="line-clamp-1">{pickupAddress}</span></div>}
                                                 {locationMethod === 'geo' && isLocating && <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 flex items-center gap-2 mb-2 text-xs text-green-600"><Loader2 className="h-3.5 w-3.5 animate-spin" />Detecting location...</div>}
                                                 {(locationMethod === 'manual' || (locationMethod === 'geo' && pickupAddress)) && (
-                                                    <Input value={pickupAddress} onChange={(e) => { setPickupAddress(e.target.value); setFormErrors(prev => ({ ...prev, address: '' })) }} placeholder="Full address, landmark, area..."
+                                                    <Input id="pickupAddress" value={pickupAddress} onChange={(e) => { setPickupAddress(e.target.value); setFormErrors(prev => ({ ...prev, address: '' })) }} placeholder="Full address, landmark, area..."
                                                         className={cn('h-11 bg-white border-2 rounded-lg text-sm focus:ring-1 transition-all', formErrors.address ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-[var(--colour-fsP2)]/30 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20')} />
                                                 )}
                                                 {formErrors.address && <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.address}</p>}
                                             </div>
                                             {/* Full Name */}
                                             <div>
-                                                <label className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><User className="h-4 w-4 text-[var(--colour-bg3)]" />Full Name</label>
-                                                <Input value={fullName} onChange={(e) => { setFullName(e.target.value); setFormErrors(prev => ({ ...prev, name: '' })) }} placeholder="e.g. Ram Sharma" maxLength={50}
+                                                <label htmlFor="fullName" className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><User className="h-4 w-4 text-[var(--colour-bg3)]" />Full Name</label>
+                                                <Input id="fullName" value={fullName} onChange={(e) => { setFullName(e.target.value); setFormErrors(prev => ({ ...prev, name: '' })) }} placeholder="e.g. Ram Sharma" maxLength={50}
                                                     className={cn('h-11 bg-white border-2 rounded-lg text-sm focus:ring-1 transition-all', formErrors.name ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-[var(--colour-fsP2)]/30 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20')} />
                                                 {formErrors.name && <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.name}</p>}
                                             </div>
                                             {/* Phone */}
                                             <div>
-                                                <label className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><Smartphone className="h-4 w-4 text-[var(--colour-bg3)]" />Phone Number</label>
-                                                <Input value={phoneNumber} onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 10); setPhoneNumber(v); setFormErrors(prev => ({ ...prev, phone: '' })) }} placeholder="98XXXXXXXX" maxLength={10}
+                                                <label htmlFor="phoneNumber" className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><Smartphone className="h-4 w-4 text-[var(--colour-bg3)]" />Phone Number</label>
+                                                <Input id="phoneNumber" value={phoneNumber} onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 10); setPhoneNumber(v); setFormErrors(prev => ({ ...prev, phone: '' })) }} placeholder="98XXXXXXXX" maxLength={10}
                                                     className={cn('h-11 bg-white border-2 rounded-lg text-sm focus:ring-1 transition-all', formErrors.phone ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-[var(--colour-fsP2)]/30 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20')} />
                                                 {formErrors.phone ? <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.phone}</p> : <p className="text-[11px] text-[var(--colour-text3)] mt-1">10 digits only</p>}
                                             </div>
@@ -542,25 +583,6 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                                 </div>
                             </div>
                         )}
-
-                        {/* ═══ SUCCESS DIALOG ═══ */}
-                        <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
-                            <DialogContent className="sm:max-w-[380px] p-0 bg-white overflow-hidden border border-gray-200 rounded-2xl" showCloseButton={false}>
-                                <div className="p-6 text-center">
-                                    <div className="w-14 h-14 rounded-full bg-[var(--colour-bg3)] flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationIterationCount: 2, animationDuration: '0.6s' }}><Check className="h-7 w-7 text-white stroke-[3]" /></div>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Exchange Request Submitted</h3>
-                                    <p className="text-[13px] text-gray-500 mb-5">Thank you, <span className="font-semibold text-gray-700">{fullName}</span></p>
-                                    <div className="bg-gray-50 rounded-xl divide-y divide-gray-200 text-left text-sm mb-5">
-                                        <div className="flex justify-between items-center px-4 py-3"><span className="text-gray-500">Device</span><span className="font-semibold text-gray-800 text-right max-w-[180px] truncate">{selectedProduct?.name}</span></div>
-                                        <div className="flex justify-between items-center px-4 py-3"><span className="text-gray-500">Exchange Value</span><span className="font-bold text-[var(--colour-bg3)]">Rs. {exchangeValue.toLocaleString()}</span></div>
-                                        <div className="flex justify-between items-center px-4 py-3"><span className="text-gray-500">Pickup</span><span className="font-semibold text-gray-800 flex items-center gap-1.5"><Truck className="h-3.5 w-3.5" />Driver Pickup</span></div>
-                                        <div className="flex justify-between items-center px-4 py-3"><span className="text-gray-500">Contact</span><span className="font-semibold text-gray-800">{phoneNumber}</span></div>
-                                    </div>
-                                    <p className="text-xs text-gray-400 mb-4">We&apos;ll call you shortly to schedule pickup.</p>
-                                    <Button onClick={() => setShowSuccess(false)} className="w-full h-10 bg-[var(--colour-bg3)] hover:bg-[#0D5500] text-white font-semibold rounded-xl text-sm">Done</Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
                     </CardContent>
                 </Card>
             </section>
@@ -640,11 +662,47 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                     <h2 className="text-2xl md:text-3xl font-bold text-[var(--colour-fsP2)] mb-1">Visit Us & Upgrade <span className="text-[var(--colour-text2)] font-normal">Your Mobile Today!</span></h2>
                     <p className="text-[var(--colour-text3)] text-sm mb-7">Explore products or check EMI eligibility today.</p>
                     <div className="flex flex-col sm:flex-row justify-center gap-3">
-                        <Button className="h-12 px-8 bg-[var(--colour-bg3)] hover:bg-[#0D5500] text-white text-base font-bold rounded-lg shadow-md hover:shadow-lg">Get Exchange Quote</Button>
+                        <Button className="h-12 px-8 bg-[var(--colour-bg3)] hover:bg-[#0D5500] text-white text-base font-bold rounded-lg shadow-md hover:shadow-lg" onClick={() => { if (formSectionRef.current) formSectionRef.current.scrollIntoView({ behavior: 'smooth' }) }}>Get Exchange Quote</Button>
                         <Button className="h-12 px-8 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-bg2)] text-white text-base font-bold rounded-lg shadow-md hover:shadow-lg">Find Showroom</Button>
                     </div>
                 </div>
             </section>
-        </div>
+
+            {/* ═══ FLOATING ACTION BAR ═══ */}
+            {selectedProduct && (
+                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-300 w-[95%] sm:w-auto">
+                    <div className="mx-auto bg-white/95 backdrop-blur-md border border-[var(--colour-border3)] shadow-[var(--shadow-premium-md)] rounded-lg py-2 px-3 sm:px-4 flex items-center justify-between gap-3 sm:gap-6 min-w-[280px] sm:min-w-[400px] max-w-full">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gray-50  p-1 sm:p-1 border-none border-gray-100 flex-shrink-0  overflow-hidden flex items-center justify-center">
+                                <Image src={getProductImage(selectedProduct)} alt={selectedProduct.name} width={40} height={40} className="object-contain" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[11px] sm:text-[13px] text-[var(--colour-text2)] font-bold leading-tight line-clamp-1 max-w-[120px] sm:max-w-[180px]">
+                                    {selectedProduct.name}
+                                </span>
+                                <div className="flex items-baseline gap-1 mt-0.5">
+                                    <span className="text-[10px] text-[var(--colour-text3)] font-semibold">Value</span>
+                                    <span className="text-[13px] sm:text-[15px] font-extrabold text-[var(--colour-bg3)] leading-none">
+                                        Rs. {(conditionComplete ? exchangeValue : maxExchangeValue).toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {nextStep && (
+                            <Button
+                                onClick={nextStep.action}
+                                disabled={isSubmitting}
+                                className={`transition-colors text-white font-bold h-8 sm:h-9 px-3 sm:px-4 rounded-full shadow-sm whitespace-nowrap text-[11px] sm:text-xs ${isSubmitting ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${nextStep.label === 'Submit Request'
+                                    ? 'bg-[var(--colour-bg3)] hover:bg-[#0D5500]'
+                                    : 'bg-[var(--colour-fsP2)] hover:bg-[var(--colour-bg2)]'
+                                    }`}
+                            >
+                                {isSubmitting ? 'Submitting...' : nextStep.label} {!isSubmitting && <ArrowRight className="ml-1 h-3 w-3" />}
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
+        </main>
     )
 }

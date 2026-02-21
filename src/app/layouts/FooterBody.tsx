@@ -100,7 +100,7 @@ const FooterBody = () => {
 
   return (
     <footer className="font-[Inter,sans-serif]">
-      <h1 className="hidden">Fatafatsewa footer</h1>
+      <h2 className="sr-only">Fatafatsewa footer</h2>
 
       {/* ═══ Help Banner ═══ */}
       <div className="bg-[var(--colour-fsP1)] border border-red-500 rounded-t-2xl">
