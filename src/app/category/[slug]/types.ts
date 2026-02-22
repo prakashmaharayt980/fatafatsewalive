@@ -119,9 +119,9 @@ export const COLORS: FilterOption[] = [
 ];
 
 export const GRID_CONFIGS = {
-    grid: 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5',
-    compact: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
+    grid4: 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4',
+    grid5: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5',
     list: 'grid-cols-1',
 } as const;
 
-export type ViewMode = keyof typeof GRID_CONFIGS;
+export type ViewMode = 'grid4' | 'grid5' | 'list';

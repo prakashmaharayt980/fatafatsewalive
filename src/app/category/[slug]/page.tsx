@@ -10,18 +10,13 @@ import {
     SearchParams,
 } from './types';
 import { parseSlugAndId, formatPageTitle, parseFiltersFromSearchParams, buildApiParams } from './utils';
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 
-// ============================================
-// TYPES
-// ============================================
 interface PageProps {
     params: Promise<{ slug: string }>;
     searchParams: Promise<SearchParams>;
 }
 
-// ============================================
-// DATA FETCHING FUNCTIONS
-// ============================================
 async function getCategoryData(slug: string): Promise<CategoryData | null> {
     try {
         const response = await RemoteServices.getCategoryBySlug(slug);
@@ -52,12 +47,12 @@ async function getInitialProducts(
             }
         );
         const queryString = new URLSearchParams(params).toString();
-        const response = await RemoteServices.searchProducts({
-            search: '',
-            ...params as any, // Cast because searchProducts strict typing might be missing optional filters
-            categories: categoryId // Passing ID or Slug
+        const response = await RemoteServices.getCategoryProducts({
+            ...params as any,
+            id: categoryId
         });
-        return response;
+        console.log('response', response.data)
+        return response
     } catch (error) {
         console.error('Error fetching products:', error);
         return { data: [], meta: { current_page: 1, per_page: 20, total: 0, last_page: 1 } };
@@ -119,14 +114,14 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     ];
 
     return {
-        title: `${title} | Shop Online`,
+        title: `${title} | Fatafat Sewa - Shop Online`,
         description,
         keywords: keywords.join(', '),
         openGraph: {
-            title: `${title} | Shop Online`,
+            title: `${title} | Fatafat Sewa - Shop Online`,
             description,
             url: canonicalUrl,
-            siteName: 'Your Store Name',
+            siteName: 'Fatafat Sewa',
             type: 'website',
             images: category?.image ? [
                 {
@@ -139,7 +134,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
         },
         twitter: {
             card: 'summary_large_image',
-            title: `${title} | Shop Online`,
+            title: `${title} | Fatafat Sewa - Shop Online`,
             description,
             images: category?.image ? [category.image] : [],
         },
@@ -213,9 +208,6 @@ function CategoryPageSkeleton() {
     );
 }
 
-// ============================================
-// STRUCTURED DATA (JSON-LD)
-// ============================================
 function generateStructuredData(
     title: string,
     slug: string,
@@ -306,11 +298,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     }
 
     // Fetch all data in parallel for performance
-    const [category, initialProducts, categories, brands] = await Promise.all([
+    const [category, initialProducts, categories, brands, bannerData] = await Promise.all([
         getCategoryData(slug),
         getInitialProducts(id, resolvedSearchParams),
         getCategories(),
         getBrands(),
+        getBannerData('blog-banner-test'), // Fetch dynamic category banner
     ]);
 
     // Format title
@@ -342,6 +335,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     categoryId={id}
                     slug={slug}
                     title={title}
+                    category={category}
+                    bannerData={bannerData}
                     initialProducts={initialProducts}
                     initialCategories={categories}
                     initialBrands={brands}

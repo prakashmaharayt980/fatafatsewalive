@@ -14,7 +14,8 @@ import { useFilters, useFilterData } from '../hooks';
 import FilterSidebar from "./FilterSidebar";
 import ProductGrid from './ProductGrid';
 import CategoryHeader from './CategoryHeader';
-import MobileFilterDrawer from "./MobileFilterDrawer";
+import MobileFilterDrawer from './MobileFilterDrawer';
+import CategoryBanner from './CategoryBanner';
 import { SmartStickyWrapper } from './SmartStickyWrapper';
 
 // ============================================
@@ -61,25 +62,30 @@ interface CategoryPageClientProps {
     categoryId: string;
     slug: string;
     title: string;
+    category: CategoryData | null;
+    bannerData?: any;
     initialProducts: CategoryProductsResponse;
     initialCategories: CategoryData[];
     initialBrands: BrandData[];
-    fallback?: Record<string, unknown>;
+    fallback: Record<string, unknown>;
 }
 
 export default function CategoryPageClient({
     categoryId,
     slug,
     title,
+    category,
+    bannerData,
     initialProducts,
     initialCategories,
     initialBrands,
-    fallback = {},
+    fallback,
 }: CategoryPageClientProps) {
     // UI State
     const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<ViewMode>('grid');
+    const [viewMode, setViewMode] = useState<ViewMode>('grid5');
 
+    console.log('id', categoryId)
     // Filter hook with URL sync
     const {
         filters,
@@ -125,7 +131,7 @@ export default function CategoryPageClient({
 
     return (
         <SWRConfig value={{ fallback }}>
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+            <div className="min-h-screen bg-[#f8fafc]">
                 {/* Mobile Filter Drawer */}
                 <MobileFilterDrawer
                     isOpen={mobileFilterOpen}
@@ -150,10 +156,13 @@ export default function CategoryPageClient({
                 </MobileFilterDrawer>
 
                 <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
+                    {/* Top Auto-Scrolling Category Banner */}
+                    <CategoryBanner category={category} bannerData={bannerData} />
+
                     {/* Header */}
                     <CategoryHeader
                         title={title}
-                        totalProducts={initialProducts.meta?.total || 0}
+                        totalProducts={initialProducts.meta.total || 0}
                         sortBy={filters.sortBy}
                         viewMode={viewMode}
                         activeFilterCount={activeFilterCount}
@@ -172,7 +181,7 @@ export default function CategoryPageClient({
                     )}
 
                     {/* Main Layout */}
-                    <div className="flex gap-8">
+                    <div className="flex gap-8 mb-12">
                         {/* Desktop Sidebar */}
                         <aside className="hidden lg:block w-72 flex-shrink-0">
                             <SmartStickyWrapper topOffset={24} bottomOffset={24}>
@@ -205,6 +214,16 @@ export default function CategoryPageClient({
                             />
                         </main>
                     </div>
+
+                    {/* Category Parsed Description */}
+                    {category?.description && (
+                        <div className="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100 max-w-[1600px] mx-auto mt-8">
+                            <div
+                                className="prose prose-sm md:prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-[var(--colour-fsP2)] prose-strong:text-gray-900"
+                                dangerouslySetInnerHTML={{ __html: category.description }}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <GlobalStyles />

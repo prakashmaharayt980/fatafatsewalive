@@ -102,8 +102,8 @@ interface ViewModeToggleProps {
 }
 
 const VIEW_MODES: { mode: ViewMode; icon: React.ElementType; label: string }[] = [
-    { mode: 'grid', icon: LayoutGrid, label: 'Grid view' },
-    { mode: 'compact', icon: Grid3X3, label: 'Compact view' },
+    { mode: 'grid5', icon: Grid3X3, label: '5 Columns view' },
+    { mode: 'grid4', icon: LayoutGrid, label: '4 Columns view' },
     { mode: 'list', icon: LayoutList, label: 'List view' },
 ];
 
@@ -178,9 +178,9 @@ const CategoryHeader = memo(({
     onMobileFilterClick,
 }: CategoryHeaderProps) => (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
-        <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">{title}</h1>
-            <span className="text-gray-500 bg-gray-100 px-3 py-1 rounded-full text-sm">
+        <div className="flex flex-wrap items-center gap-4">
+            <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-900 tracking-tight">{title}</h1>
+            <span className="text-[var(--colour-fsP2)] bg-blue-50/80 px-4 py-1.5 rounded-full text-sm font-semibold border border-blue-100/50">
                 {totalProducts.toLocaleString()} Products
             </span>
         </div>

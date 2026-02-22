@@ -12,7 +12,7 @@ import {
     COLORS,
     ViewMode,
 } from '../types';
-import { useProducts, useIntersectionObserver } from '../hooks';
+import { useProducts } from '../hooks';
 import ProductCard, { ProductCardSkeleton, ProductCardRow, ProductCardRowSkeleton } from './ProductCard';
 import { ActiveFilterTag } from './FilterSidebar';
 
@@ -50,7 +50,7 @@ interface LoadingGridProps {
     viewMode?: ViewMode;
 }
 
-const LoadingGrid = memo(({ count = 12, viewMode = 'grid' }: LoadingGridProps) => (
+const LoadingGrid = memo(({ count = 12, viewMode = 'grid5' }: LoadingGridProps) => (
     <div className={cn('grid gap-2 sm:gap-4 lg:gap-6', GRID_CONFIGS[viewMode])}>
         {[...Array(count)].map((_, i) =>
             viewMode === 'list' ? (
@@ -202,7 +202,7 @@ const ProductGrid = memo(({
     initialData,
     categories,
     brands,
-    viewMode = 'grid',
+    viewMode = 'grid5',
     onToggleFilter,
     onFiltersChange,
     onClearFilters,
@@ -220,11 +220,6 @@ const ProductGrid = memo(({
         filters,
         initialData,
         enabled: !!categoryId,
-    });
-
-    const loadMoreRef = useIntersectionObserver(loadMore, {
-        enabled: !isLoadingMore && !isReachingEnd,
-        rootMargin: '200px',
     });
 
     const handleLoadMore = useCallback(() => {
@@ -254,7 +249,7 @@ const ProductGrid = memo(({
             />
 
             {/* Product Grid / List */}
-            <div className={cn('grid gap-2 sm:gap-4 lg:gap-6', GRID_CONFIGS[viewMode])}>
+            <div className={cn('grid gap-2 sm:gap-3 lg:gap-4', GRID_CONFIGS[viewMode])}>
                 {products.map((product, index) =>
                     viewMode === 'list' ? (
                         <ProductCardRow
@@ -275,7 +270,7 @@ const ProductGrid = memo(({
             </div>
 
             {/* Load More Section */}
-            <div ref={loadMoreRef} className="mt-8">
+            <div className="mt-8">
                 {isLoadingMore && (
                     <div className="flex items-center justify-center py-8">
                         <Loader2 size={32} className="text-[var(--colour-fsP2)] animate-spin" />
@@ -283,12 +278,12 @@ const ProductGrid = memo(({
                 )}
 
                 {!isLoadingMore && !isReachingEnd && (
-                    <div className="text-center">
+                    <div className="text-center pb-8">
                         <button
                             onClick={handleLoadMore}
-                            className="px-6 py-3 bg-white border border-gray-200 rounded-xl font-medium text-sm hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-all cursor-pointer"
+                            className="px-8 py-3 bg-[var(--colour-fsP2)] text-white border border-transparent rounded-full font-semibold text-sm hover:bg-white hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:shadow-lg transition-all duration-300 cursor-pointer w-48 mx-auto"
                         >
-                            Load More Products
+                            Show More
                         </button>
                     </div>
                 )}

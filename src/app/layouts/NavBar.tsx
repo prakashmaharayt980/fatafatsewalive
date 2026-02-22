@@ -133,9 +133,9 @@ const NavBar = ({ navbaritems }: {
                         <HoverCardTrigger asChild>
                             <button className="flex items-center gap-2 px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-full transition-all duration-300 h-9 cursor-pointer border border-white/20 shadow-xs hover:shadow-sm active:scale-95 group">
                                 <div className="flex items-center gap-2">
-                                    <Telescope className="h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:text-yellow-400 transition-all" />   <span className="text-[12px] font-bold  group-hover:text-yellow-400 transition-colors">Explore</span>
+                                    <Telescope className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-white group-hover:text-yellow-200 drop-shadow-sm" />   <span className="text-[12px] font-bold transition-colors text-white group-hover:text-yellow-200 drop-shadow-sm">Explore</span>
                                 </div>
-                                <ChevronDown className="h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:text-yellow-400 transition-all" />
+                                <ChevronDown className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-white drop-shadow-sm" />
                             </button>
                         </HoverCardTrigger>
 
@@ -158,7 +158,7 @@ const NavBar = ({ navbaritems }: {
                                                     : 'hover:bg-blue-50/50 '}
                                             `}
                                         >
-                                            <Link href={`/category/${category.slug}`} className="flex items-center gap-3 w-full" onClick={() => setActiveCategory(null)}>
+                                            <Link href={`/category/${category.slug}&id=${category.id}`} className="flex items-center gap-3 w-full" onClick={() => setActiveCategory(null)}>
                                                 <div className={`
                                                     p-1.5 rounded-md transition-colors overflow-hidden
                                                     ${activeCategory?.id === category.id
@@ -201,7 +201,7 @@ const NavBar = ({ navbaritems }: {
                                                 {/* Left: Sub-Categories */}
                                                 <div className="flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-200 hover:[&::-webkit-scrollbar-thumb]:bg-blue-300">
                                                     <div className="flex items-center justify-between mb-6">
-                                                        <Link href={`/category/${activeCategory.slug}`} onClick={() => setActiveCategory(null)} className="w-full">
+                                                        <Link href={`/category/${activeCategory.slug}&id=${activeCategory.id}`} onClick={() => setActiveCategory(null)} className="w-full">
                                                             <h2 className="text-xl font-bold text-[#1e293b] flex items-center gap-2 hover:text-[var(--colour-fsP2)] transition-colors">
                                                                 {activeCategory.title}
                                                                 <ChevronRight className="h-5 w-5 text-gray-300" />
@@ -214,7 +214,7 @@ const NavBar = ({ navbaritems }: {
                                                             activeCategory.children.map((child, idx) => (
                                                                 <Link
                                                                     key={idx}
-                                                                    href={`/category/${child.slug}`}
+                                                                    href={`/category/${child.slug}&id=${child.id}`}
                                                                     onClick={() => setActiveCategory(null)}
                                                                     className="text-[13px] font-medium text-slate-600 hover:text-[var(--colour-fsP2)] hover:translate-x-1 transition-all block py-1"
                                                                 >
@@ -288,7 +288,7 @@ const NavBar = ({ navbaritems }: {
                             <Link
                                 key={idx}
                                 href={item.path}
-                                className="text-sm font-medium text-white/95 hover:text-yellow-300 transition-colors flex items-center gap-1"
+                                className="text-sm font-bold text-white hover:text-yellow-200 transition-colors flex items-center gap-1 drop-shadow-md"
                             >
                                 {item.icon && item.icon}
                                 {item.title}

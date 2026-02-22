@@ -46,38 +46,42 @@ const FilterSection = memo(({
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className="border-b border-gray-100/80 last:border-0">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 mb-3 relative group/filter overflow-hidden">
+            {/* Soft left accent on hover */}
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--colour-fsP2)] to-[var(--colour-fsP1)] opacity-0 group-hover/filter:opacity-100 transition-opacity duration-300" />
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full py-3.5 text-left group/sec cursor-pointer"
+                className="flex items-center justify-between w-full py-1.5 text-left group/sec cursor-pointer"
                 aria-expanded={isOpen}
             >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                     {Icon && (
-                        <Icon
-                            size={14}
-                            className={cn(
-                                'transition-colors',
-                                isOpen ? 'text-[var(--colour-fsP2)]' : 'text-gray-400 group-hover/sec:text-[var(--colour-fsP2)]'
-                            )}
-                        />
+                        <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center group-hover/sec:bg-blue-50 transition-colors">
+                            <Icon
+                                size={14}
+                                className={cn(
+                                    'transition-colors',
+                                    isOpen ? 'text-[var(--colour-fsP2)]' : 'text-gray-500 group-hover/sec:text-[var(--colour-fsP2)]'
+                                )}
+                            />
+                        </div>
                     )}
-                    <span className="font-semibold text-[13px] text-gray-800 tracking-wide">
+                    <span className="font-bold text-[13.5px] text-gray-800 tracking-tight">
                         {title}
                     </span>
                     {showClear && onClear && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onClear(); }}
-                            className="text-[10px] font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] ml-1.5 transition-colors cursor-pointer"
+                            className="text-[10px] font-bold text-[var(--colour-fsP2)] hover:text-red-500 ml-1.5 transition-colors cursor-pointer bg-blue-50 hover:bg-red-50 px-1.5 py-0.5 rounded"
                         >
-                            Clear
+                            CLEAR
                         </button>
                     )}
                 </div>
                 <ChevronDown
-                    size={14}
+                    size={15}
                     className={cn(
-                        'text-gray-400 transition-transform duration-200',
+                        'text-gray-400 transition-transform duration-300',
                         isOpen && 'rotate-180 text-[var(--colour-fsP2)]'
                     )}
                 />
@@ -86,7 +90,7 @@ const FilterSection = memo(({
             <div
                 className={cn(
                     'overflow-hidden transition-all duration-300 ease-in-out',
-                    isOpen ? 'max-h-[500px] opacity-100 pb-4' : 'max-h-0 opacity-0'
+                    isOpen ? 'max-h-[500px] opacity-100 mt-3 pb-1' : 'max-h-0 opacity-0'
                 )}
             >
                 {loading ? (
@@ -117,30 +121,32 @@ const CheckboxItem = memo(({ option, checked, onChange }: CheckboxItemProps) => 
     <button
         onClick={() => onChange(option.id)}
         className={cn(
-            'flex items-center gap-2 w-full py-1.5 px-2 rounded-lg text-left transition-all duration-150 cursor-pointer',
+            'flex items-center gap-2.5 w-full py-2 px-2.5 rounded-lg text-left transition-all duration-200 cursor-pointer',
             checked
-                ? 'bg-[var(--colour-fsP2)]/8'
-                : 'hover:bg-gray-50'
+                ? 'bg-[var(--colour-fsP2)] text-white shadow-sm'
+                : 'hover:bg-gray-50 text-gray-600'
         )}
     >
         <div
             className={cn(
-                'w-4 h-4 rounded border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all duration-150',
+                'w-4 h-4 rounded-[4px] border flex items-center justify-center flex-shrink-0 transition-all duration-200',
                 checked
-                    ? 'bg-[var(--colour-fsP2)] border-[var(--colour-fsP2)]'
-                    : 'border-gray-300'
+                    ? 'bg-white border-transparent'
+                    : 'border-gray-300 bg-white'
             )}
         >
-            {checked && <Check size={10} className="text-white" strokeWidth={3} />}
+            {checked && <Check size={12} className="text-[var(--colour-fsP2)]" strokeWidth={3.5} />}
         </div>
         <span className={cn(
             'flex-1 text-[13px] truncate',
-            checked ? 'text-gray-900 font-medium' : 'text-gray-600'
+            checked ? 'font-semibold' : 'font-medium'
         )}>
             {option.label}
         </span>
         {option.count !== undefined && (
-            <span className="text-[11px] text-gray-400 tabular-nums">{option.count}</span>
+            <span className={cn("text-[11px] tabular-nums font-medium", checked ? 'text-blue-100' : 'text-gray-400')}>
+                {option.count}
+            </span>
         )}
     </button>
 ));
@@ -174,12 +180,12 @@ const SearchableList = memo(({
 
     return (
         <div>
-            <div className="relative mb-2">
-                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="relative mb-3">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                     type="text"
                     placeholder={placeholder}
-                    className="w-full pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-gray-50/50 focus:outline-none focus:border-[var(--colour-fsP2)] focus:bg-white transition-all"
+                    className="w-full pl-8 pr-3 py-2 text-[13px] border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:border-[var(--colour-fsP2)] focus:ring-1 focus:ring-[var(--colour-fsP2)] focus:bg-white transition-all"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -366,23 +372,23 @@ const ToggleSwitch = memo(({ label, checked, onChange }: ToggleSwitchProps) => (
     <button
         onClick={onChange}
         className={cn(
-            'flex items-center justify-between w-full py-2 px-2.5 rounded-lg transition-all duration-150 cursor-pointer',
-            checked ? 'bg-[var(--colour-fsP2)]/8' : 'hover:bg-gray-50'
+            'flex items-center justify-between w-full py-2.5 px-3 rounded-xl border transition-all duration-200 cursor-pointer group hover:shadow-sm',
+            checked ? 'bg-white border-[var(--colour-fsP2)] shadow-[0_0_10px_rgba(26,86,219,0.1)]' : 'bg-white border-gray-100 hover:border-gray-300'
         )}
     >
         <span className={cn(
-            'text-[13px] font-medium',
-            checked ? 'text-gray-900' : 'text-gray-600'
+            'text-[13px] font-bold tracking-tight',
+            checked ? 'text-[var(--colour-fsP2)]' : 'text-gray-600 group-hover:text-gray-900'
         )}>
             {label}
         </span>
         <div className="relative">
             <div className={cn(
-                'w-9 h-[22px] rounded-full transition-all duration-200',
-                checked ? 'bg-[var(--colour-fsP2)]' : 'bg-gray-200'
+                'w-10 h-6 rounded-full transition-colors duration-300',
+                checked ? 'bg-[var(--colour-fsP2)]' : 'bg-gray-200 group-hover:bg-gray-300'
             )}>
                 <div className={cn(
-                    'absolute w-[16px] h-[16px] bg-white rounded-full shadow-sm top-[3px] transition-all duration-200',
+                    'absolute w-[18px] h-[18px] bg-white rounded-full shadow-md top-[3px] transition-all duration-300',
                     checked ? 'left-[19px]' : 'left-[3px]'
                 )} />
             </div>
@@ -482,11 +488,11 @@ const FilterSidebar = memo(({
 
     return (
         <div className={cn(
-            'relative bg-white rounded-xl border border-gray-200/80 overflow-hidden',
+            'relative rounded-2xl overflow-hidden',
             className
         )}>
             {/* Header */}
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div className="px-1 py-1 mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <SlidersHorizontal size={15} className="text-gray-700" />
                     <h2 className="text-sm font-bold text-gray-900">Filters</h2>
@@ -507,9 +513,9 @@ const FilterSidebar = memo(({
             </div>
 
             {/* Content */}
-            <div className="px-3 py-1">
+            <div className="py-1">
                 {/* Quick Toggles */}
-                <div className="py-2.5 space-y-1 border-b border-gray-100/80">
+                <div className="py-2 mb-4 space-y-2">
                     <ToggleSwitch
                         label="In Stock Only"
                         checked={filters.inStock}

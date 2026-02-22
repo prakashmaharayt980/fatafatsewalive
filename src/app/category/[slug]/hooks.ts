@@ -169,10 +169,9 @@ export const useProducts = ({
             // Parse query string to object
             const queryParams = Object.fromEntries(new URLSearchParams(queryString));
             // Ensure category filtering is applied (categoryId is likely ID, need to check if searchProducts supports ID or Slug)
-            // Assuming searchProducts can handle 'categories' param filter
-            return await RemoteServices.searchProducts({
+            return await RemoteServices.getCategoryProducts({
                 ...queryParams as any,
-                categories: categoryId // Passing ID/Slug to categories filter
+                id: categoryId
             });
         },
         [categoryId]

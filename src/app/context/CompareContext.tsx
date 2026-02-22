@@ -36,8 +36,8 @@ export const CompareProvider = ({ children }: { children: ReactNode }) => {
     }, [compareList]);
 
     const addToCompare = (product: ProductDetails) => {
-        if (compareList.length >= 5) {
-            toast.error("You can compare up to 5 products only.");
+        if (compareList.length >= 3) {
+            toast.error("You can compare up to 3 products only.");
             return;
         }
         if (compareList.some(p => p.id === product.id)) {
