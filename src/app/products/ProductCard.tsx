@@ -33,13 +33,13 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
     const isNew = product.created_at ? (new Date().getTime() - new Date(product.created_at).getTime()) < (30 * 24 * 60 * 60 * 1000) : false; // Dummy logic or adjust
     const isBestSeller = index !== undefined && index < 2; // Mock: first 2 items are best sellers
     const imageUrl = product.image?.full || product.image?.thumb;
-    const rating = product.average_rating || (Math.random() * (5 - 4) + 4).toFixed(1); // Mock rating if missing
-    const ratingCount = Math.floor(Math.random() * 500) + 50; // Mock count
+    const rating = product.average_rating || "4.5"; // Mock rating if missing
+    const ratingCount = 128; // Mock count
     const productUrl = `/products/${product.slug}`;
     const pricedisplay = displayPrice;
     const originalPrice = priceVal || (pricedisplay * 1.2); // Ensure original is higher if missing
     const discountPercent = Math.round(((originalPrice - pricedisplay) / originalPrice) * 100) || 0;
-    const hasCoupon = Math.random() > 0.7; // Mock coupon availability
+    const hasCoupon = (productId % 3) === 0; // Consistent pseudo-random mock coupon availability
     const emiPrice = Math.round(pricedisplay / 12); // Simple 12-month EMI approximation
 
     return (

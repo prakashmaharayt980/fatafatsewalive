@@ -2,21 +2,18 @@
 
 import Imgbanner from './Imgbanner';
 import SkeletonCard from '@/app/skeleton/SkeletonCard';
-import SkeletonBanner from '@/app/skeleton/SkeletonBanner';
 import BasketCard from './BasketCard';
 
 // Lazy-loaded components
 import dynamic from 'next/dynamic';
+import { useLayoutEffect } from 'react';
 
-const OfferBanner = dynamic(() => import('./OfferBanner'), {
-  loading: () => <SkeletonBanner />
-});
+
 const OurArticles = dynamic(() => import('./OurArticles'));
 const CategoryProductSection = dynamic(() => import('./BasketCardwithImage'), {
   loading: () => <SkeletonCard />
 });
-const TwoImageBanner = dynamic(() => import('./Banner2'));
-const OneImageBanner = dynamic(() => import('./Bannerfooter'));
+
 
 // Demo category data - Replace with API fetch later
 const demoCategories = [
@@ -53,6 +50,12 @@ const HomePage = ({
   sectionThree,
   sectionFour
 }: HomePageProps) => {
+
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, []);
 
   return (
     <main className="mx-auto h-full m-0 p-0 sm:py-1 space-y-1  bg-[#f8f9fa] relative overflow-hidden">

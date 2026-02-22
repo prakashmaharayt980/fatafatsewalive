@@ -91,160 +91,134 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
 
     return (
         <article
-            className="group relative bg-white rounded-[12px] h-full overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 border border-gray-100 hover:border-[var(--colour-fsP2)]/30 cursor-pointer animate-fadeInUp flex flex-col"
+            className="group flex flex-col bg-white border border-gray-100 rounded-md hover:shadow-md transition-shadow duration-300 cursor-pointer overflow-hidden p-3 relative h-full"
             style={{ animationDelay: `${(index % 12) * 50}ms` }}
             onClick={handleCardClick}
             role="link"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleCardClick()}
         >
-            {/* Wishlist Button - Top Right */}
-            <button
-                onClick={handleWishlist}
-                className={cn(
-                    'absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-all duration-200 cursor-pointer',
-                    isWishlisted ? 'text-red-500 fill-red-500 scale-110' : 'text-gray-400 hover:text-red-500'
+            {/* Top Left Badges */}
+            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+                {(index ?? 0) < 2 && (
+                    <span className="bg-[#f0c229] flex items-center gap-1 text-black text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm tracking-tight shadow-sm">
+                        express
+                    </span>
                 )}
-                aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-                <Heart className={cn("h-4 w-4 stroke-[2.5]", isWishlisted && "fill-red-500 text-red-500")} />
-            </button>
-
-            {/* Compare Button - Below Wishlist */}
-            <button
-                onClick={handleCompare}
-                className={cn(
-                    "absolute top-10 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-all duration-200 cursor-pointer",
-                    isCompared ? "text-[var(--colour-fsP2)]" : "text-gray-400 hover:text-[var(--colour-fsP2)]"
-                )}
-                title={isCompared ? "Remove from Compare" : "Compare"}
-            >
-                <Scale className="h-4 w-4 stroke-[2.5]" />
-            </button>
-            {/* Image Container */}
-            <div className="relative aspect-square w-full overflow-hidden bg-white">
-                {!imageLoaded && !imageError && (
-                    <div className="absolute inset-0 bg-gray-50 animate-pulse" />
-                )}
-
-                {imageError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                        <Package size={48} className="text-gray-300" />
-                    </div>
-                )}
-
-                {imageUrl && (
-                    <div className="relative w-full h-full">
-                        <Image
-                            src={imageUrl}
-                            alt={product.name}
-                            fill
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                            priority={priority}
-                            onLoad={() => setImageLoaded(true)}
-                            onError={() => setImageError(true)}
-                            className={cn(
-                                'object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105',
-                                imageLoaded ? 'opacity-100' : 'opacity-0'
-                            )}
-                        />
-                    </div>
-                )}
-
-
-
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {discount > 0 && (
-                        <span className="bg-[var(--colour-fsP2)] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
-                            -{discount}%
-                        </span>
-                    )}
-                </div>
             </div>
 
-            {/* Product Info */}
-            <div className="p-2.5 sm:p-3 flex flex-col h-full">
-                <h3 className="font-regular text-gray-800 text-[12px] sm:text-[13px] leading-[1.35] line-clamp-2 mb-1.5 group-hover:text-[var(--colour-fsP2)] transition-colors duration-200 min-h-[34px]">
+            {/* Top Right Wishlist & Compare Icons */}
+            <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+                <button
+                    onClick={handleWishlist}
+                    className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-gray-400 hover:text-red-500 transition-all duration-200 shadow-sm border border-gray-100"
+                    aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                    <Heart className={cn("w-4.5 h-4.5 stroke-[1.5]", isWishlisted && "fill-red-500 text-red-500")} />
+                </button>
+                <button
+                    onClick={handleCompare}
+                    className={cn(
+                        "w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-100",
+                        isCompared ? "text-[var(--colour-fsP2)] border-[var(--colour-fsP2)]" : "text-gray-400 hover:text-[var(--colour-fsP2)]"
+                    )}
+                    title={isCompared ? "Remove from Compare" : "Compare"}
+                >
+                    <Scale className="w-4.5 h-4.5 stroke-[1.5]" />
+                </button>
+            </div>
+
+            {/* Image Area */}
+            <div className="relative w-full aspect-square mb-3 mt-6 bg-white">
+                {!imageLoaded && !imageError && (
+                    <div className="absolute inset-0 bg-gray-50 animate-pulse rounded" />
+                )}
+                {imageError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded">
+                        <Package className="w-8 h-8 text-gray-200" />
+                    </div>
+                )}
+                {imageUrl && (
+                    <Image
+                        src={imageUrl}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        priority={priority}
+                        onLoad={() => setImageLoaded(true)}
+                        onError={() => setImageError(true)}
+                        className={cn(
+                            'object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105',
+                            imageLoaded ? 'opacity-100' : 'opacity-0'
+                        )}
+                    />
+                )}
+
+                {/* Add to Cart Button (The +) */}
+                <button
+                    onClick={handleAddToCart}
+                    className="absolute -bottom-2 -right-2 w-10 h-10 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] text-gray-700 hover:text-[var(--colour-fsP2)] transition-all duration-300 z-20 group/add"
+                    title="Add to Cart"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover/add:scale-110">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="flex flex-col flex-1 text-left relative z-10 bg-white">
+                {/* Brand or Title */}
+                <h3 className="text-gray-900 text-[13px] leading-relaxed line-clamp-2 min-h-[40px] font-medium mb-1.5 group-hover:text-[var(--colour-fsP2)] transition-colors">
                     {product.name}
                 </h3>
 
-                {/* Feature Tags */}
-                <div className="flex flex-wrap gap-1 mb-2">
-                    {product.quantity > 0 && (
-                        <span className="text-[10px] md:text-[11px] font-medium px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-100">
-                            In Stock
+                {/* Rating line */}
+                {mockRating > 0 && (
+                    <div className="flex items-center gap-1 mb-2">
+                        <span className="text-green-700 font-bold text-[12px] flex items-center">
+                            {mockRating.toFixed(1)} <Star className="w-3 h-3 ml-0.5" />
                         </span>
-                    )}
-                    {product.emi_enabled === 1 && (
-                        <span className="text-[10px] md:text-[11px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">
-                            EMI Available
-                        </span>
-                    )}
-                    {/* Add promotional highlight if applicable - generic implementation */}
-                    {(
-                        <span className="text-[10px] md:text-[11px] font-medium px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-100">
-                            Exchange Offer
-                        </span>
-                    )}
-                    {(
-                        <span className="text-[9px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-100">
-                            Insurance
-                        </span>
-                    )}
-                </div>
-
-                <div className="flex flex-col mt-auto pt-1 space-y-1.5">
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className="text-[15px] sm:text-[16px] font-extrabold text-[#1f2937]">Rs. {displayPrice}</span>
-                        {(
-                            <span className="text-[12px] text-gray-400 line-through decoration-gray-400 font-medium">
-                                Rs. {originalPrice}
-                            </span>
-                        )}
-                        {(
-                            <span className="text-[var(--colour-fsP2)] font-bold bg-blue-50/50 px-1 py-0.5 rounded text-[10px] ml-auto sm:ml-1">
-                                {discount}% OFF
-                            </span>
-                        )}
+                        <span className="text-gray-400 text-[11px]">({mockRatingCount})</span>
                     </div>
+                )}
 
-                    {/* Mock Coupons */}
-                    {hasCoupon && (
-                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-                            <div className="relative shrink-0 bg-green-50/80 border border-green-200/60 text-green-700 text-[9px] font-bold px-1.5 py-0.5 rounded-sm border-dashed flex items-center gap-1 w-fit">
-                                <span className="w-1 h-1 rounded-full bg-white border border-green-200/60 absolute -left-[2.5px] top-1/2 -translate-y-1/2"></span>
-                                Save Rs. 200
-                                <span className="w-1 h-1 rounded-full bg-white border border-green-200/60 absolute -right-[2.5px] top-1/2 -translate-y-1/2"></span>
-                            </div>
-                            <div className="relative shrink-0 bg-blue-50/80 border border-blue-200/60 text-[var(--colour-fsP2)] text-[9px] font-bold px-1.5 py-0.5 rounded-sm border-dashed flex items-center gap-1 w-fit">
-                                <span className="w-1 h-1 rounded-full bg-white border border-blue-200/60 absolute -left-[2.5px] top-1/2 -translate-y-1/2"></span>
-                                Free Delivery
-                                <span className="w-1 h-1 rounded-full bg-white border border-blue-200/60 absolute -right-[2.5px] top-1/2 -translate-y-1/2"></span>
-                            </div>
-                        </div>
+                {/* Price Line */}
+                <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-gray-900 font-extrabold text-[16px] xl:text-[20px] leading-none tracking-tight">
+                        Rs. {displayPrice}
+                    </span>
+                    {discount > 0 && (
+                        <span className="text-green-600 font-bold text-[11px] bg-green-50 px-1 py-0.5 rounded-sm">
+                            {discount}% OFF
+                        </span>
                     )}
-
-                    {/* Ratings Section */}
-                    {mockRating > 0 && (
-                        <div className="flex items-center gap-1">
-                            <div className="flex items-center gap-[2px] bg-[var(--colour-fsP2)] text-white px-1 py-[2px] rounded-sm shadow-sm">
-                                <span className="text-[9px] font-bold leading-none">{mockRating.toFixed(1)}</span>
-                                <Star className="w-2 h-2 fill-current" />
-                            </div>
-                            <span className="text-[9px] text-gray-500 font-medium tracking-tight">({mockRatingCount})</span>
-                        </div>
-                    )}
-
-                    {/* Add to Cart button */}
-                    <button
-                        onClick={handleAddToCart}
-                        className="w-full bg-[var(--colour-fsP2)] text-white py-1.5 rounded-md font-bold text-[12px] hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-1.5 cursor-pointer mt-1 opacity-90 group-hover:opacity-100 shadow-sm"
-                    >
-                        <ShoppingBag size={13} />
-                        <span>Add to Cart</span>
-                    </button>
                 </div>
+
+                {/* Free Delivery / Original Price */}
+                <div className="flex flex-col mt-auto pt-2">
+                    {originalPrice && (
+                        <span className="text-gray-400 text-[11px] line-through mb-0.5">Rs. {originalPrice}</span>
+                    )}
+                    <span className="text-gray-500 text-[11px] flex items-center font-medium">
+                        <span className="w-3.5 h-3.5 mr-1.5 text-gray-400/80">
+                            <svg fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                            </svg>
+                        </span>
+                        Free Delivery
+                    </span>
+                </div>
+
+                {/* Footer Badges */}
+                {hasCoupon && (
+                    <div className="flex mt-2">
+                        <span className="text-blue-600 text-[10px] border border-blue-200 bg-blue-50 px-1.5 py-0.5 rounded-sm flex items-center">
+                            10% cashback <span className="font-bold ml-1 text-green-700 bg-green-100 px-1 rounded-sm">+1</span>
+                        </span>
+                    </div>
+                )}
             </div>
         </article>
     );
@@ -342,138 +316,144 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
 
     return (
         <article
-            className="group bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50 border border-gray-100 hover:border-[var(--colour-fsP2)]/30 cursor-pointer animate-fadeInUp"
+            className="group flex flex-col sm:flex-row bg-white border border-gray-100 rounded-md hover:shadow-md transition-shadow duration-300 cursor-pointer overflow-hidden p-3 relative h-full gap-4"
             style={{ animationDelay: `${(index % 12) * 50}ms` }}
             onClick={handleCardClick}
             role="link"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleCardClick()}
         >
-            <div className="flex flex-col sm:flex-row">
-                {/* Image */}
-                <div className="relative w-full sm:w-40 md:w-48 aspect-square sm:aspect-auto sm:h-48 flex-shrink-0 overflow-hidden bg-gray-50">
-                    {!imageLoaded && !imageError && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 animate-pulse" />
-                    )}
-                    {imageError && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                            <Package size={36} className="text-gray-300" />
+            {/* Top Left Badges */}
+            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+                {(index ?? 0) < 2 && (
+                    <span className="bg-[#f0c229] flex items-center gap-1 text-black text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm tracking-tight shadow-sm">
+                        express
+                    </span>
+                )}
+            </div>
+
+            {/* Top Right Wishlist Icons */}
+            <div className="absolute top-3 right-3 z-20 flex flex-col sm:flex-row gap-2">
+                <button
+                    onClick={handleWishlist}
+                    className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-gray-400 hover:text-red-500 transition-all duration-200 shadow-sm border border-gray-100"
+                    aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                    <Heart className={cn("w-4.5 h-4.5 stroke-[1.5]", isWishlisted && "fill-red-500 text-red-500")} />
+                </button>
+            </div>
+
+            {/* Image Area */}
+            <div className="relative w-full sm:w-40 aspect-square sm:aspect-auto sm:h-40 flex-shrink-0 bg-white">
+                {!imageLoaded && !imageError && (
+                    <div className="absolute inset-0 bg-gray-50 animate-pulse rounded" />
+                )}
+                {imageError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded">
+                        <Package className="w-8 h-8 text-gray-200" />
+                    </div>
+                )}
+                {imageUrl && (
+                    <Image
+                        src={imageUrl}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 160px"
+                        priority={priority}
+                        onLoad={() => setImageLoaded(true)}
+                        onError={() => setImageError(true)}
+                        className={cn(
+                            'object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105',
+                            imageLoaded ? 'opacity-100' : 'opacity-0'
+                        )}
+                    />
+                )}
+            </div>
+
+            {/* Content Body */}
+            <div className="flex flex-col flex-1 text-left relative z-10 bg-white justify-between">
+                <div>
+                    {/* Brand or Title */}
+                    <h3 className="text-gray-900 text-[15px] leading-relaxed line-clamp-2 font-medium mb-2 group-hover:text-[var(--colour-fsP2)] transition-colors pr-8">
+                        {product.name}
+                    </h3>
+
+                    {/* Rating line */}
+                    {product.average_rating > 0 && (
+                        <div className="flex items-center gap-1 mb-2">
+                            <span className="text-green-700 font-bold text-[12px] flex items-center">
+                                {product.average_rating.toFixed(1)} <Star className="w-3 h-3 ml-0.5" />
+                            </span>
+                            <span className="text-gray-400 text-[11px]">({product.rating_count || 128})</span>
                         </div>
                     )}
-                    {imageUrl && (
-                        <Image
-                            src={imageUrl}
-                            alt={product.name}
-                            fill
-                            sizes="(max-width: 640px) 100vw, 192px"
-                            priority={priority}
-                            onLoad={() => setImageLoaded(true)}
-                            onError={() => setImageError(true)}
-                            className={cn(
-                                'object-cover transition-all duration-500 group-hover:scale-105',
-                                imageLoaded ? 'opacity-100' : 'opacity-0'
-                            )}
-                        />
+
+                    {/* Highlights */}
+                    {highlights.length > 0 && (
+                        <ul className="hidden sm:flex flex-col gap-x-3 gap-y-1 mb-3">
+                            {highlights.map((h, i) => (
+                                <li key={i} className="flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-sm">
+                                    <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                                    <span className="line-clamp-1">{h}</span>
+                                </li>
+                            ))}
+                        </ul>
                     )}
-
-                    {/* Badges */}
-                    <div className="absolute top-2 left-2 flex flex-col gap-1.5">
-                        {discount > 0 && (
-                            <span className="bg-[var(--colour-fsP2)] text-white text-xs font-bold px-2 py-0.5 rounded-full shadow">
-                                -{discount}%
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Wishlist */}
-                    <button
-                        onClick={handleWishlist}
-                        className={cn(
-                            'absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow backdrop-blur-sm cursor-pointer',
-                            isWishlisted
-                                ? 'bg-red-500 text-white scale-110'
-                                : 'bg-white/90 text-gray-600 hover:text-red-500 hover:scale-105'
-                        )}
-                        aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                    >
-                        <Heart size={14} className={isWishlisted ? 'fill-current' : ''} />
-                    </button>
                 </div>
 
-                {/* Details */}
-                <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
-                    <div>
-                        {/* Rating */}
-                        {product.average_rating > 0 && (
-                            <div className="flex items-center gap-1 mb-1.5">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star
-                                        key={i}
-                                        size={12}
-                                        className={cn(
-                                            i < Math.floor(product.average_rating)
-                                                ? 'text-amber-400 fill-amber-400'
-                                                : 'text-gray-200'
-                                        )}
-                                    />
-                                ))}
-                                <span className="text-xs text-gray-500 ml-1">
-                                    ({product.average_rating.toFixed(1)})
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Name */}
-                        <h3 className="font-medium text-gray-900 text-sm sm:text-base line-clamp-2 mb-2 group-hover:text-[var(--colour-fsP2)] transition-colors duration-200">
-                            {product.name}
-                        </h3>
-
-                        {/* Highlights */}
-                        {highlights.length > 0 && (
-                            <ul className="hidden sm:block space-y-1 mb-3">
-                                {highlights.map((h, i) => (
-                                    <li key={i} className="flex items-start gap-1.5 text-xs text-gray-500">
-                                        <span className="w-1 h-1 rounded-full bg-[var(--colour-fsP2)] mt-1.5 flex-shrink-0" />
-                                        <span className="line-clamp-1">{h}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-
-                    {/* Price + Actions */}
-                    <div className="flex items-center justify-between gap-3 mt-auto">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className="text-lg font-bold text-gray-900">Rs. {displayPrice}</span>
-                            {originalPrice && (
-                                <span className="text-sm text-gray-400 line-through">
-                                    Rs. {originalPrice}
+                <div className="flex items-end justify-between mt-4">
+                    <div className="flex flex-col">
+                        {/* Price Line */}
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-gray-900 font-extrabold text-[18px] xl:text-[22px] leading-none tracking-tight">
+                                Rs. {displayPrice}
+                            </span>
+                            {discount > 0 && (
+                                <span className="text-green-600 font-bold text-[11px] bg-green-50 px-1 py-0.5 rounded-sm">
+                                    {discount}% OFF
                                 </span>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <button
-                                onClick={handleCompare}
-                                className={cn(
-                                    "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border cursor-pointer",
-                                    isCompared
-                                        ? "bg-[var(--colour-fsP2)] text-white border-[var(--colour-fsP2)]"
-                                        : "bg-white text-gray-500 border-gray-200 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)]"
-                                )}
-                                title={isCompared ? "Remove from Compare" : "Compare"}
-                            >
-                                <Scale size={15} />
-                            </button>
-                            <button
-                                onClick={handleAddToCart}
-                                className="bg-[var(--colour-fsP2)] text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm"
-                            >
-                                <ShoppingBag size={14} />
-                                <span className="hidden md:inline">Add to Cart</span>
-                                <span className="md:hidden">Add</span>
-                            </button>
+                        {/* Free Delivery / Original Price */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1.5 border-t border-gray-50 pt-1.5">
+                            {originalPrice && (
+                                <span className="text-gray-400 text-[11px] line-through">Rs. {originalPrice}</span>
+                            )}
+                            <span className="text-gray-500 text-[11px] flex items-center font-medium">
+                                <span className="w-3.5 h-3.5 mr-1.5 text-gray-400/80">
+                                    <svg fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                                    </svg>
+                                </span>
+                                Free Delivery
+                            </span>
                         </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                        <button
+                            onClick={handleCompare}
+                            className={cn(
+                                "w-10 h-10 rounded-full border bg-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm",
+                                isCompared
+                                    ? "text-[var(--colour-fsP2)] border-[var(--colour-fsP2)]"
+                                    : "text-gray-400 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                            )}
+                            title={isCompared ? "Remove from Compare" : "Compare"}
+                        >
+                            <Scale className="w-4.5 h-4.5 stroke-[1.5]" />
+                        </button>
+                        <button
+                            onClick={handleAddToCart}
+                            className="bg-[var(--colour-fsP2)] text-white px-5 py-2 h-10 rounded-full font-medium text-[13px] hover:opacity-90 transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-md"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span className="hidden sm:inline tracking-wide font-semibold">Add to Cart</span>
+                        </button>
                     </div>
                 </div>
             </div>

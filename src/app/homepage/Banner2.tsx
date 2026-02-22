@@ -13,14 +13,12 @@ interface TwoImageBannerProps {
 }
 
 const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
+  console.log('data', data)
   // 1. Keep your logic for filtering and mapping data
   const images = useMemo(() => {
     if (!data?.images || data.images.length === 0) {
       // Default fallbacks if no data is provided
-      return [
-        { id: '1', name: 'Banner 1', src: imglist.img1, link: '#' },
-        { id: '2', name: 'Banner 2', src: imglist.img2, link: '#' },
-      ];
+      return []
     }
 
     return data.images

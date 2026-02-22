@@ -71,7 +71,7 @@ async function page() {
   const SectionThree = (
     <BannerFetcher
       key="section-three"
-      slug="home-banner-third-test"
+      slug="home-banner-3-images"
       variant="two-image"
       fetchAction={getBannerData}
       className="mt-4"
