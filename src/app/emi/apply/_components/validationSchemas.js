@@ -20,6 +20,9 @@ export const personalDetailsSchema = (isGranter = false) =>
     address: Yup.string()
       .min(5, 'Address must be at least 5 characters')
       .required('Address is required'),
+    dob_bs: Yup.string()
+      .required('Date of Birth (BS) is required')
+      .matches(/^\d{4}-\d{2}-\d{2}$/, 'Format must be YYYY-MM-DD'),
     gender: Yup.string().required('Please select a gender'),
     marriageStatus: Yup.string().required('Please select marriage status'),
     userpartnerName: Yup.string().when('marriageStatus', {

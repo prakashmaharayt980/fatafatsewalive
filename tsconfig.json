@@ -43,7 +43,7 @@
   ],
   "exclude": [
     "node_modules",
-    ".next",
+    // ".next",
     ".turbo",
     "out",
     "build"

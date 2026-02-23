@@ -14,6 +14,12 @@ interface RenderReviewProps {
   handleBack: () => void;
   onSubmit: () => void;
   previews: { [key: string]: string };
+  localCreditCardInfo?: {
+    creditCardNumber: string;
+    cardHolderName: string;
+    expiryDate: string;
+    cardLimit: string | number;
+  };
 }
 
 // Interface for data structure
@@ -29,6 +35,7 @@ const RenderReview: React.FC<RenderReviewProps> = ({
   handleBack,
   onSubmit,
   previews,
+  localCreditCardInfo,
 }) => {
   const { emiContextInfo } = useContextEmi();
   const { userInfo, bankinfo, granterPersonalDetails, hasCreditCard } = emiContextInfo;
@@ -50,12 +57,12 @@ const RenderReview: React.FC<RenderReviewProps> = ({
   }
 
   // Define credit card information fields
-  const creditCardFields: InfoItemData[] = hasCreditCard === 'yes' ? [
-    { label: 'Card Number', value: `**** **** **** ${bankinfo.creditCardNumber?.slice(-4)}` },
-    { label: 'Card Holder Name', value: bankinfo.cardHolderName },
-    { label: 'Card Provider', value: bankinfo.bankname },
-    { label: 'Expiry Date', value: bankinfo.expiryDate },
-    { label: 'Credit Limit', value: `Rs. ${bankinfo.cardLimit}` },
+  const creditCardFields: InfoItemData[] = (hasCreditCard === 'yes' && localCreditCardInfo) ? [
+    { label: 'Card Number', value: `**** **** **** ${localCreditCardInfo.creditCardNumber?.slice(-4) || 'XXXX'}` },
+    { label: 'Card Holder Name', value: localCreditCardInfo.cardHolderName || '-' },
+    { label: 'Card Provider', value: bankinfo.bankname || '-' },
+    { label: 'Expiry Date', value: localCreditCardInfo.expiryDate || '-' },
+    { label: 'Credit Limit', value: `Rs. ${localCreditCardInfo.cardLimit || '0'}` },
   ] : [];
 
   // Define bank information fields
@@ -80,17 +87,17 @@ const RenderReview: React.FC<RenderReviewProps> = ({
   const product = emiContextInfo.product;
 
   return (
-    <div className="space-y-8 pb-8 animate-in fade-in duration-500 w-full max-w-full overflow-hidden">
+    <div className="space-y-8 pb-8 animate-in fade-in duration-500  overflow-hidden">
 
 
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Personal Information */}
         <Card className="shadow-sm border-gray-200">
           <CardHeader className="pb-3 border-b border-gray-50 bg-gray-50/50">
             <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[var(--colour-fsP2)]" />
+              <CheckCircle2 className="w-4 h-4 text-(--colour-fsP2)" />
               Personal Information
             </CardTitle>
           </CardHeader>
@@ -109,7 +116,7 @@ const RenderReview: React.FC<RenderReviewProps> = ({
           <Card className="shadow-sm border-gray-200">
             <CardHeader className="pb-3 border-b border-gray-50 bg-gray-50/50">
               <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[var(--colour-fsP2)]" />
+                <CheckCircle2 className="w-4 h-4 text-(--colour-fsP2)" />
                 {hasCreditCard === 'yes' ? 'Credit Card Details' : hasCreditCard === 'make' ? 'Bank Account Details' : 'Guarantor Information'}
               </CardTitle>
             </CardHeader>
@@ -130,7 +137,7 @@ const RenderReview: React.FC<RenderReviewProps> = ({
         <Card className="shadow-sm border-gray-200">
           <CardHeader className="pb-3 border-b border-gray-50 bg-gray-50/50">
             <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[var(--colour-fsP2)]" />
+              <FileText className="w-4 h-4 text-(--colour-fsP2)" />
               Uploaded Documents
             </CardTitle>
           </CardHeader>
@@ -157,10 +164,10 @@ const RenderReview: React.FC<RenderReviewProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-6 items-center">
+          <div className="flex flex-col xl:flex-row gap-6 items-center">
             {previews['userSignature'] ? (
-              <div className="relative group w-full sm:w-auto">
-                <div className="w-full sm:w-64 h-32 bg-white rounded-xl border-2 border-dashed border-[var(--colour-fsP2)] overflow-hidden relative flex items-center justify-center">
+              <div className="relative group w-full xl:w-auto">
+                <div className="w-full xl:w-64 aspect-[2/1] bg-white rounded-xl border-2 border-dashed border-(--colour-fsP2) overflow-hidden relative flex items-center justify-center">
                   <Image src={previews['userSignature']} alt="Signature" fill className="object-contain p-4" />
                 </div>
                 <Button
@@ -173,7 +180,7 @@ const RenderReview: React.FC<RenderReviewProps> = ({
                 </Button>
               </div>
             ) : (
-              <div className="w-full sm:w-auto flex-1">
+              <div className="w-full xl:w-64 shrink-0">
                 <input
                   type="file"
                   id="signature-upload"
@@ -186,7 +193,7 @@ const RenderReview: React.FC<RenderReviewProps> = ({
                   className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all bg-gray-50/30 group"
                 >
                   <div className="p-3 bg-white rounded-full shadow-sm mb-2 group-hover:scale-110 transition-transform">
-                    <FileText className="w-5 h-5 text-[var(--colour-fsP2)]" />
+                    <FileText className="w-5 h-5 text-(--colour-fsP2)" />
                   </div>
                   <p className="text-sm font-bold text-gray-700">Click to Upload Signature</p>
                   <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
@@ -196,7 +203,7 @@ const RenderReview: React.FC<RenderReviewProps> = ({
             <div className="flex-1 text-sm text-gray-500 bg-blue-50/50 p-4 rounded-xl border border-blue-50">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <p>By uploading your signature, you acknowledge that you have read and agreed to the <span className="text-[var(--colour-fsP2)] font-semibold cursor-pointer hover:underline">Terms and Conditions</span> of Fatafatsewa EMI service.</p>
+                <p>By uploading your signature, you acknowledge that you have read and agreed to the <span className="text-(--colour-fsP2) font-semibold cursor-pointer hover:underline">Terms and Conditions</span> of Fatafatsewa EMI service.</p>
               </div>
             </div>
           </div>
@@ -208,7 +215,7 @@ const RenderReview: React.FC<RenderReviewProps> = ({
         <Button variant="outline" onClick={handleBack} className="gap-2 rounded-xl border-gray-200 hover:bg-gray-50 text-gray-700 h-12 px-6 font-semibold">
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
-        <Button onClick={onSubmit} className="bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white px-8 h-12 rounded-xl font-bold shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 gap-2">
+        <Button onClick={onSubmit} className="bg-(--colour-fsP2) hover:bg-(--colour-fsP1) text-white px-8 h-12 rounded-xl font-bold shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 gap-2">
           Confirm & Submit Application <Send className="w-4 h-4" />
         </Button>
       </div>

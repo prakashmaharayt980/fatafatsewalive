@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import * as Yup from 'yup';
 import { toast } from 'sonner'; // Assuming sonner or use-toast is available, else fallback to alert
+import NepaliDate from 'nepali-date-converter';
 import RemoteServices from '@/app/api/remoteservice';
+import { EmiService } from '@/app/api/services/emi.service';
 import {
     personalDetailsSchema,
     creditCardSchema,
@@ -16,19 +18,20 @@ import {
     emiConditionsSchema,
     emiConditionsCreditSchema,
 } from './validationSchemas';
-import creditcardicon from '../../../../../public/svgfile/creditcardicon.svg';
-import downpaymenticon from '../../../../../public/svgfile/payementiconcash.svg';
-import addcreditcard from '../../../../../public/svgfile/creditcardplus.svg';
+
 import { useContextEmi } from '../../_components/emiContext';
+import { BANK_PROVIDERS, calculateEMI } from '../../_components/_func_emiCalacutor';
 // import BuyerPersonalInfo from './BuyerPersonalInfo'; // Seems unused in original, logic was inline
 import RenderReview from './ReviewApplyEmiDoc'
 import ProgressBar from './ProgressBar';
 import EmiProductDetails from './EmiProductDetails';
+import CreditCardform from './CreditCardform';
 import DocumentUpload from './DocumentUpload';
 import SignaturePad from './SignaturePad';
 import {
     ArrowBigLeft, Loader2, CheckCircle2, ChevronRight, ChevronDown, AlertCircle, Info,
-    CreditCard, Calendar, User, MapPin, Mail, Phone, Briefcase, FileText, Hash, DollarSign, Building2
+    CreditCard, Calendar, User, MapPin, Mail, Phone, Briefcase, FileText, Hash, DollarSign, Building2, Banknote, FileBadge,
+    CreditCardIcon
 } from 'lucide-react';
 
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
@@ -48,6 +51,7 @@ interface FieldOption {
     placeholder?: string;
     maxLength?: number;
     svgicon?: string | React.ReactNode;
+
     extenduserinfo?: string;
     type?: string;
     options?: string[];
@@ -57,33 +61,39 @@ interface FieldOption {
     maxvalue?: number;
 }
 
+// Custom Fatafatsewa colors using a safe Tailwind approach or inline styles for dynamic rings
+const fsP1 = '#f97316'; // Fallback mapping based on brand orange
+const fsP2 = '#2563eb'; // Fallback mapping based on brand blue
+
 // FormField component moved outside to prevent re-creation on every render
 const FormField = React.memo(({ field, error }: { field: FieldOption, error?: string }) => (
     <div className={`space-y-1 ${field.extenduserinfo || ''}`}>
         <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{field.label}</label>
         <div className="relative group">
-            <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-gray-400 group-focus-within:text-blue-500 transition-colors pointer-events-none">
+            <div className={`absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-gray-400 transition-colors z-10 pointer-events-none ${error ? 'text-red-500' : 'group-focus-within:text-(--colour-fsP2)'}`}>
                 {field.svgicon}
             </div>
             {field.type === 'select' ? (
                 <div className="relative">
-                    <select
+                    <Select
                         name={field.name}
-                        value={field.value ?? ''}
-                        onChange={field.onChange}
-                        className={`w-full bg-slate-50 border ${error ? 'border-red-400' : 'border-gray-200'} text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent block pl-10 p-2.5 outline-none transition-all h-10 appearance-none shadow-sm cursor-pointer`}
+                        value={field.value ? String(field.value) : undefined}
+                        onValueChange={(value) => field.onChange({ target: { name: field.name, value } } as unknown as React.ChangeEvent<HTMLSelectElement>)}
                     >
-                        <option value="" disabled>Select {field.label}</option>
-                        {field.options && field.options.map((opt: string) => (
-                            <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                    </select>
-                    <div className="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-gray-400 group-focus-within:text-blue-500 pointer-events-none transition-colors">
-                        <ChevronDown className="w-4 h-4" />
-                    </div>
+                        <SelectTrigger className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-(--colour-fsP2) focus:ring-1 focus:ring-(--colour-fsP2) transition-all duration-150 ${error ? 'border-red-500' : ''}`}>
+                            <SelectValue placeholder={`Select ${field.label}`} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-blue-100 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50 text-sm">
+                            {field.options && field.options.map((opt: string) => (
+                                <SelectItem key={opt} value={opt} className="cursor-pointer px-4 py-2 hover:bg-blue-50 hover:text-(--colour-fsP2) focus:text-(--colour-fsP2) transition-all duration-150">
+                                    {opt}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             ) : (
-                <input
+                <Input
                     type={field.type || 'text'}
                     name={field.name}
                     value={field.value ?? ''}
@@ -91,7 +101,7 @@ const FormField = React.memo(({ field, error }: { field: FieldOption, error?: st
                     placeholder={field.placeholder}
                     maxLength={field.maxLength}
                     autoComplete="off"
-                    className={`w-full bg-slate-50 border ${error ? 'border-red-400' : 'border-gray-200'} text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent block pl-10 p-2.5 outline-none transition-all h-10 shadow-sm placeholder:text-gray-400`}
+                    className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-transparent focus:ring-1 focus:ring-(--colour-fsP2) transition-all duration-150 ${error ? 'border-red-500' : ''}`}
                 />
             )}
         </div>
@@ -104,11 +114,19 @@ FormField.displayName = 'FormField';
 const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selectedcolor }) => {
     const { setShowLoginAlert, authState } = useAuth();
     const user = authState?.user;
-    const { emiContextInfo, setEmiContextInfo, AvailablebankProvider, emiCalculation } = useContextEmi();
+    const { emiContextInfo, setEmiContextInfo } = useContextEmi();
     const [currentstep, setcurrentstep] = useState(0);
     const [previews, setPreviews] = useState<{ [key: string]: string }>({});
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPaymentSubOptions, setShowPaymentSubOptions] = useState(false);
+
+    const [localCreditCardInfo, setLocalCreditCardInfo] = useState({
+        cardHolderName: '',
+        creditCardNumber: '',
+        expiryDate: '',
+        cardLimit: ''
+    });
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -226,6 +244,43 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         }
     };
 
+    const handleBSDateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, sectionKey: 'userInfo' | 'granterPersonalDetails') => {
+        const value = e.target.value;
+        const bsDateStr = value; // Expected YYYY-MM-DD
+
+        // Update BS date in state and clear error
+        handleInputChange(e, sectionKey);
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(bsDateStr)) {
+            try {
+                const parts = bsDateStr.split('-');
+                const bsYear = parseInt(parts[0]);
+                const bsMonth = parseInt(parts[1]) - 1; // nepali-date-converter uses 0-11 for months
+                const bsDay = parseInt(parts[2]);
+
+                const nd = new NepaliDate(bsYear, bsMonth, bsDay);
+                const adDate = nd.getAD();
+
+                const adYear = adDate.year;
+                const adMonth = String(adDate.month + 1).padStart(2, '0');
+                const adDay = String(adDate.date).padStart(2, '0');
+
+                const adDateString = `${adYear}-${adMonth}-${adDay}`;
+
+                // Set the corresponding AD date
+                setEmiContextInfo((prev) => ({
+                    ...prev,
+                    [sectionKey]: {
+                        ...(prev as unknown as Record<string, Record<string, unknown>>)[sectionKey],
+                        dob: adDateString,
+                    },
+                }));
+            } catch (err) {
+                // Ignore invalid BS date conversion
+            }
+        }
+    };
+
     const handleFileDelete = (docType: string, isGranter = false) => {
         setEmiContextInfo((prev) => {
             // Logic to cleanup previews handled by effect
@@ -243,29 +298,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         });
     };
 
-    // Simplified handlers without auto-formatting to prevent cursor jumping
-    const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value.replace(/\D/g, '');
-        value = value.substring(0, 16);
-        const formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ');
-
-        // Update the event target value so it displays correctly
-        e.target.value = formattedValue;
-
-        handleInputChange(e, 'bankinfo');
-    };
-
-    const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length >= 2) {
-            value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        }
-
-        e.target.value = value;
-        handleInputChange(e, 'bankinfo');
-    };
-
-
 
     const handleBankSelect = async (section: string, name: string, value: string) => {
         setEmiContextInfo((prev) => ({
@@ -274,7 +306,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 ...(prev as unknown as Record<string, Record<string, unknown>>)[section],
                 [name]: value,
             },
-            interestRate: AvailablebankProvider.find((b) => b.name === value)?.rate || 10,
+            interestRate: BANK_PROVIDERS.find((b) => b.name === value)?.rate || 10,
         }));
         const currentOption = emiContextInfo.hasCreditCard === 'yes' ? 'creditCard' : emiContextInfo.hasCreditCard === 'make' ? 'makeCard' : 'downPayment';
         const schema = getValidationSchema(section, currentOption);
@@ -321,10 +353,14 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         }
         const currentSection = formSections[selectedOption as keyof typeof formSections]?.find((section) => section.step === currentstep);
         if (currentSection) {
-            const data =
-                currentSection.sectionKey === 'emiCalculation'
-                    ? { ...emiContextInfo.emiCalculation, bankname: emiContextInfo.bankinfo.bankname }
-                    : (emiContextInfo as unknown as Record<string, Record<string, unknown>>)[currentSection.sectionKey];
+            let data: Record<string, unknown> = {};
+            if (currentSection.sectionKey === 'emiCalculation') {
+                data = { ...emiContextInfo.emiCalculation, bankname: emiContextInfo.bankinfo.bankname };
+            } else if (currentSection.sectionKey === 'bankinfo' && selectedOption === 'creditCard') {
+                data = { ...emiContextInfo.bankinfo, ...localCreditCardInfo };
+            } else {
+                data = (emiContextInfo as unknown as Record<string, Record<string, unknown>>)[currentSection.sectionKey] || {};
+            }
 
             // 1. Validate Form Fields
             const sectionErrors = await validateFormSection(currentSection, data);
@@ -413,29 +449,39 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             const formData = new FormData();
             const option = selectedOption;
 
-            // Common Data
-            formData.append('product_id', String(product.id));
-            formData.append('product_price', String(product.price));
-            formData.append('application_type', option);
-            formData.append('userInfo', JSON.stringify(emiContextInfo.userInfo));
-            formData.append('emiCalculation', JSON.stringify({
-                ...emiContextInfo.emiCalculation,
-                bank: emiContextInfo.bankinfo.bankname
-            }));
-            if (emiContextInfo.selectedVariant) {
-                formData.append('selected_variant', emiContextInfo.selectedVariant);
-            }
+            let response;
 
-            // Option specific data
             if (option === 'creditCard') {
-                formData.append('bankinfo', JSON.stringify({
-                    bankname: emiContextInfo.bankinfo.bankname,
-                    creditCardNumber: emiContextInfo.bankinfo.creditCardNumber,
-                    cardHolderName: emiContextInfo.bankinfo.cardHolderName,
-                    expiryDate: emiContextInfo.bankinfo.expiryDate,
-                    cardLimit: emiContextInfo.bankinfo.cardLimit
-                }));
+                // Execute explicit EMI Service request per user specification
+                const payload = {
+                    name: emiContextInfo.userInfo.name,
+                    email: emiContextInfo.userInfo.email,
+                    contact_number: emiContextInfo.userInfo.phone,
+                    address: emiContextInfo.userInfo.address,
+                    dob_ad: emiContextInfo.userInfo.dob,
+                    dob_bs: emiContextInfo.userInfo.dob,
+                    gender: emiContextInfo.userInfo.gender,
+                    product_id: product.id,
+                    finance_amount: emiData?.financeAmount || 0,
+                    monthly_income: emiContextInfo.bankinfo.salaryAmount || 0,
+                    credit_card: localCreditCardInfo.creditCardNumber.replace(/\s+/g, '')
+                };
+
+                response = await EmiService.EmiRequest(payload);
             } else if (option === 'makeCard') {
+                // Common Data for legacy paths
+                formData.append('product_id', String(product.id));
+                formData.append('product_price', String(product.price));
+                formData.append('application_type', option);
+                formData.append('userInfo', JSON.stringify(emiContextInfo.userInfo));
+                formData.append('emiCalculation', JSON.stringify({
+                    ...emiContextInfo.emiCalculation,
+                    bank: emiContextInfo.bankinfo.bankname
+                }));
+                if (emiContextInfo.selectedVariant) {
+                    formData.append('selected_variant', emiContextInfo.selectedVariant);
+                }
+
                 formData.append('bankinfo', JSON.stringify({
                     bankname: emiContextInfo.bankinfo.bankname,
                     accountNumber: emiContextInfo.bankinfo.accountNumber,
@@ -449,6 +495,19 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 if (files.citizenshipFile.back) formData.append('citizenship_back', files.citizenshipFile.back);
                 if (files.bankStatement) formData.append('bank_statement', files.bankStatement);
             } else if (option === 'downPayment') {
+                // Common Data for legacy paths
+                formData.append('product_id', String(product.id));
+                formData.append('product_price', String(product.price));
+                formData.append('application_type', option);
+                formData.append('userInfo', JSON.stringify(emiContextInfo.userInfo));
+                formData.append('emiCalculation', JSON.stringify({
+                    ...emiContextInfo.emiCalculation,
+                    bank: emiContextInfo.bankinfo.bankname
+                }));
+                if (emiContextInfo.selectedVariant) {
+                    formData.append('selected_variant', emiContextInfo.selectedVariant);
+                }
+
                 formData.append('granterPersonalDetails', JSON.stringify(emiContextInfo.granterPersonalDetails));
                 formData.append('bankinfo', JSON.stringify({
                     bankname: emiContextInfo.bankinfo.bankname
@@ -466,7 +525,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 if (files.userSignature) formData.append('user_signature', files.userSignature);
             }
 
-            const response = await RemoteServices.applyEmi(formData);
+            if (option !== 'creditCard') {
+                response = await RemoteServices.applyEmi(formData);
+            }
 
             if (response) {
                 toast.success('Application Submitted Successfully!');
@@ -492,21 +553,29 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         }));
         setErrors({}); // Clear validation errors on mode switch
         setcurrentstep(1);
+        setShowPaymentSubOptions(false); // reset for subsequent visits
     };
 
     const tumerOptions = useMemo(() => {
-        const tumer = AvailablebankProvider.find((bank) => bank.name === emiContextInfo.bankinfo.bankname)?.tenureOptions || [];
+        const tumer = BANK_PROVIDERS.find((bank) => bank.name === emiContextInfo.bankinfo.bankname)?.tenureOptions || [];
         return tumer;
-    }, [emiContextInfo.bankinfo.bankname, AvailablebankProvider]);
+    }, [emiContextInfo.bankinfo.bankname]);
 
     const emiData = useMemo(() => {
         if (!product) return { downPayment: 0, financeAmount: 0, tenure: 0, principal: 0, paymentpermonth: 0 };
-        return emiCalculation(product.price || 0, emiCalc.duration, emiCalc.downPayment, emiContextInfo.bankinfo.bankname);
-    }, [product, emiCalc.duration, emiCalc.downPayment, emiContextInfo.bankinfo.bankname, emiCalculation]);
+        const result = calculateEMI({ principal: product.price || 0, tenure: emiCalc.duration, downPayment: emiCalc.downPayment, bankId: emiContextInfo.bankinfo.bankname });
+        return {
+            principal: result.principal,
+            tenure: result.tenure,
+            downPayment: result.downPayment,
+            financeAmount: result.financeAmount,
+            paymentpermonth: result.paymentPerMonth,
+        };
+    }, [product, emiCalc.duration, emiCalc.downPayment, emiContextInfo.bankinfo.bankname]);
 
 
 
-    const bankOptions = useMemo(() => AvailablebankProvider.map((b) => b.name), [AvailablebankProvider]);
+    const bankOptions = useMemo(() => BANK_PROVIDERS.map((b) => b.name), []);
 
     // -- REUSING FIELDS FROM ORIGINAL FILE --
     const personalDetailsInfolist = [
@@ -578,6 +647,24 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             extenduserinfo: '',
         },
         {
+            label: 'Date of Birth (BS)',
+            name: 'dob_bs',
+            value: emiContextInfo.userInfo.dob_bs,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBSDateChange(e, 'userInfo'),
+            placeholder: 'YYYY-MM-DD',
+            svgicon: <Calendar className="w-5 h-5" />,
+            extenduserinfo: '',
+        },
+        {
+            label: 'Date of Birth (AD)',
+            name: 'dob',
+            value: emiContextInfo.userInfo.dob,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
+            type: 'date',
+            svgicon: <Calendar className="w-5 h-5" />,
+            extenduserinfo: '',
+        },
+        {
             label: 'Address',
             name: 'address',
             value: emiContextInfo.userInfo.address,
@@ -597,14 +684,17 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value),
             type: 'select',
             options: bankOptions,
-            svgicon: <Building2 className="w-5 h-5" />,
+            svgicon: <CreditCardIcon className="w-5 h-5" />,
             extenduserinfo: '',
         },
         {
             label: 'Card Holder Name',
             name: 'cardHolderName',
-            value: emiContextInfo.bankinfo.cardHolderName,
-            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'),
+            value: localCreditCardInfo.cardHolderName,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+                setLocalCreditCardInfo(prev => ({ ...prev, cardHolderName: e.target.value }));
+                if (errors['cardHolderName']) setErrors(prev => ({ ...prev, cardHolderName: undefined }));
+            },
             placeholder: 'Card Holder Name',
             svgicon: <User className="w-5 h-5" />,
             extenduserinfo: '',
@@ -612,8 +702,13 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Card Number',
             name: 'creditCardNumber',
-            value: emiContextInfo.bankinfo.creditCardNumber,
-            onChange: handleCardNumberChange,
+            value: localCreditCardInfo.creditCardNumber,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+                let val = e.target.value.replace(/\D/g, '');
+                val = val.replace(/(.{4})/g, '$1 ').trim();
+                setLocalCreditCardInfo(prev => ({ ...prev, creditCardNumber: val.slice(0, 19) }));
+                if (errors['creditCardNumber']) setErrors(prev => ({ ...prev, creditCardNumber: undefined }));
+            },
             placeholder: 'XXXX XXXX XXXX XXXX',
             maxLength: 19,
             svgicon: <CreditCard className="w-5 h-5" />,
@@ -622,8 +717,15 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Expiry Date',
             name: 'expiryDate',
-            value: emiContextInfo.bankinfo.expiryDate,
-            onChange: handleExpiryChange,
+            value: localCreditCardInfo.expiryDate,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length >= 2) {
+                    val = val.slice(0, 2) + '/' + val.slice(2, 4);
+                }
+                setLocalCreditCardInfo(prev => ({ ...prev, expiryDate: val.slice(0, 5) }));
+                if (errors['expiryDate']) setErrors(prev => ({ ...prev, expiryDate: undefined }));
+            },
             placeholder: 'MM/YY',
             maxLength: 5,
             svgicon: <Calendar className="w-5 h-5" />,
@@ -632,8 +734,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Card Limit',
             name: 'cardLimit',
-            value: emiContextInfo.bankinfo.cardLimit,
-            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'),
+            value: localCreditCardInfo.cardLimit,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+                setLocalCreditCardInfo(prev => ({ ...prev, cardLimit: e.target.value }));
+                if (errors['cardLimit']) setErrors(prev => ({ ...prev, cardLimit: undefined }));
+            },
             placeholder: 'Card Limit',
             svgicon: <DollarSign className="w-5 h-5" />,
             extenduserinfo: '',
@@ -655,8 +760,10 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         { label: 'Phone Number', name: 'phone', value: emiContextInfo.granterPersonalDetails.phone, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Phone Number', svgicon: <Phone className="w-5 h-5" />, extenduserinfo: '', type: 'tel' },
         { label: 'Gender', name: 'gender', value: emiContextInfo.granterPersonalDetails.gender, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Male', 'Female'], svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Marriage Status', name: 'marriageStatus', value: emiContextInfo.granterPersonalDetails.marriageStatus, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Single', 'Married'], svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
-        { label: emiContextInfo.granterPersonalDetails.gender === 'Male' ? 'Wife Name' : 'Husband Name', name: 'userpartnerName', value: emiContextInfo.granterPersonalDetails.userpartnerName, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), extenduserinfo: emiContextInfo.granterPersonalDetails.marriageStatus === 'Single' ? 'hidden' : '', svgicon: <User className="w-5 h-5" /> },
+        { label: 'Wife Name / Husband Name', name: 'userpartnerName', value: emiContextInfo.granterPersonalDetails.userpartnerName, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), extenduserinfo: emiContextInfo.granterPersonalDetails.marriageStatus === 'Single' ? 'hidden' : '', svgicon: <User className="w-5 h-5" /> },
         { label: 'Citizenship Number', name: 'nationalID', value: emiContextInfo.granterPersonalDetails.nationalID, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter citizenship number', svgicon: <Hash className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Date of Birth (BS)', name: 'dob_bs', value: emiContextInfo.granterPersonalDetails.dob_bs, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBSDateChange(e, 'granterPersonalDetails'), placeholder: 'YYYY-MM-DD', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Date of Birth (AD)', name: 'dob', value: emiContextInfo.granterPersonalDetails.dob, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'date', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Address', name: 'address', value: emiContextInfo.granterPersonalDetails.address, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Address', maxLength: 100, svgicon: <MapPin className="w-5 h-5" />, extenduserinfo: 'md:col-span-2' },
     ];
 
@@ -771,11 +878,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             <Button variant="link" className="p-0 h-auto text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] text-sm font-medium" onClick={() => router.push('/')}>
                 Home
             </Button>
-            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
             <Button variant="link" className="p-0 h-auto text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] text-sm font-medium" onClick={() => router.push(`/products/${product?.slug}`)}>
                 {product?.name?.substring(0, 30)}...
             </Button>
-            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
             <span className="text-slate-800 font-semibold text-sm">
                 Apply EMI
             </span>
@@ -789,7 +896,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
                 {/* Progress Bar */}
                 <div className="mb-1 sm:mb-2">
-                    <ProgressBar currentstep={currentstep} />
+                    <ProgressBar currentstep={currentstep} onStepClick={setcurrentstep} />
                 </div>
 
                 {/* Main Content Layout */}
@@ -852,35 +959,63 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                         )}
 
                                         <div className="space-y-4">
-                                            <h3 className="text-gray-900 font-bold text-lg">Select EMI Method</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div onClick={() => handleOptionSelect('creditCard')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'creditCard' ? 'border-[var(--colour-fsP2)] bg-blue-50/50' : 'border-gray-100 bg-white'}`}>
-                                                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-[var(--colour-fsP2)] group-hover:scale-110 transition-transform">
-                                                        <Image src={creditcardicon} alt="" width={24} height={24} className="opacity-80 [filter:brightness(0)_saturate(100%)_invert(27%)_sepia(51%)_saturate(2878%)_hue-rotate(205deg)_brightness(96%)_contrast(92%)]" />
-                                                    </div>
-                                                    <h3 className="font-bold text-gray-900">Credit Card</h3>
-                                                    <p className="text-xs text-gray-500 mt-2">Use your existing credit card.</p>
-                                                    {selectedOption === 'creditCard' && <div className="absolute top-3 right-3 text-[var(--colour-fsP2)]"><CheckCircle2 size={20} /></div>}
-                                                </div>
+                                            {!showPaymentSubOptions ? (
+                                                <>
+                                                    <h3 className="text-gray-900 font-bold text-lg">Select EMI Method</h3>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div onClick={() => handleOptionSelect('creditCard')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'creditCard' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 bg-white'}`}>
+                                                            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                                                <CreditCard className="w-6 h-6" />
+                                                            </div>
+                                                            <h3 className="font-bold text-gray-900 text-lg">Credit Card</h3>
+                                                            <p className="text-sm text-gray-500 mt-2">Use your existing bank credit card.</p>
+                                                            {selectedOption === 'creditCard' && <div className="absolute top-3 right-3 text-blue-600"><CheckCircle2 size={24} /></div>}
+                                                        </div>
 
-                                                <div onClick={() => handleOptionSelect('makeCard')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'makeCard' ? 'border-[var(--colour-fsP2)] bg-blue-50/50' : 'border-gray-100 bg-white'}`}>
-                                                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-[var(--colour-fsP2)] group-hover:scale-110 transition-transform">
-                                                        <Image src={addcreditcard} alt="" width={24} height={24} className="opacity-80 [filter:brightness(0)_saturate(100%)_invert(27%)_sepia(51%)_saturate(2878%)_hue-rotate(205deg)_brightness(96%)_contrast(92%)]" />
+                                                        <div onClick={() => setShowPaymentSubOptions(true)} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'downPayment' || selectedOption === 'makeCard' ? 'border-orange-500 bg-orange-50' : 'border-gray-100 bg-white'}`}>
+                                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                                                                <Banknote className="w-6 h-6" />
+                                                            </div>
+                                                            <h3 className="font-bold text-gray-900 text-lg">Down Payment</h3>
+                                                            <p className="text-sm text-gray-500 mt-2">Pay upfront or provide collateral documents.</p>
+                                                            <div className="mt-4 flex items-center text-sm font-semibold text-orange-500 group-hover:underline">
+                                                                View Options <ChevronRight className="w-4 h-4 ml-1" />
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <h3 className="font-bold text-gray-900">Make New Card</h3>
-                                                    <p className="text-xs text-gray-500 mt-2">Apply for a new bank card.</p>
-                                                    {selectedOption === 'makeCard' && <div className="absolute top-3 right-3 text-[var(--colour-fsP2)]"><CheckCircle2 size={20} /></div>}
-                                                </div>
+                                                </>
+                                            ) : (
+                                                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                                                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
+                                                        <Button variant="ghost" size="icon" onClick={() => setShowPaymentSubOptions(false)} className="h-8 w-8 rounded-full border border-gray-200">
+                                                            <ArrowBigLeft className="w-4 h-4 text-gray-600" />
+                                                        </Button>
+                                                        <div>
+                                                            <h3 className="text-gray-900 font-bold text-lg">Down Payment Options</h3>
+                                                            <p className="text-xs text-gray-500">Select how you want to proceed with EMI</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div onClick={() => handleOptionSelect('makeCard')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'makeCard' ? 'border-orange-500 bg-orange-50' : 'border-gray-100 bg-white'}`}>
+                                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                                                                <FileBadge className="w-6 h-6" />
+                                                            </div>
+                                                            <h3 className="font-bold text-gray-900 text-lg">With Citizenship Card</h3>
+                                                            <p className="text-sm text-gray-500 mt-2">Apply for a new financial card using your citizenship documents.</p>
+                                                            {selectedOption === 'makeCard' && <div className="absolute top-3 right-3 text-orange-500"><CheckCircle2 size={24} /></div>}
+                                                        </div>
 
-                                                <div onClick={() => handleOptionSelect('downPayment')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'downPayment' ? 'border-[var(--colour-fsP2)] bg-blue-50/50' : 'border-gray-100 bg-white'}`}>
-                                                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-[var(--colour-fsP2)] group-hover:scale-110 transition-transform">
-                                                        <Image src={downpaymenticon} alt="" width={24} height={24} className="opacity-80 [filter:brightness(0)_saturate(100%)_invert(27%)_sepia(51%)_saturate(2878%)_hue-rotate(205deg)_brightness(96%)_contrast(92%)]" />
+                                                        <div onClick={() => handleOptionSelect('downPayment')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'downPayment' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 bg-white'}`}>
+                                                            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                                                <Banknote className="w-6 h-6" />
+                                                            </div>
+                                                            <h3 className="font-bold text-gray-900 text-lg">40% Downpayment</h3>
+                                                            <p className="text-sm text-gray-500 mt-2">Pay 40% immediately and schedule the rest over months.</p>
+                                                            {selectedOption === 'downPayment' && <div className="absolute top-3 right-3 text-blue-600"><CheckCircle2 size={24} /></div>}
+                                                        </div>
                                                     </div>
-                                                    <h3 className="font-bold text-gray-900">Down Payment</h3>
-                                                    <p className="text-xs text-gray-500 mt-2">Pay 40% now, rest later.</p>
-                                                    {selectedOption === 'downPayment' && <div className="absolute top-3 right-3 text-[var(--colour-fsP2)]"><CheckCircle2 size={20} /></div>}
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -889,11 +1024,18 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                 {currentstep > 0 && currentstep < 4 && currentFormSection && (
                                     <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                                            {currentFormSection.fields.map((field, index) => (
-                                                <FormField key={index} field={field} error={errors[field.name]} />
-                                            ))}
-                                        </div>
+                                        {currentFormSection.sectionKey === 'bankinfo' && selectedOption === 'creditCard' ? (
+                                            <CreditCardform
+                                                cardinfofield={{ fields: currentFormSection.fields }}
+                                                errors={errors}
+                                            />
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                                                {currentFormSection.fields.map((field, index) => (
+                                                    <FormField key={index} field={field} error={errors[field.name]} />
+                                                ))}
+                                            </div>
+                                        )}
 
                                         {/* Additional Content (e.g. Document Uploads, Signatures) */}
                                         {currentFormSection.additionalContent}

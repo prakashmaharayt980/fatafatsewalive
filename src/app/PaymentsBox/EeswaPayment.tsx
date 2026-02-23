@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { PaymentService } from '@/app/api/services/payments.service';
 
 interface EsewaPaymentProps {
-    orderId: string;
+    orderId: number;
     amount: number;
 }
 

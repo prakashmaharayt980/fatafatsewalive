@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { PaymentService } from '@/app/api/services/payments.service';
 
 interface NicAsiaPaymentProps {
-    orderId: string;
+    orderId: number;
 }
 
 export default function NicAsiaPayment({ orderId }: NicAsiaPaymentProps) {

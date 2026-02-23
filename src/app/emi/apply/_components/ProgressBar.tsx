@@ -8,16 +8,17 @@ interface Step {
   label: string;
 }
 
-const ProgressBar = ({ currentstep }: { currentstep: number }) => {
+const ProgressBar = ({ currentstep, onStepClick }: { currentstep: number, onStepClick?: (stepId: number) => void }) => {
   const steps: Step[] = [
     { id: 0, label: 'Start' },
     { id: 1, label: 'Details' },
     { id: 2, label: 'Documents' },
-    { id: 3, label: 'Review' }
+    { id: 3, label: 'Emi Details' },
+    { id: 4, label: 'Review' }
   ];
 
   return (
-    <div className="w-full py-8 px-2 sm:px-0">
+    <div className="w-full py-8 px-2 sm:px-0 max-w-8xl mx-auto">
       <div className="relative w-full">
         {/* Background Line */}
         <div className="absolute top-[7px] left-0 w-full h-[2px] bg-gray-200 z-0 rounded-full" />
@@ -38,7 +39,15 @@ const ProgressBar = ({ currentstep }: { currentstep: number }) => {
             const isLast = idx === steps.length - 1;
 
             return (
-              <div key={step.id} className="flex flex-col relative group">
+              <div
+                key={step.id}
+                className={`flex flex-col relative group ${isPastOrActive ? 'cursor-pointer' : 'cursor-default opacity-60'}`}
+                onClick={() => {
+                  if (onStepClick && isPastOrActive) {
+                    onStepClick(step.id);
+                  }
+                }}
+              >
                 {/* Dot Indicator */}
                 <div
                   className={`

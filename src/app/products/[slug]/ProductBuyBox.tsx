@@ -19,6 +19,7 @@ import { Heart } from "lucide-react";
 import useSWR from 'swr';
 import { CategoryService } from "@/app/api/services/category.service";
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
+import { parseHighlights } from "@/app/CommonVue/highlights";
 
 const fetchCategoryProducts = async (id: string) => {
     const response = await CategoryService.getCategoryProducts({ id });
@@ -68,22 +69,12 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
             removeFromWishlist(product.id);
         } else {
             addToWishlist(product.id);
-            // Custom event for 'wishPot'
-            if (typeof window !== 'undefined') {
-                const event = new CustomEvent('wishPot', { detail: { product } });
-                window.dispatchEvent(event);
-            }
+
         }
     };
 
     const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-    const highlightBullets = useMemo(() => {
-        if (!product.highlights) return [];
-        return product.highlights
-            .split("|")
-            .map((item) => item.trim())
-            .filter((item) => item.length > 0);
-    }, [product.highlights]);
+
 
     // Fetch related products for Free Gifts section based on the first category ID
     const categoryId = product.categories?.[0]?.id?.toString();
@@ -329,10 +320,10 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
             {/* HIGHLIGHTS */}
             {
-                highlightBullets.length > 0 && (
+                parseHighlights(product.highlights).length > 0 && (
                     <div className="pt-4 border-t border-gray-100">
                         <ul className="space-y-2.5">
-                            {highlightBullets.map((item, idx) => (
+                            {parseHighlights(product.highlights).map((item, idx) => (
                                 <li key={idx} className="flex items-start gap-3 text-sm text-slate-600">
                                     <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                                     <span className="leading-snug">{item}</span>

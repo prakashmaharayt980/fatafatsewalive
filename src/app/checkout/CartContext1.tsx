@@ -138,11 +138,8 @@ export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const { authState, triggerLoginAlert } = useAuth();
 
-    const addToCart = async (id: number, quantity: number) => {
-        if (!authState.user) {
-            triggerLoginAlert();
-            return;
-        }
+    const addToCart = async (id: number, quantity: number, variantId?: number) => {
+
 
         const existingItem = cartItems?.items.find(i => i.product_id === id);
 
