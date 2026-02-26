@@ -6,10 +6,7 @@ const OfficeLocation = () => {
             <div className="container-responsive w-full max-w-[1280px] mx-auto px-4 md:px-6">
                 <div className="flex flex-col lg:flex-row gap-12 items-center">
                     <div className="w-full lg:w-1/3">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-[#1967b3] rounded-full text-sm font-medium w-fit mb-4">
-                            <span className="w-2 h-2 rounded-full bg-[#1967b3]"></span>
-                            Visit Us
-                        </div>
+
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 font-heading mb-6">Our Headquarters</h2>
                         <p className="text-slate-600 font-poppins text-lg mb-8">
                             We are conveniently located in the heart of Kathmandu. Drop by to check out our physical store or consult with our experts.

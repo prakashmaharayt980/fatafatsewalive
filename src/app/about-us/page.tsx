@@ -7,6 +7,8 @@ import CompanyJourney from '@/components/about/CompanyJourney';
 import CompanyPartners from '@/components/about/CompanyPartners';
 import OfficeLocation from '@/components/about/OfficeLocation';
 import GoogleReviews from '@/components/about/GoogleReviews';
+import BoardMembers from '@/components/about/BoardMembers';
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 
 export const metadata: Metadata = {
     title: 'About Us | Fatafatsewa - Nepal\'s Leading Digital Shopping Destination',
@@ -28,14 +30,31 @@ export const metadata: Metadata = {
     },
 };
 
-const AboutUsPage = () => {
+const AboutUsPage = async () => {
+    // Globally cached banner fetch
+    const bannerData = await getBannerData('about-page-banner');
+
+    // Sort images by order if it exists, otherwise empty array
+    const sortedImages = bannerData?.images
+        ? [...bannerData.images].sort((a: any, b: any) => a.order - b.order)
+        : [];
+
+    const preloadImage = sortedImages[0]?.image?.full;
+
     return (
         <main className="min-h-screen bg-white">
-            <AboutHero />
+            {preloadImage && (
+                // eslint-disable-next-line @next/next/no-head-element
+                <link rel="preload" as="image" href={preloadImage} fetchPriority="high" />
+            )}
+            <AboutHero bannerData={bannerData} />
             <CompanyStats />
+
             <OurServices />
-            <CompanyJourney />
             <CompanyPartners />
+            <CompanyJourney />
+            <BoardMembers />
+
             <GoogleReviews />
             <OfficeLocation />
         </main>

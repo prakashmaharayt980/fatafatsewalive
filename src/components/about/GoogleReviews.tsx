@@ -23,7 +23,7 @@ const reviews = [
 
 const GoogleReviews = () => {
     return (
-        <section className="py-16 bg-white overflow-hidden">
+        <section className="py-8 bg-white overflow-hidden">
             <div className="container-responsive w-full max-w-[1280px] mx-auto px-4 md:px-6">
                 <div className="text-center mb-12">
                     <div className="flex justify-center mb-4">
