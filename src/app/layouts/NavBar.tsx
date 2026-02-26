@@ -79,7 +79,7 @@ const NavBar = ({ navbaritems }: {
             icon: <ArrowLeftRight className="h-3.5 w-3.5" />,
         },
         {
-            path: '/about',
+            path: '/about-us',
             title: 'About',
             icon: <Info className="h-3.5 w-3.5" />,
         },

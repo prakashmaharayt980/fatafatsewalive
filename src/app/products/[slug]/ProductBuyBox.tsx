@@ -108,7 +108,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {product.brand && (
-                            <span className="text-xs font-bold text-[var(--colour-fsP2)] uppercase tracking-wide bg-orange-50 rounded-full px-2 py-0.5">
+                            <span className="text-xs font-bold text-(--colour-fsP2) uppercase tracking-wide bg-orange-50 rounded-full px-2 py-0.5">
                                 {product.brand.name}
                             </span>
                         )}
@@ -137,7 +137,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                         </button>
                         <button
                             onClick={() => setIsShareOpen(true)}
-                            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-[var(--colour-fsP1)] hover:text-white transition-all shadow-sm"
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-(--colour-fsP1) hover:text-white transition-all shadow-sm"
                         >
                             <Share2 className="w-4 h-4" />
                         </button>
@@ -175,7 +175,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 productDisplay.variantsByColor.length > 0 && (
                     <div className="space-y-2 pt-1">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-[var(--colour-fsP2)] uppercase">
+                            <span className="text-sm font-bold text-(--colour-fsP2) uppercase">
                                 Color: <span className="text-slate-500 font-normal">{selectedVariant?.color}</span>
                             </span>
                         </div>
@@ -191,7 +191,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                         className={cn(
                                             "group relative cursor-pointer rounded-lg transition-all duration-200 p-0.5 border-2",
                                             isSelected
-                                                ? "border-[var(--colour-fsP1)] shadow-md shadow-orange-100"
+                                                ? "border-(--colour-fsP1) shadow-md shadow-orange-100"
                                                 : "border-gray-200 hover:border-gray-300"
                                         )}
                                     >
@@ -208,7 +208,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                             )}
                                         </div>
                                         {isSelected && (
-                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--colour-fsP1)] rounded-full flex items-center justify-center">
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-(--colour-fsP1) rounded-full flex items-center justify-center">
                                                 <Check className="w-2.5 h-2.5 text-white" />
                                             </div>
                                         )}
@@ -234,7 +234,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                         >
                             −
                         </button>
-                        <span className="min-w-[2.5rem] text-center font-semibold text-gray-800">
+                        <span className="min-w-10 text-center font-semibold text-gray-800">
                             {quantity}
                         </span>
                         <button
@@ -259,7 +259,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                         onClick={() => addToCart(product.id, quantity)}
                         title="add-to-cart"
                         disabled={currentStock === 0}
-                        className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-(--colour-fsP2) hover:bg-(--colour-fsP2)/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -272,7 +272,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                         <button
                             title="apply-emi"
                             onClick={() => handleroute(selectedVariant?.color ? `/emi/apply/${product.slug}?selectedcolor=${selectedVariant.color}` : `/emi/apply/${product.slug}`)}
-                            className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP1)]/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-(--colour-fsP1) hover:bg-(--colour-fsP1)/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -296,7 +296,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                         className={cn(
                             "col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 font-medium rounded-lg border transition-all active:scale-[0.98] flex items-center justify-center gap-2",
                             compareList?.some(i => i.id === product.id)
-                                ? "bg-white text-[var(--colour-fsP2)] border-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/5"
+                                ? "bg-white text-(--colour-fsP2) border-(--colour-fsP2) hover:bg-(--colour-fsP2)/5"
                                 : "bg-gray-200 hover:bg-gray-300 text-black border-gray-300 hover:border-gray-400"
                         )}
                         title={compareList?.some(i => i.id === product.id) ? "Remove from Compare" : "Add to Compare"}
@@ -340,18 +340,18 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     <div className="mt-4 border-t border-gray-100 pt-5">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                                <div className="bg-[var(--colour-fsP2)]/10 p-1.5 rounded-lg text-[var(--colour-fsP2)]">
+                                <div className="bg-(--colour-fsP2)/10 p-1.5 rounded-lg text-(--colour-fsP2)">
                                     <Gift className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-900">Free Gifts Included</h3>
                             </div>
-                            <span className="text-[10px] font-bold text-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 px-2 py-1 rounded-md border border-[var(--colour-fsP2)]/10">Limited Offer</span>
+                            <span className="text-[10px] font-bold text-(--colour-fsP2) bg-(--colour-fsP2)/5 px-2 py-1 rounded-md border border-(--colour-fsP2)/10">Limited Offer</span>
                         </div>
 
                         <div className="space-y-3">
                             {freeGifts.map((gift, i) => (
-                                <div key={i} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 bg-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:border-[var(--colour-fsP2)]/30 transition-all group relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--colour-fsP2)]/5 rounded-bl-[40px] -mr-8 -mt-8 z-0"></div>
+                                <div key={i} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 bg-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:border-(--colour-fsP2)/30 transition-all group relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-16 h-16 bg-(--colour-fsP2)/5 rounded-bl-[40px] -mr-8 -mt-8 z-0"></div>
 
                                     <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 border border-slate-100 relative overflow-hidden z-10">
                                         {gift.image ? (
@@ -362,14 +362,14 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                     </div>
                                     <div className="flex-1 min-w-0 z-10">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="bg-[var(--colour-fsP2)] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider shadow-sm">Free</span>
+                                            <span className="bg-(--colour-fsP2) text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider shadow-sm">Free</span>
                                             <span className="text-[10px] text-slate-400 line-through font-medium">Rs. {gift.price.toLocaleString()}</span>
                                         </div>
-                                        <p className="text-sm font-bold text-slate-800 truncate group-hover:text-[var(--colour-fsP2)] transition-colors">{gift.name}</p>
+                                        <p className="text-sm font-bold text-slate-800 truncate group-hover:text-(--colour-fsP2) transition-colors">{gift.name}</p>
                                         <p className="text-[10px] text-slate-500 font-medium">Worth Rs. {gift.price.toLocaleString()}</p>
                                     </div>
                                     <div className="mr-1 z-10">
-                                        <div className="w-7 h-7 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center text-[var(--colour-fsP2)] border border-[var(--colour-fsP2)]/10">
+                                        <div className="w-7 h-7 rounded-full bg-(--colour-fsP2)/10 flex items-center justify-center text-(--colour-fsP2) border border-(--colour-fsP2)/10">
                                             <Check className="w-4 h-4" />
                                         </div>
                                     </div>

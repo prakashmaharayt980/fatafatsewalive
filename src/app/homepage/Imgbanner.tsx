@@ -123,7 +123,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                 <div className="flex flex-col lg:flex-row gap-1 sm:gap-2">
 
                     {/* Main Carousel */}
-                    <div className={`w-full ${showSideImages ? 'lg:w-[60%]' : 'lg:w-full'}`}>
+                    <div className={`w-full ${showSideImages ? 'lg:w-[58%]' : 'lg:w-full'}`}>
                         <div
                             className="relative group overflow-hidden rounded sm:rounded md:rounded bg-gray-100"
                             onMouseEnter={() => setIsAutoPlaying(false)}
@@ -210,7 +210,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                     </div>
 
                     {showSideImages && (
-                        <div className="w-full lg:w-[40%]">
+                        <div className="w-full lg:w-[42%]">
                             {/* Desktop: Grid Layout */}
                             <div className="hidden lg:flex flex-col gap-1 h-full">
                                 <Link
@@ -222,14 +222,14 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                         src={sideImages[0].default}
                                         alt={sideImages[0].name}
                                         fill
-                                        sizes="(max-width: 1024px) 0vw, 40vw"
+                                        sizes="(max-width: 1024px) 0vw, 42vw"
                                         priority
-                                        className="object-contain aspect-auto  rounded  transition-transform duration-500"
+                                        className="object-contain aspect-4/1  rounded  transition-transform duration-500"
                                     />
                                     <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </Link>
 
-                                <div className="flex gap-1 flex-1">
+                                <div className="flex gap-1 flex-1 ">
                                     {
                                         sideImages.slice(1, 3).map((image, index) => (
                                             <Link
@@ -242,8 +242,8 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     src={image.default}
                                                     alt={image.name}
                                                     fill
-                                                    className="object-contain w-full  aspect-[16/9] transition-transform duration-500"
-                                                    sizes="(max-width: 1024px) 0vw, 20vw"
+                                                    className="object-contain w-full aspect-2/1 transition-transform duration-500"
+                                                    sizes="(max-width: 1024px) 0vw, 21vw"
                                                     unoptimized={true}
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

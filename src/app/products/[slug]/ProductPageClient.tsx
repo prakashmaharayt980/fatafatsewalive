@@ -200,10 +200,10 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
                         <div className="hidden lg:block lg:col-span-3">
                             <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
                                 <div className="h-5 w-28 bg-gray-200 rounded animate-pulse" />
-                                <div className="w-full aspect-[16/9] bg-gray-200 rounded-xl animate-pulse" />
+                                <div className="w-full aspect-video bg-gray-200 rounded-xl animate-pulse" />
                                 {[1, 2, 3].map(i => (
                                     <div key={i} className="flex gap-3">
-                                        <div className="w-16 h-14 bg-gray-200 rounded-lg animate-pulse flex-shrink-0" />
+                                        <div className="w-16 h-14 bg-gray-200 rounded-lg animate-pulse shrink-0" />
                                         <div className="flex-1 space-y-2 py-1">
                                             <div className="h-3 w-full bg-gray-200 rounded animate-pulse" />
                                             <div className="h-3 w-2/3 bg-gray-200 rounded animate-pulse" />
@@ -283,12 +283,12 @@ export default function ProductPageClient({ productDetails }: ProductPageClientP
             <div className="max-w-8xl mx-auto px-1 sm:px-2 lg:px-8 py-4">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm mb-6 overflow-x-auto pb-1 scrollbar-hide">
-                    <Link href="/" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">Home</Link>
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <Link href={`/category/${productDetails.categories?.[0]?.slug || ''}`} className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
+                    <Link href="/" className="text-(--colour-fsP2) hover:text-(--colour-fsP1) whitespace-nowrap text-sm font-medium transition-colors">Home</Link>
+                    <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+                    <Link href={`/category/${productDetails.categories?.[0]?.slug || ''}`} className="text-(--colour-fsP2) hover:text-(--colour-fsP1) whitespace-nowrap text-sm font-medium transition-colors">
                         {productDetails.categories?.[0]?.title || 'Category'}
                     </Link>
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
                     <span className="text-slate-800 font-semibold truncate max-w-[180px] sm:max-w-[300px] text-sm">{productDetails.name}</span>
                 </nav>
 

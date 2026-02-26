@@ -13,7 +13,7 @@ interface TwoImageBannerProps {
 }
 
 const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
-  console.log('data', data)
+
   // 1. Keep your logic for filtering and mapping data
   const images = useMemo(() => {
     if (!data?.images || data.images.length === 0) {
@@ -28,6 +28,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
         id: img.id.toString(),
         name: img.content || 'Banner Image',
         src: img.image.full,
+        mainimgs: img.image.banner,
         link: img.link || '#',
       }));
   }, [data]);
@@ -44,13 +45,13 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
             className={cn(
               'min-w-[90%] sm:min-w-0 flex-shrink-0 snap-center',
               'relative overflow-hidden rounded sm:rounded group cursor-pointer border-none', // Removed border
-              ' aspect-[1920/704]  ', // Standard Aspect Ratio
+              ' aspect-[1000/500]  ', // Standard Aspect Ratio
               'transition-all duration-300 ', // Attractive lift effect
               'shadow-sm hover:shadow-xl' // Stronger shadow on hover
             )}
           >
             <Image
-              src={img.src}
+              src={img.mainimgs}
               alt={img.name}
               fill
               className="object-contain transition-transform duration-700 " // Ensure object-cover for better fit

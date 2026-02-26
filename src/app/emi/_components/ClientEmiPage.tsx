@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ProductEMIUI from './EmiProduct';
 import { useContextEmi } from './emiContext';
+import { calculateEMI, BANK_PROVIDERS as AvailablebankProvider } from './_func_emiCalacutor';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import { BannerItem } from '@/app/types/BannerTypes';
 
@@ -19,7 +20,7 @@ interface ClientEmiPageProps {
 
 const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct, emiBanner }) => {
     const router = useRouter();
-    const { emiCalculation, AvailablebankProvider, emiContextInfo } = useContextEmi();
+    const { emiContextInfo } = useContextEmi();
 
     // Initialize product
     const [product, setProduct] = useState<ProductDetails | null>(initialProduct);
@@ -61,12 +62,12 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct, emiBanner
         []
     )
 
-    const emiData = useMemo(() => emiCalculation(
-        productPrice,
+    const emiData = useMemo(() => calculateEMI({
+        principal: productPrice,
         tenure,
-        downPaymentOption,
-        selectedBank.id
-    ), [productPrice, tenure, downPaymentOption, selectedBank.id, emiCalculation])
+        downPayment: downPaymentOption,
+        bankId: selectedBank.id
+    }), [productPrice, tenure, downPaymentOption, selectedBank.id])
 
 
     useEffect(() => {
@@ -344,7 +345,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct, emiBanner
                                 <div className="relative z-10">
                                     <p className="text-white/80 text-xs font-bold uppercase tracking-widest mb-2">Your Monthly EMI</p>
                                     <div className="text-4xl lg:text-[2.75rem] font-extrabold text-white tracking-tight">
-                                        Rs {emiData ? Math.round(emiData.paymentpermonth).toLocaleString() : '0'}
+                                        Rs {emiData ? Math.round(emiData.paymentPerMonth).toLocaleString() : '0'}
                                     </div>
                                     <p className="text-white/60 text-xs mt-1.5 font-medium">per month</p>
                                 </div>

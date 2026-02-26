@@ -298,7 +298,7 @@ export default function LoginPage() {
   if (!loginDailogOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setloginDailogOpen(false)}>
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setloginDailogOpen(false)}>
       <div
         className={`
           relative 
@@ -324,7 +324,7 @@ export default function LoginPage() {
         </button>
 
         {/* Removed gradient bg-gradient-to-b from-white to-teal-50 */}
-        <div className="flex-1 overflow-y-auto bg-white p-6 sm:p-8 flex flex-col gap-2">
+        <div className="flex-1 overflow-y-auto scrollbar-hide bg-white p-6 sm:p-8 flex flex-col gap-2">
           {loading && (
             <div className="absolute inset-0 bg-white/80 z-50 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">

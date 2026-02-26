@@ -101,7 +101,7 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
             {/* Top Left Badges */}
             <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
                 {(index ?? 0) < 2 && (
-                    <span className="bg-[#f0c229] flex items-center gap-1 text-black text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm tracking-tight shadow-sm">
+                    <span className="bg-[var(--colour-fsP1)] flex items-center gap-1 text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm tracking-tight shadow-sm">
                         express
                     </span>
                 )}
@@ -177,7 +177,7 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
                 {/* Rating line */}
                 {mockRating > 0 && (
                     <div className="flex items-center gap-1 mb-2">
-                        <span className="text-green-700 font-bold text-[12px] flex items-center">
+                        <span className="text-[var(--colour-fsP2)] font-bold text-[12px] flex items-center">
                             {mockRating.toFixed(1)} <Star className="w-3 h-3 ml-0.5" />
                         </span>
                         <span className="text-gray-400 text-[11px]">({mockRatingCount})</span>
@@ -190,7 +190,7 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
                         Rs. {displayPrice}
                     </span>
                     {discount > 0 && (
-                        <span className="text-green-600 font-bold text-[11px] bg-green-50 px-1 py-0.5 rounded-sm">
+                        <span className="text-[var(--colour-fsP1)] font-bold text-[11px] bg-orange-50 px-1 py-0.5 rounded-sm">
                             {discount}% OFF
                         </span>
                     )}
@@ -214,8 +214,8 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
                 {/* Footer Badges */}
                 {hasCoupon && (
                     <div className="flex mt-2">
-                        <span className="text-blue-600 text-[10px] border border-blue-200 bg-blue-50 px-1.5 py-0.5 rounded-sm flex items-center">
-                            10% cashback <span className="font-bold ml-1 text-green-700 bg-green-100 px-1 rounded-sm">+1</span>
+                        <span className="text-[var(--colour-fsP2)] text-[10px] border border-[var(--colour-fsP2)]/30 bg-[var(--colour-fsP2)]/5 px-1.5 py-0.5 rounded-sm flex items-center">
+                            10% cashback <span className="font-bold ml-1 text-[var(--colour-fsP1)] bg-[var(--colour-fsP1)]/10 px-1 rounded-sm">+1</span>
                         </span>
                     </div>
                 )}
@@ -326,7 +326,7 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
             {/* Top Left Badges */}
             <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
                 {(index ?? 0) < 2 && (
-                    <span className="bg-[#f0c229] flex items-center gap-1 text-black text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm tracking-tight shadow-sm">
+                    <span className="bg-[var(--colour-fsP1)] flex items-center gap-1 text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm tracking-tight shadow-sm">
                         express
                     </span>
                 )}
@@ -344,7 +344,7 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
             </div>
 
             {/* Image Area */}
-            <div className="relative w-full sm:w-40 aspect-square sm:aspect-auto sm:h-40 flex-shrink-0 bg-white">
+            <div className="relative w-full sm:w-40 aspect-square sm:aspect-auto sm:h-40 shrink-0 bg-white">
                 {!imageLoaded && !imageError && (
                     <div className="absolute inset-0 bg-gray-50 animate-pulse rounded" />
                 )}
@@ -381,7 +381,7 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
                     {/* Rating line */}
                     {product.average_rating > 0 && (
                         <div className="flex items-center gap-1 mb-2">
-                            <span className="text-green-700 font-bold text-[12px] flex items-center">
+                            <span className="text-[var(--colour-fsP2)] font-bold text-[12px] flex items-center">
                                 {product.average_rating.toFixed(1)} <Star className="w-3 h-3 ml-0.5" />
                             </span>
                             <span className="text-gray-400 text-[11px]">({product.rating_count || 128})</span>
@@ -409,7 +409,7 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
                                 Rs. {displayPrice}
                             </span>
                             {discount > 0 && (
-                                <span className="text-green-600 font-bold text-[11px] bg-green-50 px-1 py-0.5 rounded-sm">
+                                <span className="text-[var(--colour-fsP1)] font-bold text-[11px] bg-orange-50 px-1 py-0.5 rounded-sm">
                                     {discount}% OFF
                                 </span>
                             )}

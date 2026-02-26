@@ -2,7 +2,7 @@ import { apiPrivate } from './client';
 
 export const EmiService = {
     EmiRequest: (data: any) =>
-        apiPrivate.post(`/v1/emi-request`, data).then(res => res.data),
+        apiPrivate.post(`/v1/emi-requests`, data).then(res => res.data),
 
     EmiRequestList: () =>
         apiPrivate.get(`/v1/emi-request`).then(res => res.data),

@@ -7,12 +7,14 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerC
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Search, ArrowLeft, Calculator, Percent, ArrowRight, Calendar } from 'lucide-react';
 import { useContextEmi } from '@/app/emi/_components/emiContext';
+import { BANK_PROVIDERS as AvailablebankProvider } from '@/app/emi/_components/_func_emiCalacutor';
 import RemoteServices from '@/app/api/remoteservice';
 import Image from 'next/image';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 
 export default function EMICalculator() {
-  const { emiContextInfo, setEmiContextInfo, AvailablebankProvider } = useContextEmi();
+  const { emiContextInfo, setEmiContextInfo } = useContextEmi();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loanAmount, setLoanAmount] = useState(100000);
   const [interestRate, setInterestRate] = useState(10);
   const [tenure, setTenure] = useState(12);
@@ -111,10 +113,8 @@ export default function EMICalculator() {
 
   return (
     <Drawer
-      open={emiContextInfo.isDrawerOpen}
-      onOpenChange={(open) =>
-        setEmiContextInfo((prev) => ({ ...prev, isDrawerOpen: open }))
-      }
+      open={isDrawerOpen}
+      onOpenChange={setIsDrawerOpen}
     >
       <DrawerContent className="max-h-[85vh] min-h-[60vh] max-w-6xl mx-auto bg-white border-0 shadow-xl">
         <DrawerHeader className="text-center  m-0 p-0 items-center border-b-gray-200 border-b  ">
@@ -394,7 +394,7 @@ export default function EMICalculator() {
               ) :
               (<button
                 onClick={() => {
-                  setEmiContextInfo(prev => ({ ...prev, isDrawerOpen: true }))
+                  setIsDrawerOpen(true)
                   // Navigation to application or next step?
                   // Previously it was setting isDrawerOpen:true for product selection?
                   // But we are IN the drawer here.

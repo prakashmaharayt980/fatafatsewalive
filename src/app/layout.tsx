@@ -25,6 +25,7 @@ import FacebookPixel from '@/app/layouts/FacebookPixels'
 import { getGlobalData } from '@/app/context/GlobalData';
 import UserActivityTracker from '@/components/UserActivityTracker';
 import GlobalCompareDrawer from '@/components/GlobalCompareDrawer';
+import LoginAlertDialog from '@/components/auth/LoginAlertDialog';
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -91,6 +92,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
                   <WishList />
                   <GlobalCompareDrawer />
+                  <LoginAlertDialog />
                 </CompareProvider>
               </CartProvider1>
             </AddressProvider>

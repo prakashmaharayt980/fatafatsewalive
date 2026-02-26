@@ -23,7 +23,7 @@ export default function LoginAlertDialog() {
     };
 
     return (
-        <AlertDialog open={showLoginAlert} onOpenChange={setShowLoginAlert}>
+        <AlertDialog open={showLoginAlert} onOpenChange={() => setShowLoginAlert(false)}>
             <AlertDialogContent className='bg-white border-none'>
                 <AlertDialogHeader>
                     <AlertDialogTitle className='text-[var(--colour-fsP2)] items-center w-full flex justify-start text-lg gap-4'>

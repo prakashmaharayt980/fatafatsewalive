@@ -27,7 +27,7 @@ interface FormSectionsProps {
 }
 
 const inputClassName = (error: boolean) => `
-  pl-11 pr-11 h-12 
+  pl-11 pr-11 h-10 
   bg-gray-50/50 
   hover:bg-gray-50
   border 
@@ -45,7 +45,7 @@ const inputClassName = (error: boolean) => `
 `;
 
 const primaryButtonClassName = `
-  w-full cursor-pointer h-12 
+  w-full cursor-pointer h-10 
   bg-[var(--colour-fsP2)]
   hover:bg-[var(--colour-fsP1)]
   text-white text-sm font-bold tracking-wide uppercase
@@ -61,18 +61,18 @@ const primaryButtonClassName = `
 export const formSections = {
   login: {
     render: (props: FormSectionsProps) => (
-      <div className="flex flex-col space-y-6">
-        <div className="text-center space-y-2">
+      <div className="flex flex-col space-y-4">
+        <div className="text-center space-y-1">
           <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
           <p className="text-sm text-gray-500">Please enter your details to sign in</p>
         </div>
 
-        <form className="flex flex-col space-y-4" onSubmit={props.handleLogin}>
+        <form className="flex flex-col space-y-3" onSubmit={props.handleLogin}>
           {sectionFields.login.map((field) => (
             <div key={field.id} className="relative group">
               <Label
                 htmlFor={field.id}
-                className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1"
+                className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1 block ml-1"
               >
                 {field.label}
               </Label>
@@ -193,19 +193,19 @@ export const formSections = {
       };
 
       return (
-        <div className="space-y-6">
-          <div className="text-center space-y-2 mb-2">
+        <div className="space-y-4">
+          <div className="text-center space-y-1 mb-1">
             <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
             <p className="text-sm text-gray-500">Join us to start shopping today</p>
           </div>
 
-          <form className="space-y-4" onSubmit={props.handleRegister}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form className="space-y-3" onSubmit={props.handleRegister}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {sectionFields.register.map((field, index) => (
                 <div key={field.id} className={`${getColSpan(index)} relative group`}>
                   <Label
                     htmlFor={field.id}
-                    className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1"
+                    className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1 block ml-1"
                   >
                     {field.label}
                   </Label>
@@ -277,10 +277,10 @@ export const formSections = {
 
   forgot: {
     render: (props: FormSectionsProps) => (
-      <div className="space-y-6">
-        <div className="text-center mb-6">
-          <div className="mx-auto w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3">
-            <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="space-y-4">
+        <div className="text-center mb-4">
+          <div className="mx-auto w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mb-2">
+            <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
@@ -288,12 +288,12 @@ export const formSections = {
           <p className="text-sm text-gray-500 mt-1">Enter your email to receive a verification code</p>
         </div>
 
-        <form className="space-y-4" onSubmit={props.handleForgotPassword}>
+        <form className="space-y-3" onSubmit={props.handleForgotPassword}>
           {sectionFields.forgot.map((field) => (
             <div key={field.id} className="group">
               <Label
                 htmlFor={field.id}
-                className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1"
+                className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1 block ml-1"
               >
                 {field.label}
               </Label>
@@ -361,10 +361,10 @@ export const formSections = {
       const step2Fields = sectionFields.verify.filter(f => f.id !== 'otpCode');
 
       return (
-        <div className="space-y-6">
-          <div className="text-center mb-6">
-            <div className="mx-auto w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-3">
-              <KeyRound className="w-6 h-6 text-green-500" />
+        <div className="space-y-4">
+          <div className="text-center mb-4">
+            <div className="mx-auto w-10 h-10 bg-green-50 rounded-full flex items-center justify-center mb-2">
+              <KeyRound className="w-5 h-5 text-green-500" />
             </div>
             <h3 className="text-xl font-bold text-gray-900">
               {props.otpVerified ? "Set New Password" : "Enter Verification Code"}
@@ -376,10 +376,10 @@ export const formSections = {
 
           {!props.otpVerified ? (
             // STEP 1: OTP Input
-            <form className="space-y-4" onSubmit={props.handleVerifyCode}>
+            <form className="space-y-3" onSubmit={props.handleVerifyCode}>
               {step1Field && (
                 <div className="group">
-                  <Label htmlFor={step1Field.id} className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1">{step1Field.label}</Label>
+                  <Label htmlFor={step1Field.id} className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1 block ml-1">{step1Field.label}</Label>
                   <div className="relative">
                     <Input
                       id={step1Field.id}
@@ -405,9 +405,9 @@ export const formSections = {
             </form>
           ) : (
             // STEP 2: Password Reset
-            <form className="space-y-4" onSubmit={props.handleResetPassword}>
+            <form className="space-y-3" onSubmit={props.handleResetPassword}>
               {/* Show OTP as readonly context */}
-              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-100 rounded-xl mb-4">
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-100 rounded-xl mb-3">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-600" />
                   <span className="text-sm font-medium text-gray-700">Code Verified</span>
@@ -417,7 +417,7 @@ export const formSections = {
 
               {step2Fields.map((field) => (
                 <div key={field.id} className="group">
-                  <Label htmlFor={field.id} className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1.5 block ml-1">{field.label}</Label>
+                  <Label htmlFor={field.id} className="text-gray-700 text-xs font-semibold uppercase tracking-wide mb-1 block ml-1">{field.label}</Label>
                   <div className="relative">
                     <Input
                       id={field.id}

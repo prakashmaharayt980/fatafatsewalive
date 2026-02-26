@@ -111,12 +111,12 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
 
         {/* Banner Image Side */}
         {imageUrl && (
-          <div className="hidden md:block w-full md:w-1/5 min-w-[200px] relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer shrink-0">
+          <div className="hidden md:block w-full md:w-1/5 min-w-[200px] aspect-[9/16] relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer shrink-0">
             <Image
               src={imageUrl}
               alt={title || 'Category Banner'}
               fill
-              className="object-contain w-full h-full aspect-[190/940] transition-transform duration-700 p-0 m-0"
+              className="object-contain w-full h-full  transition-transform duration-700 p-0 m-0"
               sizes="(max-width: 1024px) 30vw, 20vw"
 
             />

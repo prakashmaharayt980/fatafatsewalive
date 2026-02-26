@@ -113,6 +113,13 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
         'shop ' + title.toLowerCase(),
     ];
 
+    // Prefer first banner image for OG over category image
+    const bannerForOg = await getBannerData('blog-banner-test');
+    const ogImageUrl =
+        bannerForOg?.images?.[0]?.image?.full ||
+        category?.image ||
+        null;
+
     return {
         title: `${title} | Fatafat Sewa - Shop Online`,
         description,
@@ -123,9 +130,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
             url: canonicalUrl,
             siteName: 'Fatafat Sewa',
             type: 'website',
-            images: category?.image ? [
+            images: ogImageUrl ? [
                 {
-                    url: category.image,
+                    url: ogImageUrl,
                     width: 1200,
                     height: 630,
                     alt: title,
@@ -318,6 +325,16 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         brands: { data: brands },
     };
 
+    // Derive preload URLs from bannerData for LCP optimisation
+    const sortedBannerImages = bannerData?.images
+        ? [...bannerData.images].sort((a: any, b: any) => a.order - b.order)
+        : [];
+    const preloadTopImage = sortedBannerImages[0]?.image?.full ?? null;
+    const preloadPortraitImage =
+        sortedBannerImages.length >= 2
+            ? sortedBannerImages[sortedBannerImages.length - 1]?.image?.full
+            : null;
+
     return (
         <>
             {/* Structured Data (JSON-LD) */}
@@ -328,6 +345,15 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
                 />
             ))}
+
+            {/* LCP Preload hints for banner images */}
+            {preloadTopImage && (
+                // eslint-disable-next-line @next/next/no-head-element
+                <link rel="preload" as="image" href={preloadTopImage} fetchPriority="high" />
+            )}
+            {preloadPortraitImage && (
+                <link rel="preload" as="image" href={preloadPortraitImage} />
+            )}
 
             {/* Main Content */}
             <Suspense fallback={<CategoryPageSkeleton />}>

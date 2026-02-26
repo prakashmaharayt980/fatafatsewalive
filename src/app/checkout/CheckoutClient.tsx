@@ -50,10 +50,10 @@ export default function CheckoutClient() {
     const router = useRouter();
     // Auth protection
     useEffect(() => {
-        if (!isLoading && !authState.user) {
+        if (!isLoading && authState.isLoggedIn === false) {
             triggerLoginAlert();
         }
-    }, [isLoading, authState.user, triggerLoginAlert]);
+    }, [isLoading, authState.isLoggedIn, triggerLoginAlert]);
 
     // Track Initiate Checkout
     useEffect(() => {
@@ -150,7 +150,7 @@ export default function CheckoutClient() {
             const currentItems = cartItems?.items || [];
             const subtotal = cartItems?.cart_total || 0;
             const finalTotal = subtotal - (appliedPromo?.discount || 0);
-            const order_id = cartItems.id
+
 
             const payload = {
 
@@ -176,172 +176,173 @@ export default function CheckoutClient() {
             };
 
 
-            if (checkoutState.paymentMethod.toLowerCase().includes('esewa') || checkoutState.paymentMethod.toLowerCase().includes('nic-asia') || checkoutState.paymentMethod.toLowerCase().includes('khalti')){
-                {
-                    handlePayment(order_id, finalTotal);
+            const response = await OrderService.CreateOrder(payload).then((res) => {
+                if (res.data.order_status === 'Placed' && res.data.payment_type === 'nic-asia') {
+                    // handlePayment(res.data.id, finalTotal);
+                    setProcessingPaymentOrder(res.data.id);
                 }
-            } else {
-                const response = await OrderService.CreateOrder(payload);
-                if (response.success) {
+                if (res.success && res.data.payment_type !== 'cash') {
                     toast.success('Order placed successfully!');
-                    router.push(`/checkout/Successpage/${response.order_id}`);
-                } else {
-                    toast.error('Failed to place order. Please try again.');
+                    router.push(`/checkout/Successpage/${res.data.id}`);
                 }
-            }
+            })
 
 
-            } catch (error) {
-                console.error('Order Error', error);
-                setIsSubmitting(false);
-            }
-        };
 
-        // Loading state
-        if (isLoading) {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--colour-fsP1)]" />
-                </div>
-            );
+
+
+
+        } catch (error) {
+            console.error('Order Error', error);
+            setIsSubmitting(false);
         }
+    };
 
-        if (!authState.user) {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <p>Please log in to continue.</p>
-                </div>
-            );
-        }
-
-        // Render current step
-        const renderStep = () => {
-            switch (checkoutState.currentStep) {
-                case CHECKOUT_STEPS.ADDRESS:
-                    return (
-                        <AddressStep
-                            state={checkoutState}
-                            onAddressSelect={handleAddressSelect}
-                            onLocationPermissionChange={handleLocationPermissionChange}
-                            onNext={nextStep}
-                        />
-                    );
-                case CHECKOUT_STEPS.RECIPIENT:
-                    return (
-                        <RecipientStep
-                            state={checkoutState}
-                            onRecipientChange={handleRecipientChange}
-                            onNext={nextStep}
-                            onBack={prevStep}
-                        />
-                    );
-
-                case CHECKOUT_STEPS.PAYMENT:
-                    // If we are processing a NIC Asia payment, show the loading component
-                    if (processingPaymentOrder) {
-                        if (checkoutState.paymentMethod.toLowerCase().includes('esewa')) {
-                            // Calculate total amount (subtotal + shipping - discount)
-                            const subtotal = cartItems?.cart_total || 0;
-                            const shipping = shippingCost;
-                            const discount = appliedPromo?.discount || 0;
-                            const totalAmount = subtotal + shipping - discount;
-                            return <EeswaPayment orderId={processingPaymentOrder} amount={totalAmount} />;
-                        }
-                        return <NicAsiaPayment orderId={processingPaymentOrder} />;
-                    }
-                    return (
-                        <PaymentStep
-                            state={checkoutState}
-                            onPaymentMethodChange={handlePaymentMethodChange}
-                            onPlaceOrder={handlePlaceOrder}
-                            onBack={prevStep}
-                            isSubmitting={isSubmitting}
-                        />
-                    );
-
-                default:
-                    return null;
-            }
-        };
-
-        const subtotal = cartItems?.cart_total || 0;
-        const discount = appliedPromo?.discount || 0;
-        const total = subtotal + shippingCost - discount;
-
+    // Loading state
+    if (isLoading) {
         return (
-            <div className="bg-gray-50 py-4 sm:py-8 min-h-screen">
-                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-                    {/* Breadcrumb Navigation */}
-                    <nav className="flex items-center gap-1.5 text-sm mb-4 overflow-x-auto pb-1 scrollbar-hide">
-                        <Link href="/" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
-                            Home
-                        </Link>
-                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <Link href="/cart" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
-                            Cart
-                        </Link>
-                        <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-slate-800 font-semibold text-sm">
-                            Checkout
-                        </span>
-                        {checkoutState.currentStep > 0 && (
-                            <>
-                                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <span className="text-[var(--colour-fsP2)] font-medium text-sm">
-                                    {STEP_LABELS[checkoutState.currentStep]}
-                                </span>
-                            </>
-                        )}
-                    </nav>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--colour-fsP1)]" />
+            </div>
+        );
+    }
 
-                    {/* Header */}
-                    <div className="mb-4 sm:mb-6">
+    if (authState.isLoggedIn === false) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <p>Please log in to continue.</p>
+            </div>
+        );
+    }
 
-                        <StepProgress
-                            currentStep={checkoutState.currentStep}
-                            state={checkoutState}
-                            onStepClick={goToStep}
-                        />
+    // Render current step
+    const renderStep = () => {
+        switch (checkoutState.currentStep) {
+            case CHECKOUT_STEPS.ADDRESS:
+                return (
+                    <AddressStep
+                        state={checkoutState}
+                        onAddressSelect={handleAddressSelect}
+                        onLocationPermissionChange={handleLocationPermissionChange}
+                        onNext={nextStep}
+                    />
+                );
+            case CHECKOUT_STEPS.RECIPIENT:
+                return (
+                    <RecipientStep
+                        state={checkoutState}
+                        onRecipientChange={handleRecipientChange}
+                        onNext={nextStep}
+                        onBack={prevStep}
+                    />
+                );
+
+            case CHECKOUT_STEPS.PAYMENT:
+                // If we are processing a NIC Asia payment, show the loading component
+                if (processingPaymentOrder) {
+                    if (checkoutState.paymentMethod.toLowerCase().includes('esewa')) {
+                        // Calculate total amount (subtotal + shipping - discount)
+                        const subtotal = cartItems?.cart_total || 0;
+                        const shipping = shippingCost;
+                        const discount = appliedPromo?.discount || 0;
+                        const totalAmount = subtotal + shipping - discount;
+                        return <EeswaPayment orderId={processingPaymentOrder} amount={totalAmount} />;
+                    }
+                    return <NicAsiaPayment orderId={processingPaymentOrder} />;
+                }
+                return (
+                    <PaymentStep
+                        state={checkoutState}
+                        onPaymentMethodChange={handlePaymentMethodChange}
+                        onPlaceOrder={handlePlaceOrder}
+                        onBack={prevStep}
+                        isSubmitting={isSubmitting}
+                    />
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    const subtotal = cartItems?.cart_total || 0;
+    const discount = appliedPromo?.discount || 0;
+    const total = subtotal + shippingCost - discount;
+
+    return (
+        <div className="bg-gray-50 py-4 sm:py-8 min-h-screen">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                {/* Breadcrumb Navigation */}
+                <nav className="flex items-center gap-1.5 text-sm mb-4 overflow-x-auto pb-1 scrollbar-hide">
+                    <Link href="/" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
+                        Home
+                    </Link>
+                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Link href="/cart" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
+                        Cart
+                    </Link>
+                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-slate-800 font-semibold text-sm">
+                        Checkout
+                    </span>
+                    {checkoutState.currentStep > 0 && (
+                        <>
+                            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span className="text-[var(--colour-fsP2)] font-medium text-sm">
+                                {STEP_LABELS[checkoutState.currentStep]}
+                            </span>
+                        </>
+                    )}
+                </nav>
+
+                {/* Header */}
+                <div className="mb-4 sm:mb-6">
+
+                    <StepProgress
+                        currentStep={checkoutState.currentStep}
+                        state={checkoutState}
+                        onStepClick={goToStep}
+                    />
+                </div>
+
+                {/* Two Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    {/* Left Column - Step Content */}
+                    <div className="lg:col-span-2">
+                        {renderStep()}
                     </div>
 
-                    {/* Two Column Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                        {/* Left Column - Step Content */}
-                        <div className="lg:col-span-2">
-                            {renderStep()}
-                        </div>
-
-                        {/* Right Column - Order Summary (Sticky) */}
-                        <div className="lg:col-span-1">
-                            <div className="sticky top-24">
-                                <CheckoutProduct
-                                    setsubmittedvaluelist={(updater: any) => {
-                                        if (typeof updater === 'function') {
-                                            const result = updater({ promoCode });
-                                            if (result.promoCode !== undefined) {
-                                                setPromoCode(result.promoCode);
-                                            }
+                    {/* Right Column - Order Summary (Sticky) */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-24">
+                            <CheckoutProduct
+                                setsubmittedvaluelist={(updater: any) => {
+                                    if (typeof updater === 'function') {
+                                        const result = updater({ promoCode });
+                                        if (result.promoCode !== undefined) {
+                                            setPromoCode(result.promoCode);
                                         }
-                                    }}
-                                    submittedvaluelist={{
-                                        promoCode,
-                                        appliedPromo,
-                                        totalpayment: total,
-                                        paymentmethod: checkoutState.paymentMethod,
-                                        address: checkoutState.address,
-                                        productsID: cartItems?.items || [],
-                                        receiverNO: userInfo?.phone,
+                                    }
+                                }}
+                                submittedvaluelist={{
+                                    promoCode,
+                                    appliedPromo,
+                                    totalpayment: total,
+                                    paymentmethod: checkoutState.paymentMethod,
+                                    address: checkoutState.address,
+                                    productsID: cartItems?.items || [],
+                                    receiverNO: userInfo?.phone,
 
-                                    }}
-                                    handleApplyPromo={handleApplyPromo}
-                                    Stepstate={checkoutState}
-                                />
+                                }}
+                                handleApplyPromo={handleApplyPromo}
+                                Stepstate={checkoutState}
+                            />
 
 
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        );
-    }
+        </div>
+    );
+}

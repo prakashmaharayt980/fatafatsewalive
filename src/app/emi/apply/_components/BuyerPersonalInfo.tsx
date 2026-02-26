@@ -4,10 +4,11 @@ import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useContextEmi } from "@/app/emi/_components/emiContext";
+import { BANK_PROVIDERS as AvailablebankProvider } from "@/app/emi/_components/_func_emiCalacutor";
 import { Input } from "@/components/ui/input";
 
 export default function BuyerPersonalInfo({ cardinfofield, errors }) {
-  const { AvailablebankProvider } = useContextEmi();
+  // AvailablebankProvider imported directly
 
   return (
     <div className="bg-gradient-to-b from-white to-blue-50 py-4 sm:py-6 px-2">
