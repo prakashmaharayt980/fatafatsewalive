@@ -9,17 +9,21 @@ export default function FacebookPixel() {
     const searchParams = useSearchParams()
 
     useEffect(() => {
-        // Initialize only once
+        // Delay initialization to prevent blocking the main thread during hydration (improves TBT)
         if (!loaded) {
-            import('react-facebook-pixel')
-                .then((x) => x.default)
-                .then((ReactPixel) => {
-                    ReactPixel.init(process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID) // Replace with your Pixel ID
-                    ReactPixel.pageView()
-                    setLoaded(true)
-                })
+            const timer = setTimeout(() => {
+                import('react-facebook-pixel')
+                    .then((x) => x.default)
+                    .then((ReactPixel) => {
+                        ReactPixel.init(process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID) // Replace with your Pixel ID
+                        ReactPixel.pageView()
+                        setLoaded(true)
+                    })
+            }, 3000); // 3-second delay pushes this out of the critical rendering path
+
+            return () => clearTimeout(timer);
         } else {
-            // Track page view on route change
+            // Track page view on route change immediately if already loaded
             import('react-facebook-pixel')
                 .then((x) => x.default)
                 .then((ReactPixel) => {

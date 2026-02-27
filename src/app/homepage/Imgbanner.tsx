@@ -23,16 +23,20 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
 
         return mainBanner.images
             .sort((a, b) => a.order - b.order)
-            .map((img) => ({
-                id: img.id,
-                name: img.content || 'Banner Image',
-                default: img.image.full,
-                original: img.image.full,
-                preview: img.image.thumb,
-                thumbnail: img.image.thumb,
-                link: img.link,
-                is_default: img.order === 0,
-            }));
+            .map((img) => {
+                // Strip HTML tags for SEO-friendly clean alt text
+                const cleanAlt = img.content ? img.content.replace(/<[^>]*>?/gm, '').trim() : '';
+                return {
+                    id: img.id,
+                    name: cleanAlt || 'Fatafat Sewa Banner',
+                    default: img.image.full,
+                    original: img.image.full,
+                    preview: img.image.thumb,
+                    thumbnail: img.image.thumb,
+                    link: img.link,
+                    is_default: img.order === 0,
+                };
+            });
     }, [mainBanner]);
 
     const sideImages = useMemo(() => {
@@ -40,12 +44,15 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
 
         return sideBanner.images
             .sort((a, b) => a.order - b.order)
-            .map((img) => ({
-                id: img.id,
-                name: img.content || 'Side Banner Image',
-                default: img.image.full,
-                link: img.link,
-            }));
+            .map((img) => {
+                const cleanAlt = img.content ? img.content.replace(/<[^>]*>?/gm, '').trim() : '';
+                return {
+                    id: img.id,
+                    name: cleanAlt || 'Fatafat Sewa Special Offer',
+                    default: img.image.full,
+                    link: img.link,
+                };
+            });
     }, [sideBanner]);
 
     // Slide navigation functions
@@ -151,9 +158,9 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     alt={image.name}
                                                     fill
                                                     priority={index === 0}
-                                                    // sizes tells the browser exactly how much space it takes
+                                                    fetchPriority={index === 0 ? "high" : "auto"}
                                                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 60vw"
-                                                    className="object-contain mx-auto" // Ensures no stretching
+                                                    className="object-contain mx-auto"
                                                 />
                                             </Link>
                                         </div>
@@ -224,6 +231,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                         fill
                                         sizes="(max-width: 1024px) 0vw, 42vw"
                                         priority
+                                        fetchPriority="high"
                                         className="object-contain aspect-4/1  rounded  transition-transform duration-500"
                                     />
                                     <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

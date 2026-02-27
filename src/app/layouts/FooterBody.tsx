@@ -103,30 +103,30 @@ const FooterBody = () => {
       <span className="sr-only">Fatafatsewa footer</span>
 
       {/* ═══ Help Banner ═══ */}
-      <div className="bg-[var(--colour-fsP1)] border border-red-500 rounded-t-2xl">
+      <div className="bg-[var(--colour-fsP1)] rounded-t-2xl">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <Headphones className="w-5 h-5 text-white drop-shadow-sm" />
+              <Headphones className="w-5 h-5 text-[#1a1a1a]" />
               <div>
-                <p className="text-white font-bold text-sm drop-shadow-md">We&apos;re Always Here To Help</p>
-                <p className="text-white/90 font-medium text-[11px] drop-shadow-sm">Reach out to us through any of these support channels</p>
+                <p className="text-[#1a1a1a] font-bold text-sm">We&apos;re Always Here To Help</p>
+                <p className="text-[#1a1a1a]/80 font-medium text-[11px]">Reach out to us through any of these support channels</p>
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 text-white">
-                <PhoneCall className="w-4 h-4 text-white drop-shadow-sm" />
+              <div className="flex items-center gap-2 text-[#1a1a1a]">
+                <PhoneCall className="w-4 h-4 text-[#1a1a1a]" />
                 <div>
-                  <p className="text-[10px] text-white/90 uppercase tracking-wider font-bold drop-shadow-sm">Call Us</p>
-                  <p className="text-sm font-bold text-white drop-shadow-md">+977 9828757575</p>
+                  <p className="text-[10px] text-[#1a1a1a]/70 uppercase tracking-wider font-bold">Call Us</p>
+                  <p className="text-sm font-bold text-[#1a1a1a]">+977 9828757575</p>
                 </div>
               </div>
-              <div className="hidden sm:block h-8 bg-white/30 w-[1px]" />
-              <div className="flex items-center gap-2 text-white">
-                <Mail className="w-4 h-4 text-white drop-shadow-sm" />
+              <div className="hidden sm:block h-8 bg-[#1a1a1a]/20 w-[1px]" />
+              <div className="flex items-center gap-2 text-[#1a1a1a]">
+                <Mail className="w-4 h-4 text-[#1a1a1a]" />
                 <div>
-                  <p className="text-[10px] text-white/90 uppercase tracking-wider font-bold drop-shadow-sm">Email</p>
-                  <p className="text-sm font-bold text-white drop-shadow-md">info@fatafatsewa.com</p>
+                  <p className="text-[10px] text-[#1a1a1a]/70 uppercase tracking-wider font-bold">Email</p>
+                  <p className="text-sm font-bold text-[#1a1a1a]">info@fatafatsewa.com</p>
                 </div>
               </div>
             </div>

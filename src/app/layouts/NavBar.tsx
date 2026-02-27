@@ -131,11 +131,11 @@ const NavBar = ({ navbaritems }: {
                     {/* Explore Menu Trigger */}
                     <HoverCard openDelay={0} closeDelay={100}>
                         <HoverCardTrigger asChild>
-                            <button className="flex items-center gap-2 px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-full transition-all duration-300 h-9 cursor-pointer border border-white/20 shadow-xs hover:shadow-sm active:scale-95 group">
+                            <button className="flex items-center gap-2 px-4 py-1.5 bg-white/20 hover:bg-white/30 text-[#1a1a1a] font-medium rounded-full transition-all duration-300 h-9 cursor-pointer border border-white/30 shadow-xs hover:shadow-sm active:scale-95 group">
                                 <div className="flex items-center gap-2">
-                                    <Telescope className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-white group-hover:text-yellow-200 drop-shadow-sm" />   <span className="text-[12px] font-bold transition-colors text-white group-hover:text-yellow-200 drop-shadow-sm">Explore</span>
+                                    <Telescope className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-[#1a1a1a] group-hover:text-[var(--colour-fsP2)]" />   <span className="text-[12px] font-bold transition-colors text-[#1a1a1a] group-hover:text-[var(--colour-fsP2)]">Explore</span>
                                 </div>
-                                <ChevronDown className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-white drop-shadow-sm" />
+                                <ChevronDown className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-[#1a1a1a]" />
                             </button>
                         </HoverCardTrigger>
 
@@ -288,7 +288,7 @@ const NavBar = ({ navbaritems }: {
                             <Link
                                 key={idx}
                                 href={item.path}
-                                className="text-sm font-bold text-white hover:text-yellow-200 transition-colors flex items-center gap-1 drop-shadow-md"
+                                className="text-sm font-bold text-[#1a1a1a] hover:text-[var(--colour-fsP2)] transition-colors flex items-center gap-1"
                             >
                                 {item.icon && item.icon}
                                 {item.title}

@@ -4,28 +4,28 @@ import React from 'react';
 import HeaderBody from '@/app/layouts/headerbody';
 
 import FooterBody from '@/app/layouts/FooterBody';
+import dynamic from 'next/dynamic';
+import { Inter } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner';
-import ChatBot from './chatbot';
-
 import { CartProvider1 } from '@/app/checkout/CartContext1';
-import CheckoutDrawer from '@/app/checkout/CheckoutDrawer';
-
-
 import { CompareProvider } from '@/app/context/CompareContext';
 import LoginPage from '@/app/login/page';
 import { AuthProvider } from '@/app/context/AuthContext';
-import WishList from '@/app/emi/_components/Wishlist';
 import { AddressProvider } from '@/app/context/AddressContext';
-
-import { Inter } from 'next/font/google'
 import { EmiProvider } from '@/app/emi/_components/emiContext';
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleAnalytics } from '@next/third-parties/google';
-import FacebookPixel from '@/app/layouts/FacebookPixels'
 import { getGlobalData } from '@/app/context/GlobalData';
 import UserActivityTracker from '@/components/UserActivityTracker';
-import GlobalCompareDrawer from '@/components/GlobalCompareDrawer';
-import LoginAlertDialog from '@/components/auth/LoginAlertDialog';
+
+// --- Dynamic Imports for Non-Critical & Heavy UI Components ---
+// Defers loading JS for these components
+const ChatBot = dynamic(() => import('./chatbot'));
+const CheckoutDrawer = dynamic(() => import('@/app/checkout/CheckoutDrawer'));
+const WishList = dynamic(() => import('@/app/emi/_components/Wishlist'));
+const GlobalCompareDrawer = dynamic(() => import('@/components/GlobalCompareDrawer'));
+const LoginAlertDialog = dynamic(() => import('@/components/auth/LoginAlertDialog'));
+const FacebookPixel = dynamic(() => import('@/app/layouts/FacebookPixels'));
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
