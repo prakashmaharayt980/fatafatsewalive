@@ -2,13 +2,13 @@ import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import RemoteServices from '../../api/remoteservice';
-import { getBlogPageData } from '@/app/context/BlogPageData';
+
 import { BlogService } from '../../api/services/blog.service';
 import BlogDetailsClient from '../components/BlogDetailsClient';
 import { Article } from '../../types/Blogtypes';
 import { ProductDetails } from '../../types/ProductDetailsTypes';
-import { BannerItem } from '@/app/types/BannerTypes';
 import imglogo from '../../assets/logoimg.png';
+import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
@@ -195,6 +195,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
             />
+            <h1 className="sr-only">{article.title}</h1>
             <BlogDetailsClient
                 article={article}
                 relatedArticles={relatedArticles}

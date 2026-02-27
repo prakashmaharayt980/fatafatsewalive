@@ -24,7 +24,7 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
     if (!products || products.length === 0) return null;
 
     return (
-        <div className="sticky top-24 overflow-hidden">
+        <div className="sticky top-24  overflow-hidden">
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
                 <div className="w-7 h-7 rounded-lg bg-[var(--colour-fsP1)] flex items-center justify-center">
@@ -50,7 +50,7 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
                             className="group relative flex gap-3 p-2.5 rounded-lg bg-white border border-[var(--colour-border3)] hover:border-[var(--colour-fsP2)]/40 hover:shadow-sm transition-all duration-200"
                         >
                             {/* Product Image Container */}
-                            <div className="relative flex-shrink-0 w-[72px] h-[72px] rounded-md bg-[var(--colour-bg4)] overflow-hidden border border-[var(--colour-border3)]">
+                            <div className="relative flex-shrink-0 w-[72px] h-[72px] rounded-base bg-[var(--colour-bg4)] overflow-hidden border border-[var(--colour-border3)]">
                                 <Image
                                     src={product.image?.thumb || product.image?.full || '/placeholder.png'}
                                     alt={product.name}
@@ -58,7 +58,7 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
                                     className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
                                     sizes="72px"
                                 />
-                                {hasDiscount && discountPercent > 0 && (
+                                {(
                                     <span className="absolute top-0.5 left-0.5 bg-[var(--colour-fsP1)] text-white text-[8px] font-bold px-1 py-0.5 rounded">
                                         -{discountPercent}%
                                     </span>
@@ -94,25 +94,24 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
                                         {product.name}
                                     </h4>
 
-                                    {/* Highlights (Optional - if needed) */}
-                                    {/* Unused highlights for cleaner look or limit to 1 */}
-                                    {/* {parseHighlights(product.highlights, 1).map((h, i) => (
+
+                                    {parseHighlights(product.highlights, 2).map((h, i) => (
                                         <p key={i} className="text-[10px] text-[var(--colour-text3)] line-clamp-1 mt-0.5">
                                             {h}
                                         </p>
-                                    ))} */}
+                                    ))}
                                 </div>
 
-                                <div className="flex items-end justify-between mt-1">
-                                    <div className="flex flex-col leading-none">
+                                <div className="flex items-end justify-between mt-1 ">
+                                    <div className="flex gap-2 items-center sm:flex-row flex-col  leading-none">
                                         <div className="flex items-baseline gap-1.5">
                                             <span className="text-[13px] font-bold text-[var(--colour-fsP2)]">
-                                                Rs. {formatPrice(product.discounted_price || product.price)}
+                                                Rs. {formatPrice(product.price)}
                                             </span>
                                         </div>
-                                        {hasDiscount && (
+                                        {(
                                             <span className="text-[10px] text-[var(--colour-text3)] line-through">
-                                                Rs. {formatPrice(product.price)}
+                                                Rs. {formatPrice(product.discounted_price)}
                                             </span>
                                         )}
                                     </div>

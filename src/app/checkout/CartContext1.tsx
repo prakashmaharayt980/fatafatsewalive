@@ -83,43 +83,39 @@ export const CartProvider1: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const fetchWishlist = async () => {
         try {
-            const data = await WishlistService.getWishlist();
-            // Assuming data is an array of objects { id: number, product: ProductDetails }
-            // or verify structure. If it's just products, we can't delete by ID easily unless ID matches.
-            // Based on user request "delete use ../wishlist/id", we assume wrapper object.
+            // const data = await WishlistService.getWishlist();
 
-            // Check if data is array
-            if (Array.isArray(data)) {
-                const products: ProductDetails[] = [];
-                const mapping: Record<number, number> = {};
+            // if (Array.isArray(data)) {
+            //     const products: ProductDetails[] = [];
+            //     const mapping: Record<number, number> = {};
 
-                data.forEach((item: any) => {
-                    if (item.product) {
-                        products.push(item.product);
-                        mapping[item.product.id] = item.id;
-                    } else if (item.name) {
-                        // Maybe it returned direct products?
-                        products.push(item);
-                        // If direct product, we assume delete takes product id? Unlikely given instructions.
-                        // But we'll map product.id to product.id just in case
-                        mapping[item.id] = item.id;
-                    }
-                });
-                setWishlistItems(products);
-                setWishlistMap(mapping);
-            } else if (data.results && Array.isArray(data.results)) {
-                // Handle paginated response
-                const products: ProductDetails[] = [];
-                const mapping: Record<number, number> = {};
-                data.results.forEach((item: any) => {
-                    if (item.product) {
-                        products.push(item.product);
-                        mapping[item.product.id] = item.id;
-                    }
-                });
-                setWishlistItems(products);
-                setWishlistMap(mapping);
-            }
+            //     data.forEach((item: any) => {
+            //         if (item.product) {
+            //             products.push(item.product);
+            //             mapping[item.product.id] = item.id;
+            //         } else if (item.name) {
+            //             // Maybe it returned direct products?
+            //             products.push(item);
+            //             // If direct product, we assume delete takes product id? Unlikely given instructions.
+            //             // But we'll map product.id to product.id just in case
+            //             mapping[item.id] = item.id;
+            //         }
+            //     });
+            //     setWishlistItems(products);
+            //     setWishlistMap(mapping);
+            // } else if (data.results && Array.isArray(data.results)) {
+            //     // Handle paginated response
+            //     const products: ProductDetails[] = [];
+            //     const mapping: Record<number, number> = {};
+            //     data.results.forEach((item: any) => {
+            //         if (item.product) {
+            //             products.push(item.product);
+            //             mapping[item.product.id] = item.id;
+            //         }
+            //     });
+            //     setWishlistItems(products);
+            //     setWishlistMap(mapping);
+            // }
         } catch (error) {
             console.error("Failed to fetch wishlist", error);
         }

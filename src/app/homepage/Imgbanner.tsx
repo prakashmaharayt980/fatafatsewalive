@@ -244,7 +244,6 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                     fill
                                                     className="object-contain w-full aspect-2/1 transition-transform duration-500"
                                                     sizes="(max-width: 1024px) 0vw, 21vw"
-                                                    unoptimized={true}
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                             </Link>

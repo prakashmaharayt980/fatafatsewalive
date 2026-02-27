@@ -100,7 +100,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                         priority
                         sizes="(max-width: 768px) 100vw, 35vw"
                         onClick={() => setIsZoomed(!isZoomed)}
-                        unoptimized={true}
+
                     />
                 </div>
             </div>
@@ -124,7 +124,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                             className="object-contain "
                             fill
                             sizes="60px"
-                            unoptimized={true}
+
                         />
                     </button>
                 ))}

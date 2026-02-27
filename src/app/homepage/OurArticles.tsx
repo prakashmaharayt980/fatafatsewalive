@@ -78,7 +78,7 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
         {visibleArticles.slice(0, isSidebar ? 4 : (isProductPage ? 4 : 10)).map((article) => (
           <article
             key={article.id}
-            onClick={() => router.push(`/blog/${article.slug}`)}
+            onClick={() => router.push(`/blogs/${article.slug}`)}
             className={cn(
               "group cursor-pointer flex flex-col bg-white overflow-hidden transition-all duration-300",
               isSidebar
@@ -97,7 +97,7 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
                     fill
                     className="object-cover"
                     sizes="80px"
-                    unoptimized={true}
+
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -119,7 +119,7 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 50vw, 25vw"
-                    unoptimized={true}
+
                   />
                   {article.category?.title && (
                     <div className="absolute top-2 left-2 bg-[var(--colour-fsP2)]/90 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
@@ -150,7 +150,7 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
                     fill
                     className="object-cover transition-transform duration-700 "
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
-                    unoptimized={true}
+
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
                   <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-blue-900 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shadow-sm">
