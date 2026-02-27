@@ -279,13 +279,15 @@ export default function AddressStep({
                                 <MapPin className="w-6 h-6 text-[var(--colour-fsP2)]" />
                                 Select Delivery Address
                             </h2>
-                            <Button
-                                onClick={handleAddNewAddress}
-                                className="bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl transition-all"
-                            >
-                                <Plus className="w-5 h-5 mr-2" />
-                                Add New Address
-                            </Button>
+                            {savedAddresses.length < 4 && (
+                                <Button
+                                    onClick={handleAddNewAddress}
+                                    className="bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl transition-all"
+                                >
+                                    <Plus className="w-5 h-5 mr-2" />
+                                    Add New Address
+                                </Button>
+                            )}
                         </div>
 
                         {/* Search */}
@@ -300,97 +302,116 @@ export default function AddressStep({
                         </div>
                     </div>
 
-                    {/* Address List Grid */}
-                    <div className="p-4 sm:p-6 bg-gray-50/30 min-h-[300px] max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
+                    {/* Address List — 2×2 Grid, max 4 */}
+                    <div className="p-4 sm:p-6 bg-gray-50/30 min-h-[300px]">
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="w-8 h-8 text-[var(--colour-fsP2)] animate-spin" />
                             </div>
                         ) : filteredAddresses.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                                    <MapPin className="w-8 h-8 text-[var(--colour-fsP2)]" />
+                                <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 bg-white flex items-center justify-center mb-4">
+                                    <MapPin className="w-8 h-8 text-gray-300" />
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">No addresses found</h3>
-                                <p className="text-gray-500 max-w-xs mb-6">
+                                <h3 className="text-base font-bold text-gray-900 mb-1">No addresses found</h3>
+                                <p className="text-gray-400 text-sm max-w-xs mb-5">
                                     Add a delivery location to proceed with your order.
                                 </p>
                                 <Button onClick={handleAddNewAddress} variant="outline" className="rounded-xl border-[var(--colour-fsP2)] text-[var(--colour-fsP2)] hover:bg-blue-50">
-                                    <Plus className="w-4 h-4 mr-2" /> Create Address
+                                    <Plus className="w-4 h-4 mr-2" /> Add Address
                                 </Button>
                             </div>
                         ) : (
-                            <div className="space-y-3">
-                                {filteredAddresses.map((address) => (
-                                    <div
-                                        key={address.id}
-                                        onClick={() => handleSelectAddress(address)}
-                                        className={`relative group p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${selectedAddressId === address.id
-                                            ? 'border-[var(--colour-fsP2)] bg-gradient-to-br from-blue-50 to-white shadow-lg shadow-blue-100/50'
-                                            : 'border-gray-200 bg-white hover:border-[var(--colour-fsP2)]/30 hover:shadow-md'
-                                            }`}
-                                    >
-                                        <div className="flex items-start gap-4">
-                                            {/* Radio-style Selection */}
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selectedAddressId === address.id
-                                                ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]'
-                                                : 'border-gray-300 bg-white group-hover:border-[var(--colour-fsP2)]/50'
-                                                }`}>
-                                                {selectedAddressId === address.id && (
-                                                    <div className="w-2 h-2 rounded-full bg-white"></div>
-                                                )}
-                                            </div>
-
-                                            {/* Address Content */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className={`p-1.5 rounded-lg ${selectedAddressId === address.id
-                                                        ? 'bg-[var(--colour-fsP2)]/10'
-                                                        : 'bg-gray-100'
-                                                        }`}>
-                                                        {address.label === 'Office' ? <Building2 className={`w-4 h-4 ${selectedAddressId === address.id ? 'text-[var(--colour-fsP2)]' : 'text-gray-600'}`} /> :
-                                                            address.label === 'Other' ? <MapIcon className={`w-4 h-4 ${selectedAddressId === address.id ? 'text-[var(--colour-fsP2)]' : 'text-gray-600'}`} /> :
-                                                                <Home className={`w-4 h-4 ${selectedAddressId === address.id ? 'text-[var(--colour-fsP2)]' : 'text-gray-600'}`} />}
-                                                    </div>
-                                                    <span className={`font-bold text-base ${selectedAddressId === address.id ? 'text-[var(--colour-fsP2)]' : 'text-gray-900'}`}>
-                                                        {address.label || 'Home'}
-                                                    </span>
-                                                    {address.is_default && (
-                                                        <span className="text-[9px] font-bold text-white bg-[var(--colour-fsP2)] px-2 py-0.5 rounded-full uppercase">
-                                                            Default
+                            <div className="grid grid-cols-2 gap-3">
+                                {filteredAddresses.slice(0, 4).map((address) => {
+                                    const isSelected = selectedAddressId === address.id;
+                                    const LabelIcon = address.label === 'Office' ? Building2 : address.label === 'Other' ? MapIcon : Home;
+                                    return (
+                                        <div
+                                            key={address.id}
+                                            className="relative group"
+                                        >
+                                            <div
+                                                onClick={() => handleSelectAddress(address)}
+                                                className={`w-full h-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer ${isSelected
+                                                    ? 'border-[var(--colour-fsP2)] shadow-[0_4px_16px_rgba(25,103,179,0.16)]'
+                                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-[0_2px_10px_rgba(0,0,0,0.06)]'
+                                                    }`}
+                                            >
+                                                {/* Top stripe */}
+                                                <div className={`flex items-center justify-between px-3 py-2 ${isSelected ? 'bg-[var(--colour-fsP2)]' : 'bg-gray-50 border-b border-gray-100'
+                                                    }`}>
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <div className={`p-0.5 rounded ${isSelected ? 'bg-white/20' : 'bg-white border border-gray-200'
+                                                            }`}>
+                                                            <LabelIcon className={`w-3 h-3 ${isSelected ? 'text-white' : 'text-gray-500'}`} />
+                                                        </div>
+                                                        <span className={`text-[10px] font-extrabold uppercase tracking-widest truncate ${isSelected ? 'text-white' : 'text-gray-600'
+                                                            }`}>
+                                                            {address.label || 'Home'}
                                                         </span>
+                                                        {address.is_default && (
+                                                            <span className={`shrink-0 text-[8px] font-bold px-1 py-0.5 rounded-full uppercase ${isSelected ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700'
+                                                                }`}>
+                                                                ★ Default
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {isSelected ? (
+                                                        <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
+                                                            <Check className="w-2.5 h-2.5 text-[var(--colour-fsP2)]" strokeWidth={3} />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-4 h-4 rounded-full border-2 border-gray-300 shrink-0 group-hover:border-[var(--colour-fsP2)] transition-colors" />
                                                     )}
                                                 </div>
 
-                                                <p className="text-gray-700 font-medium text-sm leading-relaxed mb-1">
-                                                    {address.address}
-                                                </p>
-                                                <p className="text-gray-500 text-xs">
-                                                    {address.city ? `${address.city}, ` : ''}{address.district}, {address.province || address.state}
-                                                </p>
+                                                {/* Card body */}
+                                                <div className={`px-3 py-2.5 flex flex-col gap-1.5 flex-1 ${isSelected ? 'bg-blue-50/30' : 'bg-white'
+                                                    }`}>
+                                                    <div className="flex items-start justify-between gap-1">
+                                                        <p className="text-xs font-bold text-gray-900 leading-snug line-clamp-1">
+                                                            {address.label || 'Address'}
+                                                        </p>
+                                                    </div>
+                                                    <p className="text-[11px] text-gray-500 leading-snug line-clamp-2">
+                                                        {address.address}
+                                                    </p>
+                                                    <p className="text-[10px] font-semibold text-gray-600 flex items-center gap-0.5 mt-auto pt-1.5 border-t border-gray-100">
+                                                        <MapPin className="w-2.5 h-2.5 text-[var(--colour-fsP2)] shrink-0" />
+                                                        {address.city ? `${address.city}, ` : ''}{address.district || address.state}
+                                                    </p>
+                                                </div>
                                             </div>
 
-                                            {/* Hover Actions */}
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {/* Edit + Delete on hover */}
+                                            <div className="absolute top-10 right-1.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleEditAddress(address); }}
-                                                    className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-[var(--colour-fsP2)] transition-colors"
+                                                    className="p-1 rounded-lg bg-white/90 hover:bg-[var(--colour-fsP2)] hover:text-white text-gray-500 transition-colors shadow-sm border border-gray-100"
                                                     aria-label="Edit address"
                                                 >
-                                                    <Edit2 className="w-4 h-4" />
+                                                    <Edit2 className="w-3 h-3" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDeleteAddress(address.id!); }}
-                                                    className="p-2 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                                                    className="p-1 rounded-lg bg-white/90 hover:bg-red-500 hover:text-white text-gray-500 transition-colors shadow-sm border border-gray-100"
                                                     aria-label="Delete address"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-3 h-3" />
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
+                        )}
+
+                        {/* Max limit notice */}
+                        {filteredAddresses.length >= 4 && (
+                            <p className="text-center text-xs text-gray-400 font-medium mt-3">
+                                Maximum 4 addresses. Delete one to add another.
+                            </p>
                         )}
                     </div>
                 </div>

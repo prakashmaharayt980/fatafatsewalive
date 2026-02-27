@@ -202,7 +202,10 @@ export default function CheckoutClient() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--colour-fsP1)]" />
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-2 border-gray-200 border-t-[var(--colour-fsP2)] rounded-full animate-spin" />
+                    <p className="text-sm text-gray-500 font-medium">Loading checkout...</p>
+                </div>
             </div>
         );
     }
@@ -210,7 +213,10 @@ export default function CheckoutClient() {
     if (authState.isLoggedIn === false) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p>Please log in to continue.</p>
+                <div className="text-center">
+                    <p className="text-gray-600 font-medium mb-3">Please log in to continue.</p>
+                    <Link href="/" className="text-sm text-[var(--colour-fsP2)] font-semibold hover:underline">← Back to Home</Link>
+                </div>
             </div>
         );
     }
@@ -270,34 +276,28 @@ export default function CheckoutClient() {
     const total = subtotal + shippingCost - discount;
 
     return (
-        <div className="bg-gray-50 py-4 sm:py-8 min-h-screen">
-            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-                {/* Breadcrumb Navigation */}
-                <nav className="flex items-center gap-1.5 text-sm mb-4 overflow-x-auto pb-1 scrollbar-hide">
-                    <Link href="/" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
-                        Home
-                    </Link>
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <Link href="/cart" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap text-sm font-medium transition-colors">
-                        Cart
-                    </Link>
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-slate-800 font-semibold text-sm">
-                        Checkout
-                    </span>
+        <div className="bg-gray-50 min-h-screen py-3 sm:py-5">
+            <div className="max-w-6xl mx-auto px-3 sm:px-5 lg:px-6">
+
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
+                    <Link href="/" className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">Home</Link>
+                    <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                    <Link href="/cart" className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">Cart</Link>
+                    <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                    <span className="text-gray-700 font-semibold whitespace-nowrap">Checkout</span>
                     {checkoutState.currentStep > 0 && (
                         <>
-                            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                            <span className="text-[var(--colour-fsP2)] font-medium text-sm">
+                            <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                            <span className="text-[var(--colour-fsP2)] font-medium whitespace-nowrap">
                                 {STEP_LABELS[checkoutState.currentStep]}
                             </span>
                         </>
                     )}
                 </nav>
 
-                {/* Header */}
-                <div className="mb-4 sm:mb-6">
-
+                {/* Step Progress */}
+                <div className="mb-4">
                     <StepProgress
                         currentStep={checkoutState.currentStep}
                         state={checkoutState}
@@ -306,22 +306,44 @@ export default function CheckoutClient() {
                 </div>
 
                 {/* Two Column Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    {/* Left Column - Step Content */}
-                    <div className="lg:col-span-2">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 items-start">
+
+                    {/* Right Column — Order Summary: shown first on mobile */}
+                    <div className="lg:hidden">
+                        <CheckoutProduct
+                            setsubmittedvaluelist={(updater: any) => {
+                                if (typeof updater === 'function') {
+                                    const result = updater({ promoCode });
+                                    if (result.promoCode !== undefined) setPromoCode(result.promoCode);
+                                }
+                            }}
+                            submittedvaluelist={{
+                                promoCode,
+                                appliedPromo,
+                                totalpayment: total,
+                                paymentmethod: checkoutState.paymentMethod,
+                                address: checkoutState.address,
+                                productsID: cartItems?.items || [],
+                                receiverNO: userInfo?.phone,
+                            }}
+                            handleApplyPromo={handleApplyPromo}
+                            Stepstate={checkoutState}
+                        />
+                    </div>
+
+                    {/* Left Column — Step Content */}
+                    <div className="min-w-0">
                         {renderStep()}
                     </div>
 
-                    {/* Right Column - Order Summary (Sticky) */}
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-24">
+                    {/* Right Column — Sticky on desktop */}
+                    <div className="hidden lg:block">
+                        <div className="sticky top-20">
                             <CheckoutProduct
                                 setsubmittedvaluelist={(updater: any) => {
                                     if (typeof updater === 'function') {
                                         const result = updater({ promoCode });
-                                        if (result.promoCode !== undefined) {
-                                            setPromoCode(result.promoCode);
-                                        }
+                                        if (result.promoCode !== undefined) setPromoCode(result.promoCode);
                                     }
                                 }}
                                 submittedvaluelist={{
@@ -332,15 +354,13 @@ export default function CheckoutClient() {
                                     address: checkoutState.address,
                                     productsID: cartItems?.items || [],
                                     receiverNO: userInfo?.phone,
-
                                 }}
                                 handleApplyPromo={handleApplyPromo}
                                 Stepstate={checkoutState}
                             />
-
-
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>

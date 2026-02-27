@@ -12,6 +12,7 @@ import imglogo from '../assets/logoimg.png';
 import { formatDate, stripHtml } from '../CommonVue/datetime';
 import RemoteServices from '../api/remoteservice';
 import { Article } from '@/app/types/Blogtypes';
+import { trackArticleClick, trackCategoryClick } from '@/lib/analytics';
 
 const fetcher = async (): Promise<Article[]> => {
   const res = await RemoteServices.getBlogList();
@@ -78,7 +79,10 @@ const OurArticles = ({ blogpage }: { blogpage: string }) => {
         {visibleArticles.slice(0, isSidebar ? 4 : (isProductPage ? 4 : 10)).map((article) => (
           <article
             key={article.id}
-            onClick={() => router.push(`/blogs/${article.slug}`)}
+            onClick={() => {
+              trackArticleClick(article.title, article.id.toString());
+              router.push(`/blogs/${article.slug}`);
+            }}
             className={cn(
               "group cursor-pointer flex flex-col bg-white overflow-hidden transition-all duration-300",
               isSidebar

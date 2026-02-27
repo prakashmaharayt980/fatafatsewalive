@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { imglist } from '@/app/CommonVue/Image';
 import { BannerItem } from '@/app/types/BannerTypes';
+import { trackBannerClick } from '@/lib/analytics';
 
 interface TwoImageBannerProps {
   data?: BannerItem;
@@ -42,6 +43,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
           <Link
             key={img.id}
             href={img.link}
+            onClick={() => trackBannerClick(img.name, 'Two Image Banner', img.link)}
             className={cn(
               'min-w-[90%] sm:min-w-0 flex-shrink-0 snap-center',
               'relative overflow-hidden rounded sm:rounded group cursor-pointer border-none', // Removed border

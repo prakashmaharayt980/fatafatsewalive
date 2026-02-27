@@ -3,11 +3,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import * as Yup from 'yup';
-import { toast } from 'sonner'; // Assuming sonner or use-toast is available, else fallback to alert
+import { toast } from 'sonner';
 import NepaliDate from 'nepali-date-converter';
 import RemoteServices from '@/app/api/remoteservice';
 import { EmiService } from '@/app/api/services/emi.service';
@@ -18,38 +16,28 @@ import {
     emiConditionsSchema,
     emiConditionsCreditSchema,
 } from './validationSchemas';
-
 import { useContextEmi } from '../../_components/emiContext';
 import { BANK_PROVIDERS, calculateEMI } from '../../_components/_func_emiCalacutor';
-// import BuyerPersonalInfo from './BuyerPersonalInfo'; // Seems unused in original, logic was inline
 import RenderReview from './ReviewApplyEmiDoc'
 import ProgressBar from './ProgressBar';
 import EmiProductDetails from './EmiProductDetails';
 import CreditCardform from './CreditCardform';
 import DocumentUpload from './DocumentUpload';
 import SignaturePad from './SignaturePad';
+import FormField from './FormField';
 import {
-    ArrowBigLeft, Loader2, CheckCircle2, ChevronRight, ChevronDown, AlertCircle, Info,
-    CreditCard, Calendar, User, MapPin, Mail, Phone, Briefcase, FileText, Hash, DollarSign, Building2, Banknote, FileBadge,
-    CreditCardIcon,
-    HandCoins
+    ArrowBigLeft, Loader2, CheckCircle2, ChevronRight,
+    CreditCard, Calendar, User, MapPin, Mail, Phone,
+    Hash, DollarSign, Building2, Banknote, CreditCardIcon, HandCoins,
 } from 'lucide-react';
-
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
-import { useAuth } from '@/app/context/AuthContext';
 
 interface ApplyEmiClientProps {
     initialProduct: ProductDetails | null;
     selectedcolor?: string;
 }
 
-import FormField, { FieldOption } from './FormField';
-
-
-
 const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selectedcolor }) => {
-    const { setShowLoginAlert, authState } = useAuth();
-    const user = authState?.user;
     const { emiContextInfo, setEmiContextInfo } = useContextEmi();
     const [currentstep, setcurrentstep] = useState(0);
     const [previews, setPreviews] = useState<{ [key: string]: string }>({});
@@ -74,7 +62,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     // Sync prop product to context if needed, or just use it directly
     useEffect(() => {
         if (initialProduct && initialProduct.id !== emiContextInfo.product?.id) {
-            // Optionally sync context if other components rely wildly on it
             setEmiContextInfo(prev => ({ ...prev, product: initialProduct }));
         }
 
@@ -363,17 +350,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         }
 
 
-        if (authState.isLoggedIn === false) {
-            setShowLoginAlert(true);
-            return;
-        }
 
 
-        // 2. Check Variant Selection if product has variants
         const hasVariants = product.variants && product.variants.length > 0;
 
-
-        if (hasVariants && !emiContextInfo.selectedVariant && product.variants.length > 1) { // >1 to avoid forcing if only 1 default
+        if (hasVariants && !emiContextInfo.selectedVariant && product.variants.length > 1) {
             toast.error("Please select a product color/variant option.");
             // Maybe scroll to variant selector or open a drawer?
             return;
@@ -468,7 +449,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
             if (response) {
                 toast.success('Application Submitted Successfully!');
-                // router.push('/');
+                router.push('/');
             }
         } catch (error: unknown) {
             console.error("Submission error:", error);
@@ -510,11 +491,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         };
     }, [product, emiCalc.duration, emiCalc.downPayment, emiContextInfo.bankinfo.bankname]);
 
-
-
     const bankOptions = useMemo(() => BANK_PROVIDERS.map((b) => b.name), []);
 
-    // -- REUSING FIELDS FROM ORIGINAL FILE --
+    // ── Form Field Definitions ────────────────────────────────────────────────
     const personalDetailsInfolist = [
         {
             label: 'User Name',
@@ -714,7 +693,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             extenduserinfo: '',
             placeholder: 'Enter down payment amount (e.g. 40% or 5000)',
             maxvalue: product ? product.price : 0,
-            type: 'text',
+            type: 'number',
             helper: typeof emiContextInfo.emiCalculation.downPayment === 'string' && emiContextInfo.emiCalculation.downPayment.includes('%')
                 ? `Calculated: Rs. ${emiData.downPayment.toLocaleString()}`
                 : null
@@ -743,11 +722,13 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         { label: 'Finance Amount', name: 'financeAmount', value: emiData.financeAmount, onChange: () => { }, svgicon: <DollarSign className="w-5 h-5" />, extenduserinfo: '', disabled: true },
     ];
 
+
+
     const formSections = {
         creditCard: [
             { title: 'Credit Card Details', sectionKey: 'bankinfo', step: 1, fields: creditCardDetailsInfo, additionalContent: <></> },
             { title: 'Personal Details', sectionKey: 'userInfo', step: 2, fields: personalDetailsInfolist, additionalContent: <></> },
-            { title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit, additionalContent: <></> },
+            { title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit },
         ],
         downPayment: [
             {
@@ -762,16 +743,19 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             },
             {
                 title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFields, additionalContent: (
-                    <div className="mt-6">
-                        <SignaturePad
-                            onSignatureChange={(file) => {
-                                setEmiContextInfo(prev => ({
-                                    ...prev,
-                                    files: { ...prev.files, userSignature: file }
-                                }));
-                            }}
-                            existingSignature={previews['userSignature']}
-                        />
+                    <div className="space-y-5">
+
+                        <div className="mt-2">
+                            <SignaturePad
+                                onSignatureChange={(file) => {
+                                    setEmiContextInfo(prev => ({
+                                        ...prev,
+                                        files: { ...prev.files, userSignature: file }
+                                    }));
+                                }}
+                                existingSignature={previews['userSignature']}
+                            />
+                        </div>
                     </div>
                 )
             },
@@ -784,10 +768,10 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             },
             {
                 title: 'Bank Details', sectionKey: 'bankinfo', step: 2, fields: bankdetailsInfo, additionalContent: (
-                    <div className="mt-6"><h3 className="text-lg font-semibold text-gray-800 mb-4">Required Documents</h3><DocumentUpload docTypes={['bankStatement']} isGranter={false} files={emiContextInfo.files} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} /></div>
+                    <div className="mt-5"><h3 className="text-sm font-bold text-gray-700 mb-3">Required Documents</h3><DocumentUpload docTypes={['bankStatement']} isGranter={false} files={emiContextInfo.files} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} /></div>
                 )
             },
-            { title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit, additionalContent: <></> },
+            { title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit },
         ]
     };
 
@@ -827,34 +811,64 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     );
 
     return (
-        <div className="bg-gray-50 py-4 sm:py-8 min-h-screen">
-            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-                {breadcrumbs}
+        <div className="bg-gray-50 min-h-screen py-3 sm:py-5">
+            <div className="max-w-6xl mx-auto px-3 sm:px-5 lg:px-6">
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
+                    <Button variant="link" className="p-0 h-auto text-(--colour-fsP2) hover:underline text-xs font-medium" onClick={() => router.push('/')}>
+                        Home
+                    </Button>
+                    <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                    <Button variant="link" className="p-0 h-auto text-(--colour-fsP2) hover:underline text-xs font-medium max-w-[180px] truncate" onClick={() => router.push(`/products/${product?.slug}`)}>
+                        {product?.name?.substring(0, 30)}{product?.name && product.name.length > 30 ? '...' : ''}
+                    </Button>
+                    <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                    <span className="text-gray-700 font-semibold whitespace-nowrap">Apply EMI</span>
+                </nav>
+
+                {/* Mobile-only product + monthly EMI summary bar */}
+                <div className="lg:hidden mb-3 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-3 p-3">
+                        <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
+                            <Image src={product?.image?.thumb || product?.image?.full || ''} alt={product?.name || ''} fill className="object-contain p-0.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-gray-800 truncate">{product?.name}</p>
+                            <p className="text-xs text-gray-500">Rs. {Number(product?.price).toLocaleString()}</p>
+                        </div>
+                        {emiData.paymentpermonth > 0 && (
+                            <div className="shrink-0 text-right">
+                                <p className="text-[10px] text-gray-400">Monthly EMI</p>
+                                <p className="text-base font-black text-(--colour-fsP2)">Rs. {Math.round(emiData.paymentpermonth).toLocaleString()}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 {/* Progress Bar */}
-                <div className="mb-1 sm:mb-2">
+                <div className="mb-4">
                     <ProgressBar currentstep={currentstep} onStepClick={setcurrentstep} />
                 </div>
 
-                {/* Main Content Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                {/* Main Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
                     {/* Left Column - Steps */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[550px]">
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
                             {/* Step Header */}
-                            <div className="px-8 py-6 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                                    {currentstep === 0 && 'Select EMI Method'}
+                            <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50/20 flex items-center justify-between">
+                                <h2 className="text-lg font-bold text-gray-900">
+                                    {currentstep === 0 && 'Choose EMI Method'}
                                     {currentstep > 0 && currentstep < 4 && currentFormSection?.title}
                                     {currentstep === 4 && 'Review Application'}
                                 </h2>
-                                <span className="text-xs font-bold text-[var(--colour-fsP2)] bg-blue-50 px-3 py-1.5 rounded-lg uppercase tracking-wider">
-                                    Step {currentstep === 0 ? '1' : currentstep + 1} of 5
+                                <span className="text-[10px] font-bold text-(--colour-fsP2) bg-blue-50 px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0">
+                                    Step {currentstep + 1} of 5
                                 </span>
                             </div>
 
-                            <div className="p-6 sm:p-8">
+                            <div className="p-5 sm:p-6">
                                 {/* Step 0: Option Selection */}
                                 {currentstep === 0 && (
                                     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
@@ -895,60 +909,101 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                             </div>
                                         )}
 
+                                        {/* EMI Method Selection Cards */}
                                         <div className="space-y-4">
                                             {!showPaymentSubOptions ? (
                                                 <>
-                                                    <h3 className="text-gray-900 font-bold text-lg">Select EMI Method</h3>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div onClick={() => handleOptionSelect('creditCard')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'creditCard' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 bg-white'}`}>
-                                                            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                                                <CreditCard className="w-6 h-6" />
+                                                    <h3 className="text-gray-800 font-bold">Select EMI Method</h3>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {/* Credit Card */}
+                                                        <div
+                                                            onClick={() => handleOptionSelect('creditCard')}
+                                                            className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'creditCard'
+                                                                ? 'border-(--colour-fsP2) bg-blue-50/50 shadow-md shadow-blue-100'
+                                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                                                }`}
+                                                        >
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all ${selectedOption === 'creditCard' ? 'bg-(--colour-fsP2) text-white' : 'bg-blue-50 text-(--colour-fsP2) group-hover:bg-blue-100'
+                                                                }`}>
+                                                                <CreditCard className="w-5 h-5" />
                                                             </div>
-                                                            <h3 className="font-bold text-gray-900 text-lg">Credit Card</h3>
-                                                            <p className="text-sm text-gray-500 mt-2">Use your existing bank credit card.</p>
-                                                            {selectedOption === 'creditCard' && <div className="absolute top-3 right-3 text-blue-600"><CheckCircle2 size={24} /></div>}
+                                                            <h3 className="font-bold text-gray-900">Credit Card</h3>
+                                                            <p className="text-xs text-gray-500 mt-1">Use your existing bank credit card for instant EMI.</p>
+                                                            {selectedOption === 'creditCard' && (
+                                                                <div className="absolute top-3 right-3 text-(--colour-fsP2)">
+                                                                    <CheckCircle2 size={20} />
+                                                                </div>
+                                                            )}
                                                         </div>
 
-                                                        <div onClick={() => setShowPaymentSubOptions(true)} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'downPayment' || selectedOption === 'makeCard' ? 'border-orange-500 bg-orange-50' : 'border-gray-100 bg-white'}`}>
-                                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
-                                                                <Banknote className="w-6 h-6" />
+                                                        {/* Down Payment */}
+                                                        <div
+                                                            onClick={() => setShowPaymentSubOptions(true)}
+                                                            className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'downPayment' || selectedOption === 'makeCard'
+                                                                ? 'border-orange-400 bg-orange-50 shadow-md shadow-orange-100'
+                                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                                                }`}
+                                                        >
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all ${selectedOption === 'downPayment' || selectedOption === 'makeCard' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-500 group-hover:bg-orange-100'
+                                                                }`}>
+                                                                <Banknote className="w-5 h-5" />
                                                             </div>
-                                                            <h3 className="font-bold text-gray-900 text-lg">Down Payment</h3>
-                                                            <p className="text-sm text-gray-500 mt-2">Pay upfront or provide collateral documents.</p>
-                                                            <div className="mt-4 flex items-center text-sm font-semibold text-orange-500 group-hover:underline">
-                                                                View Options <ChevronRight className="w-4 h-4 ml-1" />
+                                                            <h3 className="font-bold text-gray-900">Down Payment</h3>
+                                                            <p className="text-xs text-gray-500 mt-1">Pay upfront or provide collateral documents.</p>
+                                                            <div className="mt-3 flex items-center text-xs font-semibold text-orange-500">
+                                                                View Options <ChevronRight className="w-3 h-3 ml-1" />
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </>
                                             ) : (
                                                 <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
-                                                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
+                                                    <div className="flex items-center gap-3 mb-3 border-b border-gray-100 pb-3">
                                                         <Button variant="ghost" size="icon" onClick={() => setShowPaymentSubOptions(false)} className="h-8 w-8 rounded-full border border-gray-200">
                                                             <ArrowBigLeft className="w-4 h-4 text-gray-600" />
                                                         </Button>
                                                         <div>
-                                                            <h3 className="text-gray-900 font-bold text-lg">Down Payment Options</h3>
-                                                            <p className="text-xs text-gray-500">Select how you want to proceed with EMI</p>
+                                                            <h3 className="text-gray-900 font-bold">Down Payment Options</h3>
+                                                            <p className="text-xs text-gray-500">Select how you want to proceed</p>
                                                         </div>
                                                     </div>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div onClick={() => handleOptionSelect('makeCard')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'makeCard' ? 'border-orange-500 bg-orange-50' : 'border-gray-100 bg-white'}`}>
-                                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
-                                                                <FileBadge className="w-6 h-6" />
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {/* With Citizenship Card */}
+                                                        <div
+                                                            onClick={() => handleOptionSelect('makeCard')}
+                                                            className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'makeCard'
+                                                                ? 'border-orange-400 bg-orange-50 shadow-md shadow-orange-100'
+                                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                                                }`}
+                                                        >
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all ${selectedOption === 'makeCard' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-500 group-hover:bg-orange-100'
+                                                                }`}>
+                                                                <User className="w-5 h-5" />
                                                             </div>
-                                                            <h3 className="font-bold text-gray-900 text-lg">With Citizenship Card</h3>
-                                                            <p className="text-sm text-gray-500 mt-2">Apply for a new financial card using your citizenship documents.</p>
-                                                            {selectedOption === 'makeCard' && <div className="absolute top-3 right-3 text-orange-500"><CheckCircle2 size={24} /></div>}
+                                                            <h3 className="font-bold text-gray-900">With Citizenship</h3>
+                                                            <p className="text-xs text-gray-500 mt-1">Apply using citizenship documents.</p>
+                                                            {selectedOption === 'makeCard' && (
+                                                                <div className="absolute top-3 right-3 text-orange-500"><CheckCircle2 size={20} /></div>
+                                                            )}
                                                         </div>
 
-                                                        <div onClick={() => handleOptionSelect('downPayment')} className={`cursor-pointer group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${selectedOption === 'downPayment' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 bg-white'}`}>
-                                                            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                                                <Banknote className="w-6 h-6" />
+                                                        {/* 40% Down Payment */}
+                                                        <div
+                                                            onClick={() => handleOptionSelect('downPayment')}
+                                                            className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'downPayment'
+                                                                ? 'border-(--colour-fsP2) bg-blue-50/50 shadow-md shadow-blue-100'
+                                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                                                }`}
+                                                        >
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all ${selectedOption === 'downPayment' ? 'bg-(--colour-fsP2) text-white' : 'bg-blue-50 text-(--colour-fsP2) group-hover:bg-blue-100'
+                                                                }`}>
+                                                                <Banknote className="w-5 h-5" />
                                                             </div>
-                                                            <h3 className="font-bold text-gray-900 text-lg">40% Downpayment</h3>
-                                                            <p className="text-sm text-gray-500 mt-2">Pay 40% immediately and schedule the rest over months.</p>
-                                                            {selectedOption === 'downPayment' && <div className="absolute top-3 right-3 text-blue-600"><CheckCircle2 size={24} /></div>}
+                                                            <h3 className="font-bold text-gray-900">40% Downpayment</h3>
+                                                            <p className="text-xs text-gray-500 mt-1">Pay 40% upfront, rest over months.</p>
+                                                            {selectedOption === 'downPayment' && (
+                                                                <div className="absolute top-3 right-3 text-(--colour-fsP2)"><CheckCircle2 size={20} /></div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -978,31 +1033,28 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                         {currentFormSection.additionalContent}
 
                                         {/* Navigation Buttons */}
-                                        <div className="mt-8 flex items-center justify-between pt-6 border-t border-gray-100">
+                                        <div className="mt-6 flex items-center justify-between pt-5 border-t border-gray-100">
                                             <Button
                                                 variant="outline"
                                                 onClick={handleBack}
                                                 disabled={currentstep === 0}
-                                                className={`gap-2 rounded-lg border-gray-200 hover:bg-gray-50 text-gray-600 ${currentstep === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                                                className={`gap-2 rounded-xl h-11 border-gray-200 hover:bg-gray-50 text-gray-600 font-semibold ${currentstep === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                                             >
-                                                <ArrowBigLeft className="w-5 h-5" />
+                                                <ArrowBigLeft className="w-4 h-4" />
                                                 Back
                                             </Button>
 
                                             <Button
                                                 onClick={currentstep === 4 ? handleSubmit : handleContinue}
                                                 disabled={isSubmitting}
-                                                className="bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white px-8 py-2.5 h-11 rounded-lg font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none min-w-[140px]"
+                                                className="bg-(--colour-fsP2) hover:bg-(--colour-fsP1) text-white px-8 h-11 rounded-xl font-bold shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none min-w-[130px]"
                                             >
                                                 {isSubmitting ? (
-                                                    <>
-                                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                                        Processing...
-                                                    </>
+                                                    <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</>
                                                 ) : (
                                                     <>
                                                         {currentstep === 4 ? 'Submit Application' : 'Continue'}
-                                                        {currentstep !== 4 && <ChevronRight className="w-5 h-5 ml-1" />}
+                                                        {currentstep !== 4 && <ChevronRight className="w-4 h-4 ml-1" />}
                                                     </>
                                                 )}
                                             </Button>
@@ -1020,6 +1072,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                             handleBack={handleBack}
                                             onSubmit={handleSubmit}
                                             previews={previews}
+                                            localCreditCardInfo={localCreditCardInfo}
                                         />
                                         {isSubmitting && (
                                             <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[50] rounded-3xl">
@@ -1036,16 +1089,17 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                         </div>
                     </div>
 
-                    {/* Right Column - Sticky Order Summary */}
+                    {/* Right Column - Product Summary */}
                     <div className="lg:col-span-1">
                         <EmiProductDetails
                             emiData={emiData}
                             product={product}
                             selectedVariant={emiContextInfo.selectedVariant || selectedcolor}
                         />
-
                     </div>
                 </div>
+
+
             </div>
         </div>
     );

@@ -66,12 +66,14 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                     <>
                         <button
                             onClick={goToPrev}
+                            aria-label="Previous image"
                             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-white hover:shadow-md transition-all opacity-0 group-hover:opacity-100"
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
                         <button
                             onClick={goToNext}
+                            aria-label="Next image"
                             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-white hover:shadow-md transition-all opacity-0 group-hover:opacity-100"
                         >
                             <ChevronRight className="w-4 h-4" />
@@ -82,6 +84,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                 {/* Fullscreen Icon */}
                 <button
                     onClick={() => setIsZoomed(!isZoomed)}
+                    aria-label={isZoomed ? "Zoom out" : "Zoom in"}
                     className="absolute bottom-3 right-3 z-10 w-8 h-8 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white/90 hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100"
                 >
                     <Maximize2 className="w-4 h-4" />
@@ -98,9 +101,9 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                         )}
                         fill
                         priority
-                        sizes="(max-width: 768px) 100vw, 35vw"
+                        fetchPriority="high"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         onClick={() => setIsZoomed(!isZoomed)}
-
                     />
                 </div>
             </div>
@@ -110,6 +113,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                 {currentImages.map((image, idx) => (
                     <button
                         key={`thumb-${idx}`}
+                        aria-label={`View image ${idx + 1} of ${currentImages.length}`}
                         className={cn(
                             "relative w-14 h-14 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg transition-all border-2",
                             selectedImage === image

@@ -4,21 +4,17 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useState,
   Dispatch,
   SetStateAction,
 } from "react";
-import {
-  EmiContextState,
-} from "../types";
+import { EmiContextState } from "../types";
 
 interface EmiContextType {
   emiContextInfo: EmiContextState;
   setEmiContextInfo: Dispatch<SetStateAction<EmiContextState>>;
 }
 
-const STORAGE_KEY = "emiContextInfo";
 
 const defaultState: EmiContextState = {
   userInfo: {
@@ -66,25 +62,6 @@ const EmiContext = createContext<EmiContextType | undefined>(undefined);
 
 export const EmiProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [emiContextInfo, setEmiContextInfo] = useState<EmiContextState>(defaultState);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setEmiContextInfo({ ...defaultState, ...parsed });
-        }
-      } catch (err) {
-        console.error("Failed to parse EMI context from localStorage:", err);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const { files, ...rest } = emiContextInfo;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
-  }, [emiContextInfo]);
 
   return (
     <EmiContext.Provider value={{ emiContextInfo, setEmiContextInfo }}>

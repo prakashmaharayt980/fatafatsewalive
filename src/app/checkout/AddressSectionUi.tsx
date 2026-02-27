@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react';
-import { MapPin, X, Loader2, AlertCircle, Plus, Trash2, Check, Mail } from 'lucide-react';
+import { MapPin, X, Loader2, AlertCircle, Plus, Trash2, Check, Mail, Phone, Home, Briefcase, Star } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import dynamic from 'next/dynamic';
@@ -224,97 +224,122 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
               <>
                 {/* Address Count Header */}
                 {savedAddresses.length > 0 && (
-                  <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
-                    <p className="text-sm font-bold text-gray-800 uppercase tracking-wider">
-                      {savedAddresses.length} Saved {savedAddresses.length === 1 ? 'Address' : 'Addresses'}
-                    </p>
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center">
+                        <MapPin size={12} className="text-[var(--colour-fsP2)]" />
+                      </div>
+                      <p className="text-sm font-bold text-gray-800">
+                        {savedAddresses.length} Saved {savedAddresses.length === 1 ? 'Address' : 'Addresses'}
+                      </p>
+                    </div>
+                    <span className="text-xs text-gray-400 font-medium">Tap a card to select</span>
                   </div>
                 )}
 
-                {/* Scrollable Address Grid */}
-                <div className="flex-1 overflow-y-auto pr-1">
-                  {savedAddresses.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-2">
-                      {savedAddresses.map((address) => (
-                        <div key={address.id} className="relative group">
-                          <button
-                            onClick={() => handleAddressSelect(address)}
-                            className={`w-full h-full p-5 rounded-xl border text-left transition-all duration-200 flex flex-col gap-4 ${selectedAddress?.id === address.id
-                              ? 'border-[var(--colour-fsP2)] bg-white shadow-[0_2px_8px_rgba(25,103,179,0.15)] ring-2 ring-[var(--colour-fsP2)]/10'
-                              : 'border-gray-200 bg-white hover:border-gray-400 hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
-                              }`}
-                          >
-                            <div className="flex items-start justify-between w-full">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg border flex items-center justify-center shrink-0 transition-all ${selectedAddress?.id === address.id
-                                  ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white'
-                                  : 'border-gray-200 bg-gray-50 text-gray-600'
+                {/* Address List Grid — max 4 (2×2) */}
+                <div className="grid grid-cols-2 gap-3">
+                  {savedAddresses.slice(0, 4).map((address) => {
+                    const isSelected = selectedAddress?.id === address.id;
+                    const LabelIcon = address.label?.toLowerCase() === 'work' ? Briefcase : Home;
+                    return (
+                      <div key={address.id} className="relative group">
+                        <button
+                          onClick={() => handleAddressSelect(address)}
+                          className={`w-full h-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden flex flex-col ${isSelected
+                              ? 'border-[var(--colour-fsP2)] shadow-[0_4px_16px_rgba(25,103,179,0.16)]'
+                              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-[0_2px_10px_rgba(0,0,0,0.06)]'
+                            }`}
+                        >
+                          {/* Top stripe */}
+                          <div className={`flex items-center justify-between px-3 py-2 ${isSelected ? 'bg-[var(--colour-fsP2)]' : 'bg-gray-50 border-b border-gray-100'
+                            }`}>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <div className={`p-0.5 rounded ${isSelected ? 'bg-white/20' : 'bg-white border border-gray-200'
+                                }`}>
+                                <LabelIcon size={11} className={isSelected ? 'text-white' : 'text-gray-500'} />
+                              </div>
+                              <span className={`text-[10px] font-extrabold uppercase tracking-widest truncate ${isSelected ? 'text-white' : 'text-gray-600'
+                                }`}>
+                                {address.label || 'Address'}
+                              </span>
+                              {address.is_default && (
+                                <span className={`shrink-0 text-[8px] font-bold px-1 py-0.5 rounded-full uppercase ${isSelected ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700'
                                   }`}>
-                                  <MapPin size={18} />
-                                </div>
-                                <div>
-                                  <span className={`block font-bold text-sm leading-none mb-1.5 uppercase tracking-wide ${selectedAddress?.id === address.id ? 'text-[var(--colour-fsP2)]' : 'text-gray-700'
-                                    }`}>
-                                    {address.label || 'Address'}
-                                  </span>
-                                  <span className="text-xs text-gray-500 font-semibold">
-                                    {address.phone}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {address.is_default && (
-                                  <span className="text-[10px] border border-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded uppercase tracking-wider bg-white">Default</span>
-                                )}
-                                {selectedAddress?.id === address.id && (
-                                  <span className="text-[10px] border border-[var(--colour-fsP2)] text-[var(--colour-fsP2)] font-bold px-2.5 py-1 rounded uppercase tracking-wider bg-white">Selected</span>
-                                )}
-                              </div>
+                                  ★ Default
+                                </span>
+                              )}
                             </div>
-
-                            <div className="mt-auto pt-3 border-t border-gray-100 w-full">
-                              <div className="text-sm font-bold text-gray-900 mb-1">
-                                {address.full_name}
+                            {isSelected && (
+                              <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
+                                <Check size={10} className="text-[var(--colour-fsP2)]" strokeWidth={3} />
                               </div>
-                              <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                                {address.address}, {address.city}, {address.state}
+                            )}
+                          </div>
+
+                          {/* Card Body */}
+                          <div className={`px-3 py-2.5 flex flex-col gap-1.5 flex-1 ${isSelected ? 'bg-blue-50/30' : 'bg-white'
+                            }`}>
+                            {/* Name + Phone */}
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-xs font-bold text-gray-900 leading-snug line-clamp-1">{address.full_name}</p>
+                              <p className="text-[10px] font-semibold text-gray-500 flex items-center gap-0.5 shrink-0">
+                                <Phone size={9} className="text-[var(--colour-fsP2)]" />
+                                {address.phone}
                               </p>
                             </div>
-                          </button>
+                            {/* Street */}
+                            <p className="text-[11px] text-gray-500 leading-snug line-clamp-2">{address.address}</p>
+                            {/* City/State */}
+                            <p className="text-[10px] font-semibold text-gray-600 flex items-center gap-0.5 mt-auto pt-1.5 border-t border-gray-100">
+                              <MapPin size={9} className="text-[var(--colour-fsP2)] shrink-0" />
+                              {address.city}, {address.state}
+                              {address.postal_code && <span className="text-gray-400 font-normal"> – {address.postal_code}</span>}
+                            </p>
+                          </div>
+                        </button>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteAddress(address.id);
-                            }}
-                            className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center border border-gray-200 bg-white text-gray-400 hover:text-red-600 hover:border-red-300 hover:shadow-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-4">
-                        <MapPin className="w-7 h-7 text-gray-400" />
+                        {/* Delete */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteAddress(address.id); }}
+                          aria-label="Delete address"
+                          className="absolute top-2 right-2 h-6 w-6 flex items-center justify-center bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all border border-gray-200"
+                        >
+                          <Trash2 size={12} />
+                        </button>
                       </div>
-                      <p className="text-gray-500 text-sm font-semibold">No saved addresses yet</p>
-                      <p className="text-gray-400 text-xs mt-1">Add your first address to get started</p>
+                    );
+                  })}
+
+                  {/* Empty state spans full grid */}
+                  {savedAddresses.length === 0 && (
+                    <div className="col-span-2 flex flex-col items-center justify-center py-14 text-center">
+                      <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center mb-3 bg-gray-50">
+                        <MapPin className="w-7 h-7 text-gray-300" />
+                      </div>
+                      <p className="text-gray-700 text-sm font-bold mb-1">No saved addresses yet</p>
+                      <p className="text-gray-400 text-xs">Add an address to speed up checkout</p>
                     </div>
                   )}
                 </div>
 
-                {/* Sticky Add New Button */}
-                <div className="pt-4 mt-2 border-t border-gray-100 sticky bottom-0 bg-white">
-                  <button
-                    onClick={() => openDialog('addEditAddress')}
-                    className="w-full flex items-center justify-center gap-2 p-3.5 rounded-lg bg-[var(--colour-fsP2)] text-white font-bold hover:bg-[var(--colour-bg2)] transition-all shadow-[0_2px_8px_rgba(25,103,179,0.2)] hover:shadow-[0_4px_12px_rgba(25,103,179,0.3)]"
-                  >
-                    <Plus className="w-5 h-5" />
-                    Add New Address
-                  </button>
-                </div>
+                {/* Sticky Add New Button — hidden when 4 addresses reached */}
+                {savedAddresses.length < 4 && (
+                  <div className="pt-4 mt-3 border-t border-gray-100 sticky bottom-0 bg-white">
+                    <button
+                      onClick={() => openDialog('addEditAddress')}
+                      className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl bg-[var(--colour-fsP2)] text-white font-bold hover:opacity-90 transition-all shadow-[0_2px_8px_rgba(25,103,179,0.2)] hover:shadow-[0_4px_12px_rgba(25,103,179,0.3)]"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add New Address
+                    </button>
+                  </div>
+                )}
+                {savedAddresses.length >= 4 && (
+                  <div className="pt-3 mt-3 border-t border-gray-100 text-center">
+                    <p className="text-xs text-gray-400 font-medium">Maximum 4 addresses allowed. Delete one to add another.</p>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -623,33 +648,46 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
   return (
     <div className="space-y-4">
       {selectedAddress ? (
-        <div className="relative group border border-[var(--colour-fsP2)] bg-white rounded-xl p-5 transition-all shadow-[0_2px_8px_rgba(25,103,179,0.12)] ring-2 ring-[var(--colour-fsP2)]/10">
-          <div className="flex items-start gap-4">
-            <div className="mt-0.5 w-10 h-10 rounded-lg border border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white flex items-center justify-center shrink-0">
-              <MapPin className="w-[18px] h-[18px]" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2.5 mb-2">
-                <span className="font-bold text-[var(--colour-fsP2)] uppercase tracking-wide text-sm">{selectedAddress.label || 'Address'}</span>
-                <span className="text-[10px] border border-[var(--colour-fsP2)] text-[var(--colour-fsP2)] px-2.5 py-1 rounded font-bold uppercase tracking-wider bg-white">Selected</span>
-              </div>
-
-              <div className="border-t border-gray-100 pt-2 mt-1">
-                <p className="text-sm font-bold text-gray-900 mb-1">
-                  {selectedAddress.full_name}
-                </p>
-                <p className="text-sm text-gray-600 leading-relaxed mb-1">
-                  {selectedAddress.address}, {selectedAddress.city}, {selectedAddress.state}
-                </p>
-                <p className="text-sm font-semibold text-gray-700">{selectedAddress.phone}</p>
-              </div>
+        <div className="relative rounded-xl border-2 border-[var(--colour-fsP2)] overflow-hidden shadow-[0_2px_12px_rgba(25,103,179,0.15)]">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--colour-fsP2)]">
+            <div className="flex items-center gap-2">
+              {selectedAddress.label?.toLowerCase() === 'work'
+                ? <Briefcase size={13} className="text-white/80" />
+                : <Home size={13} className="text-white/80" />}
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-white">
+                {selectedAddress.label || 'Shipping Address'}
+              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20 text-white uppercase">Selected</span>
             </div>
             <button
               onClick={() => openDialog('addressList')}
-              className="text-sm font-bold text-[var(--colour-fsP2)] border border-[var(--colour-fsP2)]/30 px-3 py-1.5 rounded-lg hover:bg-[var(--colour-fsP2)]/5 hover:shadow-sm transition-all"
+              className="text-[11px] font-bold text-white/90 border border-white/30 px-2.5 py-1 rounded-lg hover:bg-white/10 transition-all"
             >
               Change
             </button>
+          </div>
+
+          {/* Body */}
+          <div className="px-4 py-3.5 bg-white flex flex-col gap-1.5">
+            <p className="text-sm font-bold text-gray-900">{selectedAddress.full_name}</p>
+            <p className="text-sm text-gray-600 leading-relaxed">{selectedAddress.address}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 pt-2 border-t border-gray-100">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-600">
+                <MapPin size={10} className="text-[var(--colour-fsP2)]" />
+                {selectedAddress.city}, {selectedAddress.state}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-600">
+                <Phone size={10} className="text-[var(--colour-fsP2)]" />
+                {selectedAddress.phone}
+              </span>
+              {selectedAddress.email && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-600">
+                  <Mail size={10} className="text-[var(--colour-fsP2)]" />
+                  {selectedAddress.email}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ) : (

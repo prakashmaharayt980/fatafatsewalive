@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { trackBannerClick, trackCategoryClick } from '@/lib/analytics';
 
 // Demo data matching the user's design image
 const TOP_BANNERS = [
@@ -57,7 +58,8 @@ const FeaturedCategoryGrid = () => {
                 {TOP_BANNERS.map((banner) => (
                     <div
                         key={banner.id}
-                        className={`${banner.colSpan} relative h-[220px] rounded-xl overflow-hidden ${banner.bgColor} transition-transform duration-300 hover:scale-[1.01] hover:shadow-lg group`}
+                        className={`${banner.colSpan} relative h-[220px] rounded-xl overflow-hidden ${banner.bgColor} transition-transform duration-300 hover:scale-[1.01] hover:shadow-lg group cursor-pointer`}
+                        onClick={() => trackBannerClick(banner.title, 'Featured Category Top Banner')}
                     >
                         <div className="absolute inset-0 p-6 z-10 flex flex-col justify-center">
                             <span className={`text-xs font-bold uppercase tracking-wider mb-2 opacity-80 ${banner.textColor === 'text-white' ? 'text-white' : 'text-orange-500'}`}>
@@ -87,6 +89,7 @@ const FeaturedCategoryGrid = () => {
                     <div
                         key={cat.id}
                         className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl cursor-pointer transition-all duration-300 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 group"
+                        onClick={() => trackCategoryClick(cat.name, 'grid_click')}
                     >
                         <div className="w-20 h-20 mb-4 relative flex items-center justify-center">
                             {/* Icon Placeholder */}

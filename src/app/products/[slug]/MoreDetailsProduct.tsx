@@ -245,12 +245,12 @@ export default function MoreDetailsProduct({
             <section ref={specsRef} className="lg:sticky lg:top-24 space-y-6">
               <div className='relative'>
                 <div className="pb-3 mb-4 border-b border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
+                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
                     <div className="p-1.5 bg-[var(--colour-fsP2)]/10 rounded-lg">
                       <Scale className="w-5 h-5 text-[var(--colour-fsP2)]" />
                     </div>
                     Specifications
-                  </h3>
+                  </h2>
                 </div>
 
                 <div className={cn(
@@ -405,7 +405,7 @@ export default function MoreDetailsProduct({
             {/* Review Form (Inline) */}
             {Rating.commentOpen && (
               <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                <h4 className="text-sm font-bold text-gray-900">Share your experience</h4>
+                <h3 className="text-sm font-bold text-gray-900">Share your experience</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Star picker */}
                   <div>
@@ -415,6 +415,7 @@ export default function MoreDetailsProduct({
                         <button
                           key={star}
                           type="button"
+                          aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                           className="focus:outline-none cursor-pointer transition-transform hover:scale-110"
                           onClick={() => setRating({ ...Rating, newRating: star })}
                           onMouseEnter={() => setRating({ ...Rating, hoverRating: star })}
@@ -591,7 +592,7 @@ export default function MoreDetailsProduct({
                 <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                   <MessageCircle className="w-6 h-6 text-gray-300" />
                 </div>
-                <h4 className="text-base font-semibold text-gray-900 mb-1">No reviews yet</h4>
+                <h3 className="text-base font-semibold text-gray-900 mb-1">No reviews yet</h3>
                 <p className="text-sm text-gray-500 max-w-xs mb-5">
                   Be the first to share your experience with this product.
                 </p>

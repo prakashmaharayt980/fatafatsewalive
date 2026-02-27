@@ -7,6 +7,7 @@ import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useSWR from 'swr';
 import RemoteServices from '../api/remoteservice';
+import { trackCategoryClick } from '@/lib/analytics';
 
 // Reuse category fetcher or types if needed, or define local ones for simplicity
 const fetcher = async () => {
@@ -33,7 +34,11 @@ const CategoryGrid = () => {
                     {/* Straight line underline extending slightly */}
                     <span className="absolute -bottom-2 left-0 w-[120%] h-[3px] bg-blue-600 rounded-sm"></span>
                 </h2>
-                <Link href="/categories" className="flex items-center gap-1 text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors group">
+                <Link
+                    href="/categories"
+                    className="flex items-center gap-1 text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors group"
+                    onClick={() => trackCategoryClick('Browse Categories', 'view_all')}
+                >
                     View All <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
             </div>
@@ -45,6 +50,7 @@ const CategoryGrid = () => {
                         key={category.id}
                         href={`/category/${category.slug}`}
                         className="group relative flex flex-col items-center p-2 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-gray-100 hover:border-blue-200 shadow-sm hover:shadow-lg transition-all duration-300"
+                        onClick={() => trackCategoryClick(category.title, 'grid_click')}
                     >
                         {/* Image Container */}
                         <div className="relative w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-2 sm:mb-3 rounded-full bg-gray-50 group-hover:bg-blue-50 transition-colors duration-300 flex items-center justify-center overflow-hidden">

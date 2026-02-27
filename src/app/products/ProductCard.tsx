@@ -6,6 +6,7 @@ import { useCompare } from "@/app/context/CompareContext";
 import { useContextCart } from "@/app/checkout/CartContext1";
 import { ProductDetails, ProductSummary } from "@/app/types/ProductDetailsTypes";
 import { trackViewContent } from "@/lib/Analytic";
+import { trackProductClick } from "@/lib/analytics";
 
 export interface ProductCardProps {
     product: ProductSummary | ProductDetails; // Accept both
@@ -136,7 +137,15 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     <Link
                         href={productUrl}
                         className="focus:outline-none"
-                        onClick={() => trackViewContent(product)}
+                        onClick={() => {
+                            trackViewContent(product);
+                            trackProductClick({
+                                id: product.id.toString(),
+                                name: product.name,
+                                price: pricedisplay,
+                                category: 'category' in product ? product.category?.title : undefined,
+                            });
+                        }}
                     >
                         <span aria-hidden="true" className="absolute inset-0 z-10" />
                         {product.name}

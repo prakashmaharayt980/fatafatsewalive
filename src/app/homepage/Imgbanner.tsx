@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BannerItem } from '../types/BannerTypes';
+import { trackBannerClick } from '@/lib/analytics';
 
 interface BannerProps {
     mainBanner?: BannerItem;
@@ -152,6 +153,9 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                 href={image.link || '#'}
                                                 className="block w-full h-full"
                                                 data-track={`banner-main-${index}`}
+                                                onClick={() => {
+                                                    trackBannerClick(image.name, 'Main Carousel', image.link || '#');
+                                                }}
                                             >
                                                 <Image
                                                     src={image.default}
@@ -224,6 +228,9 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                     href={sideImages[0].link || '#'}
                                     className="relative flex-1 w-full rounded overflow-hidden group"
                                     data-track="banner-side-0"
+                                    onClick={() => {
+                                        trackBannerClick(sideImages[0].name, 'Side Banner 1', sideImages[0].link || '#');
+                                    }}
                                 >
                                     <Image
                                         src={sideImages[0].default}
@@ -245,6 +252,9 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                                                 href={image.link || '#'}
                                                 className="relative flex-1 p-0 m-0 rounded overflow-hidden group"
                                                 data-track={`banner-side-${index + 1}`}
+                                                onClick={() => {
+                                                    trackBannerClick(image.name, `Side Banner ${index + 2}`, image.link || '#');
+                                                }}
                                             >
                                                 <Image
                                                     src={image.default}

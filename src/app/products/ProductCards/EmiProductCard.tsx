@@ -5,6 +5,8 @@ import { Star, CreditCard, Clock, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ProductSummary } from '@/app/types/ProductDetailsTypes'
+import { trackViewContent } from '@/lib/Analytic';
+import { trackProductClick } from '@/lib/analytics';
 
 // ─── Types ───────────────────────────────────────────────────
 export interface EmiProductCardProps {
@@ -90,7 +92,15 @@ const EmiProductCard = ({
                     className="text-[13px] sm:text-[14px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.6em] group-hover:text-[var(--colour-fsP2)] transition-colors mt-0.5"
                     title={product.name}
                 >
-                    <Link href={productUrl} className="focus:outline-none">
+                    <Link href={productUrl} className="focus:outline-none" onClick={() => {
+                        trackViewContent(product as any);
+                        trackProductClick({
+                            id: product.id.toString(),
+                            name: product.name,
+                            price: product.numericPrice,
+                            category: '',
+                        });
+                    }}>
                         <span aria-hidden="true" className="absolute inset-0 z-10" />
                         {product.name}
                     </Link>

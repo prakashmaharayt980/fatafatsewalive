@@ -128,6 +128,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={toggleWishlist}
+                            aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                             className={cn(
                                 "w-8 h-8 flex items-center justify-center rounded-full transition-all shadow-sm",
                                 isInWishlist ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500"
@@ -137,6 +138,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                         </button>
                         <button
                             onClick={() => setIsShareOpen(true)}
+                            aria-label="Share this product"
                             className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-(--colour-fsP1) hover:text-white transition-all shadow-sm"
                         >
                             <Share2 className="w-4 h-4" />
@@ -144,9 +146,9 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     </div>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
                     {product.name}
-                </h2>
+                </h1>
                 {product.sku && (
                     <p className="text-xs text-slate-500">SKU: {product.sku}</p>
                 )}
@@ -155,13 +157,13 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
             {/* 2. PRICE (Moved here as it's typically always high up) */}
             <div>
                 <div className="flex items-end gap-3 flex-wrap">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-none">
+                    <p className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-none">
                         Rs. {currentPrice.toLocaleString()}
-                    </h2>
-                    {(
+                    </p>
+                    {originalPrice && originalPrice > currentPrice && (
                         <>
-                            <span className="text-sm text-slate-400 line-through">Rs. {currentPrice.toLocaleString()}</span>
-                            <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-500">-{discountPercentage}% OFF</span>
+                            <span className="text-sm text-slate-500 line-through">Rs. {originalPrice.toLocaleString()}</span>
+                            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">-{discountPercentage}% OFF</span>
                         </>
                     )}
                 </div>
@@ -229,16 +231,18 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-2 py-1.5 border border-gray-200">
                         <button
                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            aria-label="Decrease quantity"
                             className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-40"
                             disabled={quantity <= 1}
                         >
                             −
                         </button>
-                        <span className="min-w-10 text-center font-semibold text-gray-800">
+                        <span className="min-w-10 text-center font-semibold text-gray-800" aria-live="polite" aria-label={`Quantity: ${quantity}`}>
                             {quantity}
                         </span>
                         <button
                             onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
+                            aria-label="Increase quantity"
                             className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-40"
                             disabled={quantity >= currentStock}
                         >
@@ -343,7 +347,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                 <div className="bg-(--colour-fsP2)/10 p-1.5 rounded-lg text-(--colour-fsP2)">
                                     <Gift className="w-4 h-4" />
                                 </div>
-                                <h3 className="text-sm font-bold text-slate-900">Free Gifts Included</h3>
+                                <h2 className="text-sm font-bold text-slate-900">Free Gifts Included</h2>
                             </div>
                             <span className="text-[10px] font-bold text-(--colour-fsP2) bg-(--colour-fsP2)/5 px-2 py-1 rounded-md border border-(--colour-fsP2)/10">Limited Offer</span>
                         </div>
@@ -363,7 +367,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                     <div className="flex-1 min-w-0 z-10">
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="bg-(--colour-fsP2) text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider shadow-sm">Free</span>
-                                            <span className="text-[10px] text-slate-400 line-through font-medium">Rs. {gift.price.toLocaleString()}</span>
+                                            <span className="text-[11px] text-slate-500 line-through font-medium">Rs. {gift.price.toLocaleString()}</span>
                                         </div>
                                         <p className="text-sm font-bold text-slate-800 truncate group-hover:text-(--colour-fsP2) transition-colors">{gift.name}</p>
                                         <p className="text-[10px] text-slate-500 font-medium">Worth Rs. {gift.price.toLocaleString()}</p>

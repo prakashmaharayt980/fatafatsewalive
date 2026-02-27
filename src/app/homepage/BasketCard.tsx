@@ -10,6 +10,7 @@ import SkeltonCard from '@/app/skeleton/SkeletonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug, CategorySlug_ID } from '@/app/types/CategoryTypes';
 import { getCategoryProductsData } from '@/app/api/CachedHelper/getCategoryProductsData';
+import { trackCategoryClick } from '@/lib/analytics';
 
 interface BasketCardProps {
   title?: string;
@@ -133,7 +134,10 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
         </div>
 
         <button
-          onClick={() => router.push(`/category/${slug}`)}
+          onClick={() => {
+            trackCategoryClick(title || slug, 'view_all');
+            router.push(`/category/${slug}`);
+          }}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[var(--colour-fsP2)] cursor-pointer hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all duration-200 group"
         >
           View All
