@@ -96,6 +96,7 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
 
   return (
     <>
+      <h1 className="sr-only">{productDetails.name}</h1>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

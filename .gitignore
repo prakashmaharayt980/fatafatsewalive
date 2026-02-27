@@ -169,3 +169,17 @@ typed-router.d.ts
 
 # Local Netlify folder
 .netlify
+
+.agent
+.agent/*
+
+documentation
+documentation/*
+
+.claude
+.claude/*
+
+.github
+.github/*
+
+

@@ -144,9 +144,9 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     </div>
                 </div>
 
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
                     {product.name}
-                </h1>
+                </h2>
                 {product.sku && (
                     <p className="text-xs text-slate-500">SKU: {product.sku}</p>
                 )}
