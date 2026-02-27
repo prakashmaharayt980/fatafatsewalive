@@ -265,7 +265,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct, emiBanner
                                                         alt={bank.name}
                                                         fill
                                                         className="object-contain p-1.5"
-                                                        unoptimized
+
                                                     />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
@@ -362,7 +362,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct, emiBanner
                                             width={48}
                                             height={48}
                                             className="object-contain"
-                                            unoptimized
+
                                         />
                                     </div>
                                     <div>

@@ -203,7 +203,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                                     fill
                                                     className="object-cover"
                                                     sizes="56px"
-                                                    unoptimized
+
                                                 />
                                             )}
                                         </div>
@@ -355,7 +355,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
                                     <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 border border-slate-100 relative overflow-hidden z-10">
                                         {gift.image ? (
-                                            <Image src={gift.image.thumb || gift.image.full} unoptimized alt={gift.name} fill className="object-cover" />
+                                            <Image src={gift.image.thumb || gift.image.full} alt={gift.name} fill className="object-cover" />
                                         ) : (
                                             <Gift className="w-7 h-7 text-slate-300" />
                                         )}

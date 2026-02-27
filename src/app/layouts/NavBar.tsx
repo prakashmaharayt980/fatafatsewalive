@@ -171,7 +171,7 @@ const NavBar = ({ navbaritems }: {
                                                         width={20}
                                                         height={20}
                                                         className="object-contain aspect-auto"
-                                                        unoptimized
+
                                                     />
                                                 </div>
                                                 <span className={`

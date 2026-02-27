@@ -30,7 +30,7 @@ export default function CategoryBanner({ category, bannerData }: CategoryBannerP
         if (!category?.image) return null;
         return (
             <section className="w-full mb-6 aria-label={`${category.title} promotion`}">
-                <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '1000/250' }}>
+                <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '4/1' }}>
                     <Image
                         src={category.image}
                         alt={`${category.title} main banner`}
@@ -38,7 +38,7 @@ export default function CategoryBanner({ category, bannerData }: CategoryBannerP
                         className="object-contain "
                         priority
                         sizes="100vw"
-                        unoptimized
+
                     />
                 </div>
             </section>
@@ -81,7 +81,7 @@ export default function CategoryBanner({ category, bannerData }: CategoryBannerP
                             className="object-contain "
                             priority
                             sizes={showRightHalf ? "(max-width: 1024px) 100vw, 50vw" : "100vw"}
-                            unoptimized
+
                         />
                     </a>
                 </div>
@@ -104,7 +104,7 @@ export default function CategoryBanner({ category, bannerData }: CategoryBannerP
                                 className="object-contain"
                                 priority
                                 sizes="(max-width: 1024px) 50vw, 25vw"
-                                unoptimized
+
                             />
                         </a>
 
@@ -122,7 +122,7 @@ export default function CategoryBanner({ category, bannerData }: CategoryBannerP
                                     fill
                                     className="object-contain"
                                     sizes="(max-width: 1024px) 50vw, 25vw"
-                                    unoptimized
+
                                 />
                             </a>
                         ) : (

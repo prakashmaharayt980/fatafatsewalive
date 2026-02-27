@@ -225,7 +225,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                     fill
                     className="object-contain p-2"
                     priority
-                    unoptimized
+
                   />
                   <button
                     onClick={() => setIsDrawerOpen(true)}
@@ -302,7 +302,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                                   alt={color}
                                   fill
                                   className="object-cover"
-                                  unoptimized
+
                                 />
                                 {selectedColor === color && (
                                   <div className="absolute inset-0 bg-[var(--colour-fsP2)]/15 flex items-center justify-center">

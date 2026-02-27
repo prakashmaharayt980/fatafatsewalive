@@ -72,7 +72,7 @@ export default function CheckoutProduct({
                     alt={product.name || 'Product'}
                     fill
                     className="object-contain  group-hover:scale-110 transition-transform duration-500 ease-in-out"
-                    unoptimized
+
                   />
                 </div>
 

@@ -6,14 +6,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'fatafatsewa.com',
-  
+
         pathname: '/**',
 
       },
       {
         protocol: 'https',
         hostname: 'www.fatafatsewa.com',
-  
+
         pathname: '/**',
         search: '',
       },
@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
     // These help Next.js generate the correct srcset for all devices
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // unoptimized: true,
+
   },
   reactStrictMode: true,
   devIndicators: false,

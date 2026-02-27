@@ -110,14 +110,14 @@ const FooterBody = () => {
               <Headphones className="w-5 h-5 text-[#1a1a1a]" />
               <div>
                 <p className="text-[#1a1a1a] font-bold text-sm">We&apos;re Always Here To Help</p>
-                <p className="text-[#1a1a1a]/80 font-medium text-[11px]">Reach out to us through any of these support channels</p>
+                <p className="text-[#1a1a1a] font-medium text-[11px]">Reach out to us through any of these support channels</p>
               </div>
             </div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 text-[#1a1a1a]">
                 <PhoneCall className="w-4 h-4 text-[#1a1a1a]" />
                 <div>
-                  <p className="text-[10px] text-[#1a1a1a]/70 uppercase tracking-wider font-bold">Call Us</p>
+                  <p className="text-[10px] text-[#1a1a1a] uppercase tracking-wider font-bold">Call Us</p>
                   <p className="text-sm font-bold text-[#1a1a1a]">+977 9828757575</p>
                 </div>
               </div>
@@ -125,7 +125,7 @@ const FooterBody = () => {
               <div className="flex items-center gap-2 text-[#1a1a1a]">
                 <Mail className="w-4 h-4 text-[#1a1a1a]" />
                 <div>
-                  <p className="text-[10px] text-[#1a1a1a]/70 uppercase tracking-wider font-bold">Email</p>
+                  <p className="text-[10px] text-[#1a1a1a] uppercase tracking-wider font-bold">Email</p>
                   <p className="text-sm font-bold text-[#1a1a1a]">info@fatafatsewa.com</p>
                 </div>
               </div>

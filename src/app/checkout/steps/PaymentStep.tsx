@@ -81,7 +81,7 @@ export default function PaymentStep({ state, onPaymentMethodChange, onPlaceOrder
                                                 fill
                                                 sizes="56px"
                                                 className="object-contain p-1"
-                                                unoptimized
+
                                             />
                                         </div>
 
