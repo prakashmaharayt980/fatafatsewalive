@@ -35,7 +35,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
     <div
       className={cn(
         'w-full relative overflow-hidden rounded sm:rounded cursor-pointer group',
-        'aspect-[1600/240] ', // Responsive full-width banner ratios
+        'aspect-[5/1] ', // Responsive full-width banner ratios
         'transition-premium '
       )}
     >

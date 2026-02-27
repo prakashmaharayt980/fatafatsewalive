@@ -109,7 +109,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
     useEffect(() => {
         if (!isAutoPlaying || mainImages.length === 0) return;
 
-        const interval = setInterval(nextSlide, 5000);
+        const interval = setInterval(nextSlide, 8000);
         return () => clearInterval(interval);
     }, [isAutoPlaying, nextSlide, mainImages.length]);
 

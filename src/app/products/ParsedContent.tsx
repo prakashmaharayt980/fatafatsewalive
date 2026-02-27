@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import parse, { domToReact, HTMLReactParserOptions, Element, DOMNode } from 'html-react-parser';
 import DOMPurify from 'dompurify';
+import Image from 'next/image';
 
 type TableElement = Element & {
   children: DOMNode[];
@@ -190,7 +191,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
 
         if (element.name === 'img') {
           return (
-            <img src={element.attribs.src} alt={element.attribs.alt} className={`w-full h-auto ${className}`} />
+            <Image src={element.attribs.src} alt={element.attribs.alt} className={`w-full h-auto ${className}`} />
           );
         }
 

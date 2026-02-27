@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import RemoteServices from '../api/remoteservice';
 import BlogListingClient from './components/BlogListingClient';
 import { Article } from '../types/Blogtypes';
-import { getBlogPageData } from '@/app/context/BlogPageData';
+import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
 import { getBannerData } from '../api/CachedHelper/getBannerData';
 import BannerFetcher from '../CommonVue/BannerFetcher';
 import { BannerItem } from '../types/BannerTypes';

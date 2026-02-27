@@ -10,7 +10,7 @@ import ProductCard from '../products/ProductCard';
 import SkeltonCard from '@/app/skeleton/SkeletonCard';
 import { cn } from '@/lib/utils';
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
-import { CategoryService } from '../api/services/category.service';
+import { getCategoryProductsData } from '@/app/api/CachedHelper/getCategoryProductsData';
 
 interface BasketCardwithImageProps {
   title?: string;
@@ -20,7 +20,7 @@ interface BasketCardwithImageProps {
 }
 
 const fetcher = async (id: string) => {
-  const response = await CategoryService.getCategoryProducts({ id });
+  const response = await getCategoryProductsData(id);
   return response;
 };
 

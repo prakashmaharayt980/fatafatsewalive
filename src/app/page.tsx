@@ -1,7 +1,7 @@
 import HomePage from './homepage'
 import { Metadata } from 'next'
 import BannerFetcher from './CommonVue/BannerFetcher'
-import { getHomepageData } from './context/HomepageData'
+import { getHomepageData } from '@/app/api/CachedHelper/getInitialData'
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
 
 // Generate Metadata for SEO
@@ -115,8 +115,31 @@ async function page() {
     ]
   };
 
+  // --- Banner image preload hints (LCP / SEO) ---
+  // Main banner: first image in the sorted list
+  const mainBannerFirstImg = criticalData.main?.images
+    ?.sort((a: { order: number }, b: { order: number }) => a.order - b.order)?.[0]?.image?.full as string | undefined;
+
+  // Side banners: first two images
+  const sideBannerImgs = (criticalData.side?.images
+    ?.sort((a: { order: number }, b: { order: number }) => a.order - b.order)
+    ?.slice(0, 2)
+    ?.map((img: { image: { full: string } }) => img.image.full) ?? []) as string[];
+
   return (
     <>
+      {/* Preload above-the-fold banner images for faster LCP */}
+      {mainBannerFirstImg && (
+        <link
+          rel="preload"
+          as="image"
+          href={mainBannerFirstImg}
+          fetchPriority="high"
+        />
+      )}
+      {sideBannerImgs.map((src) => (
+        <link key={src} rel="preload" as="image" href={src} />
+      ))}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

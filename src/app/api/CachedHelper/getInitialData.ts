@@ -1,11 +1,12 @@
-import { unstable_cache } from 'next/cache';
-import RemoteServices from '../api/remoteservice';
-import { CategoryService } from '../api/services/category.service';
+'use server';
 
+import { unstable_cache } from 'next/cache';
+import RemoteServices from '@/app/api/remoteservice';
+import { CategoryService } from '@/app/api/services/category.service';
+
+// --- Homepage Data Fetcher ---
 export const getHomepageData = unstable_cache(
     async () => {
-
-
         // 1. Fetch Critical Banners
         const criticalSlugs = {
             main: 'main-banner-test',
@@ -47,8 +48,39 @@ export const getHomepageData = unstable_cache(
     },
     ['homepage-data'], // Cache Key
     {
-        revalidate: 1, // Cache lifetime in seconds (1 hour)
+        revalidate: 3600, // Cache lifetime in seconds (1 hour)
         tags: ['homepage'] // Tag for manual invalidation
     }
+);
 
+// --- Blog Page Data Fetcher ---
+export const getBlogPageData = unstable_cache(
+    async () => {
+        // Fetch specific banner for blog
+        // Fetch deals (ProductDeals) - 'Pro' search
+        // Fetch latest articles (BlogList)
+
+        const [bannerRes, dealsRes, blogRes] = await Promise.allSettled([
+            RemoteServices.getBannerBySlug('blog-banner-test'),
+            RemoteServices.searchProducts({ search: 'Pro', page: 1, per_page: 10 }),
+            RemoteServices.getBlogList({ page: 1, per_page: 12 }),
+        ]);
+
+        const bannerData = bannerRes.status === 'fulfilled' ? bannerRes.value.data || null : null;
+        const dealProducts = dealsRes.status === 'fulfilled' ? dealsRes.value.data || [] : [];
+        const latestArticles = blogRes.status === 'fulfilled'
+            ? (Array.isArray(blogRes.value) ? blogRes.value : blogRes.value.data || [])
+            : [];
+
+        return {
+            bannerData,
+            dealProducts,
+            latestArticles
+        };
+    },
+    ['blog-page-data'],
+    {
+        revalidate: 3600,
+        tags: ['blog', 'banner', 'products']
+    }
 );
