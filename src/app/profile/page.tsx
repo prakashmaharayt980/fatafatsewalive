@@ -61,16 +61,16 @@ function ProfilePageContent() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 lg:py-10">
-            <div className="container mx-auto px-0 sm:px-4 max-w-7xl">
+        <div className="min-h-screen bg-slate-50 lg:py-4">
+            <div className=" mx-auto px-0 sm:px-4 max-w-7xl">
 
                 {/* Header Welcome (Desktop Only) */}
-                <div className="mb-6 hidden lg:block px-4 sm:px-0">
-                    <h1 className="text-2xl font-bold text-slate-800">My Account</h1>
-                    <p className="text-sm text-slate-500">Manage your profile and preferences.</p>
+                <div className="mb-5 hidden lg:block px-4 sm:px-0">
+                    <h1 className="text-2xl font-bold text-[var(--colour-fsP2)]">My Account</h1>
+                    <p className="text-sm text-slate-500  ">Manage your profile and preferences.</p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+                <div className="flex flex-col lg:flex-row gap-2">
                     {/* Mobile Profile Header */}
                     <div className="lg:hidden bg-white p-6 pb-8 flex flex-col items-center text-center border-b border-slate-100">
                         <div className="w-24 h-24 rounded-full bg-[var(--colour-fsP2)] p-0.5 mb-4 relative overflow-hidden">
@@ -155,7 +155,7 @@ function ProfilePageContent() {
 
                     {/* Main Content */}
                     <main className="flex-1 min-w-0">
-                        <div className="bg-white lg:rounded-xl lg:border lg:border-slate-200 p-4 sm:p-6 min-h-[400px]">
+                        <div className="bg-white lg:rounded-xl lg:border lg:border-slate-200 p-2 min-h-[400px]">
                             {renderContent()}
 
                             {/* Mobile Logout Button (Bottom of Content) */}

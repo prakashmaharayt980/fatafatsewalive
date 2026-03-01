@@ -11,6 +11,7 @@ import { BlogService } from './blog.service';
 import { MiscService } from './misc.service';
 import { PaymentService } from './payments.service';
 import { PagesService } from './pages.service';
+import { EmiService } from './emi.service';
 
 // Combined RemoteServices object for backward compatibility
 const RemoteServices = {
@@ -46,6 +47,9 @@ const RemoteServices = {
 
     // Pages
     ...PagesService,
+
+    // EMI
+    ...EmiService,
 };
 
 export { apiPublic, apiPrivate, n8nApi };
@@ -63,4 +67,5 @@ export {
     BlogService,
     MiscService,
     PagesService,
+    EmiService,
 };

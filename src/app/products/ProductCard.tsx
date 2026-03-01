@@ -143,7 +143,7 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                                 id: product.id.toString(),
                                 name: product.name,
                                 price: pricedisplay,
-                                category: 'category' in product ? product.category?.title : undefined,
+                                category: 'category' in product ? 'category' : undefined,
                             });
                         }}
                     >

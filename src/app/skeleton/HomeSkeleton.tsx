@@ -8,13 +8,13 @@ const HomeSkeleton = () => {
             <section className="w-full px-3 py-4 sm:px-4 sm:py-4">
                 <div className="mx-auto">
                     <div className="flex flex-col lg:flex-row gap-1 sm:gap-2">
-                        {/* Main Carousel Skeleton (60% on desktop) */}
-                        <div className="w-full lg:w-[60%]">
-                            <div className="relative w-full aspect-[1920/700] bg-gray-200 rounded sm:rounded md:rounded animate-pulse" />
+                        {/* Main Carousel Skeleton (80% on desktop) */}
+                        <div className="w-full lg:w-[80%]">
+                            <div className="relative w-full aspect-4/1 bg-gray-200 rounded sm:rounded md:rounded animate-pulse" />
                         </div>
 
-                        {/* Side Images Skeleton (40% on desktop) */}
-                        <div className="w-full lg:w-[40%] hidden lg:flex flex-col gap-1 h-full">
+                        {/* Side Images Skeleton (20% on desktop) */}
+                        <div className="w-full lg:w-[20%] hidden lg:flex flex-col gap-1 h-full">
                             {/* Top Side Image */}
                             <div className="relative flex-1 w-full rounded overflow-hidden bg-gray-200 animate-pulse" />
 
@@ -45,10 +45,10 @@ const HomeSkeleton = () => {
                     {[...Array(5)].map((_, i) => (
                         <div
                             key={i}
-                            className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-1 sm:px-1.5"
+                            className="shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-1 sm:px-1.5"
                         >
                             <div className="bg-white rounded-[12px] overflow-hidden border border-gray-100 h-full card-shadow p-2">
-                                <div className="aspect-[5/4] bg-gray-200 rounded animate-pulse mb-2" />
+                                <div className="aspect-5/4 bg-gray-200 rounded animate-pulse mb-2" />
                                 <div className="space-y-2">
                                     <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse" />
                                     <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />

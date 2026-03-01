@@ -1,21 +1,29 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { ShoppingBag, CreditCard, Scale, Star, Check, Share2, Gift } from "lucide-react";
+import React from "react";
+import {
+    ShoppingCart,
+    CreditCard,
+    Scale,
+    Star,
+    Check,
+    Share2,
+    Gift,
+    Heart,
+    CalendarClock,
+    TrendingUp,
+} from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useContextCart } from "@/app/checkout/CartContext1";
-import { PaymentMethodsOptions } from "@/app/CommonVue/Payment";
 import { useCompare } from "@/app/context/CompareContext";
 import { useRouter } from "next/navigation";
 import { ProductDetails, ProductDisplayState } from "@/app/types/ProductDetailsTypes";
-import { Button } from "@/components/ui/button";
-import IconRenderer from "@/app/CommonVue/CustomIconImg";
 import ProductCoupons from "./ProductCoupons";
-import BankOffers from "./BankOffers";
 import ShareDialog from "./ShareDialog";
 import ReviewDialog from "./ReviewDialog";
-import { Heart } from "lucide-react";
+import PreOrderDialog from "./PreOrderDialog";
+import StockInvestmentDialog from "./StockInvestmentDialog";
 import useSWR from 'swr';
 import { CategoryService } from "@/app/api/services/category.service";
 import { CategorySlug_ID } from '@/app/types/CategoryTypes';
@@ -60,6 +68,8 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
     const [isShareOpen, setIsShareOpen] = React.useState(false);
     const [isReviewOpen, setIsReviewOpen] = React.useState(false);
+    const [isPreOrderOpen, setIsPreOrderOpen] = React.useState(false);
+    const [isStockInvestOpen, setIsStockInvestOpen] = React.useState(false);
     const isInWishlist = wishlistItems.some((item) => item.id === product.id);
 
     const toggleWishlist = (e: React.MouseEvent) => {
@@ -256,61 +266,95 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     )}
                 </div>
 
-                {/* Action Buttons - 3 in a Row */}
-                <div ref={actionRef} className="grid grid-cols-3 gap-3">
-                    {/* Add to Cart */}
-                    <button
-                        onClick={() => addToCart(product.id, quantity)}
-                        title="add-to-cart"
-                        disabled={currentStock === 0}
-                        className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-(--colour-fsP2) hover:bg-(--colour-fsP2)/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        {currentStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                    </button>
+                {/* Action Buttons — object-style config */}
+                {(() => {
+                    const isInCompare = compareList?.some((i) => i.id === product.id);
 
-                    {/* EMI (conditional) */}
-                    {product.emi_enabled === 1 && (
-                        <button
-                            title="apply-emi"
-                            onClick={() => handleroute(selectedVariant?.color ? `/emi/apply/${product.slug}?selectedcolor=${selectedVariant.color}` : `/emi/apply/${product.slug}`)}
-                            className="col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 bg-(--colour-fsP1) hover:bg-(--colour-fsP1)/90 text-white font-medium rounded-lg shadow hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            Apply EMI
-                        </button>
-                    )}
+                    type ActionButton = {
+                        id: string;
+                        label: string;
+                        icon: React.ElementType;
+                        colSpan: string;
+                        className: string;
+                        onClick: () => void;
+                        disabled?: boolean;
+                        show?: boolean;
+                    };
 
-                    {/* Compare */}
-                    {/* Compare */}
-                    {/* Compare */}
-                    <button
-                        onClick={() => {
-                            const isIn = compareList?.some(i => i.id === product.id);
-                            if (isIn) {
-                                removeFromCompare(product.id);
-                            } else {
-                                addToCompare(product);
-                            }
-                        }}
-                        className={cn(
-                            "col-span-3 sm:col-span-1 cursor-pointer px-5 py-3 font-medium rounded-lg border transition-all active:scale-[0.98] flex items-center justify-center gap-2",
-                            compareList?.some(i => i.id === product.id)
-                                ? "bg-white text-(--colour-fsP2) border-(--colour-fsP2) hover:bg-(--colour-fsP2)/5"
-                                : "bg-gray-200 hover:bg-gray-300 text-black border-gray-300 hover:border-gray-400"
-                        )}
-                        title={compareList?.some(i => i.id === product.id) ? "Remove from Compare" : "Add to Compare"}
-                    >
-                        <Scale className={cn("w-5 h-5", compareList?.some(i => i.id === product.id) && "fill-current")} />
-                        {compareList?.some(i => i.id === product.id) ? "Added" : "Compare"}
-                    </button>
+                    const actionButtons: ActionButton[] = [
+                        {
+                            id: "add-to-cart",
+                            label: currentStock === 0 ? "Out of Stock" : "Add to Cart",
+                            icon: ShoppingCart,
+                            colSpan: "col-span-3 sm:col-span-1",
+                            className:
+                                "bg-(--colour-fsP2) hover:bg-(--colour-fsP2)/90 text-white shadow hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed",
+                            onClick: () => addToCart(product.id, quantity),
+                            disabled: currentStock === 0,
+                        },
+                        {
+                            id: "pre-order",
+                            label: "Pre-Order",
+                            icon: CalendarClock,
+                            colSpan: "col-span-3 sm:col-span-1",
+                            className:
+                                "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md",
+                            onClick: () => setIsPreOrderOpen(true),
+                        },
 
+                        {
+                            id: "apply-emi",
+                            label: "Apply EMI",
+                            icon: CreditCard,
+                            colSpan: "col-span-3 sm:col-span-1",
+                            className:
+                                "bg-(--colour-fsP1) hover:bg-(--colour-fsP1)/90 text-white shadow hover:shadow-md",
+                            onClick: () =>
+                                handleroute(
+                                    selectedVariant?.color
+                                        ? `/emi/apply/${product.slug}?selectedcolor=${selectedVariant.color}`
+                                        : `/emi/apply/${product.slug}`
+                                ),
+                            show: product.emi_enabled === 1,
+                        },
+                        {
+                            id: "compare",
+                            label: isInCompare ? "Added" : "Compare",
+                            icon: Scale,
+                            colSpan: "col-span-3 sm:col-span-1",
+                            className: isInCompare
+                                ? "bg-white text-(--colour-fsP2) border border-(--colour-fsP2) hover:bg-(--colour-fsP2)/5"
+                                : "bg-gray-200 hover:bg-gray-300 text-black border border-gray-300",
+                            onClick: () => {
+                                if (isInCompare) removeFromCompare(product.id);
+                                else addToCompare(product);
+                            },
+                        },
+                    ];
 
-                </div>
+                    return (
+                        <div ref={actionRef} className="grid grid-cols-3 gap-3">
+                            {actionButtons
+                                .filter((btn) => btn.show !== false)
+                                .map(({ id, label, icon: Icon, colSpan, className, onClick, disabled }) => (
+                                    <button
+                                        key={id}
+                                        title={id}
+                                        onClick={onClick}
+                                        disabled={disabled}
+                                        className={cn(
+                                            colSpan,
+                                            "cursor-pointer px-3 py-2 font-medium rounded transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm",
+                                            className
+                                        )}
+                                    >
+                                        <Icon className="w-4 h-4 shrink-0" />
+                                        {label}
+                                    </button>
+                                ))}
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* SECTIONS MOVED BELOW ACTION BUTTONS */}
@@ -394,7 +438,24 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 productImage={product.image?.full}
                 productPrice={currentPrice}
             />
-        </div >
+
+            <PreOrderDialog
+                isOpen={isPreOrderOpen}
+                onClose={() => setIsPreOrderOpen(false)}
+                productName={product.name}
+                productImage={product.image?.full}
+                productPrice={currentPrice}
+                productSlug={product.slug}
+            />
+
+            <StockInvestmentDialog
+                isOpen={isStockInvestOpen}
+                onClose={() => setIsStockInvestOpen(false)}
+                productName={product.name}
+                productImage={product.image?.full}
+                productPrice={currentPrice}
+            />
+        </div>
     );
 };
 
