@@ -53,7 +53,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
 
     return (
         <div className="space-y-2 sticky top-24">
-            <div className="relative w-full aspect-[4/4] max-h-[420px] bg-white rounded overflow-hidden border border-gray-100 shadow-sm group">
+            <div className="relative w-full aspect-[4/4] max-h-[500px] bg-white rounded overflow-hidden border border-gray-100 shadow-sm group">
                 {/* Image counter */}
                 {currentImages.length > 1 && (
                     <div className="absolute top-3 left-3 z-10 bg-black/50 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">

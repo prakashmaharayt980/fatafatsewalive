@@ -18,6 +18,7 @@ interface BasketCardwithImageProps {
   slug: string;
   id: string;
   imageUrl?: string;
+  initialData?: CategorySlug_ID;
 }
 
 const fetcher = async (id: string) => {
@@ -25,7 +26,7 @@ const fetcher = async (id: string) => {
   return response;
 };
 
-const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageProps) => {
+const BasketCardwithImage = ({ title, slug, id, imageUrl, initialData }: BasketCardwithImageProps) => {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { ref, inView } = useInView({
@@ -37,11 +38,14 @@ const BasketCardwithImage = ({ title, slug, id, imageUrl }: BasketCardwithImageP
 
   // Fetch data with SWR
   const { data: productList, error } = useSWR<CategorySlug_ID>(
-    inView ? id : null,
+    (initialData || inView) ? id : null,
     fetcher,
     {
-      dedupingInterval: 60000,
+      fallbackData: initialData,
+      dedupingInterval: 3600000, // 1 hour
       revalidateOnFocus: false,
+      revalidateOnMount: !initialData,
+      revalidateOnReconnect: false
     }
   );
 
