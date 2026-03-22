@@ -6,12 +6,13 @@ export const ProductService = {
         apiPublic.get(`/v1/products/${slug}`).then(res => res.data.data),
 
     // Search products with query
-    searchProducts: (params: { search?: string; page?: number; per_page?: number; brands?: string | number; categories?: string | number }) => {
+    searchProducts: (params: { search?: string; page?: number; per_page?: number; brands?: string | number; categories?: string | number; sort?: string }) => {
         const queryParams = new URLSearchParams();
-        if (params.search) queryParams.append('name', params.search);
+        if (params.search) queryParams.append('search', params.search);
         if (params.page) queryParams.append('page', params.page.toString());
         if (params.brands) queryParams.append('brands', params.brands.toString());
         if (params.categories) queryParams.append('categories', params.categories.toString());
+        if (params.sort) queryParams.append('sort', params.sort.toString());
         queryParams.append('per_page', (params.per_page || 10).toString());
         return apiPublic.get(`/v1/products?${queryParams.toString()}`).then(res => res.data);
     },
@@ -20,13 +21,7 @@ export const ProductService = {
     getRelatedProducts: (slug: string, limit: number = 8) =>
         apiPublic.get(`/v1/products/${slug}/related?limit=${limit}`).then(res => res.data),
 
-    // Create review by product id
-    createReview: ({ data, id }: { data: any; id: string | number }) =>
-        apiPrivate.post(`/v1/products/${id}/reviews`, data).then(res => res.data),
 
-    // Get reviews by product id
-    getReviews: (id: string | number, page: number = 1) =>
-        apiPublic.get(`/v1/products/${id}/reviews?page=${page}`).then(res => res.data),
 
     // Get featured products
     getFeaturedProducts: (limit: number = 12) =>

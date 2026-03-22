@@ -4,22 +4,27 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Zap, ArrowUpRight, ShoppingBasket, Scale } from 'lucide-react';
-import { ProductDetails } from '../../types/ProductDetailsTypes';
-import { formatPrice } from '@/app/category/[slug]/utils';
+import {  ProductData } from '../../types/ProductDetailsTypes';
+
 import { parseHighlights } from '@/app/CommonVue/highlights';
-import { useContextCart } from '@/app/checkout/CartContext1';
-import { useCompare } from '@/app/context/CompareContext';
+
 import { cn } from '@/lib/utils';
+import { useCartStore } from '@/app/context/CartContext';
+import { useShallow } from 'zustand/react/shallow';
 
 interface ProductDealsProps {
-    products: ProductDetails[];
+    products: ProductData[];
     limit?: number;
     title: string;
 }
 
 const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
-    const { compareList, addToCompare, removeFromCompare } = useCompare();
-    // const { addToCompare, removeFromCompare, compareItems } = useContextCart(); // OLD
+    const { compareList, addToCompare, removeFromCompare } = useCartStore(useShallow(state => ({
+        compareList: state.compareItems,
+        addToCompare: state.addToCompare,
+        removeFromCompare: state.removeFromCompare
+    })));
+
     const compareItems = compareList; // Alias for compatibility with code below if needed
     if (!products || products.length === 0) return null;
 
@@ -38,9 +43,9 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
             {/* Product Cards */}
             <div className="flex flex-col gap-2.5">
                 {products.slice(0, limit).map((product, index) => {
-                    const hasDiscount = product.price > (product.discounted_price || 0);
+                    const hasDiscount = Number(product.price) > Number(product.discounted_price || product.price);
                     const discountPercent = hasDiscount
-                        ? Math.round(((product.price - product.discounted_price) / product.price) * 100)
+                        ? Math.round(((Number(product.price) - Number(product.discounted_price || product.price)) / Number(product.price)) * 100)
                         : 0;
 
                     return (
@@ -52,7 +57,7 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
                             {/* Product Image Container */}
                             <div className="relative flex-shrink-0 w-[72px] h-[72px] rounded-base bg-[var(--colour-bg4)] overflow-hidden border border-[var(--colour-border3)]">
                                 <Image
-                                    src={product.image?.thumb || product.image?.full || '/placeholder.png'}
+                                    src={(product as any).image || '/placeholder.png'}
                                     alt={product.name}
                                     fill
                                     className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
@@ -72,7 +77,7 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
                                         if (isIn) {
                                             removeFromCompare(product.id);
                                         } else {
-                                            addToCompare(product);
+                                            addToCompare(product as any);
                                         }
                                     }}
                                     className={cn(
@@ -95,7 +100,7 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
                                     </h4>
 
 
-                                    {parseHighlights(product.highlights, 2).map((h, i) => (
+                                    {parseHighlights((product as any).highlights || product.description?.highlights || '', 2).map((h, i) => (
                                         <p key={i} className="text-[10px] text-[var(--colour-text3)] line-clamp-1 mt-0.5">
                                             {h}
                                         </p>
@@ -106,12 +111,12 @@ const ProductDeals = ({ products, limit = 8, title }: ProductDealsProps) => {
                                     <div className="flex gap-2 items-center sm:flex-row flex-col  leading-none">
                                         <div className="flex items-baseline gap-1.5">
                                             <span className="text-[13px] font-bold text-[var(--colour-fsP2)]">
-                                                Rs. {formatPrice(product.price)}
+                                                Rs. {typeof product.price === 'object' ? (product.price as any).current : product.price}
                                             </span>
                                         </div>
                                         {(
                                             <span className="text-[10px] text-[var(--colour-text3)] line-through">
-                                                Rs. {formatPrice(product.discounted_price)}
+                                                Rs.{typeof product.price === 'object' ? (product.price as any).original_price : product.discounted_price}
                                             </span>
                                         )}
                                     </div>

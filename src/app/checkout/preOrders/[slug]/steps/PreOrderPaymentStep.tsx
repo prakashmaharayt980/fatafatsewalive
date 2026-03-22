@@ -5,6 +5,7 @@ import { Wallet, Check, ChevronLeft, Loader2, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { PaymentMethodsOptions } from '@/app/CommonVue/Payment';
+import { useAuth } from '@/app/context/AuthContext';
 
 // Notice: We strictly omit Cash on Delivery for Pre-orders
 const allPaymentMethods = [
@@ -26,6 +27,7 @@ export default function PreOrderPaymentStep({
     onBack,
     isSubmitting
 }: PreOrderPaymentStepProps) {
+    const { authState, triggerLoginAlert } = useAuth();
 
     const isComplete = paymentMethod !== '';
 
@@ -111,7 +113,13 @@ export default function PreOrderPaymentStep({
                     Back
                 </Button>
                 <Button
-                    onClick={onPlaceOrder}
+                    onClick={() => {
+                        if (!authState.isLoggedIn) {
+                            triggerLoginAlert();
+                        } else {
+                            onPlaceOrder();
+                        }
+                    }}
                     disabled={!isComplete || isSubmitting}
                     className="flex-1 sm:flex-none h-12 px-8 bg-(--colour-fsP2) hover:bg-(--colour-fsP2)/90 text-white font-bold rounded-xl shadow-md transition-all hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-base flex items-center justify-center gap-2"
                 >

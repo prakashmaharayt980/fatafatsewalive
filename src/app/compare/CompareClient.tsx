@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Loader2, RotateCcw, ArrowLeft, Star, Smartphone, Plus, ChevronRight } from 'lucide-react';
-import RemoteServices from '../api/remoteservice';
+
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { toast } from 'sonner';
 import CompareSearchComponent from './CompareSearchComponent';
@@ -14,13 +14,20 @@ import { cn } from '@/lib/utils';
 import CustomIconImg from "@/app/CommonVue/CustomIconImg";
 
 
-import { useCompare } from '../context/CompareContext';
+import { ProductService } from '../api/services/product.service';
+import { useCartStore } from '../context/CartContext';
+import { useShallow } from 'zustand/react/shallow';
 // ... existing imports
 
 function CompareContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { compareList, setCompareList, removeFromCompare, clearCompare } = useCompare();
+    const { compareList, setCompareList, removeFromCompare, clearCompare } = useCartStore(useShallow((state) => ({
+        compareList: state.compareItems,
+        setCompareList: set=> state.setCompareItems(set),
+        removeFromCompare: state.removeFromCompare,
+        clearCompare: state.clearCompare
+    })));
 
     // Use slugs instead of IDs for SEO-friendly URLs
     const slugsString = searchParams.get('slugs') || '';
@@ -71,7 +78,7 @@ function CompareContent() {
                         if (existing) return existing;
 
                         try {
-                            const product = await RemoteServices.getProductBySlug(slug);
+                            const product = await ProductService.getProductBySlug(slug);
                             return product || null;
                         } catch (e) {
                             console.error(`Failed to load product with slug: ${slug}`, e);
@@ -208,7 +215,7 @@ function CompareContent() {
                                             {/* Image Container */}
                                             <div className="relative w-full h-40 flex items-center justify-center bg-gray-50/50 rounded-xl border border-gray-100 p-2">
                                                 <Image
-                                                    src={product.image?.full || '/placeholder.png'}
+                                                    src={(product as any).thumb?.url || (product as any).image?.full || '/placeholder.png'}
                                                     alt={`Image of ${product.name}`}
                                                     fill
                                                     className="object-contain"
@@ -373,8 +380,8 @@ function CompareContent() {
                                 // Extract all unique keys from all products' attributes to build a unified spec table
                                 const allKeys = new Set<string>();
                                 compareList.forEach(product => {
-                                    if (product.attributes?.product_attributes) {
-                                        Object.keys(product.attributes.product_attributes).forEach(key => allKeys.add(key));
+                                    if ((product as any).attributes?.product_attributes) {
+                                        Object.keys((product as any).attributes.product_attributes).forEach(key => allKeys.add(key));
                                     }
                                 });
 

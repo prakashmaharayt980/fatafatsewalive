@@ -1,9 +1,11 @@
 
 import React from 'react';
-import RemoteServices from '@/app/api/remoteservice';
+
 import ClientEmiPage from './_components/ClientEmiPage';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import { BannerItem } from '@/app/types/BannerTypes';
+import { ProductService } from '../api/services/product.service';
+import { MiscService } from '../api/services/misc.service';
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -11,7 +13,7 @@ interface PageProps {
 
 const getProductBySlug = async (slug: string): Promise<ProductDetails | null> => {
     try {
-        const product = await RemoteServices.getProductBySlug(slug);
+        const product = await ProductService.getProductBySlug(slug);
         return product || null;
     } catch (error) {
         console.error("Failed to fetch product for EMI Metadata:", error);
@@ -21,7 +23,7 @@ const getProductBySlug = async (slug: string): Promise<ProductDetails | null> =>
 
 const getEmiBanner = async (): Promise<BannerItem | null> => {
     try {
-        const res = await RemoteServices.getBannerBySlug('emi-banner-test');
+        const res = await MiscService.getBannerBySlug('emi-banner-test');
         return res.data|| null;
     } catch (error) {
         console.error("Failed to fetch EMI banner:", error);

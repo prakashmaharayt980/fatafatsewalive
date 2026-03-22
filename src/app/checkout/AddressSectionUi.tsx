@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import dynamic from 'next/dynamic';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import RemoteServices from '../api/remoteservice';
+
 import { nepalLocations } from './NepalLocations';
 import { toast } from 'sonner';
+import { AddressService } from '../api/services/address.service';
 
 // Import LeafletMapAddress (Dynamic import to avoid SSR)
 const LeafletMapAddress = dynamic(() => import('./LeafletMapAddress'), { ssr: false });
@@ -92,7 +93,7 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
   const fetchAddresses = async () => {
     setIsLoadingAddresses(true);
     try {
-      const response = await RemoteServices.ShippingAddressList();
+      const response = await AddressService.ShippingAddressList();
       if (response?.data) {
         setSavedAddresses(response.data);
         // Select default if available
@@ -124,7 +125,7 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
     if (!id) return;
     if (!confirm('Are you sure you want to delete this address?')) return;
     try {
-      await RemoteServices.ShippingAddressDelete(id);
+      await AddressService.ShippingAddressDelete(id);
       toast.success("Address deleted");
       fetchAddresses();
       if (selectedAddress?.id === id) setSelectedAddress(null);
@@ -198,7 +199,7 @@ export default function AddressSelectionUI({ setsubmittedvaluelist, mode = 'sele
         country: formData.country || 'Nepal'
       };
 
-      await RemoteServices.CreateShippingAddress(payload);
+      await AddressService.CreateShippingAddress(payload);
       toast.success("Address saved successfully");
       fetchAddresses();
       setDialogState('closed');

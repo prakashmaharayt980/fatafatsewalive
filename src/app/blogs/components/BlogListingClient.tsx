@@ -95,7 +95,7 @@ export default function BlogListingClient({
                                     </div>
                                 </div>
                                 <div className="hidden lg:block w-full lg:w-1/4">
-                                    <ProductDeals products={dealProducts} limit={8} title="Latest Deals" />
+                                    <ProductDeals products={dealProducts as any[]} limit={8} title="Latest Deals" />
                                 </div>
                             </div>
                         </section>
@@ -304,7 +304,7 @@ export default function BlogListingClient({
                                     </div>
 
                                     <div className="hidden lg:block w-full lg:w-1/4">
-                                        <ProductDeals products={dealProducts} limit={4} title="Video Deals" />
+                                        <ProductDeals products={dealProducts as any[]} limit={4} title="Video Deals" />
                                     </div>
                                 </div>
                             </section>

@@ -1,12 +1,16 @@
 import React from 'react';
 import { Metadata } from 'next';
-import RemoteServices from '../api/remoteservice';
+
 import BlogListingClient from './components/BlogListingClient';
 import { Article } from '../types/Blogtypes';
 import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
 import { getBannerData } from '../api/CachedHelper/getBannerData';
 import BannerFetcher from '../CommonVue/BannerFetcher';
 import { BannerItem } from '../types/BannerTypes';
+import { Cat } from 'lucide-react';
+import { ProductService } from '../api/services/product.service';
+import { CategoryService } from '../api/services/category.service';
+import { BlogService } from '../api/services/blog.service';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
@@ -50,8 +54,8 @@ export default async function BlogPage() {
 
     // Fetch only non-cached data in parallel
     const [categoriesResult, trendingResult] = await Promise.allSettled([
-        RemoteServices.getBlogCategories(),
-        RemoteServices.searchProducts({ search: 'smartphones', page: 1, per_page: 10 }),
+        BlogService.getBlogCategories(),
+        ProductService.searchProducts({ search: 'smartphones', page: 1, per_page: 10 }),
     ]);
 
     // Use cached latestArticles directly

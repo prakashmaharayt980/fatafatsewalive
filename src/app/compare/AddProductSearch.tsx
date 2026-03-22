@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Loader2, X, ChevronRight, Smartphone } from 'lucide-react';
-import RemoteServices from '../api/remoteservice';
+
 import Image from 'next/image';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { cn } from '@/lib/utils';
+import { ProductService } from '../api/services/product.service';
 
 // Simple debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -47,7 +48,7 @@ export default function AddProductSearch({ onSelect, excludeSlugs }: AddProductS
 
             setLoading(true);
             try {
-                const res = await RemoteServices.searchProducts({ search: debouncedQuery });
+                const res = await ProductService.searchProducts({ search: debouncedQuery });
                 const products = res.data || res || [];
                 setResults(products);
             } catch (error) {
@@ -224,9 +225,9 @@ export default function AddProductSearch({ onSelect, excludeSlugs }: AddProductS
                                                     <span className="text-sm font-bold text-[var(--colour-fsP2)]">
                                                         Rs. {product.discounted_price?.toLocaleString()}
                                                     </span>
-                                                    {product.discounted_price && product.price && product.discounted_price < product.price && (
+                                                    {product.discounted_price && product.price && product.discounted_price < (typeof product.price === 'object' ? product.price.current : product.price) && (
                                                         <span className="text-xs text-gray-400 line-through">
-                                                            Rs. {product.price.toLocaleString()}
+                                                            Rs. {(typeof product.price === 'object' ? product.price.current : product.price).toLocaleString()}
                                                         </span>
                                                     )}
                                                 </div>

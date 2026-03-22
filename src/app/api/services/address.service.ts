@@ -1,4 +1,4 @@
-import { apiPrivate } from './client';
+import { apiPrivate, apiPublic } from './client';
 
 export const AddressService = {
     // Address Endpoints
@@ -26,4 +26,7 @@ export const AddressService = {
 
     ShippingAddressDelete: (id: number) =>
         apiPrivate.delete(`/v1/shipping-addresses/${id}`).then(res => res.data),
-};
+    
+
+    GetLocations: () =>
+        apiPublic.get(`/v1/pages/locations`).then(res => res.data)}

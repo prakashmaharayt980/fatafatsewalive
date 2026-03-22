@@ -14,13 +14,15 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import RemoteServices from '@/app/api/remoteservice'
+
 import {
     REPAIR_CATEGORIES, PICKUP_LOCATIONS, REPAIR_SERVICES, CROSS_SELL_ITEMS,
     getRepairEstimate, getRepairLabels, initialRepairForm, RepairFormData
 } from './repair-helpers'
 import RepairSEOSections from './RepairSEOSections'
 import { useAddress } from '@/app/context/AddressContext'
+import { ProductService } from '../api/services/product.service'
+import { CategoryService } from '../api/services/category.service'
 
 interface BrandItem { id: number; name: string; slug: string; image?: string }
 interface ProductListItem {
@@ -97,9 +99,9 @@ export default function RepairClient({ brands }: RepairClientProps) {
         try {
             let res
             if (search?.trim()) {
-                res = await RemoteServices.searchProducts({ search: search.trim(), per_page: 20 })
+                res = await ProductService.searchProducts({ search: search.trim(), per_page: 20 })
             } else {
-                res = await RemoteServices.getBrandProducts(brandSlug, { per_page: 20 })
+                res = await CategoryService.getBrandProducts(brandSlug, { per_page: 20 })
             }
             setProducts(res?.data || [])
         } catch { setProducts([]) }

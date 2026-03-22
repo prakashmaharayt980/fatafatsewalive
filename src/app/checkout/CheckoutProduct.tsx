@@ -1,13 +1,16 @@
 'use client'
 
 import Image from 'next/image';
-import React, { Dispatch, SetStateAction } from 'react';
-import { useContextCart } from './CartContext1';
+import React, { Dispatch, SetStateAction, use } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingBag, Tag, Ticket, X } from 'lucide-react';
+import { ShoppingBag, Tag, Ticket, X, AlertCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { CheckoutState } from './checkoutTypes';
+import { useShallow } from 'zustand/react/shallow';
+import { useCartStore } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 interface CheckoutProduct {
   setsubmittedvaluelist: Dispatch<SetStateAction<CheckoutProduct['submittedvaluelist']>>;
@@ -30,7 +33,10 @@ export default function CheckoutProduct({
   handleApplyPromo,
   Stepstate
 }: CheckoutProduct) {
-  const { cartItems } = useContextCart();
+  const { cartItems } = useCartStore(useShallow((state) => ({
+    cartItems: state.cartItems
+  })));
+  const { authState, triggerLoginAlert } = useAuth();
   const items = cartItems?.items || [];
 
   const subtotal = cartItems?.cart_total || 0;
@@ -55,11 +61,20 @@ export default function CheckoutProduct({
 
 
       <div className="p-2 space-y-4 bg-white">
+
+
+
         {/* Products List - Enhanced Size */}
         <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           {items.map((item, index) => {
             const product = item.product;
-            const price = Number(product.price);
+            const extractPrice = (p: any): number => {
+                if (typeof p === 'number') return p;
+                if (typeof p === 'string') return parseInt(p) || 0;
+                if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
+                return 0;
+            };
+            const price = extractPrice((product as any).discounted_price || product.price);
             const quantity = item.quantity || 1;
             const itemTotal = price * quantity;
 
@@ -68,7 +83,7 @@ export default function CheckoutProduct({
                 {/* Image - Increased Size & Aspect Ratio */}
                 <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 shadow-sm group-hover:shadow-md transition-all duration-300">
                   <Image
-                    src={product.image?.thumb || product.image?.full}
+                    src={(product as any).thumb?.url || (product as any).image?.thumb || (product as any).image?.full || '/placeholder.png'}
                     alt={product.name || 'Product'}
                     fill
                     className="object-contain  group-hover:scale-110 transition-transform duration-500 ease-in-out"

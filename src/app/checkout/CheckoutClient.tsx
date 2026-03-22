@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { useContextCart } from './CartContext1';
-import RemoteServices, { OrderService } from '../api/remoteservice';
+
+
 import { useAuth } from '../context/AuthContext';
 import { trackInitiateCheckout } from '@/lib/Analytic';
 import {
@@ -31,10 +31,16 @@ import NicAsiaPayment from '../PaymentsBox/NicAsiaPayment';
 import EeswaPayment from '../PaymentsBox/EeswaPayment';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { OrderService } from '../api/services/order.service';
+import { useCartStore } from '../context/CartContext';
+import { useShallow } from 'zustand/react/shallow';
 
 
 export default function CheckoutClient() {
-    const { cartItems } = useContextCart();
+    const { cartItems, clearGuestData } = useCartStore(useShallow((state) => ({
+        cartItems: state.cartItems,
+        clearGuestData: state.clearGuestData
+    })));
     const { authState, isLoading, triggerLoginAlert } = useAuth();
     const userInfo = authState.user;
 
@@ -48,12 +54,11 @@ export default function CheckoutClient() {
 
 
     const router = useRouter();
-    // Auth protection
+    // Auth protection - For guest checkout, we do NOT trigger login alert here.
+    // Guests can proceed freely.
     useEffect(() => {
-        if (!isLoading && authState.isLoggedIn === false) {
-            triggerLoginAlert();
-        }
-    }, [isLoading, authState.isLoggedIn, triggerLoginAlert]);
+        // triggerLoginAlert is no longer mandatory for checkout page view
+    }, []);
 
     // Track Initiate Checkout
     useEffect(() => {
@@ -153,8 +158,7 @@ export default function CheckoutClient() {
 
 
             const payload = {
-
-                full_name: userInfo?.name,
+                full_name: userInfo?.name || (checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : 'Guest'),
                 products: currentItems.map((item: any) => ({
                     product_id: item.product?.id || item.id,
                     quantity: item.quantity || 1,
@@ -182,7 +186,16 @@ export default function CheckoutClient() {
                     setProcessingPaymentOrder(res.data.id);
                 }
                 if (res.success && res.data.payment_type !== 'cash') {
+                    if (!authState.isLoggedIn) {
+                        clearGuestData();
+                    }
                     toast.success('Order placed successfully!');
+                    router.push(`/checkout/Successpage/${res.data.id}`);
+                } else if (res.success && res.data.payment_type === 'cash') {
+                    if (!authState.isLoggedIn) {
+                        clearGuestData();
+                    }
+                    toast.success('Cash order placed successfully!');
                     router.push(`/checkout/Successpage/${res.data.id}`);
                 }
             })
@@ -210,16 +223,8 @@ export default function CheckoutClient() {
         );
     }
 
-    if (authState.isLoggedIn === false) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <p className="text-gray-600 font-medium mb-3">Please log in to continue.</p>
-                    <Link href="/" className="text-sm text-[var(--colour-fsP2)] font-semibold hover:underline">← Back to Home</Link>
-                </div>
-            </div>
-        );
-    }
+    // No longer blocking unauthenticated users
+    // Guests are allowed to proceed through the checkout flow
 
     // Render current step
     const renderStep = () => {

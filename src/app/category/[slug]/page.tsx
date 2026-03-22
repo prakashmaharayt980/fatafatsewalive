@@ -1,210 +1,129 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
-import RemoteServices from '@/app/api/remoteservice';
+import { Suspense, cache } from 'react';
+
 import { CategoryPageClient } from './components';
-import {
-    CategoryData,
-    BrandData,
-    CategoryProductsResponse,
-    SearchParams,
-} from './types';
-import { parseSlugAndId, formatPageTitle, parseFiltersFromSearchParams, buildApiParams } from './utils';
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
+import { CategoryService } from '@/app/api/services/category.service';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
-    searchParams: Promise<SearchParams>;
+    searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-async function getCategoryData(slug: string): Promise<CategoryData | null> {
-    try {
-        const response = await RemoteServices.getCategoryBySlug(slug);
-        return response?.data || null;
-    } catch (error) {
-        console.error('Error fetching category:', error);
-        return null;
-    }
+// ─── Server-side fetchers ─────────────────────────────────────────────────────
+
+const getCachedCategoryBySlug = cache(async (slug: string) => {
+    return CategoryService.getCategoryBySlug(slug)
+        .then(res => res?.data || null)
+        .catch(() => null);
+});
+
+async function getCategories(slug: string) {
+    const data = await getCachedCategoryBySlug(slug);
+    return data?.children || [];
 }
 
-async function getInitialProducts(
-    categoryId: string,
-    searchParams: SearchParams
-): Promise<CategoryProductsResponse> {
-    try {
-        const filters = parseFiltersFromSearchParams(searchParams);
-        const params = buildApiParams(
-            {
-                categories: filters.categories || [],
-                brands: filters.brands || [],
-                colors: filters.colors || [],
-                sizes: filters.sizes || [],
-                priceRange: filters.priceRange || [0, 100000],
-                sortBy: filters.sortBy || 'default',
-                inStock: filters.inStock || false,
-                onSale: filters.onSale || false,
-                emiOnly: filters.emiOnly || false,
-            }
-        );
-        const queryString = new URLSearchParams(params).toString();
-        const response = await RemoteServices.getCategoryProducts({
-            ...params as any,
-            id: categoryId
-        });
-        console.log('response', response.data)
-        return response
-    } catch (error) {
-        console.error('Error fetching products:', error);
-        return { data: [], meta: { current_page: 1, per_page: 20, total: 0, last_page: 1 } };
-    }
+/**
+ * Builds the initial product fetch params from URL searchParams.
+ * Only runs server-side on first load — subsequent fetches use the Server Action.
+ */
+function buildInitialParams(sp: Record<string, any>, sub_category?: string) {
+    return {
+        page: 1,
+        per_page: 10,
+        sort: sp.sort || 'newest',
+        min_price: sp.min_price ? Number(sp.min_price) : undefined,
+        max_price: sp.max_price ? Number(sp.max_price) : undefined,
+        brand: sp.brand || undefined,
+        category: sub_category || undefined,
+        emi_enabled: sp.emi_enabled === 'true' ? true : undefined,
+        pre_order: sp.pre_order === 'true' ? true : undefined,
+        exchange_available: sp.exchange_available === 'true' ? true : undefined,
+    };
 }
 
-async function getCategories(): Promise<CategoryData[]> {
-    try {
-        const response = await RemoteServices.getAllCategories();
-        // Handle array vs object response
-        const data = Array.isArray(response) ? response : response.data || [];
-        return data;
-    } catch (error) {
-        console.error('Error generating static params:', error);
-        return [];
-    }
+async function getInitialProducts(slug: string, sp: Record<string, any>, sub_category?: string) {
+    const params = buildInitialParams(sp, sub_category);
+    return CategoryService.getCategoryProducts(slug, params).catch(() => ({
+        data: { category: null, products: [] },
+        meta: { current_page: 1, per_page: 10, total: 0, last_page: 1 },
+    }));
 }
 
-async function getBrands(): Promise<BrandData[]> {
-    try {
-        const response = await RemoteServices.getAllBrands();
-        // Handle both array and object response
-        const data = Array.isArray(response) ? response : response?.data || [];
-        return data;
-    } catch (error) {
-        console.error('Error fetching brands:', error);
-        return [];
-    }
-}
+// ─── Metadata ─────────────────────────────────────────────────────────────────
 
-// ============================================
-// METADATA GENERATION (SEO)
-// ============================================
-export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
-    const resolvedParams = await params;
-    const resolvedSearchParams = await searchParams;
-    const { slug, id } = parseSlugAndId(resolvedParams.slug, resolvedSearchParams.id);
-
-    // Fetch category data for metadata
-    const category = await getCategoryData(slug);
-    const title = formatPageTitle(slug);
-
-    // Base URL for canonical
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yoursite.com';
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const category = await getCachedCategoryBySlug(slug);
+    const displayTitle = category?.title || category?.name || slug;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
     const canonicalUrl = `${baseUrl}/category/${slug}`;
-
-    // Build description
     const description = category?.description ||
-        `Browse our collection of ${title}. Find the best deals on ${title.toLowerCase()} with free shipping and easy returns.`;
+        `Browse our collection of ${displayTitle}. Find the best deals on ${displayTitle.toLowerCase()} with free shipping and easy returns.`;
 
-    // Build keywords
-    const keywords = [
-        title.toLowerCase(),
-        'buy ' + title.toLowerCase(),
-        title.toLowerCase() + ' online',
-        'best ' + title.toLowerCase(),
-        title.toLowerCase() + ' price',
-        'shop ' + title.toLowerCase(),
-    ];
-
-    // Prefer first banner image for OG over category image
     const bannerForOg = await getBannerData('blog-banner-test');
-    const ogImageUrl =
-        bannerForOg?.images?.[0]?.image?.full ||
-        category?.image ||
-        null;
+    const ogImageUrl = bannerForOg?.images?.[0]?.image?.full || category?.image || null;
 
     return {
-        title: `${title} | Fatafat Sewa - Shop Online`,
+        title: `${displayTitle} | Fatafat Sewa - Shop Online`,
         description,
-        keywords: keywords.join(', '),
+        keywords: [
+            displayTitle, `buy ${displayTitle}`, `${displayTitle} online`,
+            `best ${displayTitle}`, `${displayTitle} price`,
+        ].join(', '),
         openGraph: {
-            title: `${title} | Fatafat Sewa - Shop Online`,
+            title: `${displayTitle} | Fatafat Sewa - Shop Online`,
             description,
             url: canonicalUrl,
             siteName: 'Fatafat Sewa',
             type: 'website',
-            images: ogImageUrl ? [
-                {
-                    url: ogImageUrl,
-                    width: 1200,
-                    height: 630,
-                    alt: title,
-                },
-            ] : [],
+            images: ogImageUrl ? [{ url: ogImageUrl, width: 1200, height: 630, alt: displayTitle }] : [],
         },
         twitter: {
             card: 'summary_large_image',
-            title: `${title} | Fatafat Sewa - Shop Online`,
+            title: `${displayTitle} | Fatafat Sewa - Shop Online`,
             description,
             images: category?.image ? [category.image] : [],
         },
-        alternates: {
-            canonical: canonicalUrl,
-        },
+        alternates: { canonical: canonicalUrl },
         robots: {
-            index: true,
-            follow: true,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
-            'max-video-preview': -1,
+            index: true, follow: true,
+            'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1,
         },
     };
 }
 
-// ============================================
-// LOADING COMPONENT
-// ============================================
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
 function CategoryPageSkeleton() {
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
-                {/* Header Skeleton */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse" />
-                        <div className="h-6 w-24 bg-gray-100 rounded-full animate-pulse" />
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-32 bg-gray-200 rounded-xl animate-pulse" />
-                        <div className="h-10 w-44 bg-gray-200 rounded-xl animate-pulse" />
-                    </div>
-                </div>
-
+        <div className="min-h-screen bg-[#f8fafc]">
+            <div className="max-w-[1440px] mx-auto px-4 lg:px-8 py-8">
+                <div className="h-8 w-52 bg-gray-200 rounded-lg animate-pulse mb-6" />
                 <div className="flex gap-8">
-                    {/* Sidebar Skeleton */}
-                    <aside className="hidden lg:block w-72 flex-shrink-0">
-                        <div className="bg-white rounded-3xl p-6 space-y-6 border border-gray-100">
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} className="space-y-3">
-                                    <div className="h-4 w-24 bg-gray-200 rounded-full animate-pulse" />
-                                    {[...Array(4)].map((_, j) => (
-                                        <div
-                                            key={j}
-                                            className="h-10 bg-gray-100 rounded-xl animate-pulse"
-                                            style={{ animationDelay: `${j * 100}ms` }}
-                                        />
+                    <aside className="hidden lg:block w-72 shrink-0">
+                        <div className="bg-white rounded-xl p-5 border border-gray-100 space-y-4">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="space-y-2">
+                                    <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+                                    {[...Array(3)].map((_, j) => (
+                                        <div key={j} className="h-8 bg-gray-100 rounded-lg animate-pulse"
+                                            style={{ animationDelay: `${j * 80}ms` }} />
                                     ))}
                                 </div>
                             ))}
                         </div>
                     </aside>
-
-                    {/* Grid Skeleton */}
-                    <main className="flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <main className="flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                         {[...Array(12)].map((_, i) => (
-                            <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-100">
-                                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse" />
-                                <div className="p-4 space-y-3">
-                                    <div className="h-3 w-20 bg-gray-200 rounded-full animate-pulse" />
-                                    <div className="h-4 bg-gray-200 rounded-full animate-pulse" />
-                                    <div className="h-5 w-24 bg-gray-200 rounded-full animate-pulse" />
+                            <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-100"
+                                style={{ animationDelay: `${i * 40}ms` }}>
+                                <div className="aspect-square bg-gray-100 animate-pulse" />
+                                <div className="p-3 space-y-2">
+                                    <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+                                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                                    <div className="h-5 w-24 bg-gray-200 rounded animate-pulse" />
                                 </div>
                             </div>
                         ))}
@@ -215,183 +134,106 @@ function CategoryPageSkeleton() {
     );
 }
 
-function generateStructuredData(
-    title: string,
-    slug: string,
-    products: CategoryProductsResponse,
-    category: CategoryData | null
-) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yoursite.com';
+// ─── Structured data ──────────────────────────────────────────────────────────
 
-    // BreadcrumbList
-    const breadcrumb = {
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-            {
-                '@type': 'ListItem',
-                position: 1,
-                name: 'Home',
-                item: baseUrl,
-            },
-            {
-                '@type': 'ListItem',
-                position: 2,
-                name: title,
-                item: `${baseUrl}/category/${slug}`,
-            },
-        ],
-    };
-
-    // CollectionPage
-    const collectionPage = {
-        '@context': 'https://schema.org',
-        '@type': 'CollectionPage',
-        name: title,
-        description: category?.description || `Shop ${title} online`,
-        url: `${baseUrl}/category/${slug}`,
-        numberOfItems: products.meta?.total || 0,
-        ...(category?.image && { image: category.image }),
-    };
-
-    // ItemList for products
-    const itemList = {
-        '@context': 'https://schema.org',
-        '@type': 'ItemList',
-        itemListElement: (Array.isArray(products?.data) ? products.data : []).slice(0, 10).map((product, index) => ({
-            '@type': 'ListItem',
-            position: index + 1,
-            item: {
-                '@type': 'Product',
-                name: product.name,
-                url: `${baseUrl}/products/${product.slug}`,
-                image: product.image?.full || product.image?.preview,
-                offers: {
-                    '@type': 'Offer',
-                    price: product.discounted_price || product.price,
-                    priceCurrency: 'NPR',
-                    availability: product.quantity > 0
-                        ? 'https://schema.org/InStock'
-                        : 'https://schema.org/OutOfStock',
-                },
-                ...(product.average_rating > 0 && {
-                    aggregateRating: {
-                        '@type': 'AggregateRating',
-                        ratingValue: product.average_rating,
-                        bestRating: 5,
+function generateStructuredData(title: string, slug: string, products: any, category: any) {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
+    return [
+        {
+            '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+            itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+                { '@type': 'ListItem', position: 2, name: title, item: `${baseUrl}/category/${slug}` },
+            ],
+        },
+        {
+            '@context': 'https://schema.org', '@type': 'CollectionPage',
+            name: title,
+            description: category?.description || `Shop ${title} online`,
+            url: `${baseUrl}/category/${slug}`,
+            numberOfItems: products.meta?.total || 0,
+            ...(category?.image && { image: category.image }),
+        },
+        {
+            '@context': 'https://schema.org', '@type': 'ItemList',
+            itemListElement: (products?.data?.products ?? []).slice(0, 10).map((product: any, index: number) => ({
+                '@type': 'ListItem', position: index + 1,
+                item: {
+                    '@type': 'Product',
+                    name: product.name,
+                    url: `${baseUrl}/products/${product.slug}`,
+                    image: product.image?.full || product.image?.preview,
+                    offers: {
+                        '@type': 'Offer',
+                        price: product.discounted_price || product.price,
+                        priceCurrency: 'NPR',
+                        availability: product.quantity > 0
+                            ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
                     },
-                }),
-            },
-        })),
-    };
-
-    return [breadcrumb, collectionPage, itemList];
+                    ...(product.average_rating > 0 && {
+                        aggregateRating: {
+                            '@type': 'AggregateRating',
+                            ratingValue: product.average_rating,
+                            bestRating: 5,
+                        },
+                    }),
+                },
+            })),
+        },
+    ];
 }
 
-// ============================================
-// MAIN PAGE COMPONENT (SERVER)
-// ============================================
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default async function CategoryPage({ params, searchParams }: PageProps) {
-    // Resolve async params
-    const resolvedParams = await params;
-    const resolvedSearchParams = await searchParams;
+    const { slug } = await params;
+    const sp = await searchParams;
+    const sub_category = sp?.sub_category as string | undefined;
 
-    // Parse slug and ID
-    const { slug, id } = parseSlugAndId(resolvedParams.slug, resolvedSearchParams.id);
 
-    // Validate we have an ID
-    if (!id) {
-        notFound();
-    }
+    if (!slug) notFound();
 
-    // Fetch all data in parallel for performance
-    const [category, initialProducts, categories, brands, bannerData] = await Promise.all([
-        getCategoryData(slug),
-        getInitialProducts(id, resolvedSearchParams),
-        getCategories(),
-        getBrands(),
-        getBannerData('blog-banner-test'), // Fetch dynamic category banner
+    const [initialProducts, categories, bannerData] = await Promise.all([
+        getInitialProducts(slug, sp, sub_category),
+        getCategories(slug),
+        getBannerData('blog-banner-test'),
     ]);
 
-    // Format title
-    const title = formatPageTitle(slug);
+    const category = initialProducts?.data?.category || null;
+    const displayTitle = category?.title || category?.name || slug;
+    const structuredData = generateStructuredData(displayTitle, slug, initialProducts, category);
 
-    // Generate structured data
-    const structuredData = generateStructuredData(title, slug, initialProducts, category);
-
-    // Build SWR fallback for hydration
-    const fallback: Record<string, unknown> = {
-        categories: { data: categories },
-        brands: { data: brands },
-    };
-
-    // Derive preload URLs from bannerData for LCP optimisation
     const sortedBannerImages = bannerData?.images
         ? [...bannerData.images].sort((a: any, b: any) => a.order - b.order)
         : [];
     const preloadTopImage = sortedBannerImages[0]?.image?.full ?? null;
-    const preloadPortraitImage =
-        sortedBannerImages.length >= 2
-            ? sortedBannerImages[sortedBannerImages.length - 1]?.image?.full
-            : null;
+    const preloadPortraitImage = sortedBannerImages.length >= 2
+        ? sortedBannerImages[sortedBannerImages.length - 1]?.image?.full : null;
 
     return (
         <>
-            {/* Structured Data (JSON-LD) */}
             {structuredData.map((data, index) => (
-                <script
-                    key={index}
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-                />
+                <script key={index} type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
             ))}
-
-            {/* LCP Preload hints for banner images */}
             {preloadTopImage && (
-                // eslint-disable-next-line @next/next/no-head-element
                 <link rel="preload" as="image" href={preloadTopImage} fetchPriority="high" />
             )}
             {preloadPortraitImage && (
                 <link rel="preload" as="image" href={preloadPortraitImage} />
             )}
-
-            {/* Main Content */}
             <Suspense fallback={<CategoryPageSkeleton />}>
                 <CategoryPageClient
-                    categoryId={id}
+                    categoryId={slug}
                     slug={slug}
-                    title={title}
+                    title={displayTitle}
                     category={category}
                     bannerData={bannerData}
                     initialProducts={initialProducts}
                     initialCategories={categories}
-                    initialBrands={brands}
-                    fallback={fallback}
+                    sub_category={sub_category}
                 />
             </Suspense>
         </>
     );
 }
-
-// ============================================
-// STATIC PARAMS GENERATION (Optional - for SSG)
-// ============================================
-// Uncomment if you want to pre-generate popular category pages
-/*
-export async function generateStaticParams() {
-    try {
-        const categories = await getCategories();
-        return categories.slice(0, 20).map((category) => ({
-            slug: `${category.slug}&id=${category.id}`,
-        }));
-    } catch {
-        return [];
-    }
-}
-*/
-
-// ============================================
-// REVALIDATION CONFIG
-// ============================================
-export const revalidate = 3600; // Revalidate every hour
-export const dynamic = 'force-dynamic'; // Or 'force-static' for SSG

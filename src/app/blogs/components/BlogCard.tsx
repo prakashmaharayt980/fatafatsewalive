@@ -3,12 +3,12 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Article } from '../../types/Blogtypes';
+import { Article, BlogArticle } from '../../types/Blogtypes';
 import { formatDate, stripHtml } from '../../CommonVue/datetime';
 import imglogo from '../../assets/logoimg.png';
 
 interface BlogCardProps {
-    post: Article;
+    post: Article | BlogArticle;
 }
 
 export default function BlogCard({ post }: BlogCardProps) {
@@ -20,8 +20,8 @@ export default function BlogCard({ post }: BlogCardProps) {
             {/* Image Container */}
             <div className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                 <Image
-                    src={post.thumbnail_image?.full || imglogo.src}
-                    alt={post.title}
+                    src={('thumb' in post ? post.thumb?.url : post.thumbnail_image?.full) || imglogo.src}
+                    alt={('thumb' in post ? post.thumb?.alt_text : post.title) || post.title}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     width={500}
                     height={500}
@@ -29,9 +29,11 @@ export default function BlogCard({ post }: BlogCardProps) {
                 />
 
                 {/* Category Badge */}
-                <div className="absolute top-2.5 left-2.5 bg-[var(--colour-fsP2)] backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider shadow-md">
-                    {post.category?.title}
-                </div>
+                {post.category && (
+                    <div className="absolute top-2.5 left-2.5 bg-[var(--colour-fsP2)] backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider shadow-md">
+                        {'title' in post.category ? post.category.title : post.category.name}
+                    </div>
+                )}
             </div>
 
             {/* Content Area */}

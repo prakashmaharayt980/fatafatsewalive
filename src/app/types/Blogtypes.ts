@@ -61,3 +61,21 @@ export interface Article {
 export interface ApiResponse {
   data: Article[];
 }
+
+export interface BlogArticle {
+  id: number;
+  title: string;
+  slug: string;
+  short_desc: string | null;
+  thumb: {
+    url: string;
+    alt_text: string;
+  } | null;
+  publish_date: string;
+  author: string;
+  category: {
+    name: string;
+    slug: string;
+  } | null;
+  content?: string; // Sometimes present in details
+}

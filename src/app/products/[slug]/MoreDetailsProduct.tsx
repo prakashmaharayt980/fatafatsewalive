@@ -6,8 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import IconRenderer from '@/app/CommonVue/CustomIconImg';
-import RemoteServices from '@/app/api/remoteservice';
-import { ProductDetails } from '@/app/types/ProductDetailsTypes';
+
+
 import { Review } from '@/app/types/ReviewTypes';
 // AlertDialog removed — login is handled by AuthContext.triggerLoginAlert()
 import { useAuth } from '@/app/context/AuthContext';
@@ -17,15 +17,17 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 
+import { ReviewService } from '@/app/api/services/reviews.service';
+import { ProductData } from '@/app/types/ProductDetailsTypes';
 
-import RelatedComparison from './RelatedComparison';
+
 
 interface MoreDetailsProductProps {
-  productDesciption: string;
+  productDescription: string;
   keyFeatures?: Record<string, string>;
   specifications?: Record<string, string>;
   productID: number;
-  product?: ProductDetails; // Added product prop
+  product?: ProductData; // Added product prop
   categoryId?: string; // Added categoryId prop
 }
 
@@ -40,7 +42,7 @@ interface RatingInterface {
 }
 
 export default function MoreDetailsProduct({
-  productDesciption,
+  productDescription,
   keyFeatures = {},
   specifications = {},
   productID,
@@ -74,7 +76,7 @@ export default function MoreDetailsProduct({
 
   useEffect(() => {
     if (productID) {
-      RemoteServices.getReviews(productID, currentPage)
+      ReviewService.getReviews(productID, currentPage)
         .then(res => {
           setReviews({
             data: res.data,
@@ -122,7 +124,7 @@ export default function MoreDetailsProduct({
     if (!Rating.newReview.trim() || Rating.newRating === 0) return;
     setRating({ ...Rating, isSubmittingReview: true });
 
-    RemoteServices.createReview({
+    ReviewService.createReview({
       id: productID,
       data: {
         rating: Rating.newRating,
@@ -199,7 +201,7 @@ export default function MoreDetailsProduct({
   const isBothExpanded = isDescExpanded && isSpecsExpanded;
 
   return (
-    <div className="w-full  mx-auto py-4 bg-white" id="specifications">
+    <div className="w-full  mx-auto py-4 px-3 bg-white" id="specifications">
       {/* Description + Specifications Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
@@ -216,7 +218,7 @@ export default function MoreDetailsProduct({
               !isDescExpanded && "max-h-[500px] overflow-hidden"
             )}>
               <div >
-                <ParsedContent description={productDesciption} className="" />
+                <ParsedContent description={productDescription} className="" />
               </div>
 
               {/* Gradient Overlay for Description */}
@@ -292,10 +294,6 @@ export default function MoreDetailsProduct({
               </div>
 
 
-              {/* Related Comparison Widget */}
-              {product && categoryId && (
-                <RelatedComparison currentProduct={product} categoryId={categoryId} />
-              )}
             </section>
           )}
         </div>
@@ -315,26 +313,27 @@ export default function MoreDetailsProduct({
         </Button>
       </div>
 
+
       {/* Reviews Section — Rating Summary + Review Cards */}
-      <div className="mt-8" id="reviews">
+      <div className="mt-12" id="reviews">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Ratings & Reviews</h2>
+          <div className="w-1.5 h-6 bg-[var(--colour-fsP2)] rounded-full"></div>
+          <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Ratings & Reviews</h2>
           {reviews?.meta?.total ? (
-            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
               {reviews.meta.total} {reviews.meta.total === 1 ? 'review' : 'reviews'}
             </span>
           ) : null}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 
           {/* LEFT: Rating Summary Card */}
           <div className="lg:col-span-4">
-            <div className="bg-white  rounded border border-gray-200 p-6 space-y-6 lg:sticky lg:top-24 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-7 space-y-6 lg:sticky lg:top-24 shadow-sm">
               {/* Overall Rating */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full p-0 m-0 bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] text-2xl font-bold border-4 border-white shadow-sm ring-1 ring-[var(--colour-fsP2)]/10">
+              <div className="flex items-center gap-5">
+                <div className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm text-gray-900 text-3xl font-black tracking-tighter">
                   {reviews?.meta?.average_rating?.toFixed(1) || product?.average_rating?.toFixed(1) || '0.0'}
                 </div>
                 <div>
@@ -372,16 +371,16 @@ export default function MoreDetailsProduct({
                   return (
                     <div key={star} className="flex items-center gap-3">
                       <div className="flex items-center gap-1 w-8 flex-shrink-0">
-                        <span className="text-xs font-bold text-slate-700">{star}</span>
+                        <span className="text-[11px] font-bold text-slate-600">{star}</span>
                         <Star size={10} className="fill-slate-400 text-slate-400" />
                       </div>
-                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden border border-gray-200/50">
                         <div
-                          className="h-full rounded-full bg-[var(--colour-fsP2)] transition-all duration-500 opacity-80"
+                          className="h-full rounded-full bg-[var(--colour-fsP2)] transition-all duration-500 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)]"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-400 w-8 text-right tabular-nums">{count}</span>
+                      <span className="text-[11px] font-semibold text-slate-400 w-8 text-right tabular-nums">{count}</span>
                     </div>
                   );
                 })}
@@ -391,9 +390,9 @@ export default function MoreDetailsProduct({
               {!Rating.commentOpen && (
                 <Button
                   onClick={handleWriteReviewClick}
-                  className="w-full h-11 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold rounded shadow-sm text-sm transition-all active:scale-[0.98]"
+                  className="w-full h-11 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold rounded-xl shadow-sm text-sm transition-all active:scale-[0.98]"
                 >
-                  <MessageCircleMore className="w-6 sm:w-10 h-6 sm:h-10 mr-2" /> Write a Review
+                  <MessageCircleMore className="w-5 sm:w-5 h-5 sm:h-5 mr-2" /> Write a Review
                 </Button>
               )}
             </div>
@@ -520,7 +519,7 @@ export default function MoreDetailsProduct({
 
             {/* Review Cards */}
             {reviews?.meta && reviews.meta.total > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {reviews.data.map((review, index) => {
                   const ratingLabel =
                     review.rating >= 4 ? 'text-emerald-700 bg-emerald-50 border-emerald-100' :
@@ -528,28 +527,28 @@ export default function MoreDetailsProduct({
                         'text-red-700 bg-red-50 border-red-100';
 
                   return (
-                    <div key={review.id || index} className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 hover:border-gray-200 transition-colors">
+                    <div key={review.id || index} className="bg-gray-50/50 rounded-2xl border border-gray-100/60 p-5 sm:p-6 transition-colors hover:bg-gray-50/80">
                       {/* Top row: avatar + name + rating badge + date */}
-                      <div className="flex items-start gap-3">
-                        <Avatar className="w-9 h-9 flex-shrink-0">
-                          <AvatarImage src={review.user.avatar_image?.thumb || "/svgfile/menperson.svg"} />
-                          <AvatarFallback className="bg-slate-200 text-slate-600 font-bold text-xs">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="w-10 h-10 flex-shrink-0 border bg-white border-white shadow-sm ring-1 ring-gray-100">
+                          <AvatarImage src={review.user.avatar_image?.thumb || "/svgfile/menperson.svg"} className="object-cover" />
+                          <AvatarFallback className="bg-slate-100 text-slate-700 font-black text-xs">
                             {review.user.name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-semibold text-gray-900 truncate">{review.user.name}</span>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <span className="text-sm font-bold text-gray-900 truncate tracking-tight">{review.user.name}</span>
                               <span className={cn(
-                                "inline-flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded border",
+                                "inline-flex items-center gap-1 text-[10px] font-black px-1.5 py-0.5 rounded border shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)]",
                                 ratingLabel
                               )}>
                                 <Star size={10} className="fill-current" />
                                 {review.rating}
                               </span>
                             </div>
-                            <time className="text-[11px] text-gray-400 flex-shrink-0">
+                            <time className="text-[11px] font-medium text-slate-400 flex-shrink-0">
                               {new Date(review.created_at).toLocaleDateString(undefined, {
                                 year: 'numeric',
                                 month: 'short',
@@ -559,19 +558,21 @@ export default function MoreDetailsProduct({
                           </div>
 
                           {/* Verified badge */}
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <Check className="w-3 h-3 text-green-500" />
-                            <span className="text-[10px] text-green-600 font-medium">Verified Purchase</span>
+                          <div className="flex items-center gap-1 mt-1">
+                            <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-white" />
+                            </div>
+                            <span className="text-[10px] text-emerald-600 font-bold tracking-tight">Verified Buyer</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Stars row */}
-                      <div className="flex items-center gap-0.5 mt-3">
+                      <div className="flex items-center gap-0.5 mt-4 ml-[56px] opacity-90">
                         {Array.from({ length: 5 }, (_, i) => (
                           <Star
                             key={i}
-                            size={13}
+                            size={14}
                             className={cn(
                               i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'
                             )}
@@ -580,7 +581,7 @@ export default function MoreDetailsProduct({
                       </div>
 
                       {/* Review text */}
-                      <p className="text-sm text-gray-600 leading-relaxed mt-2 whitespace-pre-line">
+                      <p className="text-sm text-slate-700 font-medium leading-relaxed mt-2.5 ml-[56px] whitespace-pre-line">
                         {review.review}
                       </p>
                     </div>

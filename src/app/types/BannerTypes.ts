@@ -1,13 +1,18 @@
 export interface BannerImage {
     id: number
-    link: string
-    content: string
-    image: {
+    link?: string
+    content?: string
+    image?: {
         full: string
         thumb: string
         banner: string
     }
-    order: number
+    order?: number
+    url?: string
+    status?: boolean
+    alt_text?: string
+    start_date?: string
+    end_date?: string
 }
 
 export interface BannerItem {

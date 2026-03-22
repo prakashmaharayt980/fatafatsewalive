@@ -4,13 +4,7 @@ import React, { memo, useEffect } from 'react';
 import { X, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface MobileFilterDrawerProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onClear: () => void;
-    onApply: () => void;
-    children: React.ReactNode;
-}
+import { MobileFilterDrawerProps } from './interfaces';
 
 const MobileFilterDrawer = memo(({
     isOpen,
@@ -20,11 +14,7 @@ const MobileFilterDrawer = memo(({
     children,
 }: MobileFilterDrawerProps) => {
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        document.body.style.overflow = isOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [isOpen]);
 
@@ -46,7 +36,6 @@ const MobileFilterDrawer = memo(({
             aria-modal="true"
             aria-label="Filter options"
         >
-            {/* Backdrop */}
             <div
                 className={cn(
                     'absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300',
@@ -56,14 +45,12 @@ const MobileFilterDrawer = memo(({
                 aria-hidden="true"
             />
 
-            {/* Drawer */}
             <div
                 className={cn(
                     'absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-white transform transition-transform duration-300 ease-out flex flex-col',
                     isOpen ? 'translate-x-0' : '-translate-x-full'
                 )}
             >
-                {/* Header */}
                 <div className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-lg bg-[var(--colour-fsP2)] flex items-center justify-center">
@@ -80,12 +67,10 @@ const MobileFilterDrawer = memo(({
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 overflow-y-auto">
                     {children}
                 </div>
 
-                {/* Footer */}
                 <div className="bg-white border-t border-gray-100 px-4 py-3 flex gap-2.5 shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
                     <button
                         onClick={onClear}

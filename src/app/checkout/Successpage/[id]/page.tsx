@@ -2,8 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import RemoteServices, { OrderService } from '@/app/api/remoteservice';
+
 import SuccessClient, { OrderData } from './SuccessClient';
+import { OrderService } from '@/app/api/services/order.service';
 
 interface SuccessPageProps {
     params: Promise<{

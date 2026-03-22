@@ -14,10 +14,16 @@ interface BlogFastSaleProductCardsProps {
 export default function BlogFastSaleProductCards({ product, index = 0 }: BlogFastSaleProductCardsProps) {
     if (!product) return null;
 
-    const originalPrice = typeof product.price === 'string' ? parseInt(product.price) : product.price;
-    const discountedPrice = typeof product.discounted_price === 'string' ? parseInt(product.discounted_price) : product.discounted_price;
+    const extractPrice = (p: any): number => {
+        if (typeof p === 'number') return p;
+        if (typeof p === 'string') return parseInt(p) || 0;
+        if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
+        return 0;
+    };
+    const originalPrice = extractPrice(product.price);
+    const discountedPrice = extractPrice((product as any).discounted_price || product.price);
     const hasDiscount = originalPrice > discountedPrice;
-    const discountPercent = hasDiscount ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100) : 0;
+    const discountPercent = hasDiscount && originalPrice > 0 ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100) : 0;
     const imageUrl = product.image?.preview
 
     // Mock rating

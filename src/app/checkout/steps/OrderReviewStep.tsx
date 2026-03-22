@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { use, useState } from 'react';
 import {
     MapPin, User, Truck, CreditCard, ChevronLeft, ShoppingBag, Check,
     Gift, EyeOff, Edit2, Clock, Loader2, ShieldCheck, ArrowRight, Package, AlertCircle
@@ -8,9 +8,11 @@ import {
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { CheckoutState, RECIPIENT_TYPES, CHECKOUT_STEPS, CheckoutStep } from '../checkoutTypes';
-import { useContextCart } from '../CartContext1';
+
 import { checkoutReviewSchema } from '../checkoutValidation';
 import * as yup from 'yup';
+import { useCartStore } from '@/app/context/CartContext';
+import { useShallow } from 'zustand/react/shallow';
 
 interface OrderReviewStepProps {
     state: CheckoutState;
@@ -31,7 +33,9 @@ export default function OrderReviewStep({
     shippingCost,
     discount,
 }: OrderReviewStepProps) {
-    const { cartItems } = useContextCart();
+    const { cartItems } = useCartStore(useShallow((state) => ({
+        cartItems: state.cartItems
+    })));
     const { address, recipient, delivery, paymentMethod } = state;
 
     const [errors, setErrors] = useState<{ [key: string]: string | null }>({});

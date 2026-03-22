@@ -1,21 +1,21 @@
 'use client';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import {
   Drawer,
-
   DrawerContent,
-
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
 
-import { useContextCart } from './CartContext1';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
+import { useCartStore } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { useShallow } from 'zustand/react/shallow';
 
 const CheckoutDrawer = () => {
+  const { authState, triggerLoginAlert } = useAuth();
   const {
     cartItems,
     isCartOpen,
@@ -23,23 +23,41 @@ const CheckoutDrawer = () => {
     addToCart,
     deleteFromCart,
     CartUpdateQuantity
+  } = useCartStore(useShallow(state => ({
+    cartItems: state.cartItems,
+    isCartOpen: state.isCartOpen,
+    setIsCartOpen: state.setIsCartOpen,
+    addToCart: state.addToCart,
+    deleteFromCart: state.deleteFromCart,
+    CartUpdateQuantity: state.CartUpdateQuantity
+  })));
 
-
-  } = useContextCart();
   const router = useRouter();
 
-
-
-
-  const handlerouter = () => {
+  const handlerouter = useCallback(() => {
     router.push('/checkout');
     setIsCartOpen(false);
-  }
+  }, [router, setIsCartOpen]);
 
+  const handleQuantityIncrease = useCallback(async (e: React.MouseEvent, productId: number, product: any) => {
+    e.stopPropagation();
+    await addToCart(productId, 1, authState, triggerLoginAlert, product);
+  }, [addToCart, authState, triggerLoginAlert]);
 
+  const handleQuantityDecrease = useCallback(async (e: React.MouseEvent, itemId: number, currentQuantity: number) => {
+    e.stopPropagation();
+    if (currentQuantity > 1) {
+      await CartUpdateQuantity(itemId, currentQuantity - 1);
+    }
+  }, [CartUpdateQuantity]);
+
+  const handleDeleteItem = useCallback(async (e: React.MouseEvent, itemId: number) => {
+    e.stopPropagation();
+    await deleteFromCart(itemId);
+  }, [deleteFromCart]);
 
   return (
-    <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}  >
+    <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
       <DrawerContent className="max-h-[45vh] max-w-5xl mx-auto border border-gray-200 rounded-t-2xl overflow-hidden bg-white shadow-lg">
         <DrawerHeader className="text-center border-b border-gray-100 px-4 py-3">
           <DrawerTitle className="flex items-center justify-center gap-2 text-lg font-bold text-gray-900">
@@ -79,11 +97,10 @@ const CheckoutDrawer = () => {
                   {/* Product Image */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-100 rounded-xl flex-shrink-0 overflow-hidden relative">
                     <Image
-                      src={item.product.image.preview || '/placeholder.png'}
+                      src={item.product.thumb?.url || '/placeholder.png'}
                       alt={item.product.name}
                       fill
                       sizes="80px"
-
                       className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -94,7 +111,7 @@ const CheckoutDrawer = () => {
                       {item.product.name}
                     </h4>
                     <p className="text-sm font-bold text-[var(--colour-fsP2)] mt-1">
-                      Rs. {(Number(item.product.price) * item.quantity).toLocaleString()}
+                      Rs. {(item.price * item.quantity).toLocaleString()}
                     </p>
                   </div>
 
@@ -102,10 +119,7 @@ const CheckoutDrawer = () => {
                   <div className="flex items-center gap-2 pl-2 flex-shrink-0">
                     <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 h-9">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          CartUpdateQuantity(item.id, item.quantity - 1);
-                        }}
+                        onClick={(e) => handleQuantityDecrease(e, item.id, item.quantity)}
                         className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-l-lg disabled:opacity-40"
                         disabled={item.quantity <= 1}
                       >
@@ -113,20 +127,14 @@ const CheckoutDrawer = () => {
                       </button>
                       <span className="w-8 text-center text-sm font-bold text-gray-800 select-none">{item.quantity}</span>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(item.product.id, 1);
-                        }}
+                        onClick={(e) => handleQuantityIncrease(e, item.product_id, item.product)}
                         className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-r-lg"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteFromCart(item.id);
-                      }}
+                      onClick={(e) => handleDeleteItem(e, item.id)}
                       className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import { ProductDetails } from "@/app/types/ProductDetailsTypes";
+import { ProductData } from "@/app/types/ProductDetailsTypes";
 
 export interface UserInfo {
     name: string;
@@ -49,7 +49,7 @@ export interface EmiCalculationState {
 export interface EmiContextState {
     userInfo: UserInfo;
     files: EmiFiles;
-    product: ProductDetails | null;
+    product: ProductData | null;
     emiCalculation: EmiCalculationState;
     hasCreditCard: string;
     bankinfo: BankInfo;

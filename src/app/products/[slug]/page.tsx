@@ -1,21 +1,28 @@
-import React from "react";
-import RemoteServices from "@/app/api/remoteservice";
-import { SlugProps } from "@/app/types/PropSlug";
-import { ProductDetails } from "@/app/types/ProductDetailsTypes";
-import ProductPageClient from "./ProductPageClient";
-import { Metadata } from "next";
+import React, { cache } from "react";
 
-// Fetch product data on server
-async function getProduct(slug: string): Promise<ProductDetails | null> {
+import { SlugProps } from "@/app/types/PropSlug";
+import { ProductData } from "@/app/types/ProductDetailsTypes";
+
+import { Metadata } from "next";
+import { ProductService } from "@/app/api/services/product.service";
+import ProductPageClient from "./ProductPageClient";
+
+// Force dynamic rendering — always fetch fresh product data
+export const dynamic = "force-dynamic";
+
+
+// Fetch product data on server — wrapped in cache() to deduplicate
+// between generateMetadata() and the page component
+const getProduct = cache(async (slug: string): Promise<ProductData | null> => {
   if (!slug) return null;
   try {
-    const data = await RemoteServices.getProductBySlug(slug);
+    const data = await ProductService.getProductBySlug(slug);
     return data;
   } catch (error) {
     console.error("Error fetching product:", error);
     return null;
   }
-}
+});
 
 export async function generateMetadata({ params }: SlugProps): Promise<Metadata> {
   const resolvedParams = await params;
@@ -31,7 +38,7 @@ export async function generateMetadata({ params }: SlugProps): Promise<Metadata>
 
   const cleanCanonicalUrl = `https://fatafatsewa.com/products/${product.slug}`;
 
-  const description = product.short_description || product.description?.replace(/<[^>]*>/g, '').substring(0, 160) || `Buy ${product.name} at the best price in Nepal from Fatafat Sewa.`;
+  const description = product.description?.short_description || `Buy ${product.name} at the best price in Nepal from Fatafat Sewa.`;
 
   return {
     title: `${product.name} | Buy Online at Best Price in Nepal | Fatafat Sewa`,
@@ -41,7 +48,7 @@ export async function generateMetadata({ params }: SlugProps): Promise<Metadata>
       canonical: cleanCanonicalUrl,
     },
     openGraph: {
-      images: [product.image?.full || ""],
+      images: [product.thumb.url || ""],
       title: product.name,
       description,
       url: cleanCanonicalUrl,
@@ -71,8 +78,8 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": productDetails.name,
-    "image": [productDetails.image?.full],
-    "description": productDetails.short_description || productDetails.description,
+    "image": [productDetails.thumb.url || ""],
+    "description": productDetails.description?.short_description || "",
     "sku": productDetails.sku,
     "brand": {
       "@type": "Brand",
@@ -82,16 +89,16 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
       "@type": "Offer",
       "url": `https://fatafatsewa.com/products/${productDetails.slug}`,
       "priceCurrency": "NPR",
-      "price": productDetails.discounted_price || productDetails.price,
+      "price": productDetails.price || 0,
       "priceValidUntil": "2026-12-31", // Example validity
       "itemCondition": "https://schema.org/NewCondition",
       "availability": productDetails.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
     },
-    "aggregateRating": productDetails.average_rating ? {
-      "@type": "AggregateRating",
-      "ratingValue": productDetails.average_rating,
-      "reviewCount": productDetails.reviews?.meta?.total || 1
-    } : undefined
+    // "aggregateRating": productDetails. ? {
+    //   "@type": "AggregateRating",
+    //   "ratingValue": productDetails.average_rating,
+    //   "reviewCount": productDetails.reviews?.meta?.total || 1
+    // } : undefined
   };
 
   return (
@@ -105,3 +112,7 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
     </>
   );
 }
+
+
+
+export const revalidate = 0;

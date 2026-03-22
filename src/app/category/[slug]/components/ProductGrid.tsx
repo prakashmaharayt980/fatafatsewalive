@@ -1,79 +1,73 @@
 'use client';
 
-import React, { memo, useMemo, useCallback } from 'react';
-import { Loader2, ShoppingBag } from 'lucide-react';
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
-import {
-    FilterState,
-    CategoryProductsResponse,
-    CategoryData,
-    BrandData,
-    GRID_CONFIGS,
-    COLORS,
-    ViewMode,
-} from '../types';
-import { useProducts } from '../hooks';
-import ProductCard, { ProductCardSkeleton, ProductCardRow, ProductCardRowSkeleton } from './ProductCard';
+import { BasketProduct } from '@/app/types/ProductDetailsTypes';
+import { FilterState, ViewMode, INITIAL_FILTERS } from '../types';
 import { ActiveFilterTag } from './FilterSidebar';
+import ProductCard, { ProductCardRow } from './ProductCard';
+import {
+    ProductGridProps,
+    ActiveFiltersBarProps,
+    EmptyStateProps,
+    LoadingGridProps,
+} from './interfaces';
 
-// ============================================
-// EMPTY STATE
-// ============================================
-interface EmptyStateProps {
-    onClearFilters: () => void;
-}
+// ─── Grid columns by view mode ────────────────────────────────────────────────
+
+const GRID_COLS: Record<ViewMode, string> = {
+    grid3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    grid4: 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+    grid5: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+    list:  'grid-cols-1',
+};
+
+// ─── Loading skeleton ─────────────────────────────────────────────────────────
+
+const LoadingGrid = memo(({ count = 10, viewMode = 'grid5' }: LoadingGridProps) => (
+    <div className={cn('grid gap-4', GRID_COLS[viewMode])}>
+        {[...Array(count)].map((_, i) => (
+            <div
+                key={i}
+                className="bg-white rounded-xl border border-gray-100 overflow-hidden"
+                style={{ animationDelay: `${i * 40}ms` }}
+            >
+                <div className="aspect-square bg-gray-100 animate-pulse" />
+                <div className="p-3 space-y-2">
+                    <div className="h-2.5 w-16 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3.5 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3.5 w-3/4 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-5 w-24 bg-gray-200 rounded animate-pulse mt-1" />
+                </div>
+            </div>
+        ))}
+    </div>
+));
+LoadingGrid.displayName = 'LoadingGrid';
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
 
 const EmptyState = memo(({ onClearFilters }: EmptyStateProps) => (
-    <div className="text-center py-20">
-        <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShoppingBag size={40} className="text-gray-400" />
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-        <p className="text-gray-500 mb-6 max-w-sm mx-auto">
-            We couldn't find any products matching your criteria. Try adjusting your filters.
-        </p>
+        <p className="text-[15px] font-medium text-gray-700 mb-1">No products found</p>
+        <p className="text-[13px] text-gray-400 mb-5">Try adjusting or clearing your filters</p>
         <button
             onClick={onClearFilters}
-            className="bg-[var(--colour-fsP2)] text-white px-6 py-2.5 rounded-full font-medium hover:opacity-90 transition-all shadow-lg cursor-pointer"
+            className="px-5 py-2 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
         >
-            Clear All Filters
+            Clear filters
         </button>
     </div>
 ));
 EmptyState.displayName = 'EmptyState';
 
-// ============================================
-// LOADING GRID
-// ============================================
-interface LoadingGridProps {
-    count?: number;
-    viewMode?: ViewMode;
-}
-
-const LoadingGrid = memo(({ count = 12, viewMode = 'grid5' }: LoadingGridProps) => (
-    <div className={cn('grid gap-2 sm:gap-4 lg:gap-6', GRID_CONFIGS[viewMode])}>
-        {[...Array(count)].map((_, i) =>
-            viewMode === 'list' ? (
-                <ProductCardRowSkeleton key={i} />
-            ) : (
-                <ProductCardSkeleton key={i} />
-            )
-        )}
-    </div>
-));
-LoadingGrid.displayName = 'LoadingGrid';
-
-// ============================================
-// ACTIVE FILTERS BAR
-// ============================================
-interface ActiveFiltersBarProps {
-    filters: FilterState;
-    categories: CategoryData[];
-    brands: BrandData[];
-    onToggleFilter: (key: 'categories' | 'brands' | 'colors' | 'sizes', value: string | number) => void;
-    onFiltersChange: (filters: FilterState) => void;
-    onClearAll: () => void;
-}
+// ─── Active filters bar ───────────────────────────────────────────────────────
 
 const ActiveFiltersBar = memo(({
     filters,
@@ -83,123 +77,104 @@ const ActiveFiltersBar = memo(({
     onFiltersChange,
     onClearAll,
 }: ActiveFiltersBarProps) => {
-    const activeFilters = useMemo(() => {
-        const items: Array<{ key: string; label: string; onRemove: () => void }> = [];
+    const tags: { label: string; onRemove: () => void }[] = [];
 
-        filters.categories.forEach((catId) => {
-            const cat = categories.find((c) => c.id === catId);
-            if (cat) {
-                items.push({
-                    key: `cat-${catId}`,
-                    label: cat.title,
-                    onRemove: () => onToggleFilter('categories', catId),
-                });
-            }
+    filters.category?.forEach(slug => {
+        const cat = categories.find(c => c.slug === slug);
+        if (cat) tags.push({
+            label: cat.title,
+            onRemove: () => onToggleFilter('category', slug),
         });
+    });
 
-        filters.brands.forEach((brandId) => {
-            const brand = brands.find((b) => b.id === brandId);
-            if (brand) {
-                items.push({
-                    key: `brand-${brandId}`,
-                    label: brand.name,
-                    onRemove: () => onToggleFilter('brands', brandId),
-                });
-            }
+    filters.brand?.forEach(slug => {
+        const brand = brands.find(b => b.slug === slug);
+        if (brand) tags.push({
+            label: brand.name,
+            onRemove: () => onToggleFilter('brand', slug),
         });
+    });
 
-        filters.colors.forEach((color) => {
-            items.push({
-                key: `color-${color}`,
-                label: COLORS.find((c) => c.id === color)?.label || color,
-                onRemove: () => onToggleFilter('colors', color),
-            });
+    if (filters.min_price > 0 || filters.max_price < 100000) {
+        tags.push({
+            label: `Rs. ${filters.min_price.toLocaleString()} – ${filters.max_price.toLocaleString()}`,
+            onRemove: () => onFiltersChange({
+                ...filters,
+                min_price: INITIAL_FILTERS.min_price,
+                max_price: INITIAL_FILTERS.max_price,
+            }),
         });
+    }
 
-        filters.sizes.forEach((size) => {
-            items.push({
-                key: `size-${size}`,
-                label: `Size: ${size.toUpperCase()}`,
-                onRemove: () => onToggleFilter('sizes', size),
-            });
-        });
+    if (filters.pre_order) tags.push({
+        label: 'Pre Order',
+        onRemove: () => onFiltersChange({ ...filters, pre_order: false }),
+    });
 
-        if (filters.inStock) {
-            items.push({
-                key: 'inStock',
-                label: 'In Stock',
-                onRemove: () => onFiltersChange({ ...filters, inStock: false }),
-            });
-        }
+    if (filters.emi_enabled) tags.push({
+        label: 'EMI Available',
+        onRemove: () => onFiltersChange({ ...filters, emi_enabled: false }),
+    });
 
-        if (filters.onSale) {
-            items.push({
-                key: 'onSale',
-                label: 'On Sale',
-                onRemove: () => onFiltersChange({ ...filters, onSale: false }),
-            });
-        }
+    if (filters.exchange_available) tags.push({
+        label: 'Exchange Available',
+        onRemove: () => onFiltersChange({ ...filters, exchange_available: false }),
+    });
 
-        if (filters.emiOnly) {
-            items.push({
-                key: 'emiOnly',
-                label: 'EMI Available',
-                onRemove: () => onFiltersChange({ ...filters, emiOnly: false }),
-            });
-        }
-
-        if (filters.priceRange[0] > 0 || filters.priceRange[1] < 100000) {
-            items.push({
-                key: 'price',
-                label: `Rs. ${filters.priceRange[0].toLocaleString()} - Rs. ${filters.priceRange[1].toLocaleString()}`,
-                onRemove: () => onFiltersChange({ ...filters, priceRange: [0, 100000] }),
-            });
-        }
-
-        return items;
-    }, [filters, categories, brands, onToggleFilter, onFiltersChange]);
-
-    if (activeFilters.length === 0) return null;
+    if (!tags.length) return null;
 
     return (
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-            {activeFilters.map((filter) => (
-                <ActiveFilterTag
-                    key={filter.key}
-                    label={filter.label}
-                    onRemove={filter.onRemove}
-                />
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+            {tags.map(tag => (
+                <ActiveFilterTag key={tag.label} label={tag.label} onRemove={tag.onRemove} />
             ))}
-            <button
-                onClick={onClearAll}
-                className="text-sm text-gray-500 hover:text-[var(--colour-fsP2)] font-medium ml-2 transition-colors cursor-pointer"
-            >
-                Clear All
-            </button>
+            {tags.length > 1 && (
+                <button
+                    onClick={onClearAll}
+                    className="text-[11px] text-gray-400 hover:text-gray-700 underline underline-offset-2 cursor-pointer transition-colors"
+                >
+                    Clear all
+                </button>
+            )}
         </div>
     );
 });
 ActiveFiltersBar.displayName = 'ActiveFiltersBar';
 
-// ============================================
-// MAIN PRODUCT GRID COMPONENT
-// ============================================
-interface ProductGridProps {
-    categoryId: string;
-    filters: FilterState;
-    initialData?: CategoryProductsResponse;
-    categories: CategoryData[];
-    brands: BrandData[];
-    viewMode?: ViewMode;
-    onToggleFilter: (key: 'categories' | 'brands' | 'colors' | 'sizes', value: string | number) => void;
-    onFiltersChange: (filters: FilterState) => void;
-    onClearFilters: () => void;
-}
+// ─── Load more button ─────────────────────────────────────────────────────────
+
+const LoadMoreButton = memo(({ onClick, isLoading }: { onClick: () => void; isLoading: boolean }) => (
+    <div className="flex justify-center mt-8">
+        <button
+            onClick={onClick}
+            disabled={isLoading}
+            className="px-8 py-2.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+            {isLoading ? (
+                <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 animate-spin text-gray-400" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    Loading...
+                </span>
+            ) : 'Load more'}
+        </button>
+    </div>
+));
+LoadMoreButton.displayName = 'LoadMoreButton';
+
+// ─── ProductGrid ──────────────────────────────────────────────────────────────
 
 const ProductGrid = memo(({
-    categoryId,
     filters,
-    initialData,
+    products,
+    meta,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    onLoadMore,
     categories,
     brands,
     viewMode = 'grid5',
@@ -207,38 +182,11 @@ const ProductGrid = memo(({
     onFiltersChange,
     onClearFilters,
 }: ProductGridProps) => {
-    const {
-        products,
-        meta,
-        isLoading,
-        isLoadingMore,
-        isEmpty,
-        isReachingEnd,
-        loadMore,
-    } = useProducts({
-        categoryId,
-        filters,
-        initialData,
-        enabled: !!categoryId,
-    });
-
-    const handleLoadMore = useCallback(() => {
-        if (!isLoadingMore && !isReachingEnd) {
-            loadMore();
-        }
-    }, [isLoadingMore, isReachingEnd, loadMore]);
-
-    if (isLoading && products.length === 0) {
-        return <LoadingGrid count={viewMode === 'list' ? 6 : 12} viewMode={viewMode} />;
-    }
-
-    if (isEmpty || products.length === 0) {
-        return <EmptyState onClearFilters={onClearFilters} />;
-    }
+    const isListView = viewMode === 'list';
 
     return (
         <div>
-            {/* Active Filters */}
+            {/* Active filter tags */}
             <ActiveFiltersBar
                 filters={filters}
                 categories={categories}
@@ -248,57 +196,72 @@ const ProductGrid = memo(({
                 onClearAll={onClearFilters}
             />
 
-            {/* Product Grid / List */}
-            <div className={cn('grid gap-2 sm:gap-3 lg:gap-4', GRID_CONFIGS[viewMode])}>
-                {products.map((product, index) =>
-                    viewMode === 'list' ? (
-                        <ProductCardRow
-                            key={`${product.id}-${index}`}
-                            product={product}
-                            index={index}
-                            priority={index < 4}
-                        />
-                    ) : (
-                        <ProductCard
-                            key={`${product.id}-${index}`}
-                            product={product}
-                            index={index}
-                            priority={index < 4}
-                        />
-                    )
-                )}
-            </div>
+            {/* Loading state — full grid skeleton */}
+            {isLoading && <LoadingGrid count={10} viewMode={viewMode} />}
 
-            {/* Load More Section */}
-            <div className="mt-8">
-                {isLoadingMore && (
-                    <div className="flex items-center justify-center py-8">
-                        <Loader2 size={32} className="text-[var(--colour-fsP2)] animate-spin" />
+            {/* Empty state */}
+            {!isLoading && products.length === 0 && (
+                <EmptyState onClearFilters={onClearFilters} />
+            )}
+
+            {/* Product grid */}
+            {!isLoading && products.length > 0 && (
+                <>
+                    <div className={cn(
+                        isListView ? 'flex flex-col gap-3' : cn('grid gap-4', GRID_COLS[viewMode])
+                    )}>
+                        {products.map((product, i) =>
+                            isListView ? (
+                                <ProductCardRow
+                                    key={`${product.id}-${i}`}
+                                    product={product}
+                                    index={i}
+                                    priority={i < 4}
+                                />
+                            ) : (
+                                <ProductCard
+                                    key={`${product.id}-${i}`}
+                                    product={product}
+                                    index={i}
+                                    priority={i < 6}
+                                />
+                            )
+                        )}
                     </div>
-                )}
 
-                {!isLoadingMore && !isReachingEnd && (
-                    <div className="text-center pb-8">
-                        <button
-                            onClick={handleLoadMore}
-                            className="px-8 py-3 bg-[var(--colour-fsP2)] text-white border border-transparent rounded-full font-semibold text-sm hover:bg-white hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:shadow-lg transition-all duration-300 cursor-pointer w-48 mx-auto"
-                        >
-                            Show More
-                        </button>
+                    {/* Load more skeleton rows appended below existing products */}
+                    {isLoadingMore && (
+                        <div className={cn(
+                            'mt-4',
+                            isListView ? 'flex flex-col gap-3' : cn('grid gap-4', GRID_COLS[viewMode])
+                        )}>
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                                    <div className="aspect-square bg-gray-100 animate-pulse" />
+                                    <div className="p-3 space-y-2">
+                                        <div className="h-2.5 w-16 bg-gray-200 rounded animate-pulse" />
+                                        <div className="h-3.5 bg-gray-200 rounded animate-pulse" />
+                                        <div className="h-5 w-24 bg-gray-200 rounded animate-pulse" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Pagination info + load more */}
+                    <div className="mt-6 flex flex-col items-center gap-2">
+                        <p className="text-[12px] text-gray-400">
+                            Showing {products.length} of {meta.total} products
+                        </p>
+                        {hasMore && (
+                            <LoadMoreButton onClick={onLoadMore} isLoading={isLoadingMore} />
+                        )}
                     </div>
-                )}
-
-                {isReachingEnd && products.length > 0 && (
-                    <p className="text-center text-gray-400 text-sm py-4">
-                        You've seen all {meta?.total || products.length} products
-                    </p>
-                )}
-            </div>
+                </>
+            )}
         </div>
     );
 });
 
 ProductGrid.displayName = 'ProductGrid';
-
 export default ProductGrid;
-export { LoadingGrid, EmptyState, ActiveFiltersBar };

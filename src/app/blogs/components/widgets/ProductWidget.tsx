@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Smartphone } from 'lucide-react';
-import { formatPrice } from '@/app/category/[slug]/utils';
+
 
 interface ProductWidgetProps {
     products?: any[];
@@ -41,7 +41,7 @@ const ProductWidget = ({ products }: ProductWidgetProps) => {
                                 {product.name}
                             </h4>
                             <div className="text-[var(--colour-fsP2)] font-bold text-sm">
-                                Rs. {formatPrice(product.price)}
+                                Rs.{product.price}
                             </div>
                         </div>
                     </Link>

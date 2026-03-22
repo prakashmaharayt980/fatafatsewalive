@@ -4,12 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import useSWR from 'swr';
-import RemoteServices from '@/app/api/remoteservice';
+
 import { Store } from 'lucide-react';
+import { CategoryService } from '@/app/api/services/category.service';
 
 const BrandWidget = () => {
     const { data: brands, isLoading } = useSWR('blog-sidebar-brands', () =>
-        RemoteServices.getAllBrands().then(res => res.data?.slice(0, 9) || [])
+        CategoryService.getAllBrands().then(res => res.data?.slice(0, 9) || [])
     );
 
     if (isLoading) return <div className="h-48 bg-gray-100 rounded-2xl animate-pulse"></div>;

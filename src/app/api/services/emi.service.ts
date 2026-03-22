@@ -16,4 +16,13 @@ export const EmiService = {
     EmiRequestDelete: (id: number) =>
         apiPrivate.delete(`/v1/emi-request/${id}`).then(res => res.data),
 
+    ApplyEmiWithCard: (data: any) =>
+        apiPrivate.post(`/v1/emi-apply/card`, data).then(res => res.data),
+
+    ApplyEmiDownPayment: (data: any) =>
+        apiPrivate.post(`/v1/emi-apply/bank`, data).then(res => res.data),
+
+    ApplyEmiWithCardCreation: (data: any) =>
+        apiPrivate.post(`/v1/emi-apply/no-cost`, data).then(res => res.data),
+
 };

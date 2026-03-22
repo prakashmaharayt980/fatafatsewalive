@@ -3,12 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
-import RemoteServices from '@/app/api/remoteservice';
+
 import { Layers } from 'lucide-react';
+import { CategoryService } from '@/app/api/services/category.service';
 
 const CategoryWidget = () => {
     const { data: categories, isLoading } = useSWR('blog-sidebar-categories', () =>
-        RemoteServices.getAllCategories().then(res => res.data?.slice(0, 8) || [])
+        CategoryService.getAllCategories().then(res => res.data?.slice(0, 8) || [])
     );
 
     if (isLoading) return <div className="h-48 bg-gray-100 rounded-2xl animate-pulse"></div>;

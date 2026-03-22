@@ -19,6 +19,9 @@ import { CheckoutState, ShippingAddress } from '../checkoutTypes';
 import GoogleMapAddress, { LocationData } from '../GoogleMapAddress';
 import { AddressService } from '@/app/api/services/address.service';
 import { toast } from 'sonner';
+import { useAuth } from '@/app/context/AuthContext';
+import { useCartStore } from '@/app/context/CartContext';
+import { useShallow } from 'zustand/react/shallow';
 
 interface AddressStepProps {
     state: CheckoutState;
@@ -64,9 +67,23 @@ export default function AddressStep({
         country: 'Nepal'
     });
 
+    const { authState } = useAuth();
+    const { guestAddresses, addGuestAddress, updateGuestAddress, deleteGuestAddress } = useCartStore(
+        useShallow(state => ({
+            guestAddresses: state.guestAddresses,
+            addGuestAddress: state.addGuestAddress,
+            updateGuestAddress: state.updateGuestAddress,
+            deleteGuestAddress: state.deleteGuestAddress
+        }))
+    );
+
     // Fetch existing addresses on mount
     useEffect(() => {
         const fetchAddresses = async () => {
+            if (!authState.isLoggedIn) {
+                setSavedAddresses(guestAddresses);
+                return;
+            }
             setIsLoading(true);
             try {
                 const response = await AddressService.ShippingAddressList();
@@ -83,7 +100,7 @@ export default function AddressStep({
         };
 
         fetchAddresses();
-    }, []);
+    }, [authState.isLoggedIn, guestAddresses]);
 
     // Check for existing address selection
     useEffect(() => {
@@ -211,6 +228,25 @@ export default function AddressStep({
         try {
             let savedAddress: ShippingAddress;
 
+            if (!authState.isLoggedIn) {
+                if (selectedAddressId) {
+                    savedAddress = { ...addressPayload, address: addressPayload.full_address, id: selectedAddressId } as ShippingAddress;
+                    updateGuestAddress(selectedAddressId, savedAddress);
+                    toast.success("Guest Address updated successfully");
+                } else {
+                    savedAddress = { ...addressPayload, address: addressPayload.full_address } as ShippingAddress; // id is generated in store
+                    addGuestAddress(savedAddress);
+                    toast.success("Guest Address saved successfully");
+                }
+                
+                // Allow state effect to update it or manually select from payload
+                // In store it generates `id: Date.now()`, so for brand new guest addresses 
+                // we should let `filteredAddresses`/`guestAddresses` sync but we need an ID to select it.
+                // We'll just rely on user picking from the list next, or auto-pick the first local.
+                setViewMode('list');
+                return;
+            }
+
             if (selectedAddressId) {
                 // Update existing
                 savedAddress = await AddressService.ShippingAddressUpdate(selectedAddressId, addressPayload);
@@ -244,12 +280,20 @@ export default function AddressStep({
         if (!addressToDelete) return;
 
         try {
-            await AddressService.ShippingAddressDelete(addressToDelete);
-            setSavedAddresses(prev => prev.filter(a => a.id !== addressToDelete));
-            if (selectedAddressId === addressToDelete) {
-                setSelectedAddressId(null);
+            if (!authState.isLoggedIn) {
+                deleteGuestAddress(addressToDelete);
+                if (selectedAddressId === addressToDelete) {
+                    setSelectedAddressId(null);
+                }
+                toast.success("Guest Address deleted");
+            } else {
+                await AddressService.ShippingAddressDelete(addressToDelete);
+                setSavedAddresses(prev => prev.filter(a => a.id !== addressToDelete));
+                if (selectedAddressId === addressToDelete) {
+                    setSelectedAddressId(null);
+                }
+                toast.success("Address deleted");
             }
-            toast.success("Address deleted");
         } catch (error) {
             console.error('Failed to delete address:', error);
             toast.error("Failed to delete address");

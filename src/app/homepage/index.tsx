@@ -1,61 +1,46 @@
 'use client';
 
 import Imgbanner from './Imgbanner';
-import SkeletonCard from '@/app/skeleton/SkeletonCard';
-import BasketCard from './BasketCard';
 
-// Lazy-loaded components
-import dynamic from 'next/dynamic';
-import { useLayoutEffect } from 'react';
-
-
-const OurArticles = dynamic(() => import('./OurArticles'));
-const CategoryProductSection = dynamic(() => import('./BasketCardwithImage'), {
-  loading: () => <SkeletonCard />
-});
-
-
-// Demo category data - Replace with API fetch later
-const demoCategories = [
-  { id: '1', title: 'Mobile Phone', slug: 'mobile-price-in-nepal' },
-  { id: '2', title: 'Laptop ', slug: 'laptop-price-in-nepal', image: '/images/categories/laptop.jpg' },
-  { id: '3', title: 'Accessories', slug: 'accessories-price-in-nepal', image: '/images/categories/accessories.jpg' },
-  { id: '74', title: 'Drone', slug: 'drone-price-in-nepal', image: '/images/categories/drone.jpg' },
-  { id: '5', title: 'Home ', slug: 'home-appliance-price-in-nepal', image: '/images/categories/home-appliance.jpg' },
-  { id: '34', title: 'Camera', slug: 'dslr-camera-price-in-nepal', image: '/images/categories/dslr-camera.jpg' },
-];
 
 
 
 interface HomePageProps {
   mainBannerData: any;
   sideBannerData: any;
-  categorySectionImage: string;
-  mobilePhoneData: any; // Added prop for initial product data
+
   sectionOne: React.ReactNode;
   offerSection: React.ReactNode;
   sectionTwo: React.ReactNode;
   sectionThree: React.ReactNode;
   sectionFour: React.ReactNode;
+  basketSection0: React.ReactNode;
+  basketSection1: React.ReactNode;
+  basketSection2: React.ReactNode;
+  basketSection3: React.ReactNode;
+  basketSection4: React.ReactNode;
+  basketSection5: React.ReactNode;
+  ourArticlesSection: React.ReactNode;
 }
 
 const HomePage = ({
   mainBannerData,
   sideBannerData,
-  categorySectionImage,
-  mobilePhoneData,
+  
   sectionOne,
   offerSection,
   sectionTwo,
   sectionThree,
-  sectionFour
+  sectionFour,
+  basketSection0,
+  basketSection1,
+  basketSection2,
+  basketSection3,
+  basketSection4,
+  basketSection5,
+  ourArticlesSection,
 }: HomePageProps) => {
 
-  useLayoutEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-  }, []);
 
   return (
     <main className="mx-auto h-full m-0 p-0 sm:py-1 space-y-1  bg-[#f8f9fa] relative overflow-hidden">
@@ -73,42 +58,29 @@ const HomePage = ({
             sideBanner={sideBannerData}
           />
 
-          <BasketCard
-            title={demoCategories[0].title}
-            slug={demoCategories[0].slug}
-            id={demoCategories[0].id}
-            initialData={mobilePhoneData}
-
-          />
-
-
+          {basketSection0}
 
           {sectionOne}
 
-          <BasketCard title={demoCategories[1].title} slug={demoCategories[1].slug} id={demoCategories[1].id} />
+          {basketSection1}
 
-          <CategoryProductSection
-            title={demoCategories[2].title}
-            slug={demoCategories[2].slug}
-            id={demoCategories[2].id}
-            imageUrl={categorySectionImage}
-          />
+          {basketSection2}
         </div>
         {offerSection}
         <div className="sm:px-2 md:px-4">
-          <BasketCard title={demoCategories[3].title} slug={demoCategories[3].slug} id={demoCategories[3].id} />
+          {basketSection3}
 
           {sectionTwo}
 
-          <BasketCard title={demoCategories[4].title} slug={demoCategories[4].slug} id={demoCategories[4].id} />
+          {basketSection4}
 
           {sectionThree}
 
-          <BasketCard title={demoCategories[5].title} slug={demoCategories[5].slug} id={demoCategories[5].id} />
+          {basketSection5}
 
           {sectionFour}
 
-          <OurArticles blogpage="blog" />
+          {ourArticlesSection}
 
         </div>
       </div>

@@ -13,7 +13,8 @@ interface BlogCompareProductsProps {
 
 function ProductSide({ product, side }: { product: ProductDetails; side: 'left' | 'right' }) {
     const imgUrl = product.image?.preview || product.image?.thumb || product.image?.full;
-    const price = product.discounted_price < product.price ? product.discounted_price : product.price;
+    const basePrice = typeof product.price === 'object' ? product.price.current : product.price;
+    const price = product.discounted_price && product.discounted_price < basePrice ? product.discounted_price : basePrice;
     const category = product.categories?.[0]?.title || 'Product';
     const rating = product.average_rating || (3.5 + Math.random() * 1.5);
 

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import * as Yup from 'yup';
 import { toast } from 'sonner';
 import NepaliDate from 'nepali-date-converter';
-import RemoteServices from '@/app/api/remoteservice';
+
 import { EmiService } from '@/app/api/services/emi.service';
 import {
     personalDetailsSchema,
@@ -28,12 +28,12 @@ import FormField from './FormField';
 import {
     ArrowBigLeft, Loader2, CheckCircle2, ChevronRight,
     CreditCard, Calendar, User, MapPin, Mail, Phone,
-    Hash, DollarSign, Building2, Banknote, CreditCardIcon, HandCoins,
+    Hash, DollarSign, Building2, Banknote, CreditCardIcon, HandCoins, ShoppingBag,
 } from 'lucide-react';
-import { ProductDetails } from '@/app/types/ProductDetailsTypes';
+import { ProductData } from '@/app/types/ProductDetailsTypes';
 
 interface ApplyEmiClientProps {
-    initialProduct: ProductDetails | null;
+    initialProduct: ProductData | null;
     selectedcolor?: string;
 }
 
@@ -444,7 +444,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             }
 
             if (option !== 'creditCard') {
-                response = await RemoteServices.applyEmi(formData);
+                response = await EmiService.ApplyEmiDownPayment(formData);
             }
 
             if (response) {
@@ -481,7 +481,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
     const emiData = useMemo(() => {
         if (!product) return { downPayment: 0, financeAmount: 0, tenure: 0, principal: 0, paymentpermonth: 0 };
-        const result = calculateEMI({ principal: product.price || 0, tenure: emiCalc.duration, downPayment: emiCalc.downPayment, bankId: emiContextInfo.bankinfo.bankname });
+        const pPrice = typeof product.price === 'object' ? (product.price as any).current : product.price;
+        const result = calculateEMI({ principal: Number(pPrice) || 0, tenure: emiCalc.duration, downPayment: emiCalc.downPayment, bankId: emiContextInfo.bankinfo.bankname });
         return {
             principal: result.principal,
             tenure: result.tenure,
@@ -829,8 +830,12 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 {/* Mobile-only product + monthly EMI summary bar */}
                 <div className="lg:hidden mb-3 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="flex items-center gap-3 p-3">
-                        <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
-                            <Image src={product?.image?.thumb || product?.image?.full || ''} alt={product?.name || ''} fill className="object-contain p-0.5" />
+                        <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
+                            {product?.thumb?.url || product?.images?.[0]?.url ? (
+                                <Image src={product.thumb?.url || product.images?.[0]?.url || ''} alt={product?.name || 'Product'} fill className="object-contain p-0.5" />
+                            ) : (
+                                <ShoppingBag className="w-5 h-5 text-gray-300" />
+                            )}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold text-gray-800 truncate">{product?.name}</p>
@@ -881,7 +886,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                     {Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean).map((color: string) => {
                                                         const isSelected = emiContextInfo.selectedVariant === color;
                                                         // Find image for this color
-                                                        const variantImg = product.images?.find(img => img.color === color || img.custom_properties?.color === color)?.thumb || product.image?.thumb;
+                                                        const variantImgRecord = product.images?.find(img => img.color === color || img.custom_properties?.color === color);
+                                                        const variantImg = variantImgRecord?.url || variantImgRecord?.thumb || product.thumb?.url || product.images?.[0]?.url;
 
                                                         return (
                                                             <button

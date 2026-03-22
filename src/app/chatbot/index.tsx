@@ -9,11 +9,12 @@ import {
   Sparkles, HelpCircle, FileText, Clock
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import RemoteServices from '@/app/api/remoteservice';
+
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Image from 'next/image';
 import { CompanyLogo } from '../CommonVue/Payment';
+import { MiscService } from '../api/services/misc.service';
 
 interface ApiResponse {
   id: number;
@@ -306,7 +307,7 @@ export default function ChatBot() {
         return;
       }
 
-      const response = await RemoteServices.getChatbotHistory(sessionId);
+      const response = await MiscService.getChatbotHistory(sessionId);
 
       if (response && Array.isArray(response)) {
         setHistoryData(response);
@@ -366,7 +367,7 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
-      const response = await RemoteServices.chatBotQuery({
+      const response = await MiscService.chatBotQuery({
         message: userMessage,
         sessionId: sessionId
       });

@@ -23,19 +23,19 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
         if (!mainBanner?.images) return [];
 
         return mainBanner.images
-            .sort((a, b) => a.order - b.order)
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((img) => {
                 // Strip HTML tags for SEO-friendly clean alt text
                 const cleanAlt = img.content ? img.content.replace(/<[^>]*>?/gm, '').trim() : '';
                 return {
                     id: img.id,
-                    name: cleanAlt || 'Fatafat Sewa Banner',
-                    default: img.image.full,
-                    original: img.image.full,
-                    preview: img.image.thumb,
-                    thumbnail: img.image.thumb,
+                    name: cleanAlt || img.alt_text || 'Fatafat Sewa Banner',
+                    default: img.url || img.image?.full || '',
+                    original: img.url || img.image?.full || '',
+                    preview: img.url || img.image?.thumb || '',
+                    thumbnail: img.url || img.image?.thumb || '',
                     link: img.link,
-                    is_default: img.order === 0,
+                    is_default: img.order === 0 || !img.order,
                 };
             });
     }, [mainBanner]);
@@ -44,13 +44,13 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
         if (!sideBanner?.images) return [];
 
         return sideBanner.images
-            .sort((a, b) => a.order - b.order)
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((img) => {
                 const cleanAlt = img.content ? img.content.replace(/<[^>]*>?/gm, '').trim() : '';
                 return {
                     id: img.id,
-                    name: cleanAlt || 'Fatafat Sewa Special Offer',
-                    default: img.image.full,
+                    name: cleanAlt || img.alt_text || 'Fatafat Sewa Special Offer',
+                    default: img.url || img.image?.full || '',
                     link: img.link,
                 };
             });

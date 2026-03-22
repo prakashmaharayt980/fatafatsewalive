@@ -1,42 +1,80 @@
 import { Heart, Star, Scale } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
-import { useContextCart } from "@/app/checkout/CartContext1";
-import { useCompare } from "@/app/context/CompareContext";
+
 import { parseHighlights } from "@/app/CommonVue/highlights";
 import { ProductCardProps } from "../ProductCard";
-import { ProductDetails } from "@/app/types/ProductDetailsTypes";
+import { BasketProduct, ProductDetails } from "@/app/types/ProductDetailsTypes";
 import { cn } from "@/lib/utils";
-// ...
+import { useShallow } from "zustand/react/shallow";
+import { useCartStore } from "@/app/context/CartContext";
+import { useAuth } from "@/app/context/AuthContext";
 
 const BlogProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
     const router = useRouter();
-    const { addToWishlist } = useContextCart();
-    const { addToCompare, removeFromCompare, compareList } = useCompare(); // Use CompareContext
-    const compareItems = compareList; // Alias
-    const isCompared = compareItems?.some(i => i.id === product.id);
+    const { authState, triggerLoginAlert } = useAuth();
+    const { 
+        addToWishlist, 
+        removeFromWishlist,
+        wishlistItems,
+        addToCompare, 
+        removeFromCompare,
+        compareItems 
+    } = useCartStore(useShallow((state) => ({
+        addToWishlist: state.addToWishlist,
+        removeFromWishlist: state.removeFromWishlist,
+        wishlistItems: state.wishlistItems,
+        addToCompare: state.addToCompare,
+        removeFromCompare: state.removeFromCompare,
+        compareItems: state.compareItems
+    })));
 
     if (!product || !product.id) return null;
 
-    const originalPrice = typeof product.price === 'string' ? parseInt(product.price) : product.price;
-    const discountedPrice = typeof product.discounted_price === 'string' ? parseInt(product.discounted_price) : product.discounted_price;
+    const isWishlisted = wishlistItems.some(i => i.id === product.id);
+    const isCompared = compareItems.some(i => i.id === product.id);
+
+    const extractPrice = (p: any): number => {
+        if (typeof p === 'number') return p;
+        if (typeof p === 'string') return parseInt(p) || 0;
+        if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
+        return 0;
+    };
+    const originalPrice = extractPrice(product.price);
+    const discountedPrice = extractPrice((product as any).discounted_price || product.price);
     const hasDiscount = originalPrice > discountedPrice;
     const discountPercent = hasDiscount ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100) : 0;
 
-    const imageUrl = product.image?.preview || product.image?.thumb || product.image?.full;
+    const imageUrl = product.thumb?.url || '/images/placeholder.svg';
 
-    // Mock rating data
     const rating = product.average_rating || (3.5 + Math.random() * 1.5);
-    const ratingCount = product.rating_count || Math.floor(20 + Math.random() * 200);
+    const ratingCount = (product as any).rating_count || Math.floor(20 + Math.random() * 200);
     const fullStars = Math.floor(rating);
     const hasHalf = rating - fullStars >= 0.5;
 
-    // Color variants (mock if not available)
-    const colors = product.colors || ['#1e293b', '#dc2626', '#2563eb', '#f59e0b'];
+    const colors = (product as any).colors || ['#1e293b', '#dc2626', '#2563eb', '#f59e0b'];
 
     const handleProductClick = () => {
         if (!product.slug || !product.id) return;
         router.push(`/products/${product.slug}`);
+    };
+
+    const handleWishlistClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isWishlisted) {
+            await removeFromWishlist(product.id);
+        } else {
+            await addToWishlist(product.id, authState.user, triggerLoginAlert, product as unknown as BasketProduct);
+        }
+    };
+
+    const handleCompareClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isCompared) {
+            removeFromCompare(product.id);
+        } else {
+            addToCompare(product);
+        }
     };
 
     return (
@@ -46,30 +84,23 @@ const BlogProductCard = ({ product, index, priority = false, hidePrice = false }
         >
             {/* Wishlist */}
             <button
-                className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm text-[var(--colour-text3)] hover:text-red-500 hover:scale-110 transition-all duration-200"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    addToWishlist(Number(product.id));
-                }}
+                className={cn(
+                    "absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-200 cursor-pointer",
+                    isWishlisted ? "text-red-500" : "text-[var(--colour-text3)] hover:text-red-500 hover:scale-110"
+                )}
+                onClick={handleWishlistClick}
                 aria-label="Add to wishlist"
             >
-                <Heart className="h-3.5 w-3.5 stroke-[2]" />
+                <Heart className={cn("h-3.5 w-3.5 stroke-[2]", isWishlisted && "fill-red-500")} />
             </button>
 
             {/* Compare Button - Below Wishlist */}
             <button
                 className={cn(
-                    "absolute top-9 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-all duration-200",
+                    "absolute top-9 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-all duration-200 cursor-pointer",
                     isCompared ? "text-[var(--colour-fsP2)]" : "text-[var(--colour-text3)] hover:text-[var(--colour-fsP2)]"
                 )}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (isCompared) {
-                        removeFromCompare(Number(product.id));
-                    } else {
-                        addToCompare(product as unknown as ProductDetails);
-                    }
-                }}
+                onClick={handleCompareClick}
                 aria-label="Compare"
             >
                 <Scale className={cn("h-3.5 w-3.5 stroke-[2]", isCompared && "fill-current")} />
@@ -123,9 +154,9 @@ const BlogProductCard = ({ product, index, priority = false, hidePrice = false }
                 </h3>
 
                 {/* Highlights */}
-                {parseHighlights(product.highlights, 3).length > 0 && (
+                {parseHighlights((product as any).highlights, 3).length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                        {parseHighlights(product.highlights, 3).map((h, i) => (
+                        {parseHighlights((product as any).highlights, 3).map((h, i) => (
                             <span key={i} className="text-[9px] text-[var(--colour-text3)] bg-[var(--colour-bg4)] px-1.5 py-0.5 rounded border border-[var(--colour-border3)]">
                                 {h}
                             </span>
@@ -138,17 +169,17 @@ const BlogProductCard = ({ product, index, priority = false, hidePrice = false }
                     <div className="mt-auto pt-1 border-t border-[var(--colour-border3)]/50">
                         <div className="flex items-baseline gap-1.5">
                             <span className="text-[14px] font-bold text-[var(--colour-text2)]">
-                                Rs. {(discountedPrice || originalPrice)?.toLocaleString()}
+                                Rs. {(discountedPrice || originalPrice).toLocaleString()}
                             </span>
                             {hasDiscount && (
                                 <span className="text-[10px] text-[var(--colour-text3)] line-through">
-                                    Rs. {originalPrice?.toLocaleString()}
+                                    Rs. {originalPrice.toLocaleString()}
                                 </span>
                             )}
                         </div>
                         {hasDiscount && (
                             <span className="inline-block mt-0.5 text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                                Save Rs. {(originalPrice - discountedPrice)?.toLocaleString()}
+                                Save Rs. {(originalPrice - discountedPrice).toLocaleString()}
                             </span>
                         )}
                     </div>
@@ -158,17 +189,22 @@ const BlogProductCard = ({ product, index, priority = false, hidePrice = false }
     );
 };
 
-export const BlogProductCardSkeleton = () => (
-    <div className="bg-white rounded-lg overflow-hidden border border-[var(--colour-border3)] h-full">
-        <div className="aspect-square bg-[var(--colour-bg4)] animate-pulse" />
-        <div className="p-2.5 space-y-2">
-            <div className="flex gap-0.5">{[...Array(5)].map((_, i) => <div key={i} className="w-3 h-3 bg-gray-200 rounded-full animate-pulse" />)}</div>
-            <div className="h-3 w-full bg-gray-200 rounded animate-pulse" />
-            <div className="h-3 w-3/4 bg-gray-200 rounded animate-pulse" />
-            <div className="flex gap-1">{[...Array(4)].map((_, i) => <div key={i} className="w-3 h-3 bg-gray-200 rounded-full animate-pulse" />)}</div>
-            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mt-1" />
-        </div>
-    </div>
-);
+
+
 
 export default BlogProductCard;
+
+
+
+// export const BlogProductCardSkeleton = () => (
+//     <div className="bg-white rounded-lg overflow-hidden border border-[var(--colour-border3)] h-full">
+//         <div className="aspect-square bg-[var(--colour-bg4)] animate-pulse" />
+//         <div className="p-2.5 space-y-2">
+//             <div className="flex gap-0.5">{[...Array(5)].map((_, i) => <div key={i} className="w-3 h-3 bg-gray-200 rounded-full animate-pulse" />)}</div>
+//             <div className="h-3 w-full bg-gray-200 rounded animate-pulse" />
+//             <div className="h-3 w-3/4 bg-gray-200 rounded animate-pulse" />
+//             <div className="flex gap-1">{[...Array(4)].map((_, i) => <div key={i} className="w-3 h-3 bg-gray-200 rounded-full animate-pulse" />)}</div>
+//             <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mt-1" />
+//         </div>
+//     </div>
+// );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import RemoteServices from '../../api/remoteservice';
+
 
 import { BlogService } from '../../api/services/blog.service';
 import BlogDetailsClient from '../components/BlogDetailsClient';
@@ -19,7 +19,7 @@ interface PageProps {
 // Data Fetching Helper
 const getArticleData = async (slug: string) => {
     try {
-        const blogRes = await RemoteServices.getBlogList();
+        const blogRes = await BlogService.getBlogList();
         const articles: Article[] = Array.isArray(blogRes) ? blogRes : blogRes.data || [];
         const article = articles.find((a) => a.slug === slug);
         return article;

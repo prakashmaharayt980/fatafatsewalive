@@ -1,47 +1,77 @@
+import React from 'react';
 import { cn } from "@/lib/utils";
 import { Heart, Star, Scale } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCompare } from "@/app/context/CompareContext";
-import { useContextCart } from "@/app/checkout/CartContext1";
-import { ProductDetails, ProductSummary } from "@/app/types/ProductDetailsTypes";
+
+import { ProductDetails, ProductSummary, BasketProduct } from "@/app/types/ProductDetailsTypes";
 import { trackViewContent } from "@/lib/Analytic";
 import { trackProductClick } from "@/lib/analytics";
+import { placeholderimg } from "../CommonVue/Image";
+import { useShallow } from 'zustand/react/shallow';
+import { useCartStore } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 export interface ProductCardProps {
-    product: ProductSummary | ProductDetails; // Accept both
+    product: BasketProduct;
     index?: number;
     priority?: boolean;
     hidePrice?: boolean;
 }
 
 const ProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
-    const { addToWishlist, wishlistItems } = useContextCart();
-    const { addToCompare, removeFromCompare, compareList } = useCompare();
+    const { user } = useAuth();
+    const {
+        addToWishlist,
+        wishlistItems,
+        addToCompare,
+        removeFromCompare,
+        isInCompare
+    } = useCartStore(useShallow(
+        state => ({
+            addToWishlist: state.addToWishlist,
+            wishlistItems: state.wishlistItems,
+            addToCompare: state.addToCompare,
+            removeFromCompare: state.removeFromCompare,
+            isInCompare: state.isInCompare
+        })
+    ));
+
+    const { triggerLoginAlert } = useAuth();
 
     if (!product || !product.id) {
         return null;
     }
 
-    // Safely parse ID and Price
-    const productId = Number(product.id);
-    const priceVal = Number(product.price);
-    const discountedPriceVal = Number(product.discounted_price);
-    const displayPrice = discountedPriceVal || priceVal || 0;
+    const basePrice = typeof product.price === "object" ? Number((product.price as any).current || 0) : Number(product.price || 0);
+    const discountedPriceVal = 'discounted_price' in product && product.discounted_price ? Number(product.discounted_price) : basePrice;    // --- Derived Values & Mocks ---
+    const isNew = product.created_at ? (new Date().getTime() - new Date(product.created_at).getTime()) < (30 * 24 * 60 * 60 * 1000) : false;
+    const isBestSeller = index !== undefined && index < 2;
 
+    // Resolve Brand
+    const brandName = product.brand?.name || "Brand Name";
 
-    // --- Derived Values & Mocks ---
-    const isNew = product.created_at ? (new Date().getTime() - new Date(product.created_at).getTime()) < (30 * 24 * 60 * 60 * 1000) : false; // Dummy logic or adjust
-    const isBestSeller = index !== undefined && index < 2; // Mock: first 2 items are best sellers
-    const imageUrl = product.image?.full || product.image?.thumb;
-    const rating = product.average_rating || "4.5"; // Mock rating if missing
-    const ratingCount = 128; // Mock count
-    const productUrl = `/products/${product.slug}`;
-    const pricedisplay = displayPrice;
-    const originalPrice = priceVal || (pricedisplay * 1.2); // Ensure original is higher if missing
-    const discountPercent = Math.round(((originalPrice - pricedisplay) / originalPrice) * 100) || 0;
-    const hasCoupon = (productId % 3) === 0; // Consistent pseudo-random mock coupon availability
-    const emiPrice = Math.round(pricedisplay / 12); // Simple 12-month EMI approximation
+    const rating = product.average_rating || 0;
+    const ratingCount = product.rating_count || 0;
+
+    const hasCoupon = false; // Disable mock coupons since we want real data
+    const emiPrice = Math.round(basePrice / 12);
+
+    const handleAddToWishlist = async (e: React.MouseEvent, productId: number) => {
+        e.stopPropagation();
+        await addToWishlist(productId, user, triggerLoginAlert, product as BasketProduct);
+    };
+
+    const handleCompareClick = (e: React.MouseEvent, productId: number) => {
+        e.stopPropagation();
+        const isIn = isInCompare(productId);
+        if (isIn) {
+            removeFromCompare(productId);
+        } else {
+            addToCompare(product);
+        }
+    };
+    const discountPercent = discountedPriceVal < basePrice ? Math.round(((basePrice - discountedPriceVal) / basePrice) * 100) : 0;
 
     return (
         <div
@@ -51,39 +81,26 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
             {/* Wishlist Button - Absolute Top Right */}
             <button
                 className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm text-gray-400 hover:text-red-500 hover:scale-110 transition-all duration-200"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    addToWishlist(productId);
-                }}
+                onClick={(e) => handleAddToWishlist(e, product.id)}
                 aria-label="Add to wishlist"
             >
-                <Heart className={cn("h-4 w-4 stroke-[2.5]", wishlistItems.some(i => i.id === productId) && "fill-red-500 text-red-500")} />
+                <Heart className={cn("h-4 w-4 stroke-[2.5]", wishlistItems.some(i => i.id === product.id) && "fill-red-500 text-red-500")} />
             </button>
 
             {/* Compare Button - Below Wishlist */}
             <button
                 className={cn(
                     "absolute top-10 right-2 z-20 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-all duration-200",
-                    compareList?.some(i => i.id === productId) ? "text-[var(--colour-fsP2)]" : "text-gray-400 hover:text-[var(--colour-fsP2)]"
+                    isInCompare(product.id) ? "text-[var(--colour-fsP2)]" : "text-gray-400 hover:text-[var(--colour-fsP2)]"
                 )}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    const isIn = compareList?.some(i => i.id === productId);
-                    if (isIn) {
-                        removeFromCompare(productId);
-                    } else {
-                        // Cast to ProductDetails as compare expects full details, or update compare context type.
-                        // For now casting as any or specific minimal compatible shape
-                        addToCompare(product as unknown as ProductDetails);
-                    }
-                }}
+                onClick={(e) => handleCompareClick(e, product.id)}
                 aria-label="Add to compare"
             >
                 <Scale className="h-4 w-4 stroke-[2.5]" />
             </button>
 
             {/* Image Container - Aspect 5:4 */}
-            <div className="relative aspect-[5/4] w-full bg-white p-2">
+            <div className="relative w-full bg-white p-2 aspect-[2/2]">
                 {/* Badges - Top Left */}
                 <div className="absolute top-0 left-0 z-10 flex flex-col gap-1">
                     {/* Refined Best Seller Tag - Gold (Only if NOT New) */}
@@ -100,10 +117,10 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     )}
                 </div>
 
-                <div className="relative w-full h-full ">
+                <div className="relative w-full h-full  ">
                     <Image
-                        src={imageUrl || '/placeholder-product.png'}
-                        alt={product.name || 'Product'}
+                        src={product.thumb?.url || placeholderimg}
+                        alt={product.thumb?.alt_text || 'Product'}
                         fill
                         className="object-contain  mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                         priority={priority}
@@ -117,16 +134,18 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                 {/* Brand Name */}
                 <div className="flex justify-between items-start">
                     <div className="text-[11px] text-gray-700 font-bold uppercase tracking-wide">
-                        {product.brand?.name || "Brand Name"}
+                        {brandName}
                     </div>
                     {/* Ratings Row - Compact */}
-                    <div className="flex items-center gap-1">
-                        <div className="flex items-center gap-0.5 bg-[var(--colour-fsP2)] text-white px-1.5 py-0.5 rounded-[4px] shadow-sm">
-                            <span className="text-[10px] font-extrabold">{rating}</span>
-                            <Star className="w-2 h-2 fill-current" />
+                    {rating > 0 && (
+                        <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-0.5 bg-[var(--colour-fsP2)] text-white px-1.5 py-0.5 rounded-[4px] shadow-sm">
+                                <span className="text-[10px] font-extrabold">{rating}</span>
+                                <Star className="w-2 h-2 fill-current" />
+                            </div>
+                            <span className="text-[10px] text-gray-600 font-medium">({ratingCount})</span>
                         </div>
-                        <span className="text-[10px] text-gray-600 font-medium">({ratingCount}) • 1.2k+ sold</span>
-                    </div>
+                    )}
                 </div>
 
                 {/* Title */}
@@ -135,14 +154,14 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     title={product.name}
                 >
                     <Link
-                        href={productUrl}
+                        href={`/products/${product.slug}`}
                         className="focus:outline-none"
                         onClick={() => {
                             trackViewContent(product);
                             trackProductClick({
                                 id: product.id.toString(),
                                 name: product.name,
-                                price: pricedisplay,
+                                price: basePrice,
                                 category: 'category' in product ? 'category' : undefined,
                             });
                         }}
@@ -157,20 +176,20 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                     <div className="mt-1 space-y-0.5">
                         <div className="flex items-baseline gap-2">
                             <span className="text-base sm:text-lg font-extrabold text-[#1f2937]">
-                                Rs. {(pricedisplay)?.toLocaleString()}
+                                Rs. {(discountedPriceVal < basePrice ? discountedPriceVal : basePrice).toLocaleString()}
                             </span>
                         </div>
 
-                        {(
+                        {(discountedPriceVal < basePrice) ? (
                             <div className="flex items-center gap-2 text-[14px]">
                                 <span className="text-gray-500 line-through decoration-gray-500 font-medium">
-                                    Rs. {originalPrice?.toLocaleString()}
+                                    Rs. {basePrice.toLocaleString()}
                                 </span>
                                 <span className="text-[var(--colour-fsP2)] font-bold bg-blue-50 px-1 py-0.5 rounded-sm">
                                     {discountPercent}% OFF
                                 </span>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 )}
 
@@ -193,12 +212,12 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
                 {/* EMI & Delivery - Modified EMI Size */}
                 <div className="flex flex-wrap gap-1 mt-1.5">
                     {/* EMI Calculation Badge - Increased Font Size */}
-                    <span className="inline-flex items-center text-[12px] font-semibold text-white bg-[#1967b3] px-1.5 py-0.5 rounded-sm shadow-sm">
-                        {/* <CreditCard className="w-3 h-3 mr-1" /> */}
-                        EMI fr. Rs. {emiPrice?.toLocaleString()}
-                    </span>
+                    {product.emi_enabled ? (
+                        <span className="inline-flex items-center text-[12px] font-semibold text-white bg-[#1967b3] px-1.5 py-0.5 rounded-sm shadow-sm">
+                            EMI fr. Rs. {emiPrice?.toLocaleString()}
+                        </span>
+                    ) : null}
                     <span className="inline-flex items-center text-[12px] font-semibold text-black bg-[#e9d26c] px-1.5 py-0.5 rounded-sm shadow-sm">
-                        {/* <Truck className="w-3 h-3 mr-1" /> */}
                         Fatafat Delivery
                     </span>
                 </div>
@@ -206,20 +225,4 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
         </div>
     );
 };
-
-export const ProductCardSkeleton = () => (
-    <div className="bg-white rounded-[12px] overflow-hidden border border-gray-100 h-full card-shadow">
-        <div className="aspect-square bg-gray-50 animate-pulse" />
-        <div className="p-3 space-y-3">
-            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
-            <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
-            <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
-            <div className="flex gap-2 pt-2">
-                <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
-            </div>
-            <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse mt-3" />
-        </div>
-    </div>
-);
-
-export default ProductCard;
+export default React.memo(ProductCard);

@@ -2,15 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Search, X, Smartphone, Loader2, ChevronRight, Check, RefreshCw, Shield, ShoppingCart, Scale, Truck, Eye, Zap, Info } from "lucide-react";
-import RemoteServices from "@/app/api/remoteservice";
+
 import { useContextEmi } from "./emiContext";
 import { ProductDetails } from "@/app/types/ProductDetailsTypes";
-import { useCompare } from "@/app/context/CompareContext";
+
+import { ProductService } from "@/app/api/services/product.service";
+import { useCartStore } from "@/app/context/CartContext";
+import { useShallow } from "zustand/react/shallow";
 
 interface ProductEMIUIProps {
   chooseProduct: (col: string) => void;
@@ -26,8 +29,13 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedInsurance, setSelectedInsurance] = useState<string | null>(null);
-  const { addToCompare, removeFromCompare, compareList } = useCompare();
-  const isInCompare = compareList?.some(i => i.id === Number(product?.id));
+  const { addToCompare, removeFromCompare, compareList ,isInCompare} = useCartStore(useShallow((state) => ({
+    addToCompare: state.addToCompare,
+    removeFromCompare: state.removeFromCompare,
+    compareList: state.compareItems,
+    isInCompare: state.isInCompare
+    })));
+
 
   // Filter available variants (quantity > 0)
   const availableVariants = product?.variants?.filter((variant) => variant.quantity > 0) || [];
@@ -40,7 +48,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
     const delayDebounceFn = setTimeout(() => {
       if (searchQuery.trim()) {
         setLoading(true);
-        RemoteServices.searchProducts({ search: searchQuery.trim() })
+        ProductService.searchProducts({ search: searchQuery.trim() })
           .then((res) => {
             setSelectItems(res.data);
           })
@@ -57,7 +65,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
   const handleProductSelect = async (productSlug: string) => {
     setLoading(true);
     try {
-      const fullProduct = await RemoteServices.getProductBySlug(productSlug);
+      const fullProduct = await ProductService.getProductBySlug(productSlug);
       if (fullProduct) {
         setEmiContextInfo((prev) => ({
           ...prev,
@@ -258,15 +266,15 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                   {/* Price Section */}
                   <div className="flex items-baseline gap-2 flex-wrap">
                     <span className="text-xl font-extrabold text-gray-900">
-                      Rs. {(product.discounted_price || product.price).toLocaleString()}
+                      Rs. {Number(typeof product.discounted_price === 'object' ? (product.discounted_price as any).current : (product.discounted_price || typeof product.price === 'object' ? (product.price as any).current : product.price) || 0).toLocaleString()}
                     </span>
-                    {product.price && product.discounted_price && product.discounted_price < product.price && (
+                    {product.price && product.discounted_price && Number(typeof product.discounted_price === 'object' ? (product.discounted_price as any).current : product.discounted_price) < Number(typeof product.price === 'object' ? (product.price as any).current : product.price) && (
                       <>
                         <span className="text-sm text-gray-400 line-through">
-                          Rs. {product.price.toLocaleString()}
+                          Rs. {Number(typeof product.price === 'object' ? (product.price as any).current : product.price).toLocaleString()}
                         </span>
                         <span className="text-[12px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                          {Math.round(((product.price - product.discounted_price) / product.price) * 100)}% OFF
+                          {Math.round(((Number(typeof product.price === 'object' ? (product.price as any).current : product.price) - Number(typeof product.discounted_price === 'object' ? (product.discounted_price as any).current : product.discounted_price)) / Number(typeof product.price === 'object' ? (product.price as any).current : product.price)) * 100)}% OFF
                         </span>
                       </>
                     )}
@@ -320,9 +328,9 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                   )}
 
                   {/* Short Description */}
-                  {product.short_description && (
+                  {(product as any).short_description && (
                     <p className="text-[12px] text-gray-500 leading-relaxed line-clamp-2">
-                      {product.short_description}
+                      {(product as any).short_description}
                     </p>
                   )}
                 </div>
@@ -428,7 +436,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                         <p className="text-[9px] text-gray-400">{plan.desc}</p>
                       </div>
                       <span className="text-[10px] font-bold text-[var(--colour-fsP2)] whitespace-nowrap">
-                        Rs. {Math.round((product?.discounted_price || product?.price || 0) * plan.pct).toLocaleString()}
+                        Rs. {Math.round((Number(typeof product?.discounted_price === 'object' ? (product.discounted_price as any).current : product?.discounted_price) || Number(typeof product?.price === 'object' ? (product.price as any).current : product?.price) || 0) * plan.pct).toLocaleString()}
                       </span>
                     </label>
                   ))}
@@ -455,7 +463,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                       <p className="text-[9px] text-gray-400">Get value up to</p>
                     </div>
                     <span className="text-sm font-extrabold text-amber-600">
-                      Rs. {Math.round((product?.discounted_price || product?.price || 0) * 0.15).toLocaleString()}
+                      Rs. {Math.round((Number(typeof product?.discounted_price === 'object' ? (product.discounted_price as any).current : product?.discounted_price) || Number(typeof product?.price === 'object' ? (product.price as any).current : product?.price) || 0) * 0.15).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[9px] text-gray-500">
@@ -490,8 +498,8 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                   }}
                   className={cn(
                     "flex items-center justify-center gap-1 text-xs font-semibold py-2.5 px-3.5 rounded-lg border transition-all",
-                    isInCompare
-                      ? "border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 text-[var(--colour-fsP2)]"
+                    
+                      isInCompare? "border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 text-[var(--colour-fsP2)]"
                       : "border-gray-200 bg-white text-gray-600 hover:border-[var(--colour-fsP2)]/40 hover:text-[var(--colour-fsP2)]"
                   )}
                 >

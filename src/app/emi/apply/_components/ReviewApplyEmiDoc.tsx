@@ -149,25 +149,23 @@ const RenderReview: React.FC<RenderReviewProps> = ({
           <div className="p-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               {previews['userSignature'] ? (
-                <div className="relative group shrink-0">
-                  <div className="w-full sm:w-56 aspect-[2/1] bg-white rounded-xl border-2 border-dashed border-(--colour-fsP2) overflow-hidden relative flex items-center justify-center">
-                    <Image src={previews['userSignature']} alt="Signature" fill className="object-contain p-3" />
-                  </div>
+                <div className="relative group shrink-0 w-full sm:w-56 aspect-[2/1] bg-white rounded-xl border-2 border-dashed border-(--colour-fsP2) overflow-hidden flex items-center justify-center">
+                  <Image src={previews['userSignature']} alt="Signature" fill className="object-contain p-3" />
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-md p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-md p-0 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     onClick={() => handleFileDelete('userSignature')}
                   >
                     <Trash className="w-3 h-3" />
                   </Button>
                 </div>
               ) : (
-                <div className="w-full sm:w-56 shrink-0">
+                <div className="w-full sm:w-56 shrink-0 aspect-[2/1] relative">
                   <input type="file" id="sig-upload" accept="image/*" onChange={(e) => handleFileChange(e, 'userSignature')} className="hidden" />
                   <label
                     htmlFor="sig-upload"
-                    className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-(--colour-fsP2) hover:bg-blue-50/30 transition-all"
+                    className="absolute inset-0 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-(--colour-fsP2) hover:bg-blue-50/30 transition-all"
                   >
                     <FileText className="w-5 h-5 text-(--colour-fsP2) mb-1.5" />
                     <p className="text-xs font-bold text-gray-700">Upload Signature</p>

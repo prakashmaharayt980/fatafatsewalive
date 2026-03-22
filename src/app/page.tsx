@@ -1,8 +1,23 @@
 import HomePage from './homepage'
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 import BannerFetcher from './CommonVue/BannerFetcher'
+import BasketCardFetcher from './homepage/BasketCardFetcher'
+import LazyBasketCardFetcher from './homepage/LazyBasketCardFetcher'
+import BasketCardwithImageFetcher from './homepage/BasketCardwithImageFetcher'
+import LazyOurArticlesFetcher from './homepage/LazyOurArticlesFetcher'
 import { getHomepageData } from '@/app/api/CachedHelper/getInitialData'
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
+
+// Demo category data - Replace with API fetch later
+const demoCategories = [
+  { slug: 'mobile-price-in-nepal', title: 'Mobile Phone' },
+  { slug: 'laptop-price-in-nepal', title: 'Laptop' },
+  { slug: 'accessories-price-in-nepal', title: 'Accessories' },
+  { slug: 'drone-price-in-nepal', title: 'Drone' },
+  { slug: 'home-appliance-price-in-nepal', title: 'Home' },
+  { slug: 'dslr-camera-price-in-nepal', title: 'Camera' },
+];
 
 // Generate Metadata for SEO
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,63 +44,130 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+// Loading skeletons
+const BannerSkeleton = () => (
+  <div className="w-full h-32 sm:h-48 lg:h-64 bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl animate-pulse" />
+);
 
+const BasketCardSkeleton = () => (
+  <div className="space-y-4">
+    <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-gray-100 rounded-lg h-64 animate-pulse" />
+      ))}
+    </div>
+  </div>
+);
 
 // Server Component
 async function page() {
-  // 1. Fetch Critical Data (Cached for 1 hour)
-  const { criticalData, mobilePhoneData } = await getHomepageData();
+  // 1. Fetch Critical Data (Now un-cached to resolve caching issues)
+  const { criticalData } = await getHomepageData();
 
   // 2. Client-side Lazy Loaded Sections using BannerFetcher
 
   const SectionOne = (
-    <BannerFetcher
-      key="section-one"
-      slug="home-banner-fourth-test"
-      variant="footer"
-      fetchAction={getBannerData}
-      className="mt-4"
-    />
+    <Suspense key="section-one" fallback={<BannerSkeleton />}>
+      <BannerFetcher
+        slug="home-banner-fourth-test"
+        variant="footer"
+        fetchAction={getBannerData}
+        className="mt-4"
+      />
+    </Suspense>
   );
 
   const OfferSection = (
-    <BannerFetcher
-      key="offer-section"
-      slug="offer-banner"
-      variant="offer"
-      fetchAction={getBannerData}
-      className="mt-4"
-    />
+    <Suspense key="offer-section" fallback={<BannerSkeleton />}>
+      <BannerFetcher
+        slug="offer-banner"
+        variant="offer"
+        fetchAction={getBannerData}
+        className="mt-4"
+      />
+    </Suspense>
   );
 
   const SectionTwo = (
-    <BannerFetcher
-      key="section-two"
-      slug="home-banner-fourth-test"
-      variant="footer"
-      fetchAction={getBannerData}
-      className="mt-4"
-    />
+    <Suspense key="section-two" fallback={<BannerSkeleton />}>
+      <BannerFetcher
+        slug="home-banner-fourth-test"
+        variant="footer"
+        fetchAction={getBannerData}
+        className="mt-4"
+      />
+    </Suspense>
   );
 
   const SectionThree = (
-    <BannerFetcher
-      key="section-three"
-      slug="banner-3-img-test"
-      variant="two-image"
-      fetchAction={getBannerData}
-      className="mt-4"
-    />
+    <Suspense key="section-three" fallback={<BannerSkeleton />}>
+      <BannerFetcher
+        slug="banner-3-img-test"
+        variant="two-image"
+        fetchAction={getBannerData}
+        className="mt-4"
+      />
+    </Suspense>
   );
 
   const SectionFour = (
-    <BannerFetcher
-      key="section-four"
-      slug="home-banner-fourth-test"
-      variant="footer"
-      fetchAction={getBannerData}
-      className="mt-4"
+    <Suspense key="section-four" fallback={<BannerSkeleton />}>
+      <BannerFetcher
+        slug="home-banner-fourth-test"
+        variant="footer"
+        fetchAction={getBannerData}
+        className="mt-4"
+      />
+    </Suspense>
+  );
+
+  // 3. Client-side Lazy Loaded Product Sections (BasketCards)
+
+  const BasketSection0 = (
+    <BasketCardFetcher
+      title={demoCategories[0].title}
+      slug={demoCategories[0].slug}
     />
+  );
+
+  const BasketSection1 = (
+    <LazyBasketCardFetcher
+      title={demoCategories[1].title}
+      slug={demoCategories[1].slug}
+    />
+  );
+
+  const BasketSection2 = (
+    <BasketCardwithImageFetcher
+      title={demoCategories[2].title}
+      slug={demoCategories[2].slug}
+    />
+  );
+
+  const BasketSection3 = (
+    <LazyBasketCardFetcher
+      title={demoCategories[3].title}
+      slug={demoCategories[3].slug}
+    />
+  );
+
+  const BasketSection4 = (
+    <LazyBasketCardFetcher
+      title={demoCategories[4].title}
+      slug={demoCategories[4].slug}
+    />
+  );
+
+  const BasketSection5 = (
+    <LazyBasketCardFetcher
+      title={demoCategories[5].title}
+      slug={demoCategories[5].slug}
+    />
+  );
+
+  const OurArticlesSection = (
+    <LazyOurArticlesFetcher blogpage="blog" />
   );
 
   const jsonLd = {
@@ -115,16 +197,12 @@ async function page() {
     ]
   };
 
-  // --- Banner image preload hints (LCP / SEO) ---
-  // Main banner: first image in the sorted list
-  const mainBannerFirstImg = criticalData.main?.images
-    ?.sort((a: { order: number }, b: { order: number }) => a.order - b.order)?.[0]?.image?.full as string | undefined;
 
-  // Side banners: first two images
-  const sideBannerImgs = (criticalData.side?.images
-    ?.sort((a: { order: number }, b: { order: number }) => a.order - b.order)
-    ?.slice(0, 2)
-    ?.map((img: { image: { full: string } }) => img.image.full) ?? []) as string[];
+  const mainBannerFirstImgObj = criticalData.main?.images
+    ?.sort((a: any, b: any) => (a.order || 0) - (b.order || 0))?.[0];
+  const mainBannerFirstImg = mainBannerFirstImgObj?.url || mainBannerFirstImgObj?.image?.full as string | undefined;
+
+
 
   return (
     <>
@@ -137,9 +215,7 @@ async function page() {
           fetchPriority="high"
         />
       )}
-      {sideBannerImgs.map((src) => (
-        <link key={src} rel="preload" as="image" href={src} />
-      ))}
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -147,13 +223,19 @@ async function page() {
       <HomePage
         mainBannerData={criticalData.main}
         sideBannerData={criticalData.side}
-        categorySectionImage={criticalData.category?.images?.[0]?.image?.full}
-        mobilePhoneData={mobilePhoneData}
+       
         sectionOne={SectionOne}
         offerSection={OfferSection}
         sectionTwo={SectionTwo}
         sectionThree={SectionThree}
         sectionFour={SectionFour}
+        basketSection0={BasketSection0}
+        basketSection1={BasketSection1}
+        basketSection2={BasketSection2}
+        basketSection3={BasketSection3}
+        basketSection4={BasketSection4}
+        basketSection5={BasketSection5}
+        ourArticlesSection={OurArticlesSection}
       />
     </>
   )

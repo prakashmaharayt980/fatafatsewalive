@@ -6,14 +6,19 @@ import useSWR from 'swr';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Check, X, ArrowLeft } from 'lucide-react';
-import RemoteServices from '../../api/remoteservice';
+
 import { ProductDetails } from '../../types/ProductDetailsTypes';
-import { useCompare } from '../../context/CompareContext';
+
+import { ProductService } from '@/app/api/services/product.service';
+import { useCartStore } from '@/app/context/CartContext';
+import { useShallow } from 'zustand/react/shallow';
 
 export default function ComparisonPage() {
     const params = useParams();
     const slug = params.slug as string[]; // e.g., ['iphone-14-vs-samsung-s23']
-    const { addToCompare } = useCompare();
+    const { addToCompare } = useCartStore(useShallow    (state => ({
+        addToCompare: state.addToCompare
+    })));
 
     const [products, setProducts] = useState<ProductDetails[]>([]);
     const [loading, setLoading] = useState(true);
@@ -34,23 +39,20 @@ export default function ComparisonPage() {
             }
 
             try {
-                // 2. Fetch all products in parallel
-                // Note: RemoteServices doesn't have "getBySlug", using Search as proxy or specialized endpoint if available.
-                // ideally: RemoteServices.ProductDetails_Slug(s)
-                // For now, using Search or Loop ID fetch if slugs are actually IDs (fallback)
+
 
                 const fetchedProducts = await Promise.all(
                     productSlugs.map(async (s) => {
                         // Try fetching by slug/search
                         // If s looks like an ID (numeric), use ID fetch
                         if (!isNaN(Number(s))) {
-                            const res = await RemoteServices.searchProducts({ search: s });
+                            const res = await ProductService.searchProducts({ search: s });
                             return res.data?.[0] || null;
                         }
 
                         // Fallback: Search by name/slug and take first result
                         // This is inexact but works for demo/SEO URLs if names are unique enough
-                        const res = await RemoteServices.searchProducts({ search: s.replace(/-/g, ' ') });
+                        const res = await ProductService.searchProducts({ search: s.replace(/-/g, ' ') });
                         return res.data?.[0] || null;
                     })
                 );
@@ -105,7 +107,7 @@ export default function ComparisonPage() {
                                             <p className="text-blue-600 font-bold mb-4">Rs. {p.discounted_price.toLocaleString()}</p>
                                             <button
                                                 className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition"
-                                                onClick={() => addToCompare(p)}
+                                                onClick={() => addToCompare(p as any)}
                                             >
                                                 Add to Cart
                                             </button>
@@ -140,7 +142,7 @@ export default function ComparisonPage() {
                                 <td className="p-4 font-semibold text-gray-700 sticky left-0 bg-white align-top">Summary</td>
                                 {products.map(p => (
                                     <td key={p.id} className="p-4 text-gray-600 text-sm leading-relaxed min-w-[250px]">
-                                        <div dangerouslySetInnerHTML={{ __html: p.description?.substring(0, 150) + '...' }} />
+                                        <div dangerouslySetInnerHTML={{ __html: typeof p.description === 'string' ? (p.description as string).substring(0, 150) + '...' : ((p.description as any)?.overview?.substring(0, 150) + '...' || '') }} />
                                     </td>
                                 ))}
                             </tr>

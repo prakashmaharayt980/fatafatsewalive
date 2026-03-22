@@ -16,12 +16,14 @@ import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import RemoteServices from '@/app/api/remoteservice'
+
 import {
     BrandItem, ProductListItem, FullProduct, ColorOption, ConditionAnswer,
     CONDITION_QUESTIONS, calculateExchangeValue, getMaxExchangeValue,
     extractColorsFromVariants, guessColorHex
 } from './exchange-helpers'
+import { ProductService } from '../api/services/product.service'
+import { CategoryService } from '../api/services/category.service'
 
 interface ExchangeClientProps {
     brands: BrandItem[]
@@ -99,10 +101,10 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
         try {
             let res
             if (search?.trim()) {
-                res = await RemoteServices.searchProducts({ search: search.trim(), per_page: 20 })
+                res = await ProductService.searchProducts({ search: search.trim(), per_page: 20 })
                 setProducts(res?.data || [])
             } else {
-                res = await RemoteServices.getBrandProducts(brandSlug, { per_page: 20 })
+                res = await CategoryService.getBrandProducts(brandSlug, { per_page: 20 })
                 setProducts(res?.data || [])
             }
         } catch (err) {
@@ -139,7 +141,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
         setConditionComplete(false)
         setConditionAnswers({ screen: 0, body: 0, battery: 0, functional: 0 })
         try {
-            const full = await RemoteServices.getProductBySlug(product.slug)
+            const full = await ProductService.getProductBySlug(product.slug)
             setSelectedProduct(full)
             const colors = extractColorsFromVariants(full)
             setColorOptions(colors)

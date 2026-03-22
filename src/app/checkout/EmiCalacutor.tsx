@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreditCard, Search, ArrowLeft, Calculator, Percent, ArrowRight, Calendar } from 'lucide-react';
 import { useContextEmi } from '@/app/emi/_components/emiContext';
 import { BANK_PROVIDERS as AvailablebankProvider } from '@/app/emi/_components/_func_emiCalacutor';
-import RemoteServices from '@/app/api/remoteservice';
+
 import Image from 'next/image';
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
+import { ProductService } from '../api/services/product.service';
 
 export default function EMICalculator() {
   const { emiContextInfo, setEmiContextInfo } = useContextEmi();
@@ -45,7 +46,7 @@ export default function EMICalculator() {
   // Search and filter products
   useEffect(() => {
     if (searchQuery.trim()) {
-      RemoteServices.searchProducts({ search: searchQuery.trim() }).then(res => {
+      ProductService.searchProducts({ search: searchQuery.trim() }).then(res => {
         setFilteredProducts(res.data);
       }).catch(e => console.log('error', e));
     } else {
@@ -170,7 +171,7 @@ export default function EMICalculator() {
                       )}
                       <div className="flex-1">
                         <p className="font-medium text-gray-900 text-sm">{product.name}</p>
-                        <p className="text-xs text-gray-600">  {currencySymbol}{product.price}</p>
+                        <p className="text-xs text-gray-600">  {currencySymbol}{(typeof product.price === 'object' ? product.price.current : product.price).toLocaleString()}</p>
                       </div>
                     </div>
                   ))}
@@ -203,7 +204,7 @@ export default function EMICalculator() {
                     />
                   )}
                   <h3 className="text-sm font-semibold text-gray-900 mb-1">{emiContextInfo.product.name}</h3>
-                  <p className="text-lg font-bold text-blue-600">  {currencySymbol}{emiContextInfo.product.price}</p>
+                  <p className="text-lg font-bold text-blue-600">  {currencySymbol}{(typeof emiContextInfo.product.price === 'object' ? emiContextInfo.product.price.current : emiContextInfo.product.price).toLocaleString()}</p>
                 </div>
               </div>
 

@@ -1,31 +1,26 @@
 // src/app/layout.tsx
 import './globals.css'; // Tailwind or global styles
 import React from 'react';
-import HeaderBody from '@/app/layouts/headerbody';
 
-import FooterBody from '@/app/layouts/FooterBody';
 import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google'
-import { Toaster } from '@/components/ui/sonner';
-import { CartProvider1 } from '@/app/checkout/CartContext1';
-import { CompareProvider } from '@/app/context/CompareContext';
-import LoginPage from '@/app/login/page';
-import { AuthProvider } from '@/app/context/AuthContext';
-import { AddressProvider } from '@/app/context/AddressContext';
-import { EmiProvider } from '@/app/emi/_components/emiContext';
-import { GoogleOAuthProvider } from "@react-oauth/google";
-import { GoogleAnalytics } from '@next/third-parties/google';
-import { getGlobalData } from '@/app/context/GlobalData';
-import UserActivityTracker from '@/components/UserActivityTracker';
 
-// --- Dynamic Imports for Non-Critical & Heavy UI Components ---
-// Defers loading JS for these components
-const ChatBot = dynamic(() => import('./chatbot'));
-const CheckoutDrawer = dynamic(() => import('@/app/checkout/CheckoutDrawer'));
-const WishList = dynamic(() => import('@/app/emi/_components/Wishlist'));
-const GlobalCompareDrawer = dynamic(() => import('@/components/GlobalCompareDrawer'));
-const LoginAlertDialog = dynamic(() => import('@/components/auth/LoginAlertDialog'));
-const FacebookPixel = dynamic(() => import('@/app/layouts/FacebookPixels'));
+
+
+
+import { AuthProvider } from '@/app/context/AuthContext';
+
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { getGlobalData } from '@/app/context/GlobalData';
+import { Toaster } from 'sonner';
+
+
+import ClientSideDrawers from './clientlayout';
+import HeaderBody from './layouts/headerbody';
+
+
+const FooterBody = dynamic(() => import('./layouts/FooterBody'));
+
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -74,28 +69,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
 
           <AuthProvider initialState={{ isLoggedIn, user, accessToken }}>
-            <AddressProvider>
-              <CartProvider1>
-                <CompareProvider>
-                  <HeaderBody initialNavItems={navItems} />
-                  <main className="flex-1 w-full mx-auto bg-gray-50">
-                    <EmiProvider>
-                      {children}
-                      <LoginPage />
-                    </EmiProvider>
-                  </main>
-                  <FooterBody />
-                  <ChatBot />
-                  <Toaster richColors position="top-right" />
-                  <CheckoutDrawer />
-                  <FacebookPixel />
 
-                  <WishList />
-                  <GlobalCompareDrawer />
-                  <LoginAlertDialog />
-                </CompareProvider>
-              </CartProvider1>
-            </AddressProvider>
+            <HeaderBody initialNavItems={navItems} />
+            <main className="flex-1 w-full mx-auto bg-gray-50">
+
+              {children}
+            </main>
+            <FooterBody />
+
+            <Toaster richColors position="top-right" />
+            <ClientSideDrawers />
+
+
+
           </AuthProvider>
 
 
@@ -103,8 +89,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 
       </body>
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
-      <UserActivityTracker />
+
+
     </html>
   );
 }

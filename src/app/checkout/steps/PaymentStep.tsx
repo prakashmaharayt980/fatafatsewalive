@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { CheckoutState } from '../checkoutTypes';
 import { PaymentMethodsOptions } from '../../CommonVue/Payment';
+import { useAuth } from '@/app/context/AuthContext';
 
 interface PaymentStepProps {
     state: CheckoutState;
@@ -29,6 +30,7 @@ const allPaymentMethods = [
 
 export default function PaymentStep({ state, onPaymentMethodChange, onPlaceOrder, onBack, isSubmitting }: PaymentStepProps) {
     const { paymentMethod } = state;
+    const { authState, triggerLoginAlert } = useAuth();
 
     const isComplete = paymentMethod !== '';
 
@@ -120,7 +122,13 @@ export default function PaymentStep({ state, onPaymentMethodChange, onPlaceOrder
                     Back
                 </Button>
                 <Button
-                    onClick={onPlaceOrder}
+                    onClick={() => {
+                        if (!authState.isLoggedIn) {
+                            triggerLoginAlert();
+                        } else {
+                            onPlaceOrder();
+                        }
+                    }}
                     disabled={!isComplete || isSubmitting}
                     className="flex-1 sm:flex-none h-12 px-8 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-base flex items-center justify-center gap-2"
                 >

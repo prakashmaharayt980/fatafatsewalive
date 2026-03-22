@@ -1,11 +1,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import RemoteServices from '@/app/api/remoteservice'
-import parse from 'html-react-parser'
-import DOMPurify from 'dompurify'
+import { AddressService } from '../api/services/address.service'
 
-// --- Interfaces ---
 export interface LocationData {
     lat: number
     lng: number
@@ -63,7 +60,7 @@ export function AddressProvider({ children }: { children: ReactNode }) {
         try {
             // Note: The /v1/pages/locations endpoint should return HTML or structured data.
             // Based on user instructions, it returns HTML that needs parsing.
-            const res = await RemoteServices.GetLocations()
+            const res = await AddressService.GetLocations()
 
             // Assuming the API returns a page object with content
             const content = res?.content || ''

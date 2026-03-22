@@ -12,8 +12,9 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
-import RemoteServices from '../api/remoteservice';
+
 import { formatDate } from '../CommonVue/datetime';
+import { ProfileService } from '../api/services/profile.service';
 
 interface ProfileResponse {
     id: number;
@@ -53,7 +54,7 @@ function Profile() {
 
     const FetchUserData = async () => {
         try {
-            const res = await RemoteServices.ProfileView();
+            const res = await ProfileService.ProfileView();
             setUserDataState(res);
         } catch (error) {
             console.error("Failed to fetch profile:", error);
@@ -83,7 +84,7 @@ function Profile() {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            // await RemoteServices.UpdateProfile(formData);
+    
             await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
 
             setUserDataState(prev => prev ? ({

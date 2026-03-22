@@ -28,8 +28,8 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
       .map((img) => ({
         id: img.id.toString(),
         name: img.content || 'Banner Image',
-        src: img.image.full,
-        mainimgs: img.image.banner,
+        src: img.url || img.image?.full || '',
+        mainimgs: img.url || img.image?.banner || img.image?.full || '',
         link: img.link || '#',
       }));
   }, [data]);

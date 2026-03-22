@@ -5,7 +5,7 @@ import { Loader } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { CompanyLogo, PaymentMethodsOptions } from "../CommonVue/Payment";
-import RemoteServices from "../api/remoteservice";
+
 import { toast } from "sonner";
 import { loginSchema, registerSchema, forgotSchema, verifySchema } from './validationSchema';
 import { formSections } from './formSections';
@@ -14,9 +14,10 @@ import { useRouter } from 'next/navigation';
 
 
 import { useAuth } from "../context/AuthContext";
+import { AuthService } from "../api/services/auth.service";
 
 export default function LoginPage() {
-  const { loginDailogOpen, setloginDailogOpen } = useAuth();
+  const { loginDailogOpen, setloginDailogOpen, login } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('login');
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ export default function LoginPage() {
     register: { name: '', email: '', password: '', password_confirmation: '', phone: '', address: '' },
     forgot: { email: '' },
     verify: { otpCode: '', newPassword: '', confirmNewPassword: '' },
-    socialComplete: { phone: '', address: '', password: '', confirmPassword: '' },
+
   });
 
 
@@ -110,18 +111,21 @@ export default function LoginPage() {
     if (!isValid) return;
 
     setLoading(true);
-    try {
-      const res = await RemoteServices.Login(trimmedData);
-      if (res) {
-        toast.success("Login successful!");
-        // router.push('/');
-        window.location.reload();
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Invalid email or password");
-    } finally {
-      setLoading(false);
-    }
+    AuthService.Login(trimmedData)
+      .then(res => {
+        if (res && res.data) {
+          toast.success("Login successful!");
+          login(res.data.access_token, res.data.user);
+          setloginDailogOpen(false);
+          setFormData(prev => ({ ...prev, login: { email: '', password: '' } }));
+        }
+      })
+      .catch((error: any) => {
+        toast.error(error.response?.data?.detail || error.response?.data?.message || "Invalid email or password");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const handleGoogleLogin = async (credentialResponse) => {
@@ -129,39 +133,37 @@ export default function LoginPage() {
     setSocialToken(id_token);
     setSocialProvider('google');
 
-    try {
-
-
-      const res = await RemoteServices.GoogleLogin(id_token)
-
-      if (res) {
-        toast.success("Login successful!");
-        setActiveSection('login');
-        // router.push('/');
-      }
-    } catch (error) {
-      console.log('err', error)
-      toast.error("Network error during Google login");
-    }
+    AuthService.GoogleLogin(id_token)
+      .then(res => {
+        if (res && res.data) {
+          toast.success("Login successful!");
+          login(res.data.access_token, res.data.user);
+          setloginDailogOpen(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Google login err', error);
+        toast.error("Network error during Google login");
+      });
   };
 
   const handleFacebookLogin = async (response) => {
-
     const access_token = response.accessToken;
     setSocialToken(access_token);
     setSocialProvider('facebook');
 
-    try {
-      const res = await RemoteServices.FacebookLogin(access_token)
-
-      if (res) {
-        toast.success("Login successful!");
-        setActiveSection('login');
-        // router.push('/');
-      }
-    } catch (error) {
-      toast.error("Network error during Facebook login");
-    }
+    AuthService.FacebookLogin(access_token)
+      .then(res => {
+        if (res && res.data) {
+          toast.success("Login successful!");
+          login(res.data.access_token, res.data.user);
+          setloginDailogOpen(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Facebook login err', error);
+        toast.error("Network error during Facebook login");
+      });
   };
 
   const handleRegister = async (e) => {
@@ -171,47 +173,51 @@ export default function LoginPage() {
     if (!isValid) return;
 
     setLoading(true);
-    RemoteServices.Register(trimmedData).then(res => {
-      toast.success("Registration successful! Please login.");
-      setActiveSection('login');
-      setFormData(prev => ({
-        ...prev,
-        register: { name: '', email: '', password: '', password_confirmation: '', phone: '', address: '' }
-      }));
-    }).catch((error) => {
-      if (error.response && error.response.status === 400 && error.response.data.email) {
-        toast.error(error.response.data.email[0]);
-      } else {
-        toast.error(error.message || "Please check your details and try again");
-      }
-    }).finally(() => {
-      setLoading(false);
-    });
+    AuthService.Register(trimmedData)
+      .then(res => {
+        if (res && res.data) {
+          toast.success("Registration successful!");
+          login(res.data.access_token, res.data.user);
+          setloginDailogOpen(false);
+          setFormData(prev => ({
+            ...prev,
+            register: { name: '', email: '', password: '', password_confirmation: '', phone: '', address: '' }
+          }));
+        }
+      })
+      .catch((error) => {
+        if (error.response && error.response.status === 400 && error.response.data.email) {
+          toast.error(error.response.data.email[0]);
+        } else {
+          toast.error(error.response?.data?.message || error.message || "Please check your details and try again");
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const handleForgotPassword = async (e) => {
-    // ... (keep implementation)
     e.preventDefault();
     const trimmedData = trimFormData('forgot');
     const isValid = await validateForm('forgot', trimmedData);
     if (!isValid) return;
 
     setLoading(true);
-    RemoteServices.ForgottenPassword(trimmedData).then(res => {
-      toast.success("Verification code sent to your email!");
-      setFormData(prev => ({
-        ...prev,
-        verify: { otpCode: '', newPassword: '', confirmNewPassword: '' }
-      }));
-      setActiveSection('verify'); // Go directly to verify
-    }).catch((error) => {
-      toast.error(error.message || "Email not found");
-    }).finally(() => {
-      setLoading(false);
-    });
+    AuthService.ForgottenPassword(trimmedData)
+      .then(res => {
+        toast.success("Verification code sent to your email!");
+        setFormData(prev => ({ ...prev, verify: { otpCode: '', newPassword: '', confirmNewPassword: '' } }));
+        setActiveSection('verify');
+      })
+      .catch((error) => {
+        toast.error(error.response?.data?.message || error.message || "Email not found");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  // NEW: Handle just the OTP Step check
   const handleVerifyCode = async (e) => {
     e.preventDefault();
     const code = formData.verify.otpCode?.trim();
@@ -221,59 +227,51 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    try {
-      // Verify OTP with backend before showing password fields
-      // User requested: "otp verfiy end only otp code ,as code not otpcode"
-      await RemoteServices.VerifyOtp({
-        email: formData.forgot.email,
-        code: code,
-      } as any);
-
-      setOtpVerified(true);
-      toast.success("Code verified successfully");
-    } catch (error: any) {
-      console.error("OTP Verification Error:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Invalid Verification Code";
-      setErrors(prev => ({ ...prev, verify: { ...prev.verify, otpCode: errorMessage } }));
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    AuthService.VerifyOtp({ email: formData.forgot.email, code: code } as any)
+      .then(() => {
+        setOtpVerified(true);
+        toast.success("Code verified successfully");
+      })
+      .catch((error: any) => {
+        console.error("OTP Verification Error:", error);
+        const errorMessage = error.response?.data?.message || error.message || "Invalid Verification Code";
+        setErrors(prev => ({ ...prev, verify: { ...prev.verify, otpCode: errorMessage } }));
+        toast.error(errorMessage);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  // Modified: Resets password
   const handleResetPassword = async (e) => {
     e.preventDefault();
     const trimmedData = trimFormData('verify');
-
-    // We only validate password fields here mostly, but schema checks all
     const isValid = await validateForm('verify', trimmedData);
-    console.log("Validation Result:", isValid, trimmedData);
     if (!isValid) {
       toast.error("Please check the form for errors");
       return;
     }
 
     setLoading(true);
-    try {
-      // Include email from the previous step so the backend knows who to verify
-      // Map otpCode to code as requested
-      const payload = {
-        email: formData.forgot.email,
-        code: trimmedData.otpCode,
-        password: trimmedData.newPassword,
-        password_confirmation: trimmedData.confirmNewPassword
-      };
+    const payload = {
+      email: formData.forgot.email,
+      code: trimmedData.otpCode,
+      password: trimmedData.newPassword,
+      password_confirmation: trimmedData.confirmNewPassword
+    };
 
-      const res = await RemoteServices.ResetPassword(payload as any); // Use NEW endpoint
-      toast.success("Password reset successfully!");
-      setActiveSection('resetSuccess');
-      setOtpVerified(false); // Reset state
-    } catch (error) {
-      toast.error(error.message || "Failed to reset password");
-    } finally {
-      setLoading(false);
-    }
+    AuthService.ResetPassword(payload as any)
+      .then(res => {
+        toast.success("Password reset successfully!");
+        setActiveSection('resetSuccess');
+        setOtpVerified(false);
+      })
+      .catch(error => {
+        toast.error(error.response?.data?.message || error.message || "Failed to reset password");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const sectionProps = {

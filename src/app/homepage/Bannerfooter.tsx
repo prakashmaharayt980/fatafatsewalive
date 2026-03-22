@@ -23,7 +23,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
       .map((img) => ({
         id: img.id,
         name: img.content || 'Banner Image',
-        src: img.image.full,
+        src: img.url || img.image?.full || '',
         link: img.link,
       }));
   }, [data]);

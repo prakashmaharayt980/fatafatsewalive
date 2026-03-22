@@ -12,11 +12,8 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
     <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden sticky top-24">
       {/* Header */}
       <div className="bg-[var(--colour-fsP2)] p-4 text-white">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-base">Order Summary</h3>
-          <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded text-white/90">
-            {product.name?.substring(0, 20)}...
-          </span>
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-bold text-base whitespace-nowrap">Order Summary</h3>
         </div>
       </div>
 
@@ -24,12 +21,18 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
         {/* Product Details */}
         <div className="flex gap-4">
           <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
-            <Image
-              src={product.image?.full || ''}
-              alt={product.name || 'product'}
-              fill
-              className="object-contain p-1"
-            />
+            {product.thumb?.url || product.images?.[0]?.url ? (
+              <Image
+                src={product.thumb?.url || product.images?.[0]?.url || ''}
+                alt={product.name || 'product'}
+                fill
+                className="object-contain p-1"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                <ShoppingBag className="w-8 h-8 opacity-20" />
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <p className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1">

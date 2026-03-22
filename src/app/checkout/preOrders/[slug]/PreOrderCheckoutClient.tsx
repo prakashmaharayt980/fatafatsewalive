@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
@@ -59,18 +59,10 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [processingPaymentOrder, setProcessingPaymentOrder] = useState<number | null>(null);
 
-    const productPrice = product.discounted_price || product.price;
-    const isFullPaymentRequired = productPrice <= 5000;
+    const productPrice = product.discounted_price || (typeof product.price === 'object' ? product.price.current : product.price);
 
-    useEffect(() => {
-        setDepositAmount(isFullPaymentRequired ? productPrice : 5000);
-    }, [isFullPaymentRequired, productPrice]);
-
-    useEffect(() => {
-        if (!isLoading && authState.isLoggedIn === false) {
-            triggerLoginAlert();
-        }
-    }, [isLoading, authState.isLoggedIn, triggerLoginAlert]);
+    // Guest mode — no login required to browse/fill form
+    // Login is enforced only on submit via PreOrderPaymentStep
 
     const goToStep = useCallback((step: PreOrderStep) => setCurrentStep(step), []);
     const nextStep = useCallback(() => {
@@ -135,16 +127,8 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
         );
     }
 
-    if (authState.isLoggedIn === false) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <p className="text-gray-600 font-medium mb-3">Please log in to continue booking.</p>
-                    <Link href="/" className="text-sm text-[var(--colour-fsP2)] font-semibold hover:underline">← Back to Home</Link>
-                </div>
-            </div>
-        );
-    }
+    // No auth gate — guests can proceed freely
+    // Login is enforced only on submit (PreOrderPaymentStep)
 
     const renderStep = () => {
         switch (currentStep) {
@@ -174,7 +158,7 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
                         productPrice={productPrice}
                         depositAmount={depositAmount}
                         setDepositAmount={setDepositAmount}
-                        isFullPaymentRequired={isFullPaymentRequired}
+                        isFullPaymentRequired={false}
                         onNext={nextStep}
                         onBack={prevStep}
                     />

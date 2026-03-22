@@ -1,13 +1,13 @@
-import React from 'react';
-import RemoteServices from '@/app/api/remoteservice';
+
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import PreOrderCheckoutClient from './PreOrderCheckoutClient';
+import { ProductService } from '@/app/api/services/product.service';
 
 // Same fetch pattern as products/[slug]/page.tsx
 async function getProduct(slug: string): Promise<ProductDetails | null> {
     if (!slug) return null;
     try {
-        const data = await RemoteServices.getProductBySlug(slug);
+        const data = await ProductService.getProductBySlug(slug);
         return data;
     } catch (error) {
         console.error('Error fetching product for pre-order:', error);

@@ -32,6 +32,8 @@ const BannerFetcher = ({
     const [data, setData] = useState<any>(null);
     const [hasFetched, setHasFetched] = useState(false);
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const { ref, inView } = useInView({
         triggerOnce: true,
         threshold: 0.1,
@@ -41,11 +43,15 @@ const BannerFetcher = ({
     useEffect(() => {
         if (inView && !hasFetched) {
             setHasFetched(true);
+            setIsLoading(true);
             fetchAction(slug)
                 .then((res) => {
                     if (res) setData(res);
                 })
-                .catch((err) => console.error(`Error loading banner ${slug}:`, err));
+                .catch((err) => console.error(`Error loading banner ${slug}:`, err))
+                .finally(() => {
+                    setIsLoading(false);
+                });
         }
     }, [inView, hasFetched, slug, fetchAction]);
 

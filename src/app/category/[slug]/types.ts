@@ -1,122 +1,69 @@
-import { ProductDetails } from '@/app/types/ProductDetailsTypes';
-import { getAllCategory as GlobalCategoryData } from '@/app/types/CategoryTypes';
-import { BrandsResponse } from '@/app/types/Brands';
+import { getAllCategory } from '@/app/types/category';
+import { BasketProduct } from '@/app/types/ProductDetailsTypes';
 
-// ============================================
-// FILTER TYPES
-// ============================================
-export interface FilterState {
-    categories: number[];
-    brands: number[];
-    colors: string[];
-    sizes: string[];
-    priceRange: [number, number];
-    sortBy: SortOption;
-    inStock: boolean;
-    onSale: boolean;
-    emiOnly: boolean;
-}
-
-export type SortOption = 'default' | 'price-low-high' | 'price-high-low' | 'newest' | 'rating';
-
-export interface FilterOption {
-    id: string | number;
-    label: string;
-    count?: number;
-    color?: string;
-}
-
-// ============================================
-// API RESPONSE TYPES
-// ============================================
-export type CategoryData = GlobalCategoryData['data'][0];
-
-export type BrandData = BrandsResponse['data'][0];
-
-export type Product = ProductDetails;
-
-export interface PaginationMeta {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-}
+export type CategoryData = getAllCategory['data'][0];
 
 export interface CategoryProductsResponse {
-    data: Product[];
-    meta: PaginationMeta;
+    data: {
+        category?: CategoryData;
+        products?: BasketProduct[];
+    };
+    meta: {
+        total: number;
+        current_page: number;
+        per_page: number;
+        last_page: number;
+    }
 }
 
-export interface CategoriesResponse {
-    data: CategoryData[];
+export interface FilterState {
+    category: string[];
+    brand: string[];
+    colors: string[];
+    sizes: string[];
+    min_price: number;
+    max_price: number;
+    sort: SortOption;
+    emi_enabled: boolean;
+    pre_order: boolean;
+    exchange_available: boolean;
 }
 
-
-
-// ============================================
-// COMPONENT PROPS TYPES
-// ============================================
-export interface PageParams {
-    slug: string;
-}
+export type SortOption = 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'newest';
 
 export interface SearchParams {
-    id?: string;
-    page?: string;
-    categories?: string;
-    brands?: string;
-    colors?: string;
-    sizes?: string;
-    min_price?: string;
-    max_price?: string;
-    sort?: string;
-    in_stock?: string;
-    on_sale?: string;
-    emi_enabled?: string;
+    page?: number;
+    per_page?: number;
+    sort?: SortOption;
+    min_price?: number;
+    max_price?: number;
+    brand?: string;
+    category?: string;
+    emi_enabled?: boolean;
+    pre_order?: boolean;
+    exchange_available?: boolean;
 }
 
-export interface CategoryPageData {
-    category: CategoryData | null;
-    initialProducts: CategoryProductsResponse;
-    categories: CategoryData[];
-    brands: BrandData[];
-    slug: string;
-    id: string;
-}
-
-// ============================================
-// CONSTANTS
-// ============================================
 export const INITIAL_FILTERS: FilterState = {
-    categories: [],
-    brands: [],
+    category: [],
+    brand: [],
     colors: [],
     sizes: [],
-    priceRange: [0, 100000],
-    sortBy: 'default',
-    inStock: false,
-    onSale: false,
-    emiOnly: false,
+    min_price: 0,
+    max_price: 100000,
+    sort: 'newest',
+    emi_enabled: false,
+    pre_order: false,
+    exchange_available: false,
 };
 
 export const SORT_OPTIONS = [
-    { id: 'default', label: 'Relevance' },
-    { id: 'price-low-high', label: 'Price: Low to High' },
-    { id: 'price-high-low', label: 'Price: High to Low' },
-    { id: 'newest', label: 'Newest First' },
-    { id: 'rating', label: 'Top Rated' },
+    { id: 'newest', label: 'Relevance' },
+    { id: 'price_asc', label: 'Price: Low to High' },
+    { id: 'price_desc', label: 'Price: High to Low' },
+    { id: 'name_asc', label: 'Name: A to Z' },
+    { id: 'name_desc', label: 'Name: Z to A' },
 ] as const;
-
-export const COLORS: FilterOption[] = [
-    { id: 'black', label: 'Black', color: '#0a0a0a' },
-    { id: 'white', label: 'White', color: '#fafafa' },
-    { id: 'red', label: 'Red', color: '#dc2626' },
-    { id: 'blue', label: 'Blue', color: '#2563eb' },
-    { id: 'green', label: 'Green', color: '#16a34a' },
-    { id: 'orange', label: 'Orange', color: '#ea580c' },
-    { id: 'purple', label: 'Purple', color: '#9333ea' },
-    { id: 'pink', label: 'Pink', color: '#db2777' },
-];
 
 export const GRID_CONFIGS = {
     grid4: 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4',
@@ -124,4 +71,4 @@ export const GRID_CONFIGS = {
     list: 'grid-cols-1',
 } as const;
 
-export type ViewMode = 'grid4' | 'grid5' | 'list';
+export type ViewMode =  'grid3' |  'grid4' | 'grid5' | 'list';

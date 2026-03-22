@@ -1,74 +1,86 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { SWRConfig } from 'swr';
-import {
-    FilterState,
-    CategoryProductsResponse,
-    CategoryData,
-    BrandData,
-    ViewMode,
-    INITIAL_FILTERS,
-} from '../types';
-import { useFilters, useFilterData } from '../hooks';
-import FilterSidebar from "./FilterSidebar";
-import ProductGrid from './ProductGrid';
-import CategoryHeader from './CategoryHeader';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { FilterState, ViewMode, INITIAL_FILTERS } from '../types';
+import { fetchCategoryProducts } from './actions';
+
 import MobileFilterDrawer from './MobileFilterDrawer';
 import CategoryBanner from './CategoryBanner';
 import { SmartStickyWrapper } from './SmartStickyWrapper';
+import ParsedContent from '@/app/products/ParsedContent';
+import { CategoryPageClientProps } from './interfaces';
+import FilterSidebar from './FilterSidebar';
+import CategoryHeader from './CategoryHeader';
+import ProductGrid from './ProductGrid';
 
-// ============================================
-// GLOBAL STYLES
-// ============================================
-const GlobalStyles = () => (
-    <style jsx global>{`
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function buildQueryString(filters: FilterState): string {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+        const isDefault = value === INITIAL_FILTERS[key as keyof FilterState];
+        const isEmptyArray = Array.isArray(value) && value.length === 0;
+        if (value !== undefined && value !== null && !isDefault && !isEmptyArray && value !== false) {
+            params.set(key, Array.isArray(value) ? value.join(',') : String(value));
         }
-
-        .animate-fadeInUp {
-            animation: fadeInUp 0.5s ease-out forwards;
-            opacity: 0;
-        }
-
-        /* Hide scrollbar everywhere but keep scrollable */
-        .custom-scrollbar::-webkit-scrollbar,
-        *::-webkit-scrollbar {
-            width: 0px;
-            height: 0px;
-            display: none;
-        }
-
-        .custom-scrollbar,
-        * {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    `}</style>
-);
-
-// ============================================
-// MAIN CLIENT COMPONENT
-// ============================================
-interface CategoryPageClientProps {
-    categoryId: string;
-    slug: string;
-    title: string;
-    category: CategoryData | null;
-    bannerData?: any;
-    initialProducts: CategoryProductsResponse;
-    initialCategories: CategoryData[];
-    initialBrands: BrandData[];
-    fallback: Record<string, unknown>;
+    });
+    return params.toString();
 }
+
+function parseFilters(sp: Record<string, string>): FilterState {
+    return {
+        ...INITIAL_FILTERS,
+        ...(sp.sort && { sort: sp.sort as FilterState['sort'] }),
+        ...(sp.emi_enabled === 'true' && { emi_enabled: true }),
+        ...(sp.pre_order === 'true' && { pre_order: true }),
+        ...(sp.exchange_available === 'true' && { exchange_available: true }),
+        ...(sp.min_price && { min_price: Number(sp.min_price) }),
+        ...(sp.max_price && { max_price: Number(sp.max_price) }),
+        ...(sp.category && { category: sp.category.split(',') }),
+        ...(sp.brand && { brand: sp.brand.split(',') }),
+    };
+}
+
+// Always produce a fresh object — prevents React bailing out on same reference
+function freshFilters(f: FilterState): FilterState {
+    return { ...f };
+}
+
+// ─── Core fetch helper — used by both useEffect and clearAllFilters ───────────
+
+function runFetch(
+    slug: string,
+    filters: FilterState,
+    abortRef: React.MutableRefObject<AbortController | null>,
+    setProducts: React.Dispatch<React.SetStateAction<any[]>>,
+    setMeta: React.Dispatch<React.SetStateAction<any>>,
+    setIsFetching: React.Dispatch<React.SetStateAction<boolean>>,
+) {
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setProducts([]);
+    setMeta({ current_page: 1, per_page: 10, total: 0, last_page: 1 });
+    setIsFetching(true);
+
+    fetchCategoryProducts({ slug, filters, page: 1 })
+        .then(result => {
+            if (controller.signal.aborted) return;
+            if (!result.error) {
+                setProducts(result.products);
+                setMeta(result.meta);
+            }
+        })
+        .finally(() => {
+            if (!controller.signal.aborted) setIsFetching(false);
+        });
+
+    return controller;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CategoryPageClient({
     categoryId,
@@ -78,156 +90,227 @@ export default function CategoryPageClient({
     bannerData,
     initialProducts,
     initialCategories,
-    initialBrands,
-    fallback,
+    sub_category,
 }: CategoryPageClientProps) {
-    // UI State
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
     const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('grid5');
 
-    console.log('id', categoryId)
-    // Filter hook with URL sync
-    const {
-        filters,
-        setFilters,
-        toggleArrayFilter,
-        clearAllFilters,
-        activeFilterCount,
-        isPending,
-    } = useFilters({ syncToUrl: true });
+    // sub_category seeded once into filters.category — never injected again after init
+    const [filters, setFiltersState] = useState<FilterState>(() => {
+        const sp = Object.fromEntries(searchParams.entries());
+        const parsed = parseFilters(sp);
+        if (sub_category && !sp.category) {
+            parsed.category = [sub_category];
+        }
+        return parsed;
+    });
 
-    // Filter data with hydrated initial data
-    const { categories, brands, isLoading: filterDataLoading } = useFilterData(
-        initialCategories,
-        initialBrands
+    const [products, setProducts] = useState<any[]>(
+        initialProducts?.data?.products ?? []
+    );
+    const [meta, setMeta] = useState(
+        initialProducts?.meta ?? { current_page: 1, per_page: 10, total: 0, last_page: 1 }
+    );
+    const [isFetching, setIsFetching] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    const isFirstMount = useRef(true);
+    const isInternalUpdate = useRef(false);
+    const abortRef = useRef<AbortController | null>(null);
+    // When clear triggers its own fetch directly, skip the useEffect fetch
+    const skipNextEffect = useRef(false);
+
+    // ── Back/forward navigation sync ──
+    useEffect(() => {
+        if (isFirstMount.current) return;
+        if (isInternalUpdate.current) {
+            isInternalUpdate.current = false;
+            return;
+        }
+        // Real browser navigation — re-parse URL
+        const sp = Object.fromEntries(searchParams.entries());
+        const parsed = parseFilters(sp);
+        if (sp.sub_category && !sp.category) {
+            parsed.category = [sp.sub_category];
+        }
+        setFiltersState(parsed);
+    }, [searchParams]);
+
+    // ── Re-fetch on filter change ──
+    useEffect(() => {
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
+            return;
+        }
+        // clearAllFilters already handled the fetch — don't double fetch
+        if (skipNextEffect.current) {
+            skipNextEffect.current = false;
+            return;
+        }
+
+        isInternalUpdate.current = true;
+        const qs = buildQueryString(filters);
+        window.history.replaceState(null, '', qs ? `${pathname}?${qs}` : pathname);
+
+        const controller = runFetch(slug, filters, abortRef, setProducts, setMeta, setIsFetching);
+        return () => controller.abort();
+    }, [filters, pathname, slug]);
+
+    // ── Load more ──
+    const handleLoadMore = useCallback(async () => {
+        if (isLoadingMore || meta.current_page >= meta.last_page) return;
+        setIsLoadingMore(true);
+
+        const result = await fetchCategoryProducts({
+            slug,
+            filters,
+            page: meta.current_page + 1,
+        });
+
+        if (!result.error) {
+            setProducts(prev => {
+                const seen = new Set(prev.map((p: any) => p.id));
+                return [...prev, ...result.products.filter((p: any) => !seen.has(p.id))];
+            });
+            setMeta(result.meta);
+        }
+        setIsLoadingMore(false);
+    }, [isLoadingMore, meta, slug, filters]);
+
+    // ── Filter setters ──
+    const setFilters = useCallback(
+        (updater: FilterState | ((prev: FilterState) => FilterState)) =>
+            setFiltersState(updater),
+        []
     );
 
-    // Handlers
-    const handleSortChange = useCallback(
-        (sortBy: FilterState['sortBy']) => {
-            setFilters((prev) => ({ ...prev, sortBy }));
+    const toggleArrayFilter = useCallback(
+        (key: 'category' | 'brand' | 'colors' | 'sizes', value: string | number) => {
+            setFilters(prev => {
+                const arr = prev[key] as (string | number)[];
+                return {
+                    ...prev,
+                    [key]: arr.includes(value)
+                        ? arr.filter(v => v !== value)
+                        : [...arr, value],
+                };
+            });
         },
+        [setFilters]
+    );
+
+    const clearAllFilters = useCallback(() => {
+        // Update URL immediately
+        isInternalUpdate.current = true;
+        window.history.replaceState(null, '', pathname);
+
+        // Tell the useEffect to skip — we're fetching here directly
+        skipNextEffect.current = true;
+
+        // freshFilters ensures new object reference even if already at defaults
+        // This guarantees setFiltersState triggers a re-render + sidebar resets
+        const cleared = freshFilters(INITIAL_FILTERS);
+        setFiltersState(cleared);
+
+        // Fetch directly — doesn't rely on useEffect
+        runFetch(slug, cleared, abortRef, setProducts, setMeta, setIsFetching);
+    }, [slug, pathname]);
+
+    const handleSortChange = useCallback(
+        (sort: FilterState['sort']) => setFilters(prev => ({ ...prev, sort })),
         [setFilters]
     );
 
     const handleFiltersChange = useCallback(
-        (newFilters: FilterState) => {
-            setFilters(newFilters);
-        },
+        (newFilters: FilterState) => setFilters(newFilters),
         [setFilters]
     );
 
-    const handleMobileFilterOpen = useCallback(() => {
-        setMobileFilterOpen(true);
-    }, []);
+    // ── Derived ──
+    const activeFilterCount = useMemo(() => (
+        (filters.category?.length ?? 0) +
+        (filters.brand?.length ?? 0) +
+        (filters.colors?.length ?? 0) +
+        (filters.sizes?.length ?? 0) +
+        (filters.min_price > 0 || filters.max_price < 100000 ? 1 : 0)
+    ), [filters]);
 
-    const handleMobileFilterClose = useCallback(() => {
-        setMobileFilterOpen(false);
-    }, []);
+    const hasMore = meta.current_page < meta.last_page;
+    const categories = initialCategories ?? [];
+    const brands: { id: number; name: string; slug: string }[] = [];
 
-    const handleMobileFilterApply = useCallback(() => {
-        setMobileFilterOpen(false);
-    }, []);
+    const filterSidebarProps = {
+        filters,
+        onFiltersChange: handleFiltersChange,
+        onToggleFilter: toggleArrayFilter,
+        onClearAll: clearAllFilters,
+        categories,
+        brands,
+        loadingCategories: false,
+        loadingBrands: false,
+    };
 
     return (
-        <SWRConfig value={{ fallback }}>
-            <div className="min-h-screen bg-[#f8fafc]">
-                {/* Mobile Filter Drawer */}
-                <MobileFilterDrawer
-                    isOpen={mobileFilterOpen}
-                    onClose={handleMobileFilterClose}
-                    onClear={clearAllFilters}
-                    onApply={handleMobileFilterApply}
-                >
-                    <div className="px-3 sm:px-4 py-4">
-                        <FilterSidebar
+        <div className="min-h-screen bg-[#f8fafc] scrollbar-hide">
+            <MobileFilterDrawer
+                isOpen={mobileFilterOpen}
+                onClose={() => setMobileFilterOpen(false)}
+                onClear={clearAllFilters}
+                onApply={() => setMobileFilterOpen(false)}
+            >
+                <div className="px-4 py-4">
+                    <FilterSidebar {...filterSidebarProps} className="shadow-none border-0" />
+                </div>
+            </MobileFilterDrawer>
+
+            <div className="max-w-[1440px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
+                <CategoryBanner category={category} bannerData={bannerData} />
+
+                <CategoryHeader
+                    title={title}
+                    totalProducts={meta.total}
+                    sortBy={filters.sort}
+                    activeFilterCount={activeFilterCount}
+                    onSortChange={handleSortChange}
+                    onMobileFilterClick={() => setMobileFilterOpen(true)}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                />
+
+                <div className="flex gap-8 mb-12">
+                    <aside className="hidden lg:block w-72 shrink-0">
+                        <SmartStickyWrapper topOffset={24} bottomOffset={24}>
+                            <FilterSidebar {...filterSidebarProps} />
+                        </SmartStickyWrapper>
+                    </aside>
+
+                    <main className="flex-1 min-w-0">
+                        <ProductGrid
+                            categoryId={categoryId}
                             filters={filters}
-                            onFiltersChange={handleFiltersChange}
-                            onToggleFilter={toggleArrayFilter}
-                            onClearAll={clearAllFilters}
+                            products={products}
+                            meta={meta}
+                            isLoading={isFetching}
+                            isLoadingMore={isLoadingMore}
+                            hasMore={hasMore}
+                            onLoadMore={handleLoadMore}
                             categories={categories}
                             brands={brands}
-                            loadingCategories={filterDataLoading}
-                            loadingBrands={filterDataLoading}
-                            activeFilterCount={activeFilterCount}
-                            className="shadow-none border-0"
+                            viewMode={viewMode}
+                            onToggleFilter={toggleArrayFilter}
+                            onFiltersChange={handleFiltersChange}
+                            onClearFilters={clearAllFilters}
                         />
-                    </div>
-                </MobileFilterDrawer>
-
-                <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
-                    {/* Top Auto-Scrolling Category Banner */}
-                    <CategoryBanner category={category} bannerData={bannerData} />
-
-                    {/* Header */}
-                    <CategoryHeader
-                        title={title}
-                        totalProducts={initialProducts.meta.total || 0}
-                        sortBy={filters.sortBy}
-                        viewMode={viewMode}
-                        activeFilterCount={activeFilterCount}
-                        onSortChange={handleSortChange}
-                        onViewModeChange={setViewMode}
-                        onMobileFilterClick={handleMobileFilterOpen}
-                    />
-
-                    {/* Loading indicator for filter changes */}
-                    {isPending && (
-                        <div className="mb-4">
-                            <div className="h-1 bg-[var(--colour-fsP2)]/10 rounded-full overflow-hidden">
-                                <div className="h-full bg-[var(--colour-fsP2)] animate-pulse w-1/2" />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Main Layout */}
-                    <div className="flex gap-8 mb-12">
-                        {/* Desktop Sidebar */}
-                        <aside className="hidden lg:block w-72 flex-shrink-0">
-                            <SmartStickyWrapper topOffset={24} bottomOffset={24}>
-                                <FilterSidebar
-                                    filters={filters}
-                                    onFiltersChange={handleFiltersChange}
-                                    onToggleFilter={toggleArrayFilter}
-                                    onClearAll={clearAllFilters}
-                                    categories={categories}
-                                    brands={brands}
-                                    loadingCategories={filterDataLoading}
-                                    loadingBrands={filterDataLoading}
-                                    activeFilterCount={activeFilterCount}
-                                />
-                            </SmartStickyWrapper>
-                        </aside>
-
-                        {/* Product Grid */}
-                        <main className="flex-1 min-w-0">
-                            <ProductGrid
-                                categoryId={categoryId}
-                                filters={filters}
-                                initialData={initialProducts}
-                                categories={categories}
-                                brands={brands}
-                                viewMode={viewMode}
-                                onToggleFilter={toggleArrayFilter}
-                                onFiltersChange={handleFiltersChange}
-                                onClearFilters={clearAllFilters}
-                            />
-                        </main>
-                    </div>
-
-                    {/* Category Parsed Description */}
-                    {category?.description && (
-                        <div className="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100 max-w-[1600px] mx-auto mt-8">
-                            <div
-                                className="prose prose-sm md:prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-[var(--colour-fsP2)] prose-strong:text-gray-900"
-                                dangerouslySetInnerHTML={{ __html: category.description }}
-                            />
-                        </div>
-                    )}
+                    </main>
                 </div>
 
-                <GlobalStyles />
+                {category?.description && (
+                    <ParsedContent description={category.description} className="" />
+                )}
             </div>
-        </SWRConfig>
+        </div>
     );
 }

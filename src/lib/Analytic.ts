@@ -1,8 +1,11 @@
 // utils/analytics.ts
 import { sendGAEvent } from '@next/third-parties/google'
 
-
-const getPixel = async () => (await import('react-facebook-pixel')).default
+const safeFbq = (...args: any[]) => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq(...args);
+    }
+};
 
 
 export const trackSearch = async (searchTerm: string) => {
@@ -12,8 +15,7 @@ export const trackSearch = async (searchTerm: string) => {
     })
 
 
-    const ReactPixel = await getPixel()
-    ReactPixel.track('Search', {
+    safeFbq('track', 'Search', {
         search_string: searchTerm
     })
 }
@@ -28,8 +30,7 @@ export const trackViewContent = async (product: any) => {
     })
 
 
-    const ReactPixel = await getPixel()
-    ReactPixel.track('ViewContent', {
+    safeFbq('track', 'ViewContent', {
         content_ids: [product.id],
         content_type: 'product',
         value: product.discounted_price || product.price,
@@ -49,8 +50,7 @@ export const trackAddToCart = async (product: any, quantity: number = 1) => {
         }]
     })
 
-    const ReactPixel = await getPixel()
-    ReactPixel.track('AddToCart', {
+    safeFbq('track', 'AddToCart', {
         content_ids: [product.id],
         content_type: 'product',
         value: (product.discounted_price || product.price) * quantity,
@@ -72,8 +72,7 @@ export const trackInitiateCheckout = async (cart: any) => {
         }))
     })
 
-    const ReactPixel = await getPixel()
-    ReactPixel.track('InitiateCheckout', {
+    safeFbq('track', 'InitiateCheckout', {
         content_ids: items.map((item: any) => item.product?.id),
         content_type: 'product',
         value: cart.cart_total,
@@ -94,16 +93,7 @@ export const trackPurchase = async (order: any) => {
         }))
     })
 
-    const ReactPixel = await getPixel()
-    ReactPixel.track('Purchase', {
-        content_ids: order.items.map((item: any) => item.id),
-        content_type: 'product',
-        value: order.total,
-        currency: 'NPR',
-        num_items: order.items.length
-    })
-    const ReactPixelPurchase = await getPixel()
-    ReactPixelPurchase.track('Purchase', {
+    safeFbq('track', 'Purchase', {
         content_ids: order.items.map((item: any) => item.id),
         content_type: 'product',
         value: order.total,
@@ -121,9 +111,7 @@ export const trackScroll = async (depth: number, path: string) => {
         page_path: path
     })
 
-    // Meta Pixel Custom Event
-    const ReactPixel = await getPixel()
-    ReactPixel.trackCustom('ScrollDepth', {
+    safeFbq('trackCustom', 'ScrollDepth', {
         depth: `${depth}%`,
         path: path
     })
@@ -136,8 +124,7 @@ export const trackClick = async (elementId: string, text: string, path: string) 
         page_path: path
     })
 
-    const ReactPixel = await getPixel()
-    ReactPixel.trackCustom('ElementClick', {
+    safeFbq('trackCustom', 'ElementClick', {
         element_id: elementId,
         element_text: text,
         path: path
@@ -154,8 +141,7 @@ export const trackHover = async (elementId: string, duration: number, path: stri
         page_path: path
     })
 
-    const ReactPixel = await getPixel()
-    ReactPixel.trackCustom('ElementHover', {
+    safeFbq('trackCustom', 'ElementHover', {
         element_id: elementId,
         duration: duration,
         path: path
@@ -167,6 +153,5 @@ export const trackPageView = async (path: string) => {
         page_path: path
     })
 
-    const ReactPixel = await getPixel()
-    ReactPixel.pageView()
+    safeFbq('track', 'PageView')
 }

@@ -2,14 +2,16 @@
 import React from 'react';
 import { Metadata } from 'next';
 import ApplyEmiClient from '../_components/ApplyEmiClient';
-import RemoteServices from '@/app/api/remoteservice';
-import { ProductDetails } from '@/app/types/ProductDetailsTypes';
+import { EmiProvider } from '../../_components/emiContext';
+
+import { ProductData } from '@/app/types/ProductDetailsTypes';
+import { ProductService } from '@/app/api/services/product.service';
 
 // Fetch product by slug helper
-async function getProductBySlug(slug: string): Promise<ProductDetails | null> {
+async function getProductBySlug(slug: string): Promise<ProductData | null> {
     if (!slug) return null;
     try {
-        const product = await RemoteServices.getProductBySlug(slug);
+        const product = await ProductService.getProductBySlug(slug);
         return product || null;
     } catch (error) {
         console.error("Error fetching product for EMI:", error);
@@ -37,6 +39,9 @@ export default async function ApplyEmiPage({ params, searchParams }: { params: P
     const product = slug ? await getProductBySlug(slug) : null;
 
     return (
-        <ApplyEmiClient initialProduct={product} selectedcolor={selectedcolor} />
+        <EmiProvider>
+            <ApplyEmiClient initialProduct={product} selectedcolor={selectedcolor} />
+        </EmiProvider>
     );
 }
+

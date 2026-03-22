@@ -19,6 +19,18 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'dev.fatafatsewa.com',
+
+        pathname: '/**',
+
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.fatafatsewa.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.googleusercontent.com',
         pathname: '/**',
       },
@@ -42,6 +54,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   experimental: {
     optimizeCss: true,
+
   },
   async headers() {
     return [
@@ -50,10 +63,17 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }
         ],
       },
     ];
   },
 };
+
+
+// const withBundleAnalyzer = require('@next/bundle-analyzer')({
+//   enabled: process.env.ANALYZE === 'true',
+// })
+// module.exports = withBundleAnalyzer({})
 
 export default nextConfig;

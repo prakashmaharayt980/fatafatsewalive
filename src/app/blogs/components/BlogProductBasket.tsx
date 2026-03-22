@@ -8,10 +8,10 @@ import useSWR from 'swr';
 
 
 import { cn } from '@/lib/utils';
-import { CategorySlug_ID } from '@/app/types/CategoryTypes';
-import RemoteServices, { CategoryService } from '@/app/api/remoteservice';
+
 import BlogProductCard from '@/app/products/ProductCards/blogProducts';
 import SkeltonBasket from '@/app/skeleton/skelettonBasket';
+import { CategoryService } from '@/app/api/services/category.service';
 
 interface BlogProductBasketProps {
   title?: string;

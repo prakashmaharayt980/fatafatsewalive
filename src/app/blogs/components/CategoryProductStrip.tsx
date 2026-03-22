@@ -5,8 +5,9 @@ import useSWR from 'swr';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import RemoteServices from '../../api/remoteservice';
+
 import { ProductDetails } from '../../types/ProductDetailsTypes';
+import { ProductService } from '@/app/api/services/product.service';
 
 interface CategoryProductStripProps {
     categorySlug: string;
@@ -18,7 +19,7 @@ const CategoryProductStrip = ({ categorySlug, categoryTitle }: CategoryProductSt
     // Fetch products by category (using search as proxy or specific endpoint if available)
     const { data: products, isLoading } = useSWR<ProductDetails[]>(
         ['category-strip', categorySlug],
-        () => RemoteServices.searchProducts({ search: categoryTitle }).then(res => res.data || []),
+        () => ProductService.searchProducts({ search: categoryTitle }).then(res => res.data || []),
         { dedupingInterval: 600000 } // Cache for 10 mins
     );
 
@@ -62,9 +63,9 @@ const CategoryProductStrip = ({ categorySlug, categoryTitle }: CategoryProductSt
                                     <span className="font-bold text-blue-600">
                                         Rs. {product.discounted_price.toLocaleString()}
                                     </span>
-                                    {product.discounted_price < product.price && (
+                                    {product.discounted_price && product.discounted_price < (typeof product.price === 'object' ? product.price.current : product.price) && (
                                         <span className="text-xs text-gray-400 line-through">
-                                            {product.price.toLocaleString()}
+                                            {(typeof product.price === 'object' ? product.price.current : product.price).toLocaleString()}
                                         </span>
                                     )}
                                 </div>

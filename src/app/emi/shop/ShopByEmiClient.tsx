@@ -5,9 +5,11 @@ import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { ChevronDown, SlidersHorizontal, ShoppingBag, Loader2, Search, X } from 'lucide-react'
-import RemoteServices from '@/app/api/remoteservice'
+
 import { ProductSummary } from '@/app/types/ProductDetailsTypes'
 import EmiProductCard, { EmiProductCardSkeleton } from '@/app/products/ProductCards/EmiProductCard'
+import { CategoryService } from '@/app/api/services/category.service'
+import { ProductService } from '@/app/api/services/product.service'
 
 // ─── Types ───────────────────────────────────────────────────
 interface Brand {
@@ -48,7 +50,7 @@ export default function ShopByEmiClient() {
 
     // ─── Fetch Brands ───
     useEffect(() => {
-        RemoteServices.getAllBrands()
+        CategoryService.getAllBrands()
             .then((res: any) => {
                 const brands = res?.data || res || []
                 setAllBrands(Array.isArray(brands) ? brands : [])
@@ -93,7 +95,7 @@ export default function ShopByEmiClient() {
                 params.brands = selectedBrands.join(',')
             }
 
-            const res = await RemoteServices.searchProducts(params)
+            const res = await ProductService.searchProducts(params)
             const data = res?.data || res?.products || []
             const productList: ProductSummary[] = Array.isArray(data) ? data : []
 

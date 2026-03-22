@@ -4,8 +4,8 @@
 
 
 'use client'
-import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Globe, Telescope, HelpCircle, Calculator, Star, BookOpen, ArrowLeftRight, Info, Phone, Wrench, BookCopy, ShoppingBag } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ChevronDown, ChevronRight, Telescope, HelpCircle, Calculator, Star, BookOpen, ArrowLeftRight, Info, Wrench, BookCopy, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import {
     HoverCard,
@@ -13,46 +13,98 @@ import {
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
-import { useRouter } from 'next/navigation';
-import { navitems } from '@/app/context/GlobalData';
+import { NavbarItem } from '@/app/context/GlobalData';
 
 import Image from 'next/image';
-import { imglist } from '../CommonVue/Image';
-
-// Mock Data
-const mockBrandLogos = [
-    { name: "Samsung", color: "text-blue-600" },
-    { name: "Apple", color: "text-gray-800" },
-    { name: "Xiaomi", color: "text-orange-500" },
-    { name: "Dell", color: "text-blue-700" },
-    { name: "HP", color: "text-blue-600" },
-    { name: "Sony", color: "text-black" },
-    { name: "OnePlus", color: "text-red-500" },
-    { name: "Asus", color: "text-blue-600" }
-];
-
-const mockPriceRanges = [
-    "Under Rs. 10,000",
-    "Rs. 10,000 - 20,000",
-    "Rs. 20,000 - 50,000",
-    "Rs. 50,000 - 1,00,000",
-    "Above Rs. 1,00,000"
-];
+import { placeholderimg } from '../CommonVue/Image';
 
 
-interface navitemsExtra {
+const generatePriceRanges = (min: number | null | undefined, max: number | null | undefined) => {
+    if (!max || max <= 0) return [];
+    const safeMin = min && min > 0 ? min : 0;
+    const ranges: string[] = [];
+    if (safeMin > 0) ranges.push(`Rs. 0 – ${safeMin.toLocaleString()}`);
+    const remaining = 5 - ranges.length;
+    const step = Math.ceil((max - safeMin) / remaining);
+    for (let i = 0; i < remaining; i++) {
+        const start = safeMin + i * step;
+        const end = i === remaining - 1 ? max : safeMin + (i + 1) * step;
+        ranges.push(`Rs. ${start.toLocaleString()} – ${end.toLocaleString()}`);
+    }
+    return ranges;
+};
+
+
+
+
+export interface navitemsExtra {
     path: string;
     title: string;
     icon: React.ReactNode | null;
 }
 
+export const navbarExtradata: navitemsExtra[] = [
+    {
+        path: '/emi',
+        title: 'EMI',
+        icon: <Calculator className="h-3.5 w-3.5" />,
+    },
+
+    {
+        path: '/blogs',
+        title: 'Blogs',
+        icon: <BookOpen className="h-3.5 w-3.5" />,
+    },
+    {
+        path: '/exchangeProducts',
+        title: 'Exchange',
+        icon: <ArrowLeftRight className="h-3.5 w-3.5" />,
+    },
+    {
+        path: '/about-us',
+        title: 'About',
+        icon: <Info className="h-3.5 w-3.5" />,
+    },
+    {
+        path: '/Insurance',
+        title: 'Insurance',
+        icon: <BookCopy className="h-3.5 w-3.5" />,
+    },
+    {
+        path: '/EarnInvestReferral',
+        title: 'Earn & Invest',
+        icon: <Star className="h-3.5 w-3.5" />,
+    },
+    {
+        path: '/emi/shop',
+        title: 'Shop by EMI',
+        icon: <ShoppingBag className="h-3.5 w-3.5" />,
+    },
+
+    {
+        path: '/repair',
+        title: 'Repair',
+        icon: <Wrench className="h-3.5 w-3.5" />,
+    },
+    {
+        path: '/help',
+        title: 'Help',
+        icon: <HelpCircle className="h-3.5 w-3.5" />,
+    }
+]
+
 
 
 const NavBar = ({ navbaritems }: {
-    navbaritems: navitems[];
+    navbaritems: NavbarItem[];
 }) => {
-    const router = useRouter()
-    const [activeCategory, setActiveCategory] = useState<navitems | null>(null);
+    const [activeCategory, setActiveCategory] = useState<NavbarItem | null>(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const closeDropdown = () => {
+        setIsDropdownOpen(false);
+        setActiveCategory(null);
+    };
 
     // Set initial active category when navbaritems load
     useEffect(() => {
@@ -61,64 +113,19 @@ const NavBar = ({ navbaritems }: {
         }
     }, [navbaritems]);
 
-    const navbarExtradata: navitemsExtra[] = [
-        {
-            path: '/emi',
-            title: 'EMI',
-            icon: <Calculator className="h-3.5 w-3.5" />,
-        },
 
-        {
-            path: '/blogs',
-            title: 'Blogs',
-            icon: <BookOpen className="h-3.5 w-3.5" />,
-        },
-        {
-            path: '/exchangeProducts',
-            title: 'Exchange',
-            icon: <ArrowLeftRight className="h-3.5 w-3.5" />,
-        },
-        {
-            path: '/about-us',
-            title: 'About',
-            icon: <Info className="h-3.5 w-3.5" />,
-        },
-        {
-            path: '/Insurance',
-            title: 'Insurance',
-            icon: <BookCopy className="h-3.5 w-3.5" />,
-        },
-        {
-            path: '/EarnInvestReferral',
-            title: 'Earn & Invest',
-            icon: <Star className="h-3.5 w-3.5" />,
-        },
-        {
-            path: '/emi/shop',
-            title: 'Shop by EMI',
-            icon: <ShoppingBag className="h-3.5 w-3.5" />,
-        },
 
-        {
-            path: '/repair',
-            title: 'Repair',
-            icon: <Wrench className="h-3.5 w-3.5" />,
-        },
-        {
-            path: '/help',
-            title: 'Help',
-            icon: <HelpCircle className="h-3.5 w-3.5" />,
-        }
-    ]
+    if (!navbaritems?.length) return null;
 
-    const handlerouter = (slug: string) => {
-        router.push(`${slug}`)
-    }
+    const priceRanges = useMemo(() => {
+        return generatePriceRanges(activeCategory?.price_range?.min, activeCategory?.price_range?.max);
+    }, [activeCategory]);
 
-    // Early return if no valid navigation items
-    if (!navbaritems?.length) {
-        return null;
-    }
+    const uniqueBrands = useMemo(() => {
+        return activeCategory?.brands
+            ? Array.from(new Map(activeCategory.brands.map(b => [b.name, b])).values())
+            : [];
+    }, [activeCategory]);
 
     return (
         <nav className="relative shadow-md hidden md:block border-t border-white/10 overflow-hidden">
@@ -129,24 +136,27 @@ const NavBar = ({ navbaritems }: {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex items-center h-12">
                     {/* Explore Menu Trigger */}
-                    <HoverCard openDelay={0} closeDelay={100}>
+                    <HoverCard openDelay={0} closeDelay={100} open={isDropdownOpen} onOpenChange={(open) => {
+                        setIsDropdownOpen(open);
+                        if (open && navbaritems?.length) setActiveCategory(navbaritems[0]);
+                    }}>
                         <HoverCardTrigger asChild>
                             <button className="flex items-center gap-2 px-4 py-1.5 bg-white/20 hover:bg-white/30 text-[#1a1a1a] font-medium rounded-full transition-all duration-300 h-9 cursor-pointer border border-white/30 shadow-xs hover:shadow-sm active:scale-95 group">
                                 <div className="flex items-center gap-2">
-                                    <Telescope className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-[#1a1a1a] group-hover:text-[var(--colour-fsP2)]" />   <span className="text-[12px] font-bold transition-colors text-[#1a1a1a] group-hover:text-[var(--colour-fsP2)]">Explore</span>
+                                    <Telescope className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-[#1a1a1a] group-hover:text-white" />   <span className="text-[12px] font-bold transition-colors text-[#1a1a1a] group-hover:text-white">Explore</span>
                                 </div>
                                 <ChevronDown className="h-4 w-4 opacity-90 group-hover:opacity-100 transition-all text-[#1a1a1a]" />
                             </button>
                         </HoverCardTrigger>
-
+                        {/* Sidebar Categories */}
                         <HoverCardContent
-                            className="w-[950px] p-0 border-0 shadow-xl bg-white rounded-xl overflow-hidden mt-1"
+                            className="w-[950px]  p-0 border-0 shadow-xl bg-white rounded-xl overflow-hidden mt-1"
                             align="start"
                             sideOffset={4}
                         >
                             <div className="flex h-[520px]">
-                                {/* Sidebar Categories */}
-                                <div className="w-[220px] bg-white border-r border-blue-50 overflow-y-auto py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-100 hover:[&::-webkit-scrollbar-thumb]:bg-blue-200">
+
+                                <div className="w-[220px] shrink-0 bg-white border-r  border-blue-50 overflow-y-auto py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-100 hover:[&::-webkit-scrollbar-thumb]:bg-blue-200">
                                     {navbaritems.map((category) => (
                                         <div
                                             key={category.id}
@@ -158,24 +168,26 @@ const NavBar = ({ navbaritems }: {
                                                     : 'hover:bg-blue-50/50 '}
                                             `}
                                         >
-                                            <Link href={`/category/${category.slug}&id=${category.id}`} className="flex items-center gap-3 w-full" onClick={() => setActiveCategory(null)}>
+                                            <Link href={`/category/${category.slug}`} onClick={closeDropdown} className="flex items-center gap-3 w-full">
                                                 <div className={`
-                                                    p-1.5 rounded-md transition-colors overflow-hidden
+                                                    p-1.5 rounded-md h-8  transition-colors overflow-hidden
                                                     ${activeCategory?.id === category.id
                                                         ? 'bg-white'
                                                         : 'bg-gray-50 group-hover:bg-white'}
                                                 `}>
                                                     <Image
-                                                        src={category.image ? category.image : imglist.blog}
+                                                        src={category.thumb?.url || placeholderimg}
                                                         alt={category.title}
                                                         width={20}
                                                         height={20}
                                                         className="object-contain aspect-auto"
 
+
+
                                                     />
                                                 </div>
                                                 <span className={`
-                                                    text-sm font-medium transition-colors
+                                                    text-sm break-after-avoid font-medium transition-colors
                                                     ${activeCategory?.id === category.id
                                                         ? 'text-[var(--colour-fsP2)] font-semibold'
                                                         : 'text-slate-600 group-hover:text-[var(--colour-fsP2)]'}
@@ -191,87 +203,74 @@ const NavBar = ({ navbaritems }: {
                                 </div>
 
                                 {/* Main Content Area */}
-                                <div className="flex-1 bg-[#f0f9ff] flex flex-col">
+                                <div className="flex-1 bg-white flex flex-col min-w-0">
                                     {activeCategory && (
-                                        <div className="flex-1 flex flex-col h-full animate-in fade-in duration-300">
+                                        <div className="flex-1 flex flex-col h-full animate-in fade-in duration-200">
 
-                                            {/* Top Section: Categories & Quick Links */}
-                                            <div className="flex-1 p-8 flex gap-10 min-h-0 overflow-hidden">
+                                            {/* Content: Sub-Categories + Price Range */}
+                                            <div className="flex-1 flex min-h-0 border-none">
 
                                                 {/* Left: Sub-Categories */}
-                                                <div className="flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-200 hover:[&::-webkit-scrollbar-thumb]:bg-blue-300">
-                                                    <div className="flex items-center justify-between mb-6">
-                                                        <Link href={`/category/${activeCategory.slug}&id=${activeCategory.id}`} onClick={() => setActiveCategory(null)} className="w-full">
-                                                            <h2 className="text-xl font-bold text-[#1e293b] flex items-center gap-2 hover:text-[var(--colour-fsP2)] transition-colors">
-                                                                {activeCategory.title}
-                                                                <ChevronRight className="h-5 w-5 text-gray-300" />
-                                                            </h2>
-                                                        </Link>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                                                        {activeCategory.children && activeCategory.children.length > 0 ? (
-                                                            activeCategory.children.map((child, idx) => (
-                                                                <Link
-                                                                    key={idx}
-                                                                    href={`/category/${child.slug}&id=${child.id}`}
-                                                                    onClick={() => setActiveCategory(null)}
-                                                                    className="text-[13px] font-medium text-slate-600 hover:text-[var(--colour-fsP2)] hover:translate-x-1 transition-all block py-1"
-                                                                >
-                                                                    {child.title}
-                                                                </Link>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-sm text-slate-400 italic col-span-2">No sub-categories available</span>
+                                                <div className="flex-1 p-6 overflow-y-auto min-w-0 [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-thumb]:bg-slate-200">
+                                                    <Link href={`/category/${activeCategory.slug}`} onClick={closeDropdown}>
+                                                        <h2 className="text-lg font-bold text-black mb-5 flex items-center gap-1.5 hover:text-[var(--colour-fsP2)] transition-colors">
+                                                            {activeCategory.title}
+                                                            <ChevronRight className="h-4 w-4 text-slate-300" />
+                                                        </h2>
+                                                    </Link>
+                                                    <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                                                        {activeCategory.children?.length ? activeCategory.children.map((child, i) => (
+                                                            <Link key={i} href={`/category/${activeCategory.slug}?sub_category=${child.slug}`}
+                                                                onClick={closeDropdown}
+                                                                className="flex items-center gap-2 text-[13px] text-slate-600 hover:text-[var(--colour-fsP2)] py-1.5 transition-colors group/link overflow-hidden">
+                                                                <span className="w-1 h-1 rounded-full bg-slate-300 group-hover/link:bg-(--colour-fsP2) shrink-0 transition-colors" />
+                                                                <span className="truncate">{child.name || child.title}</span>
+                                                            </Link>
+                                                        )) : (
+                                                            <span className="text-sm text-slate-400 italic col-span-2">No sub-categories</span>
                                                         )}
                                                     </div>
                                                 </div>
 
                                                 {/* Right: Price Range */}
-                                                <div className="w-[260px] h-full flex flex-col gap-8 border-l border-blue-100 pl-8">
-
-                                                    {/* Price Range */}
-                                                    <div className="space-y-4">
-                                                        <h3 className="text-xs font-bold text-[#1967b3] uppercase tracking-widest flex items-center gap-2">
-                                                            Price Range
-                                                        </h3>
-                                                        <div className="flex flex-col gap-2">
-                                                            {mockPriceRanges.map((range, idx) => (
-                                                                <span
-                                                                    key={idx}
-                                                                    className="text-xs font-medium text-slate-600 bg-white hover:bg-[var(--colour-fsP2)] hover:text-white transition-all cursor-pointer rounded-md px-3 py-2.5 border border-blue-100 hover:border-transparent text-center shadow-sm"
-                                                                >
-                                                                    {range}
-                                                                </span>
-                                                            ))}
-                                                        </div>
+                                                <div className="w-[250px] shrink-0 border-l mt-8 border-slate-100 p-6">
+                                                    <h3 className="text-[11px] font-bold text-black uppercase tracking-widest mb-4">Price Range</h3>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        {priceRanges.map((range, i) => (
+                                                            <span key={i} className="text-xs text-slate-600 bg-slate-50 hover:bg-[var(--colour-fsP2)] hover:text-white rounded-md px-3 py-2 border border-slate-100 hover:border-transparent text-center cursor-pointer transition-all whitespace-nowrap">
+                                                                {range}
+                                                            </span>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Bottom Section: Top Brands */}
-                                            <div className="border-t border-blue-100 p-6 bg-blue-50/50">
-                                                <div className="flex items-center gap-2 mb-4">
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Top Brands</span>
-                                                    <div className="h-[1px] flex-1 bg-blue-100"></div>
+                                            {/* Bottom: Top Brands */}
+                                            {uniqueBrands.length > 0 && (
+                                                <div className="border-none px-2 py-2 bg-blue-50/30 overflow-hidden">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <div className="h-px flex-1 bg-[var(--colour-fsP2)]" />
+                                                        <span className="text-[12px] font-bold text-black uppercase tracking-widest shrink-0">Top Brands</span>
+                                                        <div className="h-px flex-1 bg-[var(--colour-fsP2)]" />
+                                                    </div>
+                                                    <div className="flex gap-3 overflow-x-auto min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                                        {uniqueBrands.map((brand, i) => (
+                                                            <Link key={i} href={`/category/${activeCategory.slug}?brand=${brand.slug}`}
+                                                                title={brand.name}
+                                                                onClick={closeDropdown}
+                                                                className="flex items-center gap-2 px-4 py-2 h-12 bg-white border-2 border-blue-100  hover:shadow-sm rounded-lg text-sm text-slate-700 hover:text-[var(--colour-fsP2)] shrink-0 transition-all">
+                                                                {brand.thumb?.url ? (
+                                                                    <Image src={brand.thumb.url || placeholderimg} alt={brand.name} width={24} height={20} className="object-contain"
+                                                                    />
+                                                                ) : (
+                                                                    <span className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-xs font-bold text-blue-600">{brand.name[0]}</span>
+                                                                )}
+                                                                <span className="font-bold whitespace-nowrap">{brand.name}</span>
+                                                            </Link>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <div className="grid grid-cols-8 gap-4">
-                                                    {mockBrandLogos.map((brand, idx) => (
-                                                        <div
-                                                            key={idx}
-                                                            className="group flex flex-col items-center justify-center gap-2 p-2 bg-white rounded-lg border border-blue-50 hover:border-[var(--colour-fsP2)]/30 hover:shadow-md transition-all cursor-pointer h-16"
-                                                        >
-                                                            {/* Placeholder for actual brand logo - using stylized text for "face data" */}
-                                                            <span className={`text-sm font-black ${brand.color} group-hover:scale-110 transition-transform`}>
-                                                                {brand.name.substring(0, 1)}
-                                                            </span>
-                                                            <span className="text-[10px] font-medium text-slate-600 uppercase tracking-wide group-hover:text-slate-800">
-                                                                {brand.name}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -288,7 +287,7 @@ const NavBar = ({ navbaritems }: {
                             <Link
                                 key={idx}
                                 href={item.path}
-                                className="text-sm font-bold text-[#1a1a1a] hover:text-[var(--colour-fsP2)] transition-colors flex items-center gap-1"
+                                className="text-sm font-bold text-[#1a1a1a] hover:text-white transition-colors flex items-center gap-1"
                             >
                                 {item.icon && item.icon}
                                 {item.title}
@@ -301,4 +300,4 @@ const NavBar = ({ navbaritems }: {
     );
 };
 
-export default NavBar;
+export default React.memo(NavBar);

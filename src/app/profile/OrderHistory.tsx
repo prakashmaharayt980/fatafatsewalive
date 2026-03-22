@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Layers, CreditCard } from 'lucide-react';
-import { OrderService } from '@/app/api/remoteservice';
+
 import OrdersSection from './orders/OrdersSection';
 import PreOrdersSection from './orders/PreOrdersSection';
 import EmiSection from './orders/EmiSection';
 import { MOCK_PRE_ORDERS, MOCK_EMI_ORDERS, type Order } from './orders/shared';
+import { OrderService } from '../api/services/order.service';
 
 type TabType = 'orders' | 'pre_orders' | 'emi';
 

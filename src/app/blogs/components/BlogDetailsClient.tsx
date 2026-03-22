@@ -290,7 +290,7 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                     {/* ─── Right: Product Deals ─── */}
                     {dealProducts.length > 0 && (
                         <aside className="w-full lg:w-72 shrink-0 sm:pt-10">
-                            <ProductDeals products={dealProducts} limit={6} title="Top Deals" />
+                            <ProductDeals products={dealProducts as any[]} limit={6} title="Top Deals" />
                         </aside>
                     )}
                 </div>

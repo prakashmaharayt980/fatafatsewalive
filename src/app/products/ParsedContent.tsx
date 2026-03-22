@@ -1,7 +1,8 @@
 "use client";
 import React, { JSX, useMemo } from 'react';
 import parse, { domToReact, HTMLReactParserOptions, Element, DOMNode, Text } from 'html-react-parser';
-import DOMPurify from 'dompurify';
+import { sanitizeHtml } from '@/lib/dompurify';
+
 import Image from 'next/image';
 
 interface ParsedContentProps {
@@ -14,27 +15,27 @@ const isText = (node: DOMNode): node is Text => node.type === 'text';
 
 // Strip Quill's injected UI spans: <span class="ql-ui">
 const isQuillUiSpan = (node: DOMNode): boolean =>
-  isElement(node) && node.name === 'span' && node.attribs?.class === 'ql-ui';
+  isElement(node) && (node as Element).name === 'span' && (node as Element).attribs?.class === 'ql-ui';
 
 // Check if a <p> is just a Quill <p><br></p> spacer
 const isEmptyQuillParagraph = (node: Element): boolean => {
   const kids = node.children as DOMNode[];
   return (
     kids.length === 0 ||
-    (kids.length === 1 && isElement(kids[0]) && kids[0].name === 'br') ||
+    (kids.length === 1 && isElement(kids[0]) && (kids[0] as Element).name === 'br') ||
     (kids.length === 1 && isText(kids[0]) && !(kids[0] as Text).data?.trim())
   );
 };
 
 export default function ParsedContent({ description, className = '' }: ParsedContentProps) {
   const parsedContent = useMemo(() => {
-    if (!description || !description.trim()) {
+    if (!description) {
       return (
         <p className="text-gray-400 italic text-sm">No description available.</p>
       );
     }
 
-    const cleanHTML = DOMPurify.sanitize(description, {
+    const cleanHTML = sanitizeHtml(description, {
       ADD_TAGS: ['iframe'],
       ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'style', 'width', 'height', 'loading'],
     });
@@ -42,7 +43,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
     const options: HTMLReactParserOptions = {
       replace: (domNode: DOMNode) => {
         if (!isElement(domNode)) return undefined;
-        const { name, attribs, children } = domNode;
+        const { name, attribs, children } = domNode as Element;
         // Strip ql-ui spans from every node's children
         const nodeChildren = (children as DOMNode[]).filter(n => !isQuillUiSpan(n));
 
@@ -161,9 +162,10 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
 
         // ── IFRAME ────────────────────────────────────────────────────────────
         if (name === 'iframe') {
+          const { style, class: className, ...restAttribs } = attribs || {};
           return (
             <span className="block w-full my-6 rounded-xl overflow-hidden shadow-md aspect-video">
-              <iframe {...attribs} className="w-full h-full" style={{ minHeight: '300px' }} />
+              <iframe {...restAttribs} className="w-full h-full" style={{ minHeight: '300px' }} />
             </span>
           );
         }
@@ -195,11 +197,12 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
 
         // ── ANCHOR ────────────────────────────────────────────────────────────
         if (name === 'a') {
+          const { style, class: className, target, rel, ...restAttribs } = attribs || {};
           return (
             <a
-              {...attribs}
+              {...restAttribs}
               className="text-(--colour-fsP2,#1967b3) underline underline-offset-4 decoration-[1.5px] decoration-(--colour-fsP2,#1967b3)/30 hover:decoration-(--colour-fsP2,#1967b3) hover:text-blue-800 transition-all duration-200 font-medium"
-              target={attribs.target || '_blank'}
+              target={target || '_blank'}
               rel="noopener noreferrer"
             >
               {domToReact(nodeChildren, options)}

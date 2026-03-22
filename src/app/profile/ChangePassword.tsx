@@ -11,9 +11,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { ProfileService } from '../api/services/profile.service';
 
 
-import RemoteServices from '../api/remoteservice';
 
 function ChangePassword() {
     const initialFormValues = {
@@ -91,7 +91,7 @@ function ChangePassword() {
 
             };
 
-            await RemoteServices.ChangePassword(payload);
+            await ProfileService.ChangePassword(payload);
 
             // Success reset
             setFormValues(initialFormValues);

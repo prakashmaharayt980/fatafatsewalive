@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Loader2, X, ChevronRight, Smartphone } from 'lucide-react';
-import RemoteServices from '../api/remoteservice';
+
 import Image from 'next/image';
 import { ProductDetails } from '../types/ProductDetailsTypes';
 import { cn } from '@/lib/utils';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { ProductService } from '../api/services/product.service';
 
 // Simple debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -41,7 +42,7 @@ export default function CompareSearchComponent({ onSelect, excludeSlugs, compact
 
             setLoading(true);
             try {
-                const res = await RemoteServices.searchProducts({ search: debouncedQuery });
+                const res = await ProductService.searchProducts({ search: debouncedQuery });
                 const products = res.data || res || [];
                 setResults(products);
             } catch (error) {

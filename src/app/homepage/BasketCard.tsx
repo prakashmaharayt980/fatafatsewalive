@@ -3,51 +3,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useInView } from 'react-intersection-observer';
-import useSWR from 'swr';
 import ProductCard from '../products/ProductCard';
 import SkeltonCard from '@/app/skeleton/SkeletonCard';
 import { cn } from '@/lib/utils';
-import { CategorySlug, CategorySlug_ID } from '@/app/types/CategoryTypes';
-import { getCategoryProductsData } from '@/app/api/CachedHelper/getCategoryProductsData';
 import { trackCategoryClick } from '@/lib/analytics';
 
 interface BasketCardProps {
   title?: string;
   slug: string;
-  id: string;
-  initialData?: CategorySlug_ID;
+  initialData?: any; // Expecting the "data" object from the /v1/categories/[slug]/products API
 }
 
-const fetcher = async (id: string) => {
-  const response = await getCategoryProductsData(id);
-  return response;
-};
-
-const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
+const BasketCard = ({ title, slug, initialData }: BasketCardProps) => {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { ref, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
   const [windowWidth, setWindowWidth] = useState(0);
   const [activeDot, setActiveDot] = useState(0);
 
-  // Fetch data with SWR
-  const { data: productList, error } = useSWR<CategorySlug_ID>(
-    (initialData || inView) ? id : null,
-    fetcher,
-    {
-      fallbackData: initialData,
-      dedupingInterval: 3600000,
-      revalidateOnFocus: false,
-      revalidateOnMount: !initialData,
-      revalidateOnReconnect: false
-    }
-  );
-
-  const displayData = productList || initialData;
+  const displayData = initialData;
 
 
   // Handle window resize
@@ -61,36 +34,20 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Loading state - Prioritize initialData to prevent double-loading flash
-  const showSkeleton = !displayData && inView;
-
-  if (showSkeleton) {
+  // No data yet
+  if (!displayData) {
     return (
-      <div ref={ref} className="w-full">
+      <div className="w-full">
         <SkeltonCard />
       </div>
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <div ref={ref} className="w-full bg-white text-red-600 text-center p-4">
-        Error loading products: {error.message}
-      </div>
-    );
-  }
-
-  // No data yet
-  if (!displayData) {
-    return <div ref={ref} className="min-h-[200px] bg-white" />;
-  }
-
   // Empty products
-  const products = displayData?.data || [];
+  const products = displayData?.products || [];
   if (!products.length) {
     return (
-      <div ref={ref} className="w-full bg-white text-gray-600 text-center p-4">
+      <div className="w-full bg-white text-gray-600 text-center p-4">
         No products found for this category.
       </div>
     );
@@ -122,7 +79,7 @@ const BasketCard = ({ title, slug, id, initialData }: BasketCardProps) => {
   };
 
   return (
-    <div ref={ref} className="w-full py-2 sm:py-3 bg-transparent">
+    <div className="w-full py-2 sm:py-3 bg-transparent">
       {/* Header Section - Clean & Minimal */}
       <div className="flex items-center justify-between px-4 sm:px-6 mb-3">
         <div className="flex items-center gap-3">

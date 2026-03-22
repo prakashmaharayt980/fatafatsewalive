@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
-import RemoteServices from '@/app/api/remoteservice'
+
 import ExchangeClient from './ExchangeClient'
+import { CategoryService } from '../api/services/category.service';
 
 export const metadata: Metadata = {
     title: 'Mobile Exchange — Trade In Your Old Phone | Fatafat Sewa',
@@ -37,7 +38,7 @@ export default async function ExchangePage() {
     let brands: Array<{ id: number; name: string; slug: string; image?: string }> = []
 
     try {
-        const res = await RemoteServices.getAllBrands()
+        const res = await CategoryService.getAllBrands()
         brands = res?.data || []
     } catch (err) {
         console.error('Failed to fetch brands for exchange page:', err)

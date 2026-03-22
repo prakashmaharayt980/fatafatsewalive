@@ -1,36 +1,49 @@
 import { cookies } from 'next/headers';
 import { cache } from 'react'; // For per-request caching
 import { unstable_cache } from 'next/cache'; // For shared server caching
+import { CategoryService } from '../api/services/category.service';
 
-import { AuthService, CategoryService, ProfileService } from '@/app/api/services';
 
 
-export interface navitems {
+export interface NavbarItem {
     id: number;
-    slug: string;
     title: string;
-    image?: string;
-    description?: string;
-    featured?: number;
-    status?: number;
-    order?: number;
-    parent_id?: number | null;
-    children?: navitems[]
+    slug: string;
+    status: boolean;
+    thumb: {
+        url: string;
+        alt_text: string | null;
+    } | null;
+    children: {
+        id: number;
+        title?: string;
+        name?: string;
+        slug: string;
+    }[];
+    price_range: {
+        min: number | null;
+        max: number | null;
+    };
+    brands: {
+        name: string;
+        slug: string;
+        thumb: {
+            url: string;
+            alt_text: string | null;
+        } | null;
+    }[];
 }
 
 
 
 const getCachedNavbar = unstable_cache(
-    async () => {
-        try {
-
-            const response: navitems[] = await CategoryService.getAllCategories().then(res => res.data)
-
-            return response;
-        } catch (error) {
-            console.error("Error fetching navbar items:", error);
-            return [];
-        }
+    () => {
+        return CategoryService.getAllCategories()
+            .then(res => res.data as NavbarItem[])
+            .catch(error => {
+                console.error("Error fetching navbar items:", error);
+                return [];
+            });
     },
     ['navbar-items'], // Cache Key
     {
@@ -41,25 +54,7 @@ const getCachedNavbar = unstable_cache(
 
 
 
-/**
- * 3. MAIN DATA LOADER
- * Orchestrates the fetching.
- */
 
-const getUser = unstable_cache(
-    async () => {
-        try {
-            return await ProfileService.ProfileView().then(res => res.data)
-        } catch (error) {
-            return null;
-        }
-    },
-    ['user'],
-    {
-        revalidate: 3600,
-        tags: ['user']
-    }
-)
 export async function getGlobalData() {
     const cookieStore = await cookies();
     const token = cookieStore.get('access_token')?.value;
@@ -67,26 +62,22 @@ export async function getGlobalData() {
 
     // Start fetching Navbar (Hit Cache or API)
     const navItemsPromise = getCachedNavbar();
-    const userPromise = getUser();
     if (!token) {
         return {
             isLoggedIn: false,
             accessToken: null,
-            user: null,
             navItems: await navItemsPromise,
         };
     }
 
-    // Returning a minimal user object or null if we don't want to fetch profile here yet.
-    // Ideally we'd verify the token or fetch the user, but for CLS prevention, 
-    // just knowing we have a token is often enough to show "Profile" formatted header.
-    // For now, we return minimal data to satisfy the AuthContext initial state if needed.
+    // TTFB OPTIMIZATION:
+    // We intentionally DO NOT wait for the user profile API (userPromise) to resolve here.
+    // Fetching the user on the server blocks the initial HTML response (TTFB), causing delays.
+    // We return the token, and let the Client-side AuthContext silently fetch the user data in the background.
     return {
         isLoggedIn: true,
         accessToken: token,
-        user: await userPromise,
+        user: null,
         navItems: await navItemsPromise,
     };
 }
-
-
