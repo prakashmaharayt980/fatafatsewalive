@@ -6,10 +6,15 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import Image from "next/image";
 import { useShallow } from "zustand/react/shallow";
 import { useCartStore } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../context/AuthContext";
+
 
 const WishList = () => {
-  const { authState, triggerLoginAlert } = useAuth();
+  const { isLoggedIn, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+    isLoggedIn: state.isLoggedIn,
+    triggerLoginAlert: state.triggerLoginAlert
+  })));
+
   const {
     isWishlistOpen,
     setIsWishlistOpen,
@@ -28,9 +33,10 @@ const WishList = () => {
 
   const handleAddToCart = useCallback(
     async (product: any) => {
-      await addToCart(product.id, 1, authState, triggerLoginAlert, product);
+      await addToCart(product.id, 1, { isLoggedIn }, triggerLoginAlert, product);
+
     },
-    [addToCart, authState, triggerLoginAlert]
+    [addToCart, isLoggedIn, triggerLoginAlert]
   );
 
   const handleRemoveFromWishlist = useCallback(

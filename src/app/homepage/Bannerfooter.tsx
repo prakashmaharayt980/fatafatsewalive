@@ -20,12 +20,16 @@ const TopBanner = ({ data }: TopBannerProps) => {
 
     return data.images
       .sort((a, b) => a.order - b.order)
-      .map((img) => ({
-        id: img.id,
-        name: img.content || 'Banner Image',
-        src: img.url || img.image?.full || '',
-        link: img.link,
-      }));
+      .map((img) => {
+        const cleanAlt = img.content ? img.content.replace(/<[^>]*>?/gm, '').trim() : '';
+        return {
+          id: img.id,
+          name: cleanAlt || img.alt_text || 'Banner Image',
+          src: img.url || img.image?.full || '',
+          link: img.link,
+        };
+      });
+
   }, [data]);
 
   // Fallback image if no banner data

@@ -3,7 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Loader } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+
 import { CompanyLogo, PaymentMethodsOptions } from "../CommonVue/Payment";
 
 import { toast } from "sonner";
@@ -13,11 +15,23 @@ import { useRouter } from 'next/navigation';
 
 
 
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../context/AuthContext";
+import { useShallow } from 'zustand/react/shallow';
 import { AuthService } from "../api/services/auth.service";
 
+
+const GoogleAuthWrapper = dynamic(() => import('./GoogleAuthWrapper'), {
+  ssr: false,
+});
+
+
 export default function LoginPage() {
-  const { loginDailogOpen, setloginDailogOpen, login } = useAuth();
+  const { loginDailogOpen, setloginDailogOpen, login } = useAuthStore(useShallow(state => ({
+    loginDailogOpen: state.loginDailogOpen,
+    setloginDailogOpen: state.setloginDailogOpen,
+    login: state.login
+  })));
+
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('login');
   const [loading, setLoading] = useState(false);
@@ -343,7 +357,9 @@ export default function LoginPage() {
           </div>
 
           <div className="flex-1 w-full mx-auto">
-            {formSections[activeSection]?.render(sectionProps)}
+            <GoogleAuthWrapper>
+              {formSections[activeSection]?.render(sectionProps)}
+            </GoogleAuthWrapper>
           </div>
         </div>
 

@@ -5,7 +5,9 @@ import { Wallet, Check, ChevronLeft, Loader2, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { PaymentMethodsOptions } from '@/app/CommonVue/Payment';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuthStore } from '@/app/context/AuthContext';
+import { useShallow } from 'zustand/react/shallow';
+
 
 // Notice: We strictly omit Cash on Delivery for Pre-orders
 const allPaymentMethods = [
@@ -27,7 +29,11 @@ export default function PreOrderPaymentStep({
     onBack,
     isSubmitting
 }: PreOrderPaymentStepProps) {
-    const { authState, triggerLoginAlert } = useAuth();
+    const { isLoggedIn, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        isLoggedIn: state.isLoggedIn,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+
 
     const isComplete = paymentMethod !== '';
 
@@ -114,7 +120,7 @@ export default function PreOrderPaymentStep({
                 </Button>
                 <Button
                     onClick={() => {
-                        if (!authState.isLoggedIn) {
+                        if (!isLoggedIn) {
                             triggerLoginAlert();
                         } else {
                             onPlaceOrder();

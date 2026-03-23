@@ -14,7 +14,9 @@ import Image from 'next/image';
 import { CompanyLogo } from '../CommonVue/Payment';
 import { placeholderimg } from '../CommonVue/Image';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../context/AuthContext';
+import { useShallow } from 'zustand/react/shallow';
+
 import { NavbarItem } from '@/app/context/GlobalData';
 
 const MobileSidebar = ({ open, toggleMobileMenu, initialNavItems, openCart, openWishlist, navbarExtradata = [] }: {
@@ -26,7 +28,13 @@ const MobileSidebar = ({ open, toggleMobileMenu, initialNavItems, openCart, open
   navbarExtradata?: { path: string, title: string, icon: React.ReactNode | null }[];
 }) => {
   const router = useRouter();
-  const { user, isLoggedIn, logout, setloginDailogOpen } = useAuth();
+  const { user, isLoggedIn, logout, setloginDailogOpen } = useAuthStore(useShallow(state => ({
+    user: state.user,
+    isLoggedIn: state.isLoggedIn,
+    logout: state.logout,
+    setloginDailogOpen: state.setloginDailogOpen
+  })));
+
 
   const handlerouter = (path: string) => {
     router.push(path);

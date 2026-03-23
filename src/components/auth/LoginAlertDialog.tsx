@@ -11,11 +11,18 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuthStore } from "@/app/context/AuthContext";
+import { useShallow } from 'zustand/react/shallow';
+
 import { UserLock } from "lucide-react";
 
 export default function LoginAlertDialog() {
-    const { showLoginAlert, setShowLoginAlert, setloginDailogOpen } = useAuth();
+    const { showLoginAlert, setShowLoginAlert, setloginDailogOpen } = useAuthStore(useShallow(state => ({
+        showLoginAlert: state.showLoginAlert,
+        setShowLoginAlert: state.setShowLoginAlert,
+        setloginDailogOpen: state.setloginDailogOpen
+    })));
+
 
     const handleLoginConfirm = () => {
         setShowLoginAlert(false);

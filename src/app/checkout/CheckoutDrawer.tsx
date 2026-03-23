@@ -11,11 +11,16 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../context/AuthContext';
+
 import { useShallow } from 'zustand/react/shallow';
 
 const CheckoutDrawer = () => {
-  const { authState, triggerLoginAlert } = useAuth();
+  const { isLoggedIn, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+    isLoggedIn: state.isLoggedIn,
+    triggerLoginAlert: state.triggerLoginAlert
+  })));
+
   const {
     cartItems,
     isCartOpen,
@@ -41,8 +46,8 @@ const CheckoutDrawer = () => {
 
   const handleQuantityIncrease = useCallback(async (e: React.MouseEvent, productId: number, product: any) => {
     e.stopPropagation();
-    await addToCart(productId, 1, authState, triggerLoginAlert, product);
-  }, [addToCart, authState, triggerLoginAlert]);
+    await addToCart(productId, 1, { isLoggedIn }, triggerLoginAlert, product);
+  }, [addToCart, isLoggedIn, triggerLoginAlert]);
 
   const handleQuantityDecrease = useCallback(async (e: React.MouseEvent, itemId: number, currentQuantity: number) => {
     e.stopPropagation();

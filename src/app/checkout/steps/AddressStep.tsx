@@ -19,7 +19,8 @@ import { CheckoutState, ShippingAddress } from '../checkoutTypes';
 import GoogleMapAddress, { LocationData } from '../GoogleMapAddress';
 import { AddressService } from '@/app/api/services/address.service';
 import { toast } from 'sonner';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuthStore } from '@/app/context/AuthContext';
+
 import { useCartStore } from '@/app/context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -67,7 +68,10 @@ export default function AddressStep({
         country: 'Nepal'
     });
 
-    const { authState } = useAuth();
+    const { isLoggedIn } = useAuthStore(useShallow(state => ({
+        isLoggedIn: state.isLoggedIn
+    })));
+
     const { guestAddresses, addGuestAddress, updateGuestAddress, deleteGuestAddress } = useCartStore(
         useShallow(state => ({
             guestAddresses: state.guestAddresses,
@@ -80,7 +84,7 @@ export default function AddressStep({
     // Fetch existing addresses on mount
     useEffect(() => {
         const fetchAddresses = async () => {
-            if (!authState.isLoggedIn) {
+            if (!isLoggedIn) {
                 setSavedAddresses(guestAddresses);
                 return;
             }
@@ -100,7 +104,7 @@ export default function AddressStep({
         };
 
         fetchAddresses();
-    }, [authState.isLoggedIn, guestAddresses]);
+    }, [isLoggedIn, guestAddresses]);
 
     // Check for existing address selection
     useEffect(() => {
@@ -228,7 +232,7 @@ export default function AddressStep({
         try {
             let savedAddress: ShippingAddress;
 
-            if (!authState.isLoggedIn) {
+            if (!isLoggedIn) {
                 if (selectedAddressId) {
                     savedAddress = { ...addressPayload, address: addressPayload.full_address, id: selectedAddressId } as ShippingAddress;
                     updateGuestAddress(selectedAddressId, savedAddress);
@@ -280,7 +284,7 @@ export default function AddressStep({
         if (!addressToDelete) return;
 
         try {
-            if (!authState.isLoggedIn) {
+            if (!isLoggedIn) {
                 deleteGuestAddress(addressToDelete);
                 if (selectedAddressId === addressToDelete) {
                     setSelectedAddressId(null);

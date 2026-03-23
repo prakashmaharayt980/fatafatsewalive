@@ -11,7 +11,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 
 import MobileSidebar from './sidebarMobile';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../context/AuthContext';
+
 
 import { trackSearch } from '@/lib/Analytic';
 import { NavbarItem } from '@/app/context/GlobalData';
@@ -91,7 +92,13 @@ const HeaderBody = ({ initialNavItems }: HeaderBodyProps) => {
     const { cartItems, setIsCartOpen, setIsWishlistOpen } = useCartStore(useShallow(
         state => ({ cartItems: state.cartItems, setIsCartOpen: state.setIsCartOpen, setIsWishlistOpen: state.setIsWishlistOpen })
     ));
-    const { user, isLoggedIn, logout, setloginDailogOpen } = useAuth();
+    const { user, isLoggedIn, logout, setloginDailogOpen } = useAuthStore(useShallow(state => ({
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
+        logout: state.logout,
+        setloginDailogOpen: state.setloginDailogOpen
+    })));
+
     const router = useRouter();
     const searchRef = useRef<HTMLDivElement>(null);
     const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);

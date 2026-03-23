@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { CheckoutState } from '../checkoutTypes';
 import { PaymentMethodsOptions } from '../../CommonVue/Payment';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuthStore } from '@/app/context/AuthContext';
+import { useShallow } from 'zustand/react/shallow';
+
 
 interface PaymentStepProps {
     state: CheckoutState;
@@ -30,7 +32,11 @@ const allPaymentMethods = [
 
 export default function PaymentStep({ state, onPaymentMethodChange, onPlaceOrder, onBack, isSubmitting }: PaymentStepProps) {
     const { paymentMethod } = state;
-    const { authState, triggerLoginAlert } = useAuth();
+    const { isLoggedIn, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        isLoggedIn: state.isLoggedIn,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+
 
     const isComplete = paymentMethod !== '';
 
@@ -123,7 +129,7 @@ export default function PaymentStep({ state, onPaymentMethodChange, onPlaceOrder
                 </Button>
                 <Button
                     onClick={() => {
-                        if (!authState.isLoggedIn) {
+                        if (!isLoggedIn) {
                             triggerLoginAlert();
                         } else {
                             onPlaceOrder();

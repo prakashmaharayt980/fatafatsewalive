@@ -3,7 +3,9 @@
 import React, { useState, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuthStore } from '@/app/context/AuthContext';
+import { useShallow } from 'zustand/react/shallow';
+
 import { ProductDetails } from '@/app/types/ProductDetailsTypes';
 
 import {
@@ -49,8 +51,12 @@ const STEP_LABELS: Record<PreOrderStep, string> = {
 };
 
 export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClientProps) {
-    const { authState, isLoading, triggerLoginAlert } = useAuth();
-    const userInfo = authState.user;
+    const { user, isLoading, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        user: state.user,
+        isLoading: state.isLoading,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+    const userInfo = user;
     const router = useRouter();
 
     const [currentStep, setCurrentStep] = useState<PreOrderStep>(PRE_ORDER_STEPS.ADDRESS);

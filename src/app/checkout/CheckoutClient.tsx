@@ -5,7 +5,8 @@ import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../context/AuthContext';
+
 import { trackInitiateCheckout } from '@/lib/Analytic';
 import {
     CheckoutState,
@@ -41,8 +42,13 @@ export default function CheckoutClient() {
         cartItems: state.cartItems,
         clearGuestData: state.clearGuestData
     })));
-    const { authState, isLoading, triggerLoginAlert } = useAuth();
-    const userInfo = authState.user;
+    const { user, isLoggedIn, isLoading, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
+        isLoading: state.isLoading,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+    const userInfo = user;
 
     // Checkout state
     const [checkoutState, setCheckoutState] = useState<CheckoutState>(initialCheckoutState);
@@ -186,13 +192,13 @@ export default function CheckoutClient() {
                     setProcessingPaymentOrder(res.data.id);
                 }
                 if (res.success && res.data.payment_type !== 'cash') {
-                    if (!authState.isLoggedIn) {
+                    if (!isLoggedIn) {
                         clearGuestData();
                     }
                     toast.success('Order placed successfully!');
                     router.push(`/checkout/Successpage/${res.data.id}`);
                 } else if (res.success && res.data.payment_type === 'cash') {
-                    if (!authState.isLoggedIn) {
+                    if (!isLoggedIn) {
                         clearGuestData();
                     }
                     toast.success('Cash order placed successfully!');

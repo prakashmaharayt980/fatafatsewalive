@@ -9,8 +9,9 @@ import IconRenderer from '@/app/CommonVue/CustomIconImg';
 
 
 import { Review } from '@/app/types/ReviewTypes';
-// AlertDialog removed — login is handled by AuthContext.triggerLoginAlert()
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuthStore } from '@/app/context/AuthContext';
+import { useShallow } from 'zustand/react/shallow';
+
 // Pagination replaced with custom inline buttons
 
 import { toast } from 'sonner';
@@ -72,7 +73,11 @@ export default function MoreDetailsProduct({
   const hasAttributes = Object.keys(keyFeatures).length > 0;
   const hasAnyFeatures = hasSpecifications || hasAttributes;
 
-  const { triggerLoginAlert, authState } = useAuth();
+  const { isLoggedIn, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+    isLoggedIn: state.isLoggedIn,
+    triggerLoginAlert: state.triggerLoginAlert
+  })));
+
 
   useEffect(() => {
     if (productID) {
@@ -88,7 +93,7 @@ export default function MoreDetailsProduct({
   }, [productID, currentPage]);
 
   const handleWriteReviewClick = () => {
-    if (!authState.isLoggedIn) {
+    if (!isLoggedIn) {
       triggerLoginAlert();
     } else {
       setRating({ ...Rating, commentOpen: !Rating.commentOpen });

@@ -10,8 +10,7 @@ import { trackProductClick } from "@/lib/analytics";
 import { placeholderimg } from "../CommonVue/Image";
 import { useShallow } from 'zustand/react/shallow';
 import { useCartStore } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-
+import { useAuthStore } from '../context/AuthContext';
 export interface ProductCardProps {
     product: BasketProduct;
     index?: number;
@@ -20,7 +19,11 @@ export interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
-    const { user } = useAuth();
+    const { user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        user: state.user,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+
     const {
         addToWishlist,
         wishlistItems,
@@ -36,8 +39,6 @@ const ProductCard = ({ product, index, priority = false, hidePrice = false }: Pr
             isInCompare: state.isInCompare
         })
     ));
-
-    const { triggerLoginAlert } = useAuth();
 
     if (!product || !product.id) {
         return null;

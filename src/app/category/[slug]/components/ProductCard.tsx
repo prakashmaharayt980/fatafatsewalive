@@ -7,14 +7,20 @@ import { Heart, Package, Scale, ShoppingCart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BasketProduct } from '@/app/types/ProductDetailsTypes';
 import { useCartStore } from '@/app/context/CartContext';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuthStore } from '@/app/context/AuthContext';
+
 import { useShallow } from 'zustand/react/shallow';
 import { ProductCardProps, ProductCardRowProps } from './interfaces';
 
 // ─── Shared hook ─────────────────────────────────────────────────────────────
 
 function useProductCard(product: ProductCardProps['product']) {
-    const { authState, triggerLoginAlert } = useAuth();
+    const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        isLoggedIn: state.isLoggedIn,
+        user: state.user,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+
     const {
         addToCart, addToWishlist, removeFromWishlist, wishlistItems,
         addToCompare, compareItems, removeFromCompare,
@@ -47,15 +53,16 @@ function useProductCard(product: ProductCardProps['product']) {
 
     const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
-        await addToCart(product.id, 1, authState, triggerLoginAlert, product);
-    }, [addToCart, product, authState, triggerLoginAlert]);
+        await addToCart(product.id, 1, { isLoggedIn }, triggerLoginAlert, product);
+    }, [addToCart, product, isLoggedIn, triggerLoginAlert]);
 
     const handleWishlist = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
         isWishlisted
             ? await removeFromWishlist(product.id)
-            : await addToWishlist(product.id, authState.user, triggerLoginAlert, product);
-    }, [isWishlisted, addToWishlist, removeFromWishlist, product, authState.user, triggerLoginAlert]);
+            : await addToWishlist(product.id, user, triggerLoginAlert, product);
+    }, [isWishlisted, addToWishlist, removeFromWishlist, product, user, triggerLoginAlert]);
+
 
     const handleCompare = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();

@@ -1,9 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { deleteCookie, setCookie } from 'cookies-next';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+import { useRouter } from 'next/navigation';
+
 
 interface User {
     id: string;
@@ -13,102 +17,94 @@ interface User {
     phone: string;
     avatar_image?: { thumb: string; full: string; };
 }
+
 interface AuthState {
     user: User | null;
     isLoggedIn: boolean;
-}
-
-interface AuthContextType extends AuthState {
-    login: (token: string, user: User) => void;
-    triggerLoginAlert: () => void;
-    logout: () => void;
-    authState: AuthState;
     loginDailogOpen: boolean;
-    setloginDailogOpen: React.Dispatch<React.SetStateAction<boolean>>;
     showLoginAlert: boolean;
-    setShowLoginAlert: React.Dispatch<React.SetStateAction<boolean>>;
     isLoading: boolean;
-    syncSession: (session: { user: User; access_token: string; refresh_token?: string | null }) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface AuthActions {
+    login: (token: string, user: User) => void;
+    logout: () => void;
+    syncSession: (session: { user: User; access_token: string }) => void;
+    triggerLoginAlert: () => void;
+    setloginDailogOpen: (open: boolean) => void;
+    setShowLoginAlert: (show: boolean) => void;
+}
+
+export const useAuthStore = create<AuthState & AuthActions>()(
+    persist(
+        (set, get) => ({
+            // State
+            user: null,
+            isLoggedIn: false,
+            loginDailogOpen: false,
+            showLoginAlert: false,
+            isLoading: false,
+
+            // Actions
+            login: (token, userData) => {
+                setCookie('access_token', token, { maxAge: 60 * 60 * 24 * 7 });
+                set({ user: userData, isLoggedIn: true });
+                toast.success("Successfully logged in");
+                // Note: router.refresh() should be handled by the caller or specialized hook if needed
+                // For direct store actions, we just update the state
+            },
+
+            logout: () => {
+                deleteCookie('access_token');
+                deleteCookie('refresh_token');
+                set({ user: null, isLoggedIn: false });
+                toast.info("Logged out");
+            },
+
+            syncSession: (session) => {
+                set({
+                    user: session.user,
+                    isLoggedIn: true
+                });
+            },
+
+            triggerLoginAlert: () => {
+                set({ showLoginAlert: true });
+                setTimeout(() => set({ showLoginAlert: false }), 3000);
+            },
+
+            setloginDailogOpen: (open) => set({ loginDailogOpen: open }),
+            setShowLoginAlert: (show) => set({ showLoginAlert: show }),
+        }),
+        {
+            name: 'auth-storage',
+            partialize: (state) => ({
+                user: state.user,
+                isLoggedIn: state.isLoggedIn
+            }),
+        }
+    )
+);
+
 
 export const AuthProvider = ({
     children,
     initialState
 }: {
     children: React.ReactNode,
-    initialState?: AuthState & { accessToken?: string }
+    initialState?: { user: User | null; isLoggedIn: boolean; accessToken?: string }
 }) => {
-    const router = useRouter();
-
-    // Initialize with server state if provided
-    const [authState, setAuthState] = useState<AuthState>(() => {
+    useEffect(() => {
         if (initialState) {
-            return {
+            useAuthStore.setState({
                 user: initialState.user,
                 isLoggedIn: initialState.isLoggedIn
-            };
+            });
         }
-        return {
-            user: null,
-            isLoggedIn: false
-        };
-    });
+    }, [initialState]);
 
-    const [loginDailogOpen, setloginDailogOpen] = useState(false);
-    const [showLoginAlert, setShowLoginAlert] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); // Added for Header compatibility
-
-    const login = useCallback((token: string, userData: User) => {
-        setCookie('access_token', token, { maxAge: 60 * 60 * 24 * 7 });
-        setAuthState({ user: userData, isLoggedIn: true });
-        toast.success("Successfully logged in");
-        router.refresh();
-    }, [router]);
-
-    const logout = useCallback(() => {
-        deleteCookie('access_token');
-        deleteCookie('refresh_token');
-        setAuthState({ user: null, isLoggedIn: false });
-        toast.info("Logged out");
-        router.refresh();
-    }, [router]);
-
-    const triggerLoginAlert = useCallback(() => {
-        setShowLoginAlert(true);
-        setTimeout(() => setShowLoginAlert(false), 3000);
-    }, []);
-
-    const syncSession = useCallback((session: { user: User; access_token: string; refresh_token?: string | null }) => {
-        // This can be used to update the context from a client component that receives props
-        setAuthState({
-            user: session.user,
-            isLoggedIn: true
-        });
-    }, []);
-
-    return (
-        <AuthContext.Provider value={{
-            ...authState,
-            login,
-            logout,
-            loginDailogOpen,
-            setloginDailogOpen,
-            showLoginAlert,
-            setShowLoginAlert,
-            isLoading,
-            syncSession,
-            triggerLoginAlert,
-            authState
-        }}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <>{children}</>;
 };
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) throw new Error('useAuth must be used within an AuthProvider');
-    return context;
-};
+
+

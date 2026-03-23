@@ -10,7 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { CheckoutState } from './checkoutTypes';
 import { useShallow } from 'zustand/react/shallow';
 import { useCartStore } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../context/AuthContext';
+
 
 interface CheckoutProduct {
   setsubmittedvaluelist: Dispatch<SetStateAction<CheckoutProduct['submittedvaluelist']>>;
@@ -36,7 +37,10 @@ export default function CheckoutProduct({
   const { cartItems } = useCartStore(useShallow((state) => ({
     cartItems: state.cartItems
   })));
-  const { authState, triggerLoginAlert } = useAuth();
+  const { triggerLoginAlert } = useAuthStore(useShallow(state => ({
+    triggerLoginAlert: state.triggerLoginAlert
+  })));
+
   const items = cartItems?.items || [];
 
   const subtotal = cartItems?.cart_total || 0;

@@ -10,7 +10,7 @@ import { Inter } from 'next/font/google'
 
 import { AuthProvider } from '@/app/context/AuthContext';
 
-import { GoogleOAuthProvider } from "@react-oauth/google";
+
 import { getGlobalData } from '@/app/context/GlobalData';
 import { Toaster } from 'sonner';
 
@@ -66,7 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={inter.className}>
       <body className="flex flex-col min-h-screen">
 
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
+
 
           <AuthProvider initialState={{ isLoggedIn, user, accessToken }}>
 
@@ -78,14 +78,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <FooterBody />
 
             <Toaster richColors position="top-right" />
-            <ClientSideDrawers />
+           
 
 
 
           </AuthProvider>
 
+ <ClientSideDrawers />
 
-        </GoogleOAuthProvider>
 
 
       </body>

@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-// Move all ssr: false components here
+
 const CheckoutDrawer = dynamic(() => import('@/app/checkout/CheckoutDrawer'), { ssr: false });
 const WishList = dynamic(() => import('@/app/checkout/Wishlist'), { ssr: false });
 const GlobalCompareDrawer = dynamic(() => import('@/app/context/GlobalCompareDrawer'), { ssr: false });

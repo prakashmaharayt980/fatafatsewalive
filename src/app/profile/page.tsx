@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { User, MapPin, ShieldCheck, LogOut, Package2, Bell } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../context/AuthContext';
+import { useShallow } from 'zustand/react/shallow';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -16,7 +18,11 @@ import Notifications from './Notifications';
 
 // Wrapped component that uses searchParams
 function ProfilePageContent() {
-    const { logout, authState } = useAuth();
+    const { logout, user } = useAuthStore(useShallow(state => ({
+        logout: state.logout,
+        user: state.user
+    })));
+
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -75,15 +81,15 @@ function ProfilePageContent() {
                     <div className="lg:hidden bg-white p-6 pb-8 flex flex-col items-center text-center border-b border-slate-100">
                         <div className="w-24 h-24 rounded-full bg-[var(--colour-fsP2)] p-0.5 mb-4 relative overflow-hidden">
                             <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[var(--colour-fsP2)] text-3xl font-bold overflow-hidden">
-                                {authState.user?.avatar_image?.thumb ? (
-                                    <Image src={authState.user.avatar_image.thumb} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
+                                {user?.avatar_image?.thumb ? (
+                                    <Image src={user.avatar_image.thumb} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
                                 ) : (
-                                    authState.user?.name?.substring(0, 2).toUpperCase() || <User size={40} />
+                                    user?.name?.substring(0, 2).toUpperCase() || <User size={40} />
                                 )}
                             </div>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800">{authState.user?.name || 'Guest User'}</h2>
-                        <p className="text-slate-500 font-medium">{authState.user?.email}</p>
+                        <h2 className="text-2xl font-bold text-slate-800">{user?.name || 'Guest User'}</h2>
+                        <p className="text-slate-500 font-medium">{user?.email}</p>
                     </div>
 
                     {/* Mobile Navigation (Sticky) */}
@@ -113,15 +119,15 @@ function ProfilePageContent() {
                             <div className="p-5 border-b border-slate-100 flex flex-col items-center text-center bg-gray-50">
                                 <div className="w-16 h-16 rounded-full bg-[var(--colour-fsP2)] p-0.5 mb-3 relative overflow-hidden">
                                     <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[var(--colour-fsP2)] text-lg font-bold">
-                                        {authState.user?.avatar_image?.thumb ? (
-                                            <Image src={authState.user.avatar_image.thumb} alt="Profile" width={64} height={64} className="w-full h-full object-cover rounded-full" />
+                                        {user?.avatar_image?.thumb ? (
+                                            <Image src={user.avatar_image.thumb} alt="Profile" width={64} height={64} className="w-full h-full object-cover rounded-full" />
                                         ) : (
-                                            authState.user?.name?.substring(0, 2).toUpperCase() || <User size={24} />
+                                            user?.name?.substring(0, 2).toUpperCase() || <User size={24} />
                                         )}
                                     </div>
                                 </div>
-                                <h3 className="font-semibold text-slate-800 text-sm truncate w-full">{authState.user?.name || 'Guest User'}</h3>
-                                <p className="text-xs text-slate-400 truncate w-full">{authState.user?.email}</p>
+                                <h3 className="font-semibold text-slate-800 text-sm truncate w-full">{user?.name || 'Guest User'}</h3>
+                                <p className="text-xs text-slate-400 truncate w-full">{user?.email}</p>
                             </div>
 
                             {/* Navigation */}

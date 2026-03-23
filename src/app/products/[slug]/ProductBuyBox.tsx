@@ -36,7 +36,8 @@ import { CategorySlug_ID } from "@/app/types/category";
 import { parseHighlights } from "@/app/CommonVue/highlights";
 import { useShallow } from "zustand/react/shallow";
 import { useCartStore } from "@/app/context/CartContext";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuthStore } from "@/app/context/AuthContext";
+
 
 interface ProductBuyBoxProps {
     product: ProductDetails;
@@ -59,7 +60,12 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
     setQuantity,
     allVariantImages,
 }) => {
-    const { authState, triggerLoginAlert } = useAuth();
+    const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        isLoggedIn: state.isLoggedIn,
+        user: state.user,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+
     const { addToCart, wishlistItems, addToWishlist, removeFromWishlist, addToCompare, removeFromCompare, compareItems } =
         useCartStore(
             useShallow((state) => ({
@@ -111,11 +117,14 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
     const toggleWishlist = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        isInWishlist ? await removeFromWishlist(product.id) : await addToWishlist(product.id, authState.user, triggerLoginAlert, product as unknown as BasketProduct);
+        isInWishlist ? await removeFromWishlist(product.id) : await addToWishlist(product.id, user, triggerLoginAlert, product as unknown as BasketProduct);
+
     };
 
     const handleAddToCart = async () => {
-        await addToCart(product.id, quantity, authState, triggerLoginAlert, product as unknown as BasketProduct);
+        await addToCart(product.id, quantity, { isLoggedIn }, triggerLoginAlert, product as unknown as BasketProduct);
+
+
     };
 
     const handleCompareToggle = () => {

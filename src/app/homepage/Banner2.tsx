@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
-import { imglist } from '@/app/CommonVue/Image';
+
 import { BannerItem } from '@/app/types/BannerTypes';
 import { trackBannerClick } from '@/lib/analytics';
 
@@ -25,13 +25,17 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
     return data.images
       .sort((a, b) => a.order - b.order)
       .slice(0, 2) // Ensure it only takes two images for this specific UI
-      .map((img) => ({
-        id: img.id.toString(),
-        name: img.content || 'Banner Image',
-        src: img.url || img.image?.full || '',
-        mainimgs: img.url || img.image?.banner || img.image?.full || '',
-        link: img.link || '#',
-      }));
+      .map((img) => {
+        const cleanAlt = img.content ? img.content.replace(/<[^>]*>?/gm, '').trim() : '';
+        return {
+          id: img.id.toString(),
+          name: cleanAlt || img.alt_text || 'Banner Image',
+          src: img.url || img.image?.full || '',
+          mainimgs: img.url || img.image?.banner || img.image?.full || '',
+          link: img.link || '#',
+        };
+      });
+
   }, [data]);
 
   return (
@@ -56,8 +60,9 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
               src={img.mainimgs}
               alt={img.name}
               fill
-              className="object-contain transition-transform duration-700 " // Ensure object-cover for better fit
+              className="object-cover transition-transform duration-700 " 
               priority={idx === 0}
+              fetchPriority={idx === 0 ? "high" : "auto"}
               sizes="(max-width: 639px) 100vw, 50vw" // SEO: explicitly states size hints
             />
 

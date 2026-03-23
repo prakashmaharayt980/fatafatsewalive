@@ -70,7 +70,7 @@ const BannerFetcher = ({
     }
 
     return (
-        <div ref={ref} className={`min-h-[100px] w-full ${className || ''}`} data-track={`banner-${slug}`}>
+        <div ref={ref} className={`min-h-[250px] w-full ${className || ''}`} data-track={`banner-${slug}`}>
             {data ? (
                 <Component data={data} />
             ) : (

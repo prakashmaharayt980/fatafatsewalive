@@ -8,11 +8,16 @@ import { BasketProduct, ProductDetails } from "@/app/types/ProductDetailsTypes";
 import { cn } from "@/lib/utils";
 import { useShallow } from "zustand/react/shallow";
 import { useCartStore } from "@/app/context/CartContext";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuthStore } from "@/app/context/AuthContext";
+
 
 const BlogProductCard = ({ product, index, priority = false, hidePrice = false }: ProductCardProps) => {
     const router = useRouter();
-    const { authState, triggerLoginAlert } = useAuth();
+    const { user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+        user: state.user,
+        triggerLoginAlert: state.triggerLoginAlert
+    })));
+
     const { 
         addToWishlist, 
         removeFromWishlist,
@@ -64,7 +69,8 @@ const BlogProductCard = ({ product, index, priority = false, hidePrice = false }
         if (isWishlisted) {
             await removeFromWishlist(product.id);
         } else {
-            await addToWishlist(product.id, authState.user, triggerLoginAlert, product as unknown as BasketProduct);
+            await addToWishlist(product.id, user, triggerLoginAlert, product as unknown as BasketProduct);
+
         }
     };
 
