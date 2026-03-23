@@ -3,6 +3,7 @@ import './globals.css';
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import { AuthProvider } from '@/app/context/AuthContext';
 import { getGlobalData } from '@/app/context/GlobalData';
@@ -72,6 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </AuthProvider>
 
         <ClientSideDrawers />
+        <SpeedInsights />
       </body>
     </html>
   );
