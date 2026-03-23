@@ -31,7 +31,7 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
           id: img.id.toString(),
           name: cleanAlt || img.alt_text || 'Banner Image',
           src: img.url || img.image?.full || '',
-          mainimgs: img.url || img.image?.banner || img.image?.full || '',
+
           link: img.link || '#',
         };
       });
@@ -57,10 +57,10 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
             )}
           >
             <Image
-              src={img.mainimgs}
+              src={img.src}
               alt={img.name}
               fill
-              className="object-cover transition-transform duration-700 " 
+              className="object-cover transition-transform duration-700 "
               priority={idx === 0}
               fetchPriority={idx === 0 ? "high" : "auto"}
               sizes="(max-width: 639px) 100vw, 50vw" // SEO: explicitly states size hints

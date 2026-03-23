@@ -1,25 +1,17 @@
-// src/app/layout.tsx
-import './globals.css'; // Tailwind or global styles
+
+import './globals.css';
 import React from 'react';
-
 import dynamic from 'next/dynamic';
-import { Inter } from 'next/font/google'
-
-
-
+import { Inter } from 'next/font/google';
 
 import { AuthProvider } from '@/app/context/AuthContext';
-
-
 import { getGlobalData } from '@/app/context/GlobalData';
-import { Toaster } from 'sonner';
 
-
-import ClientSideDrawers from './clientlayout';
 import HeaderBody from './layouts/headerbody';
+import ClientSideDrawers from './clientlayout';
 
 
-const FooterBody = dynamic(() => import('./layouts/FooterBody'));
+
 
 const inter = Inter({
   subsets: ['latin'],
@@ -60,37 +52,27 @@ export const metadata = {
   },
 };
 
+
+
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { navItems, isLoggedIn, accessToken, user } = await getGlobalData();
+
   return (
     <html lang="en" className={inter.className}>
       <body className="flex flex-col min-h-screen">
+        <AuthProvider initialState={{ isLoggedIn, user, accessToken }}>
+          <HeaderBody initialNavItems={navItems} />
+
+          <main className="flex-1 w-full mx-auto bg-gray-50">
+            {children}
+          </main>
 
 
+        </AuthProvider>
 
-          <AuthProvider initialState={{ isLoggedIn, user, accessToken }}>
-
-            <HeaderBody initialNavItems={navItems} />
-            <main className="flex-1 w-full mx-auto bg-gray-50">
-
-              {children}
-            </main>
-            <FooterBody />
-
-            <Toaster richColors position="top-right" />
-           
-
-
-
-          </AuthProvider>
-
- <ClientSideDrawers />
-
-
-
+        <ClientSideDrawers />
       </body>
-
-
     </html>
   );
 }

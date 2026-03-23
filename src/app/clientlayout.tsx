@@ -2,6 +2,15 @@
 
 import dynamic from 'next/dynamic';
 
+const Toaster = dynamic(() => import('sonner').then(m => m.Toaster), {
+  ssr: false,
+});
+
+const FooterBody = dynamic(() => import('./layouts/FooterBody'), {
+  ssr: true,
+});
+
+
 
 const CheckoutDrawer = dynamic(() => import('@/app/checkout/CheckoutDrawer'), { ssr: false });
 const WishList = dynamic(() => import('@/app/checkout/Wishlist'), { ssr: false });
@@ -14,6 +23,7 @@ const UserActivityTracker = dynamic(() => import('@/components/UserActivityTrack
 export default function ClientSideDrawers() {
   return (
     <>
+      <FooterBody />
       <CheckoutDrawer />
       <WishList />
       <GlobalCompareDrawer />
@@ -21,6 +31,7 @@ export default function ClientSideDrawers() {
       <FacebookPixel />
       <LoginPage />
       <UserActivityTracker />
+      <Toaster richColors position="top-right" />
     </>
   );
 }
