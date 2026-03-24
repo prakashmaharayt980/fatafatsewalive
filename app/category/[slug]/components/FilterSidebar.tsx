@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, memo, useCallback, useMemo } from 'react';
-import type { ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { FilterState } from '../types';
 import type { FilterOption } from '@/app/types/category';
-import {
+import type {
     FilterSectionProps,
     CheckboxItemProps,
     SearchableListProps,
@@ -19,7 +19,7 @@ import {
     ActiveFilterTagProps,
     FilterSidebarProps
 } from './interfaces';
-import type { FilterSidebarSkeleton } from './Skeletons';
+import { FilterSidebarSkeleton } from './Skeletons';
 
 // ─── Filter Section ───────────────────────────────────────────────────────────
 

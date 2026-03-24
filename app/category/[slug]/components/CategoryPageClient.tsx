@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { usePathname, useSearchParams } from 'next/navigation';
-import type { FilterState, ViewMode, INITIAL_FILTERS } from '../types';
-import type { fetchCategoryProducts } from './actions';
+import { usePathname, useSearchParams } from 'next/navigation';
+import type { FilterState, ViewMode } from '../types';
+import { INITIAL_FILTERS } from '../types';
+import { fetchCategoryProducts } from './actions';
 
 import dynamic from 'next/dynamic';
-import type { ProductCardSkeleton, FilterSidebarSkeleton } from './Skeletons';
+import { ProductCardSkeleton, FilterSidebarSkeleton } from './Skeletons';
 
 const MobileFilterDrawer = dynamic(() => import('./MobileFilterDrawer'), { ssr: false });
 const CategoryBanner = dynamic(() => import('./CategoryBanner'), { ssr: true });
@@ -23,7 +24,7 @@ const ProductGrid = dynamic(() => import('./ProductGrid'), {
 });
 const ParsedContent = dynamic(() => import('@/app/products/ParsedContent'), { ssr: true });
 
-import type { SmartStickyWrapper } from './SmartStickyWrapper';
+import { SmartStickyWrapper } from './SmartStickyWrapper';
 import type { CategoryPageClientProps } from './interfaces';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
