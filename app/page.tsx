@@ -1,65 +1,141 @@
-import Image from "next/image";
+// src/app/page.tsx
 
-export default function Home() {
+import type { Metadata } from 'next';
+import HomePage from './homepage';
+import Bannerfooter from './homepage/Bannerfooter';
+import Banner2 from './homepage/Banner2';
+import OfferBanner from './homepage/OfferBanner';
+import { Suspense } from 'react';
+import SkeletonCard from '@/app/skeleton/SkeletonCard';
+import SkeletonBanner from '@/app/skeleton/SkeletonBanner';
+import BannerCarouselServer from '@/components/BannerCarouselServer';
+import BannerSectionServer from '@/components/BannerSectionServer';
+import OurArticles from '@/app/homepage/OurArticles';
+import BasketSectionServer from '@/components/BasketSectionServer';
+
+
+// Demo categories
+const demoCategories = [
+  { slug: 'mobile-price-in-nepal', title: 'Mobile Phone' },
+  { slug: 'laptop-price-in-nepal', title: 'Laptop' },
+  { slug: 'accessories-price-in-nepal', title: 'Accessories', imgSlug: 'right-slider-thumbnail-test' },
+  { slug: 'drone-price-in-nepal', title: 'Drone' },
+  { slug: 'home-appliance-price-in-nepal', title: 'Home' },
+  { slug: 'dslr-camera-price-in-nepal', title: 'Camera' },
+];
+
+// Banner sections config
+const bannerSections = [
+  { slug: 'home-banner-fourth-test', type: 'Bannerfooter' as const },
+  { slug: 'pathao-offer', type: 'OfferBanner' as const },
+  { slug: 'banner-3-img-test', type: 'Banner2' as const },
+];
+
+// Generate Metadata for SEO
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Fatafat Sewa - Online Shopping in Nepal',
+    description: 'Fatafat Sewa is the best online shopping site in Nepal. Buy Electronics, Mobile, Laptops, and many more at the best price.',
+    alternates: {
+      canonical: 'https://fatafatsewa.com',
+    },
+    openGraph: {
+      title: 'Fatafat Sewa - Online Shopping in Nepal',
+      description: 'Fatafat Sewa is the best online shopping site in Nepal.',
+      type: 'website',
+      url: 'https://fatafatsewa.com',
+      images: [
+        {
+          url: '/favicon.png',
+          width: 1200,
+          height: 630,
+          alt: 'Fatafat Sewa',
+        },
+      ],
+    },
+  };
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "name": "Fatafat Sewa",
+      "url": "https://fatafatsewa.com",
+      "logo": "https://fatafatsewa.com/favicon.png",
+      "sameAs": [
+        "https://www.facebook.com/fatafatsewa",
+        "https://www.instagram.com/fatafatsewa",
+        "https://twitter.com/fatafatsewa"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "name": "Fatafat Sewa",
+      "url": "https://fatafatsewa.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://fatafatsewa.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+  ]
+};
+
+import LazySection from '@/components/LazySection';
+
+async function Page() {
+  const basketSections = Object.fromEntries(demoCategories.map((cat, index) => {
+    const section = (
+      <BasketSectionServer
+        slug={cat.slug}
+        title={cat.title}
+        imgSlug={(cat as any).imgSlug}
+      />
+    );
+
+    return [`basketSection${index}`, index < 2 ? section : (
+      <LazySection key={cat.slug} fallback={<SkeletonCard />} minHeight="400px">
+        <Suspense fallback={<SkeletonCard />}>
+          {section}
+        </Suspense>
+      </LazySection>
+    )];
+  }));
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      <HomePage
+        {...basketSections}
+        mainBannerSection={<BannerCarouselServer />}
+        sectionOne={<Suspense fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}><BannerSectionServer slug={bannerSections[0].slug} type={bannerSections[0].type} /></Suspense>}
+        offerSection={
+          <LazySection fallback={<div className="w-full min-h-[400px] sm:min-h-[500px] bg-gray-50 animate-pulse rounded-xl" />} minHeight="400px">
+            <Suspense fallback={<div className="w-full min-h-[400px] sm:min-h-[500px] bg-gray-50 animate-pulse rounded-xl" />}><BannerSectionServer slug={bannerSections[1].slug} type={bannerSections[1].type} /></Suspense>
+          </LazySection>
+        }
+        sectionTwo={
+          <LazySection fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />} minHeight="200px">
+            <Suspense fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}><BannerSectionServer slug={bannerSections[2].slug} type={bannerSections[2].type} /></Suspense>
+          </LazySection>
+        }
+        ourArticlesSection={
+          <LazySection fallback={<div className="min-h-[400px] animate-pulse bg-gray-50 rounded-2xl" />} minHeight="400px">
+            <OurArticles blogpage="home" />
+          </LazySection>
+        }
+      />
+    </>
   );
 }
+
+export const revalidate = 60;
+
+export default Page;
+

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 61.94 62.08" id="tiktok">
+  <defs>
+    <radialGradient id="a" cx="34.83" cy="-27.77" r="54.67" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1f1f1f"></stop>
+      <stop offset=".44" stop-color="#232222"></stop>
+      <stop offset=".82" stop-color="#2d2b2b"></stop>
+      <stop offset="1" stop-color="#353132"></stop>
+    </radialGradient>
+    <linearGradient id="b" x1="30.97" x2="30.97" y1="47.69" y2="14.25" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d1d3d4"></stop>
+      <stop offset=".15" stop-color="#dee0e1"></stop>
+      <stop offset=".41" stop-color="#f1f1f2"></stop>
+      <stop offset=".69" stop-color="#fbfcfc"></stop>
+      <stop offset="1" stop-color="#fff"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="61.94" height="61.94" fill="url(#a)" rx="16.96"></rect>
+  <path fill="url(#b)" d="M28.42,32.17a15.14,15.14,0,0,0-2.47.14,4.79,4.79,0,0,0-3.68,5.42,4.84,4.84,0,0,0,5.17,4.12A4.79,4.79,0,0,0,31.9,37.1c0-7.36,0-14.71,0-22.07v-.78h5.73c.36,4.87,3.22,7.35,7.9,8v5.61a13.76,13.76,0,0,1-7.81-2.55c0,.26,0,.45,0,.64,0,3.61,0,7.21,0,10.81A10.47,10.47,0,0,1,30.7,47a10,10,0,0,1-11.27-2.62,10,10,0,0,1-2.18-11.26,10.52,10.52,0,0,1,11-6.61l.21.05Z"></path>
+</svg>
