@@ -18,6 +18,8 @@ interface LazySectionProps<T = any> {
   rootMargin?: string;
   /** Optional delay in ms before showing the content after it enters view */
   delay?: number;
+  /** Visual Aspect Ratio to reserve space (e.g. '16/9' or '5/1') */
+  aspectRatio?: string;
 }
 
 /**
@@ -35,6 +37,7 @@ function LazySection<T = any>({
   minHeight = '100px',
   rootMargin = '200px',
   delay = 0,
+  aspectRatio,
 }: LazySectionProps<T>) {
   const [inView, setInView] = useState(false);
   const [data, setData] = useState<T | null>(null);
@@ -88,7 +91,7 @@ function LazySection<T = any>({
     <div
       ref={containerRef}
       className={cn('w-full', className)}
-      style={{ minHeight }}
+      style={aspectRatio ? { aspectRatio } : { minHeight }}
     >
       {!inView || (fetcher && !data && isLoading) ? (
         fallback

@@ -8,8 +8,8 @@ import OurArticles from '@/app/homepage/OurArticles';
 export default function OurArticlesSectionClient() {
     return (
         <LazySection
-            fallback={<div className="min-h-[400px] animate-pulse bg-gray-50 rounded-2xl" />}
-            minHeight="400px"
+            className="min-h-[400px] sm:min-h-[600px]"
+            minHeight="0"
             fetcher={() => getBlogList({ per_page: 5 }).then(res => Array.isArray(res) ? res : (res.data || []))}
             render={(data) => <OurArticles blogpage="home" initialData={data} />}
         />

@@ -115,7 +115,7 @@ async function Page() {
         sectionOne={
           <LazySection
             fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}
-            minHeight="200px"
+            aspectRatio="5/1"
             rootMargin="50px"
           >
             <Suspense fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}>
@@ -125,7 +125,7 @@ async function Page() {
         }
         offerSection={<OfferSectionClient />}
         sectionTwo={
-          <LazySection fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />} minHeight="200px" rootMargin="0px">
+          <LazySection fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />} aspectRatio="1000/250" rootMargin="0px">
             <Suspense fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}><BannerSectionServer slug={bannerSections[1].slug} type={bannerSections[1].type} /></Suspense>
           </LazySection>
         }

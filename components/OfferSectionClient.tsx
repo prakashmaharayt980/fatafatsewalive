@@ -10,8 +10,8 @@ const OfferBannerClient = dynamic(() => import('@/app/homepage/OfferBannerClient
 export default function OfferSectionClient() {
     return (
         <LazySection
-            fallback={<div className="w-full min-h-[400px] sm:min-h-[500px] bg-gray-50 animate-pulse rounded-xl" />}
-            minHeight="400px"
+            className="min-h-[400px] sm:min-h-[500px]"
+            minHeight="0"
             fetcher={async () => {
                 // Fetch first campaign details (Server Action called from Client)
                 const campaigns = await GetallOfferlist();

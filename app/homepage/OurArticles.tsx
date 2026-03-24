@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,48 +12,12 @@ const OurArticles = ({ blogpage, initialData }: { blogpage: string, initialData?
   const router = useRouter();
   const [articles, setArticles] = useState<any[]>(initialData || []);
   const [isLoading, setIsLoading] = useState(!initialData);
-  const [hasFetched, setHasFetched] = useState(!!initialData);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (hasFetched || initialData) return;
-
-    const observer = new IntersectionObserver(
-      async (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsLoading(true);
-          try {
-            const rawData = await getBlogList({ per_page: 5 });
-            const fetchedArticles = Array.isArray(rawData) ? rawData : (rawData.data || []);
-            setArticles(fetchedArticles);
-            setHasFetched(true);
-          } catch (error) {
-            console.error('Failed to fetch articles on demand:', error);
-          } finally {
-            setIsLoading(false);
-            observer.disconnect();
-          }
-        }
-      },
-      { threshold: 0.1, rootMargin: '100px' }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasFetched, initialData]);
-
-  if (isLoading && !hasFetched) return (
-    <div ref={containerRef} className="min-h-[400px]" />
-  );
-
+  // Content is now handled by parent LazySection
   const isSidebar = blogpage === 'sidebar';
   const isProductPage = blogpage === 'product-page';
 
   return (
-    <div ref={containerRef} className={cn("mx-auto", isSidebar ? "py-0 px-0" : isProductPage ? "py-0" : "py-8 md:py-12 px-4")}>
+    <div className={cn("mx-auto", isSidebar ? "py-0 px-0" : isProductPage ? "py-0" : "py-8 md:py-12 px-4")}>
       {/* Header */}
       {!isSidebar && (
         <div className={cn(
