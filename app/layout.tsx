@@ -2,7 +2,7 @@
 import './globals.css';
 import React from 'react';
 import { Inter } from 'next/font/google';
-import { GoogleAnalytics } from '@next/third-parties/google';
+import Script from 'next/script';
 
 import { getGlobalData } from '@/app/context/GlobalData';
 import Header from './layouts/Header';
@@ -54,8 +54,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={inter.className}>
       <body className="flex flex-col min-h-screen">
-        {/* Using lazyOnload for non-critical analytics to prioritize FCP */}
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
+        {/* Using lazyOnload for non-critical analytics to prioritize FCP/LCP */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
+          strategy="lazyOnload"
+        />
+        <Script id="google-analytics" strategy="lazyOnload">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}');
+          `}
+        </Script>
         
         <Header initialNavItems={navItems} />
 

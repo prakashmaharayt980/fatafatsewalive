@@ -2,11 +2,13 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import imglogo from '@/app/assets/CompanyLogo.webp';
-import NavBar from './NavBar';
-import SearchBarClient from './SearchBarClient';
-import HeaderActionsClient from './HeaderActionsClient';
-import MobileNavClient from './MobileNavClient';
+import dynamic from 'next/dynamic';
 import type { NavbarItem } from '../context/navbar.interface';
+
+const NavBar = dynamic(() => import('./NavBar'), { ssr: true });
+const SearchBarClient = dynamic(() => import('./SearchBarClient'), { ssr: true });
+const HeaderActionsClient = dynamic(() => import('./HeaderActionsClient'), { ssr: true });
+const MobileNavClient = dynamic(() => import('./MobileNavClient'), { ssr: true });
 
 interface HeaderProps {
     initialNavItems: NavbarItem[];
