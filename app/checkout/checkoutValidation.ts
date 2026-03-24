@@ -1,7 +1,7 @@
 'use client';
 
 import * as yup from 'yup';
-import { CheckoutState, RECIPIENT_TYPES } from './checkoutTypes';
+import { RECIPIENT_TYPES } from './checkoutTypes';
 
 const shippingAddressSchema = yup.object({
     id: yup.number().nullable().optional(),

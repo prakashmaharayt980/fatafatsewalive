@@ -381,7 +381,7 @@ export default function CheckoutClient() {
                                     paymentmethod: checkoutState.paymentMethod,
                                     address: checkoutState.address,
                                     productsID: cartItems?.items || [],
-                                    receiverNO: userInfo?.phone,
+                                    receiverNO: userInfo?.phone || '',
                                 }}
                                 handleApplyPromo={handleApplyPromo}
                                 Stepstate={checkoutState}
