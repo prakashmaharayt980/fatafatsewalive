@@ -19,6 +19,7 @@ import {
     fmt, fmtRs, isDelivered, MOCK_ADDRESS, MOCK_USER, MOCK_ORDERS,
     type Order,
 } from './shared';
+import Image from 'next/image';
 
 const noBar = '[&::-webkit-scrollbar]:w-0 [scrollbar-width:none]';
 const isCOD = (t: string) => !t || t.toLowerCase().includes('cash') || t.toLowerCase().includes('cod');
@@ -56,7 +57,7 @@ function CancelDialog({
                             <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50">
                                 <div className="w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center shrink-0 overflow-hidden">
                                     {item.product?.image?.thumb
-                                        ? <Image src={item.product.image.thumb} alt={item.product.name} className="w-full h-full object-contain p-0.5" />
+                                        ? <Image src={item.product.image.thumb} alt={item.product.name} width={40} height={40} className="w-full h-full object-contain p-0.5" />
                                         : <Package size={14} className="text-gray-300" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -210,7 +211,7 @@ function OrderDetailDialog({ order, onClose, onCancelClick }: {
                                         <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50">
                                             <div className="w-11 h-11 shrink-0 rounded-xl border border-gray-200 bg-white flex items-center justify-center overflow-hidden">
                                                 {item.product?.image?.thumb
-                                                    ? <Image src={item.product.image.thumb} alt={item.product.name} className="w-full h-full object-contain p-0.5" />
+                                                    ? <Image src={item.product.image.thumb} alt={item.product.name} width={44} height={44} className="w-full h-full object-contain p-0.5" />
                                                     : <Package size={16} className="text-gray-300" />}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -291,7 +292,7 @@ function OrderDetailDialog({ order, onClose, onCancelClick }: {
                                         <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-all">
                                             <div className="w-12 h-12 shrink-0 rounded-xl border border-gray-200 bg-white flex items-center justify-center overflow-hidden">
                                                 {item.product?.image?.thumb
-                                                    ? <Image src={item.product.image.thumb} alt={item.product.name} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
+                                                    ? <Image src={item.product.image.thumb} alt={item.product.name} width={48} height={48} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
                                                     : <Package size={16} className="text-gray-300" />}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -452,7 +453,7 @@ export default function OrdersSection({ orders: rawOrders, loading, error }: {
                                     <div key={item.id} className="flex items-center gap-3 px-4 py-2.5">
                                         <div className="w-9 h-9 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
                                             {item.product?.image?.thumb
-                                                ? <Image src={item.product.image.thumb} alt={item.product.name} className="w-full h-full object-cover" />
+                                                ? <Image src={item.product.image.thumb} alt={item.product.name} width={36} height={36} className="w-full h-full object-cover" />
                                                 : <Package size={13} className="text-gray-300" />}
                                         </div>
                                         <div className="flex-1 min-w-0">

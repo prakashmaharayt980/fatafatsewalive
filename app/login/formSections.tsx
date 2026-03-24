@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Eye, EyeOff, IdCardLanyard, Loader } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, IdCardLanyard, Loader, CheckCircle, CheckCircle2, KeyRound } from 'lucide-react';
 import { sectionFields } from './formConfig';
 import { GoogleLogin } from "@react-oauth/google";
 import FacebookLogin from '@greatsumini/react-facebook-login';
@@ -147,7 +147,7 @@ export const formSections = {
           </div>
 
           <FacebookLogin
-            appId={process.env.NEXT_PUBLIC_FB_APP_ID}
+            appId={process.env.NEXT_PUBLIC_FB_APP_ID || ''}
             onSuccess={(response) => {
               props.handleFacebookSuccess(response);
             }}

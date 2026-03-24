@@ -48,7 +48,7 @@ export interface RecipientInfo {
 export interface DeliveryPartner {
     id: number;
     name: string;
-    img: string;
+    img: any;
     description: string;
     estimatedDays?: string;
     requiresUserId?: boolean;

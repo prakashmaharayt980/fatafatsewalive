@@ -24,7 +24,7 @@ function CompareContent() {
     const searchParams = useSearchParams();
     const { compareList, setCompareList, removeFromCompare, clearCompare } = useCartStore(useShallow((state) => ({
         compareList: state.compareItems,
-        setCompareList: set=> state.setCompareItems(set),
+        setCompareList: (set: any) => state.setCompareItems(set),
         removeFromCompare: state.removeFromCompare,
         clearCompare: state.clearCompare
     })));

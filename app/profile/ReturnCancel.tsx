@@ -85,7 +85,7 @@ function ReturnCancel() {
         total: 107.00
     };
 
-    const getStatusColor = (status) => {
+    const getStatusColor = (status: string) => {
         switch (status) {
             case 'Return':
                 return 'text-green-600 bg-green-50';

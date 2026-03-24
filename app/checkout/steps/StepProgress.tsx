@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CHECKOUT_STEPS, CheckoutStep, STEP_LABELS, CheckoutState, isStepComplete, canProceedToStep } from '../checkoutTypes';
+import { CHECKOUT_STEPS, type CheckoutStep, STEP_LABELS, type CheckoutState, isStepComplete, canProceedToStep } from '../checkoutTypes';
 
 interface StepProgressProps {
     currentStep: CheckoutStep;

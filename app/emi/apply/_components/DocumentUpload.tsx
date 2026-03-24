@@ -10,7 +10,12 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 interface DocumentUploadProps {
   docTypes: string[];
   isGranter?: boolean;
-  files: any;
+  files: {
+    citizenshipFile: Record<string, File | null>;
+    granterDocument: Record<string, File | null>;
+    bankStatement: File | null;
+    userSignature: File | null;
+  };
   previews: { [key: string]: string };
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, docType: string, isGranter?: boolean) => void;
   handleFileDelete: (docType: string, isGranter?: boolean) => void;

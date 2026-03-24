@@ -9,11 +9,11 @@ import { useShallow } from 'zustand/react/shallow';
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
 
 import {
-    CheckoutState,
-    CheckoutStep,
+    type CheckoutState,
+    type CheckoutStep,
     initialCheckoutState,
-    ShippingAddress,
-    RecipientInfo,
+    type ShippingAddress,
+    type RecipientInfo,
 } from '@/app/checkout/checkoutTypes';
 
 import AddressStep from '@/app/checkout/steps/AddressStep';

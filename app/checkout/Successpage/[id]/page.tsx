@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 
-import SuccessClient, { OrderData } from './SuccessClient';
+import SuccessClient, { type OrderData } from './SuccessClient';
 import { OrderService } from '@/app/api/services/order.service';
 
 interface SuccessPageProps {

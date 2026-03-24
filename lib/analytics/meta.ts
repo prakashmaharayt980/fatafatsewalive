@@ -1,4 +1,4 @@
-import { MetaEventNames, MetaEventParams } from './types';
+import type { MetaEventNames, MetaEventParams } from './types';
 
 // Declare the fbq function on the window object
 declare global {

@@ -27,13 +27,13 @@ function ChangePassword() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFormVisible, setIsFormVisible] = useState(false); // Default hidden
 
-    const [showPasswords, setShowPasswords] = useState({
+    const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({
         current_password: false,
         new_password1: false,
         new_password2: false
     });
 
-    const [errors, setErrors] = useState({
+    const [errors, setErrors] = useState<Record<string, string>>({
         current_password: '',
         new_password1: '',
         new_password2: '',

@@ -6,8 +6,15 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, FileText, CheckCircle2, ArrowLeft, Send, Trash } from 'lucide-react';
 import { useContextEmi } from '@/app/emi/_components/emiContext';
 
+interface EmiData {
+  tenure: number;
+  downPayment: number;
+  financeAmount: number;
+  paymentpermonth: number;
+}
+
 interface RenderReviewProps {
-  emiData: any;
+  emiData: EmiData;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, docType: string) => void;
   handleFileDelete: (docType: string, isGranter?: boolean) => void;
   handleBack: () => void;

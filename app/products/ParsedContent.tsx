@@ -1,6 +1,6 @@
 
-import React, { JSX, useMemo } from 'react';
-import parse, { domToReact, HTMLReactParserOptions, Element, DOMNode, Text } from 'html-react-parser';
+import React, { type JSX, useMemo } from 'react';
+import parse, { domToReact, type HTMLReactParserOptions, type Element, type DOMNode, type Text } from 'html-react-parser';
 import { sanitizeHtml } from '@/lib/dompurify';
 
 import Image from 'next/image';

@@ -1,4 +1,4 @@
-import { GA4EventNames, GA4EventParams } from './types';
+import type { GA4EventNames, GA4EventParams } from './types';
 
 // Declare the gtag function on the window object
 declare global {

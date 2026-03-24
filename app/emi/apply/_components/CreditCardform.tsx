@@ -4,13 +4,21 @@ import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import type { FieldOption } from "./FormField";
 import { BANK_PROVIDERS } from "../../_components/_func_emiCalacutor";
 
-export default function CreditCardComponent({ cardinfofield, errors }: any) {
+interface CreditCardComponentProps {
+  cardinfofield: {
+    fields: FieldOption[];
+  };
+  errors: Record<string, string>;
+}
+
+export default function CreditCardComponent({ cardinfofield, errors }: CreditCardComponentProps) {
 
   // Extract expiryDate and cardLimit fields
-  const expiryField = cardinfofield.fields.find((field) => field.name === 'expiryDate');
-  const limitField = cardinfofield.fields.find((field) => field.name === 'cardLimit');
+  const expiryField = cardinfofield.fields.find((field: FieldOption) => field.name === 'expiryDate');
+  const limitField = cardinfofield.fields.find((field: FieldOption) => field.name === 'cardLimit');
 
   return (
     <div className="bg-gradient-to-b from-white to-blue-50 flex items-center justify-center ">
@@ -29,8 +37,8 @@ export default function CreditCardComponent({ cardinfofield, errors }: any) {
                   <div className="relative">
                     {field.type === 'select' ? (
                       <Select
-                        value={field.value}
-                        onValueChange={(value) => field.onChange({ target: { value } })}
+                        value={field.value ? String(field.value) : undefined}
+                        onValueChange={(value) => field.onChange({ target: { name: field.name, value } } as unknown as React.ChangeEvent<HTMLSelectElement>)}
                       >
                         <SelectTrigger
                           className={`w-full h-10 pl-10 bg-white border-blue-200 text-gray-600 text-sm rounded-lg focus:border-(--colour-fsP2) focus:ring-1 focus:ring-(--colour-fsP2) transition-all duration-150 ${errors[field.name] ? 'border-red-500' : ''
@@ -69,8 +77,9 @@ export default function CreditCardComponent({ cardinfofield, errors }: any) {
                       <div className="relative group">
                         <Input
                           type={field.type || 'text'}
-                          value={field.value}
+                          value={field.value ?? ''}
                           onChange={field.onChange}
+                          name={field.name}
                           placeholder={field.placeholder}
                           maxLength={field.maxLength}
                           max={field.maxvalue}
@@ -97,8 +106,9 @@ export default function CreditCardComponent({ cardinfofield, errors }: any) {
                     <div className="relative group">
                       <Input
                         type={expiryField.type || 'text'}
-                        value={expiryField.value}
+                        value={expiryField.value ?? ''}
                         onChange={expiryField.onChange}
+                        name={expiryField.name}
                         placeholder={expiryField.placeholder}
                         maxLength={expiryField.maxLength}
                         autoComplete="off"
@@ -120,8 +130,9 @@ export default function CreditCardComponent({ cardinfofield, errors }: any) {
                     <div className="relative group">
                       <Input
                         type={limitField.type || 'text'}
-                        value={limitField.value}
+                        value={limitField.value ?? ''}
                         onChange={limitField.onChange}
+                        name={limitField.name}
                         placeholder={limitField.placeholder}
                         maxLength={limitField.maxLength}
                         autoComplete="off"

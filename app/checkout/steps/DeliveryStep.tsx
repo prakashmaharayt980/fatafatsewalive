@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
-import { CheckoutState, DeliveryPartner, DeliverySelection } from '../checkoutTypes';
+import { type CheckoutState, type DeliveryPartner, type DeliverySelection } from '../checkoutTypes';
 import { deliveypartnerDetails } from '../../CommonVue/deliveypartner';
 
 interface DeliveryStepProps {

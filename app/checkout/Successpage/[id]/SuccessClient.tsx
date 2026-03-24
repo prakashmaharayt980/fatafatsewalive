@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Check, Package, CreditCard, MapPin, Mail, Phone, User, MapPinHouse, PackageOpen, Store } from 'lucide-react';
 import { trackPurchase } from '@/lib/Analytic';
 
@@ -202,7 +203,7 @@ export default function SuccessClient({ order }: SuccessClientProps) {
                                 <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 shrink-0">
                                         {item.product.image?.thumb ? (
-                                            <Image src={item.product.image.thumb} alt={item.product.name} className="w-full h-full object-cover" />
+                                            <Image src={item.product.image.thumb} alt={item.product.name} width={64} height={64} className="w-full h-full object-cover" />
                                         ) : (
                                             <Package className="w-6 h-6 text-gray-400" />
                                         )}

@@ -163,7 +163,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         }));
         // Clear any previous error for this field on typing
         if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: undefined }));
+            setErrors((prev) => ({ ...prev, [name]: '' }));
         }
     };
 
@@ -235,7 +235,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         const schema = getValidationSchema(section, currentOption);
         try {
             await schema.validateAt(name, { [name]: value });
-            setErrors((prev) => ({ ...prev, [name]: undefined }));
+            setErrors((prev) => ({ ...prev, [name]: '' }));
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Validation error';
             setErrors((prev) => ({ ...prev, [name]: errorMessage }));
@@ -476,7 +476,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
     const tumerOptions = useMemo(() => {
         const tumer = BANK_PROVIDERS.find((bank) => bank.name === emiContextInfo.bankinfo.bankname)?.tenureOptions || [];
-        return tumer;
+        return tumer.map(String);
     }, [emiContextInfo.bankinfo.bankname]);
 
     const emiData = useMemo(() => {
@@ -610,7 +610,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             value: localCreditCardInfo.cardHolderName,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
                 setLocalCreditCardInfo(prev => ({ ...prev, cardHolderName: e.target.value }));
-                if (errors['cardHolderName']) setErrors(prev => ({ ...prev, cardHolderName: undefined }));
+                if (errors['cardHolderName']) setErrors(prev => ({ ...prev, cardHolderName: '' }));
             },
             placeholder: 'Card Holder Name',
             svgicon: <User className="w-5 h-5" />,
@@ -624,7 +624,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 let val = e.target.value.replace(/\D/g, '');
                 val = val.replace(/(.{4})/g, '$1 ').trim();
                 setLocalCreditCardInfo(prev => ({ ...prev, creditCardNumber: val.slice(0, 19) }));
-                if (errors['creditCardNumber']) setErrors(prev => ({ ...prev, creditCardNumber: undefined }));
+                if (errors['creditCardNumber']) setErrors(prev => ({ ...prev, creditCardNumber: '' }));
             },
             placeholder: 'XXXX XXXX XXXX XXXX',
             maxLength: 19,
@@ -641,7 +641,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                     val = val.slice(0, 2) + '/' + val.slice(2, 4);
                 }
                 setLocalCreditCardInfo(prev => ({ ...prev, expiryDate: val.slice(0, 5) }));
-                if (errors['expiryDate']) setErrors(prev => ({ ...prev, expiryDate: undefined }));
+                if (errors['expiryDate']) setErrors(prev => ({ ...prev, expiryDate: '' }));
             },
             placeholder: 'MM/YY',
             maxLength: 5,
@@ -654,7 +654,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             value: localCreditCardInfo.cardLimit,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
                 setLocalCreditCardInfo(prev => ({ ...prev, cardLimit: e.target.value }));
-                if (errors['cardLimit']) setErrors(prev => ({ ...prev, cardLimit: undefined }));
+                if (errors['cardLimit']) setErrors(prev => ({ ...prev, cardLimit: '' }));
             },
             placeholder: 'Card Limit',
             svgicon: <HandCoins className="w-5 h-5" />,
@@ -693,7 +693,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             svgicon: <DollarSign className="w-5 h-5" />,
             extenduserinfo: '',
             placeholder: 'Enter down payment amount (e.g. 40% or 5000)',
-            maxvalue: product ? product.price : 0,
+            maxvalue: (product && typeof product.price === 'number') ? product.price : (product && typeof product.price === 'object' && 'current' in product.price) ? Number((product.price as any).current) : 0,
             type: 'number',
             helper: typeof emiContextInfo.emiCalculation.downPayment === 'string' && emiContextInfo.emiCalculation.downPayment.includes('%')
                 ? `Calculated: Rs. ${emiData.downPayment.toLocaleString()}`
@@ -713,7 +713,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             svgicon: <DollarSign className="w-5 h-5" />,
             extenduserinfo: '',
             placeholder: 'Enter down payment amount',
-            maxvalue: product ? product.price : 0,
+            maxvalue: (product && typeof product.price === 'number') ? product.price : (product && typeof product.price === 'object' && 'current' in product.price) ? Number((product.price as any).current) : 0,
             type: 'text',
             helper: typeof emiContextInfo.emiCalculation.downPayment === 'string' && emiContextInfo.emiCalculation.downPayment.includes('%')
                 ? `Calculated: Rs. ${emiData.downPayment.toLocaleString()}`

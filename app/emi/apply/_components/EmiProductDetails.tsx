@@ -6,7 +6,14 @@ import { ShoppingBag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import type { ProductData } from '@/app/types/ProductDetailsTypes';
 
-export default function EmiProductDetails({ emiData, product, selectedVariant }: { emiData: any, product: ProductData, selectedVariant?: string }) {
+interface EmiData {
+  tenure: number;
+  downPayment: number;
+  financeAmount: number;
+  paymentpermonth: number;
+}
+
+export default function EmiProductDetails({ emiData, product, selectedVariant }: { emiData: EmiData, product: ProductData, selectedVariant?: string }) {
   if (!product) return null;
 
   return (

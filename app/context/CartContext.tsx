@@ -7,7 +7,7 @@ import { WishlistService } from '../api/services/wishlist';
 import type { BasketProduct } from '../types/ProductDetailsTypes';
 import { CartService } from '../api/services/cart.service';
 import { trackAddToCart } from '@/lib/Analytic';
-import { ShippingAddress } from '../checkout/checkoutTypes';
+import type { ShippingAddress } from '../checkout/checkoutTypes';
 import { AddressService } from '../api/services/address.service';
 
 interface CartItem {

@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
-import { ShippingAddress } from '@/app/checkout/checkoutTypes';
+import { type ShippingAddress } from '@/app/checkout/checkoutTypes';
 import { CalendarClock, ShieldCheck, MapPin, Banknote, Clock } from 'lucide-react';
 
 interface PreOrderSummaryProps {
@@ -113,7 +113,7 @@ export default function PreOrderSummary({
                         <div>
                             <p className="text-[10px] font-bold text-green-700 uppercase tracking-wider mb-0.5">Delivery To</p>
                             <p className="text-xs text-gray-700 leading-snug">
-                                {selectedAddress.address}{selectedAddress.city ? `, ${selectedAddress.city}` : ''}
+                                {selectedAddress.address?.landmark || selectedAddress.address?.city}{selectedAddress.address?.city ? `, ${selectedAddress.address.city}` : ''}
                             </p>
                         </div>
                     </div>

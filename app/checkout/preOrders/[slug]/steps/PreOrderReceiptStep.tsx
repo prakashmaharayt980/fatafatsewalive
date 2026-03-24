@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronRight, ChevronLeft, MapPin } from 'lucide-react';
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
-import { ShippingAddress } from '@/app/checkout/checkoutTypes';
+import { type ShippingAddress } from '@/app/checkout/checkoutTypes';
 import Image from 'next/image';
 
 interface PreOrderReceiptStepProps {
@@ -47,12 +47,12 @@ export default function PreOrderReceiptStep({ product, address, onNext, onBack }
                         <div className="flex items-start gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50">
                             <MapPin className="w-5 h-5 text-(--colour-fsP2) shrink-0 mt-0.5" />
                             <div>
-                                <p className="text-sm font-semibold text-gray-900">{address.address}</p>
+                                <p className="text-sm font-semibold text-gray-900">{address.address?.landmark || address.address?.city}</p>
                                 <p className="text-xs text-gray-600 mt-1">
-                                    {address.city}{address.district ? `, ${address.district}` : ''}
+                                    {address.address?.city}{address.address?.district ? `, ${address.address.district}` : ''}
                                 </p>
                                 <p className="text-xs text-gray-600">
-                                    {address.province ? `${address.province}, ` : ''}{address.country || 'Nepal'}
+                                    {address.address?.province ? `${address.address.province}, ` : ''}{address.address?.country || 'Nepal'}
                                 </p>
                             </div>
                         </div>

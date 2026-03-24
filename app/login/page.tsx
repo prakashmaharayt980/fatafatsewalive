@@ -39,7 +39,7 @@ export default function LoginPage() {
   const [socialToken, setSocialToken] = useState('');
   const [socialProvider, setSocialProvider] = useState<'google' | 'facebook'>('google');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Record<string, any>>({
     login: { email: '', password: '' },
     register: { name: '', email: '', password: '', password_confirmation: '', phone: '', address: '' },
     forgot: { email: '' },
@@ -48,7 +48,7 @@ export default function LoginPage() {
   });
 
 
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<Record<string, any>>({
     login: {},
     register: {},
     forgot: {},
@@ -56,7 +56,7 @@ export default function LoginPage() {
     socialComplete: {},
   });
 
-  const [showPassword, setShowPassword] = useState({
+  const [showPassword, setShowPassword] = useState<Record<string, boolean>>({
 
     loginPassword: false,
     registerPassword: false,
@@ -68,7 +68,7 @@ export default function LoginPage() {
   });
 
   // ... (existing handleInputChange)
-  const handleInputChange = (section, field, value) => {
+  const handleInputChange = (section: string, field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [section]: { ...prev[section], [field]: value },
@@ -82,14 +82,14 @@ export default function LoginPage() {
   };
 
   // ... (existing toggleShowPassword, trimFormData, validateForm)
-  const toggleShowPassword = (field) => {
+  const toggleShowPassword = (field: string) => {
     setShowPassword((prev) => ({
       ...prev,
       [field]: !prev[field],
     }));
   };
 
-  const trimFormData = (section) => {
+  const trimFormData = (section: string) => {
     const trimmed = { ...formData[section] };
     Object.keys(trimmed).forEach(key => {
       if (typeof trimmed[key] === 'string') {
@@ -99,16 +99,16 @@ export default function LoginPage() {
     return trimmed;
   };
 
-  const validateForm = async (section, data) => {
+  const validateForm = async (section: string, data: any) => {
     try {
       const schema = section === 'login' ? loginSchema : section === 'register' ? registerSchema : section === 'forgot' ? forgotSchema : verifySchema;
       await schema.validate(data, { abortEarly: false });
       setErrors((prev) => ({ ...prev, [section]: {} }));
       return true;
-    } catch (error) {
-      const newErrors = {};
+    } catch (error: any) {
+      const newErrors: Record<string, string> = {};
       if (error.inner) {
-        error.inner.forEach((err) => {
+        error.inner.forEach((err: any) => {
           newErrors[err.path] = err.message;
         });
       }
@@ -118,7 +118,7 @@ export default function LoginPage() {
   };
 
   // ... (handleLogin, handleGoogleLogin, handleFacebookLogin, handleRegister, handleForgotPassword - keep as is)
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedData = trimFormData('login');
     const isValid = await validateForm('login', trimmedData);
@@ -142,7 +142,7 @@ export default function LoginPage() {
       });
   };
 
-  const handleGoogleLogin = async (credentialResponse) => {
+  const handleGoogleLogin = async (credentialResponse: any) => {
     const id_token = credentialResponse.credential;
     setSocialToken(id_token);
     setSocialProvider('google');
@@ -155,13 +155,13 @@ export default function LoginPage() {
           setloginDailogOpen(false);
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         console.error('Google login err', error);
         toast.error("Network error during Google login");
       });
   };
 
-  const handleFacebookLogin = async (response) => {
+  const handleFacebookLogin = async (response: any) => {
     const access_token = response.accessToken;
     setSocialToken(access_token);
     setSocialProvider('facebook');
@@ -174,13 +174,13 @@ export default function LoginPage() {
           setloginDailogOpen(false);
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         console.error('Facebook login err', error);
         toast.error("Network error during Facebook login");
       });
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedData = trimFormData('register');
     const isValid = await validateForm('register', trimmedData);
@@ -199,7 +199,7 @@ export default function LoginPage() {
           }));
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         if (error.response && error.response.status === 400 && error.response.data.email) {
           toast.error(error.response.data.email[0]);
         } else {
@@ -211,7 +211,7 @@ export default function LoginPage() {
       });
   };
 
-  const handleForgotPassword = async (e) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedData = trimFormData('forgot');
     const isValid = await validateForm('forgot', trimmedData);
@@ -224,7 +224,7 @@ export default function LoginPage() {
         setFormData(prev => ({ ...prev, verify: { otpCode: '', newPassword: '', confirmNewPassword: '' } }));
         setActiveSection('verify');
       })
-      .catch((error) => {
+      .catch((error: any) => {
         toast.error(error.response?.data?.message || error.message || "Email not found");
       })
       .finally(() => {
@@ -232,7 +232,7 @@ export default function LoginPage() {
       });
   };
 
-  const handleVerifyCode = async (e) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = formData.verify.otpCode?.trim();
     if (!code || !/^\d{6}$/.test(code)) {
@@ -257,7 +257,7 @@ export default function LoginPage() {
       });
   };
 
-  const handleResetPassword = async (e) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedData = trimFormData('verify');
     const isValid = await validateForm('verify', trimmedData);
@@ -280,7 +280,7 @@ export default function LoginPage() {
         setActiveSection('resetSuccess');
         setOtpVerified(false);
       })
-      .catch(error => {
+      .catch((error: any) => {
         toast.error(error.response?.data?.message || error.message || "Failed to reset password");
       })
       .finally(() => {
@@ -358,7 +358,7 @@ export default function LoginPage() {
 
           <div className="flex-1 w-full mx-auto">
             <GoogleAuthWrapper>
-              {formSections[activeSection]?.render(sectionProps)}
+              {(formSections as any)[activeSection]?.render(sectionProps)}
             </GoogleAuthWrapper>
           </div>
         </div>

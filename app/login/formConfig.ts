@@ -1,5 +1,5 @@
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 
 import { Mail, Lock, User, Phone, KeyRound, Home } from 'lucide-react';

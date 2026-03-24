@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { CheckoutState, RECIPIENT_TYPES, CHECKOUT_STEPS, CheckoutStep } from '../checkoutTypes';
+import { type CheckoutState, RECIPIENT_TYPES, CHECKOUT_STEPS, type CheckoutStep } from '../checkoutTypes';
 
 import { checkoutReviewSchema } from '../checkoutValidation';
 import * as yup from 'yup';

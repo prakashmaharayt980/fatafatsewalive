@@ -1,4 +1,4 @@
-import { Review } from "./ReviewTypes";
+import type { Review } from "./ReviewTypes";
 
 export interface ProductDescription {
     short_description: string | null;
@@ -88,7 +88,10 @@ export interface ProductData {
     weight?: string | null;
     status?: number | boolean;
     is_featured?: number;
-    attributes: Record<string, string>;
+    attributes: {
+        product_attributes?: Record<string, string>;
+        [key: string]: any;
+    };
     variant_attributes?: Record<string, string[]>;
     highlights?: string; // fallback in case some old properties use it directly
     product_video_url?: string | null;

@@ -18,6 +18,7 @@ export interface DocumentFiles {
     front: File | null;
     back: File | null;
     ppphoto: File | null;
+    [key: string]: File | null;
 }
 
 export interface EmiFiles {
