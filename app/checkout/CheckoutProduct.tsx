@@ -22,7 +22,7 @@ interface CheckoutProduct {
     appliedPromo: { code: string; discount: number } | null;
     paymentmethod: string;
     address: any;
-    receiverNO: Number;
+    receiverNO: string;
     productsID: any[];
   };
   handleApplyPromo: () => void;
