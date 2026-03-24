@@ -52,6 +52,7 @@ const CategoryProductStrip = ({ categorySlug, categoryTitle }: CategoryProductSt
                                     src={product.image?.full || '/placeholder.png'}
                                     alt={product.name}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, 240px"
                                     className="object-contain p-2 transition-transform duration-500 group-hover:scale-110"
                                 />
                             </div>

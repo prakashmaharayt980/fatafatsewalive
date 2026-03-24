@@ -1,4 +1,4 @@
-import { YouTubeVideo } from './YouTubeVideoCard';
+import type { YouTubeVideo } from './YouTubeVideoCard';
 
 /**
  * Shared YouTube video data used in both blog listing and blog details pages.

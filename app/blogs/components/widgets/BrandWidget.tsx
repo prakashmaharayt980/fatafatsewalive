@@ -5,12 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import useSWR from 'swr';
 
-import type { Store } from 'lucide-react';
-import { CategoryService } from '@/app/api/services/category.service';
+import { Store } from 'lucide-react';
+import { getAllBrands } from '@/app/api/services/category.service';
 
 const BrandWidget = () => {
     const { data: brands, isLoading } = useSWR('blog-sidebar-brands', () =>
-        CategoryService.getAllBrands().then(res => res.data?.slice(0, 9) || [])
+        getAllBrands().then(res => res.data?.slice(0, 9) || [])
     );
 
     if (isLoading) return <div className="h-48 bg-gray-100 rounded-2xl animate-pulse"></div>;
@@ -38,6 +38,7 @@ const BrandWidget = () => {
                                     src={brand.image}
                                     alt={brand.name}
                                     fill
+                                    sizes="48px"
                                     className="object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-110"
                                 />
                             </div>

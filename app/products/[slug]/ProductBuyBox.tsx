@@ -35,7 +35,6 @@ const PreOrderDialog = dynamic(() => import("./PreOrderDialog"), { ssr: false })
 const ProductEmiDialog = dynamic(() => import("./ProductEmiDialog"), { ssr: false });
 
 import useSWR from "swr";
-import { CategoryService } from "@/app/api/services/category.service";
 import type { CategorySlug_ID } from "@/app/types/category";
 import { parseHighlights } from "@/app/CommonVue/highlights";
 import { useShallow } from "zustand/react/shallow";

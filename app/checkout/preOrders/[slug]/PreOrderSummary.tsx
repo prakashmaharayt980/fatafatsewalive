@@ -34,9 +34,9 @@ export default function PreOrderSummary({
                 <div className="flex gap-3">
                     <div className="w-20 h-20 rounded-xl bg-white border border-gray-200 relative shrink-0 overflow-hidden shadow-sm">
                         {product.image?.full ? (
-                            <Image src={product.image.full} alt={product.name} fill className="object-contain p-1" />
+                            <Image src={product.image.full} alt={product.name} fill sizes="80px" className="object-contain p-1" />
                         ) : (product as any).thumb?.url ? (
-                            <Image src={(product as any).thumb.url} alt={product.name} fill className="object-contain p-1" />
+                            <Image src={(product as any).thumb.url} alt={product.name} fill sizes="80px" className="object-contain p-1" />
                         ) : (
                             <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                                 <CalendarClock className="w-6 h-6 text-gray-300" />

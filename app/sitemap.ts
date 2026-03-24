@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
-import { CategoryService } from './api/services/category.service';
-import { BlogService } from './api/services/blog.service';
+import { getAllCategories } from './api/services/category.service';
+import { getBlogList } from './api/services/blog.service';
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Dynamic Categories
     let categories = []
     try {
-        const res = await CategoryService.getAllCategories(); // Ensure this matches your API response structure
+        const res = await getAllCategories(); // Ensure this matches your API response structure
         // If res is array
         if (Array.isArray(res)) {
             categories = res.map((cat: any) => ({
@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Dynamic Blogs
     let blogs = []
     try {
-        const res = await BlogService.getBlogList();
+        const res = await getBlogList();
         if (res && res.data && Array.isArray(res.data)) {
             blogs = res.data.map((blog: any) => ({
                 url: `${baseUrl}/blog/${blog.id}`, // Confirm if blog uses slug or ID

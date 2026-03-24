@@ -8,7 +8,7 @@ import { ChevronDown, SlidersHorizontal, ShoppingBag, Loader2, Search, X } from 
 
 import type { ProductSummary } from '@/app/types/ProductDetailsTypes'
 import EmiProductCard, { EmiProductCardSkeleton } from '@/app/products/ProductCards/EmiProductCard'
-import { CategoryService } from '@/app/api/services/category.service'
+import { getAllBrands } from '@/app/api/services/category.service'
 import { ProductService } from '@/app/api/services/product.service'
 import { logoImg } from '@/app/CommonVue/Image'
 
@@ -51,7 +51,7 @@ export default function ShopByEmiClient() {
 
     // ─── Fetch Brands ───
     useEffect(() => {
-        CategoryService.getAllBrands()
+        getAllBrands()
             .then((res: any) => {
                 const brands = res?.data || res || []
                 setAllBrands(Array.isArray(brands) ? brands : [])

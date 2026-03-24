@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { trackArticleClick } from '@/lib/analytics';
 import BlogCard from '../blogs/components/BlogCard';
-import { BlogService } from '@/app/api/services/blog.service';
+import { getBlogList } from '@/app/api/services/blog.service';
 
 const OurArticles = ({ blogpage, initialData }: { blogpage: string, initialData?: any[] }) => {
   const router = useRouter();
@@ -23,7 +23,7 @@ const OurArticles = ({ blogpage, initialData }: { blogpage: string, initialData?
         if (entries[0].isIntersecting) {
           setIsLoading(true);
           try {
-            const rawData = await BlogService.getBlogList({ per_page: 5 });
+            const rawData = await getBlogList({ per_page: 5 });
             const fetchedArticles = Array.isArray(rawData) ? rawData : (rawData.data || []);
             setArticles(fetchedArticles);
             setHasFetched(true);

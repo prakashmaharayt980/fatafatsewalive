@@ -27,6 +27,7 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
                 src={product.thumb?.url || product.images?.[0]?.url || ''}
                 alt={product.name || 'product'}
                 fill
+                sizes="80px"
                 className="object-contain p-1"
               />
             ) : (

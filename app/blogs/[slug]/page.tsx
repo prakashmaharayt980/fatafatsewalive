@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 
-import { BlogService } from '../../api/services/blog.service';
+import { getBlogList } from '../../api/services/blog.service';
 import BlogDetailsClient from '../components/BlogDetailsClient';
 import type { Article } from '../../types/Blogtypes';
 import type { ProductDetails } from '../../types/ProductDetailsTypes';
@@ -19,7 +19,7 @@ interface PageProps {
 // Data Fetching Helper
 const getArticleData = async (slug: string) => {
     try {
-        const blogRes = await BlogService.getBlogList();
+        const blogRes = await getBlogList();
         const articles: Article[] = Array.isArray(blogRes) ? blogRes : blogRes.data || [];
         const article = articles.find((a) => a.slug === slug);
         return article;

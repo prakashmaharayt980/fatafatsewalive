@@ -1,8 +1,8 @@
 'use server';
 
-import { CategoryService } from '@/app/api/services/category.service';
+import { getCategoryProducts } from '@/app/api/services/category.service';
 import type { FilterState } from '../types';
-import type { decorateProduct } from '@/app/api/utils/productDecorator';
+import { decorateProduct } from '@/app/api/utils/productDecorator';
 
 export interface FetchProductsInput {
     slug: string;
@@ -30,8 +30,8 @@ function buildParams(filters: FilterState, page: number, per_page: number) {
 export async function fetchCategoryProducts({ slug, filters, page, per_page = 10 }: FetchProductsInput) {
     const params = buildParams(filters, page, per_page);
     try {
-        const result = await CategoryService.getCategoryProducts(slug, params);
-        const products = (result?.data?.products ?? []).map((p, index) => decorateProduct(p, index));
+        const result = await getCategoryProducts(slug, params);
+        const products = (result?.data?.products ?? []).map((p: any, index: number) => decorateProduct(p, index));
         return {
             products,
             meta: result?.meta ?? { current_page: page, per_page, total: 0, last_page: 1 },

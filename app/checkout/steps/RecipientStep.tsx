@@ -5,7 +5,8 @@ import { User, Gift, EyeOff, ChevronRight, ChevronLeft, Phone, UserCircle, Messa
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckoutState, RECIPIENT_TYPES, RecipientType, RecipientInfo } from '../checkoutTypes';
+import type { CheckoutState, RecipientType, RecipientInfo } from '../checkoutTypes';
+import { RECIPIENT_TYPES } from '../checkoutTypes';
 import Image from 'next/image';
 
 interface RecipientStepProps {
@@ -101,14 +102,14 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
         label: string,
         photo?: string,
         field: 'recipientPhoto' | 'senderPhoto',
-        inputRef: React.RefObject<HTMLInputElement>
+        inputRef: React.RefObject<HTMLInputElement | null>
     }) => (
         <div className="space-y-2">
             <Label className="text-xs font-bold text-gray-600 uppercase tracking-wide">{label}</Label>
 
             {photo ? (
                 <div className="relative w-full h-32 rounded-xl overflow-hidden border border-gray-200 group">
-                    <Image src={photo} alt="Uploaded" fill className="object-cover" />
+                    <Image src={photo} alt="Uploaded" fill sizes="(max-width: 768px) 100vw, 300px" className="object-cover" />
                     <button
                         onClick={() => removePhoto(field)}
                         className="absolute top-2 right-2 bg-white/90 p-1 rounded-full shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors"

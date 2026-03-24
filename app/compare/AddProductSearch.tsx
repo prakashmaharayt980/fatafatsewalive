@@ -209,6 +209,7 @@ export default function AddProductSearch({ onSelect, excludeSlugs }: AddProductS
                                                         src={product.image.full || product.image.thumb || '/placeholder.png'}
                                                         alt={product.name}
                                                         fill
+                                                        sizes="64px"
                                                         className="object-contain p-1 group-hover:scale-110 transition-transform duration-300"
                                                     />
                                                 ) : (

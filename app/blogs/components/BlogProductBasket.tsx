@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 import BlogProductCard from '@/app/products/ProductCards/blogProducts';
 import SkeltonBasket from '@/app/skeleton/skelettonBasket';
-import { CategoryService } from '@/app/api/services/category.service';
+import { getCategoryProducts } from '@/app/api/services/category.service';
 import type { BasketProduct } from '@/app/types/ProductDetailsTypes';
 
 interface BlogProductBasketProps {
@@ -24,7 +24,7 @@ interface BlogProductBasketProps {
 }
 
 const fetcher = async ({ id, brandSlug, minPrice, maxPrice }: { id: string; brandSlug?: string; minPrice?: number; maxPrice?: number }) => {
-  const response = await CategoryService.getCategoryProducts({
+  const response = await getCategoryProducts({
     categories: id,
     brand: brandSlug,
     min_price: minPrice,

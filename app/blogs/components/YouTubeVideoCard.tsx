@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Play, Eye, Clock } from 'lucide-react';
 
 interface YouTubeVideo {
@@ -53,6 +54,8 @@ export default function YouTubeVideoCard({ video }: YouTubeVideoCardProps) {
                         <Image
                             src={thumbnailUrl}
                             alt={video.title}
+                            fill
+                            sizes="(max-width: 768px) 50vw, 25vw"
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         {/* Dark overlay */}

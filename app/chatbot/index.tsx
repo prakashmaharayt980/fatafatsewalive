@@ -14,7 +14,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Image from 'next/image';
 import { CompanyLogo } from '../CommonVue/Payment';
-import { MiscService } from '../api/services/misc.service';
+import { getChatbotHistory, chatBotQuery } from '../api/services/misc.service';
 
 interface ApiResponse {
   id: number;
@@ -307,7 +307,7 @@ export default function ChatBot() {
         return;
       }
 
-      const response = await MiscService.getChatbotHistory(sessionId);
+      const response = await getChatbotHistory(sessionId);
 
       if (response && Array.isArray(response)) {
         setHistoryData(response);
@@ -367,7 +367,7 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
-      const response = await MiscService.chatBotQuery({
+      const response = await chatBotQuery({
         message: userMessage,
         sessionId: sessionId
       });

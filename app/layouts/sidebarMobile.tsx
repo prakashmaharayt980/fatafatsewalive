@@ -69,6 +69,7 @@ const MobileSidebar = ({ open, toggleMobileMenu, initialNavItems, openCart, open
                 alt="Fatafatsewa Logo"
                 className="w-auto h-full object-contain"
                 fill
+                sizes="112px"
               />
             </div>
           </div>

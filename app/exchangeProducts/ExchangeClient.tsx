@@ -24,7 +24,7 @@ import {
     extractColorsFromVariants, guessColorHex
 } from './exchange-helpers'
 import { ProductService } from '../api/services/product.service'
-import { CategoryService } from '../api/services/category.service'
+import { getBrandProducts } from '../api/services/category.service'
 
 interface ExchangeClientProps {
     brands: BrandItem[]
@@ -105,7 +105,7 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
                 res = await ProductService.searchProducts({ search: search.trim(), per_page: 20 })
                 setProducts(res?.data || [])
             } else {
-                res = await CategoryService.getBrandProducts(brandSlug, { per_page: 20 })
+                res = await getBrandProducts(brandSlug, { per_page: 20 })
                 setProducts(res?.data || [])
             }
         } catch (err) {

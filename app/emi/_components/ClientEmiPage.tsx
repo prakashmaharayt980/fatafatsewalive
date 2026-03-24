@@ -266,6 +266,7 @@ const ClientEmiPage: React.FC<ClientEmiPageProps> = ({ initialProduct, emiBanner
                                                         src={bank.img}
                                                         alt={bank.name}
                                                         fill
+                                                        sizes="44px"
                                                         className="object-contain p-1.5"
 
                                                     />

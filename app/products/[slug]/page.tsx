@@ -4,7 +4,7 @@ import type { SlugProps } from "@/app/types/PropSlug";
 import type { ProductData } from "@/app/types/ProductDetailsTypes";
 
 import type { Metadata } from "next";
-import { ProductService } from "@/app/api/services/product.service";
+import { getProductBySlug } from "@/app/api/services/product.service";
 import ProductPageClient from "./ProductPageClient";
 
 // Force dynamic rendering — always fetch fresh product data
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 const getProduct = cache(async (slug: string): Promise<ProductData | null> => {
   if (!slug) return null;
   try {
-    const data = await ProductService.getProductBySlug(slug);
+    const data = await getProductBySlug(slug);
     return data;
   } catch (error) {
     console.error("Error fetching product:", error);

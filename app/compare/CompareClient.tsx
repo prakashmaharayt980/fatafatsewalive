@@ -218,6 +218,7 @@ function CompareContent() {
                                                     src={(product as any).thumb?.url || (product as any).image?.full || '/placeholder.png'}
                                                     alt={`Image of ${product.name}`}
                                                     fill
+                                                    sizes="(max-width: 768px) 100vw, 30vw"
                                                     className="object-contain"
                                                 />
                                             </div>

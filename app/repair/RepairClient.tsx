@@ -23,7 +23,7 @@ import {
 import RepairSEOSections from './RepairSEOSections'
 
 import { ProductService } from '../api/services/product.service'
-import { CategoryService } from '../api/services/category.service'
+import { getBrandProducts } from '../api/services/category.service'
 
 interface BrandItem { id: number; name: string; slug: string; image?: string }
 interface ProductListItem {
@@ -62,7 +62,7 @@ export default function RepairClient({ brands }: RepairClientProps) {
     const [form, setForm] = useState<RepairFormData & { agreedToTerms: boolean }>({
         ...initialRepairForm,
         address: guestAddresses.length > 0
-            ? `${guestAddresses[0].address || ''}, ${guestAddresses[0].city || ''}`
+            ? `${guestAddresses[0].address.label || guestAddresses[0].address.landmark || ''}, ${guestAddresses[0].address.city || ''}`
             : '',
         agreedToTerms: false
     })
@@ -109,7 +109,7 @@ export default function RepairClient({ brands }: RepairClientProps) {
             if (search?.trim()) {
                 res = await ProductService.searchProducts({ search: search.trim(), per_page: 20 })
             } else {
-                res = await CategoryService.getBrandProducts(brandSlug, { per_page: 20 })
+                res = await getBrandProducts(brandSlug, { per_page: 20 })
             }
             setProducts(res?.data || [])
         } catch { setProducts([]) }
@@ -255,7 +255,7 @@ export default function RepairClient({ brands }: RepairClientProps) {
                             >
                                 <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-gray-50/80 p-0.5 border border-gray-100 rounded-full flex-shrink-0 flex items-center justify-center shadow-inner overflow-hidden group-hover:bg-gray-100 transition-colors">
                                     {form.productImage ? (
-                                        <Image src={form.productImage} alt={form.productName} fill className="object-contain p-2" />
+                                        <Image src={form.productImage} alt={form.productName} fill sizes="48px" className="object-contain p-2" />
                                     ) : (
                                         <Smartphone className="w-5 h-5 text-gray-400" />
                                     )}
@@ -448,7 +448,7 @@ export default function RepairClient({ brands }: RepairClientProps) {
                                         <div className="flex items-center gap-3 flex-wrap">
                                             {form.photoUrls.map((url, i) => (
                                                 <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-[var(--colour-border3)]">
-                                                    <Image src={url} alt={`Photo ${i + 1}`} fill className="object-cover" />
+                                                    <Image src={url} alt={`Photo ${i + 1}`} fill sizes="80px" className="object-cover" />
                                                     <button onClick={() => removePhoto(i)} className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center cursor-pointer"><X className="h-3 w-3" /></button>
                                                 </div>
                                             ))}
@@ -558,7 +558,7 @@ export default function RepairClient({ brands }: RepairClientProps) {
                                         <div className="bg-gray-50/50 border-b border-[var(--colour-border3)] px-5 py-4 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-white rounded-lg border border-gray-100 flex items-center justify-center shrink-0 shadow-sm p-1.5 relative overflow-hidden">
-                                                    {form.productImage ? <Image src={form.productImage} alt={form.productName} fill className="object-contain p-1" /> : <Smartphone className="text-gray-300" />}
+                                                    {form.productImage ? <Image src={form.productImage} alt={form.productName} fill sizes="48px" className="object-contain p-1" /> : <Smartphone className="text-gray-300" />}
                                                 </div>
                                                 <div>
                                                     <p className="text-[15px] font-extrabold text-gray-900 leading-tight mb-0.5">{form.productName}</p>

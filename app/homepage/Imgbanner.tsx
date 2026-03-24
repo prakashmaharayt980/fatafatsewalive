@@ -108,7 +108,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
             {/* Top Side Banner */}
             <Link
               href={sideImages[0].link || '#'}
-              className="relative flex-1 w-full rounded overflow-hidden group block"
+              className="relative flex-1 w-full rounded overflow-hidden group block aspect-[4/1]"
               onClick={() =>
                 trackBannerClick(
                   sideImages[0].name,
@@ -125,7 +125,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                 priority
                 fetchPriority="high"
                 loading="eager"
-                className="object-contain aspect-[4/1] rounded transition-transform duration-500 group-hover:scale-105"
+                className="object-contain rounded transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
@@ -137,7 +137,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                   <Link
                     key={image.id}
                     href={image.link || '#'}
-                    className="relative flex-1 rounded overflow-hidden group block"
+                    className="relative flex-1 rounded overflow-hidden group block aspect-[2/1]"
                     onClick={() =>
                       trackBannerClick(
                         image.name,
@@ -152,7 +152,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                       fill
                       sizes="(max-width: 1024px) 0vw, 21vw"
                       loading="lazy"
-                      className="object-contain w-full aspect-[2/1] transition-transform duration-500 group-hover:scale-105"
+                      className="object-contain w-full transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </Link>

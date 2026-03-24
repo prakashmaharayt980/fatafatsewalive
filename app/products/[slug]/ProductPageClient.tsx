@@ -29,7 +29,7 @@ const ProductSidebar = dynamic(() => import("./ProductSidebar"), {
 
 import { trackViewContent } from "@/lib/Analytic";
 import LazySection from "@/components/LazySection";
-import { CategoryService } from "@/app/api/services/category.service";
+import { getCategoryProducts } from "@/app/api/services/category.service";
 import SkeletonCard from "@/app/skeleton/SkeletonCard";
 
 const BasketCard = dynamic(() => import("@/app/homepage/BasketCard"), { ssr: false });
@@ -170,7 +170,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                             <section className="space-y-6 mt-4">
                                 {relatedCategory.slug && (
                                     <LazySection
-                                        fetcher={() => CategoryService.getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data)}
+                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data)}
                                         render={(data) => (
                                             <BasketCard
                                                 title={`More from ${productDetails.brand?.name || "Brand"}`}
@@ -189,7 +189,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
 
                                 {priceRange && relatedCategory.slug && (
                                     <LazySection
-                                        fetcher={() => CategoryService.getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, max_price: priceRange.max, per_page: 10 }).then(r => r.data)}
+                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, max_price: priceRange.max, per_page: 10 }).then(r => r.data)}
                                         render={(data) => (
                                             <BasketCard
                                                 title="Similar Price Range"

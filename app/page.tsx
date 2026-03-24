@@ -2,17 +2,18 @@
 
 import type { Metadata } from 'next';
 import HomePage from './homepage';
-import Bannerfooter from './homepage/Bannerfooter';
-import Banner2 from './homepage/Banner2';
-import OfferBanner from './homepage/OfferBanner';
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import SkeletonCard from '@/app/skeleton/SkeletonCard';
 import SkeletonBanner from '@/app/skeleton/SkeletonBanner';
 import BannerCarouselServer from '@/components/BannerCarouselServer';
 import BannerSectionServer from '@/components/BannerSectionServer';
-import OurArticles from '@/app/homepage/OurArticles';
-import BasketSectionServer from '@/components/BasketSectionServer';
 
+
+import BasketSectionServer from '@/components/BasketSectionServer';
+import BasketSectionClient from '@/components/BasketSectionClient';
+import OfferSectionClient from '@/components/OfferSectionClient';
+import OurArticlesSectionClient from '@/components/OurArticlesSectionClient';
 
 // Demo categories
 const demoCategories = [
@@ -27,7 +28,6 @@ const demoCategories = [
 // Banner sections config
 const bannerSections = [
   { slug: 'home-banner-fourth-test', type: 'Bannerfooter' as const },
-  { slug: 'pathao-offer', type: 'OfferBanner' as const },
   { slug: 'banner-3-img-test', type: 'Banner2' as const },
 ];
 
@@ -86,23 +86,21 @@ const jsonLd = {
 import LazySection from '@/components/LazySection';
 
 async function Page() {
-  const basketSections = Object.fromEntries(demoCategories.map((cat, index) => {
-    const section = (
-      <BasketSectionServer
-        slug={cat.slug}
-        title={cat.title}
-        imgSlug={(cat as any).imgSlug}
-      />
-    );
-
-    return [`basketSection${index}`, index < 2 ? section : (
-      <LazySection key={cat.slug} fallback={<SkeletonCard />} minHeight="400px">
-        <Suspense fallback={<SkeletonCard />}>
-          {section}
-        </Suspense>
-      </LazySection>
-    )];
-  }));
+  // Mobile (index 0) uses SSR — renders with banner in initial HTML after cache warms (~5ms)
+  // All other sections lazy-load on scroll
+  const basketSections = Object.fromEntries(demoCategories.map((cat, index) => [
+    `basketSection${index}`,
+    index === 0
+      ? <BasketSectionServer key={cat.slug} slug={cat.slug} title={cat.title} imgSlug={(cat as any).imgSlug} />
+      : <BasketSectionClient
+          key={cat.slug}
+          slug={cat.slug}
+          title={cat.title}
+          imgSlug={(cat as any).imgSlug}
+          isFirstSection={false}
+          sectionIndex={index}
+        />
+  ]));
 
   return (
     <>
@@ -114,22 +112,24 @@ async function Page() {
       <HomePage
         {...basketSections}
         mainBannerSection={<BannerCarouselServer />}
-        sectionOne={<Suspense fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}><BannerSectionServer slug={bannerSections[0].slug} type={bannerSections[0].type} /></Suspense>}
-        offerSection={
-          <LazySection fallback={<div className="w-full min-h-[400px] sm:min-h-[500px] bg-gray-50 animate-pulse rounded-xl" />} minHeight="400px">
-            <Suspense fallback={<div className="w-full min-h-[400px] sm:min-h-[500px] bg-gray-50 animate-pulse rounded-xl" />}><BannerSectionServer slug={bannerSections[1].slug} type={bannerSections[1].type} /></Suspense>
+        sectionOne={
+          <LazySection
+            fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}
+            minHeight="200px"
+            rootMargin="50px"
+          >
+            <Suspense fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}>
+              <BannerSectionServer slug={bannerSections[0].slug} type={bannerSections[0].type} />
+            </Suspense>
           </LazySection>
         }
+        offerSection={<OfferSectionClient />}
         sectionTwo={
-          <LazySection fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />} minHeight="200px">
-            <Suspense fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}><BannerSectionServer slug={bannerSections[2].slug} type={bannerSections[2].type} /></Suspense>
+          <LazySection fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />} minHeight="200px" rootMargin="0px">
+            <Suspense fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}><BannerSectionServer slug={bannerSections[1].slug} type={bannerSections[1].type} /></Suspense>
           </LazySection>
         }
-        ourArticlesSection={
-          <LazySection fallback={<div className="min-h-[400px] animate-pulse bg-gray-50 rounded-2xl" />} minHeight="400px">
-            <OurArticles blogpage="home" />
-          </LazySection>
-        }
+        ourArticlesSection={<OurArticlesSectionClient />}
       />
     </>
   );

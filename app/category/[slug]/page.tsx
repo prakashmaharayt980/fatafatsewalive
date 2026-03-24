@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
 import type { ProductData } from '@/app/types/ProductDetailsTypes';
 
-import type { notFound } from 'next/navigation';
-import type { Suspense, cache } from 'react';
+import { notFound } from 'next/navigation';
+import { Suspense, cache } from 'react';
 
 import dynamic from 'next/dynamic';
 const CategoryPageClient = dynamic(() => import('./components/CategoryPageClient'), {
     ssr: true,
     loading: () => <CategoryPageSkeleton />
 });
-import type { getBannerData } from '@/app/api/CachedHelper/getBannerData';
-import { CategoryService } from '@/app/api/services/category.service';
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
+import { getCategoryBySlug, getCategoryProducts } from '@/app/api/services/category.service';
+import { decorateProduct } from '@/app/api/utils/productDecorator';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
@@ -20,7 +21,7 @@ interface PageProps {
 // ─── Server-side fetchers ─────────────────────────────────────────────────────
 
 const getCachedCategoryBySlug = cache(async (slug: string) => {
-    return CategoryService.getCategoryBySlug(slug)
+    return getCategoryBySlug(slug)
         .then(res => res?.data || null)
         .catch(() => null);
 });
@@ -49,12 +50,11 @@ function buildInitialParams(sp: Record<string, any>, sub_category?: string) {
     };
 }
 
-import type { decorateProduct } from '@/app/api/utils/productDecorator';
 
 async function getInitialProducts(slug: string, sp: Record<string, any>, sub_category?: string) {
     const params = buildInitialParams(sp, sub_category);
     try {
-        const result = await CategoryService.getCategoryProducts(slug, params);
+        const result = await getCategoryProducts(slug, params);
         if (result?.data?.products) {
             result.data.products = result.data.products.map((p: ProductData, index: number) => decorateProduct(p, index));
         }

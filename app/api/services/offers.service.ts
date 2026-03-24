@@ -1,25 +1,32 @@
+'use server'
+
 import { apiPublic } from './client';
 import { unstable_cache } from 'next/cache';
 import type { CampaignsResponse, CampaignDetailsResponse } from './offers.interface';
 
-export const OffersService = {
-    GetallOfferlist: () => 
-        unstable_cache(
-            async () => {
-                const res = await apiPublic.get<CampaignsResponse>(`/v1/campaigns`);
-                return res.data;
-            },
-            ['all-campaigns'],
-            { revalidate: 7200, tags: ['campaigns'] }
-        )(),
+// Raw fetchers for use on client or in server actions
+export const fetchAllOffers = async () => {
+    const res = await apiPublic.get<CampaignsResponse>(`/v1/campaigns`);
+    return res.data;
+};
 
-    GetOfferDetailsBySlug: (slug: string) =>
-        unstable_cache(
-            async () => {
-                const res = await apiPublic.get<CampaignDetailsResponse>(`/v1/campaigns/${slug}`);
-                return res.data;
-            },
-            [`campaign-details-${slug}`],
-            { revalidate: 7200, tags: [`campaign-${slug}`] }
-        )(),
-}
+export const fetchOfferDetails = async (slug: string) => {
+    const res = await apiPublic.get<CampaignDetailsResponse>(`/v1/campaigns/${slug}`);
+    return res.data;
+};
+
+
+// Cached server-side versions (Server Actions)
+export const GetallOfferlist = async () => 
+    unstable_cache(
+        fetchAllOffers,
+        ['all-campaigns'],
+        { revalidate: 7200, tags: ['campaigns'] }
+    )();
+
+export const GetOfferDetailsBySlug = async (slug: string) =>
+    unstable_cache(
+        () => fetchOfferDetails(slug),
+        [`campaign-details-${slug}`],
+        { revalidate: 7200, tags: [`campaign-${slug}`] }
+    )();

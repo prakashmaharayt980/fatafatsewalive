@@ -207,6 +207,7 @@ export default function ReviewDialog({
                                                 src={src}
                                                 alt="Preview"
                                                 fill
+                                                sizes="96px"
                                                 className="object-cover"
                                             />
                                             <button
@@ -349,7 +350,7 @@ export default function ReviewDialog({
 
                                         {customerPhotos.slice(0, 3).map((src, i) => (
                                             <div key={i} className="aspect-square relative rounded-lg overflow-hidden border border-gray-100 cursor-pointer hover:opacity-90 transition-opacity">
-                                                <Image src={src} alt="Customer photo" fill className="object-cover" />
+                                                <Image src={src} alt="Customer photo" fill sizes="80px" className="object-cover" />
                                             </div>
                                         ))}
                                         {customerPhotos.length > 3 && (
@@ -378,7 +379,7 @@ export default function ReviewDialog({
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden relative border border-slate-100">
                                                         {review.user?.avatar_image?.thumb ? (
-                                                            <Image src={review.user.avatar_image.thumb} alt={review.user.name} fill className="object-cover" />
+                                                            <Image src={review.user.avatar_image.thumb} alt={review.user.name} fill sizes="40px" className="object-cover" />
                                                         ) : (
                                                             <div className="w-full h-full flex items-center justify-center bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] text-sm font-bold">
                                                                 {review.user?.name?.charAt(0) || "U"}
@@ -426,7 +427,7 @@ export default function ReviewDialog({
                                                     <div className="flex flex-wrap gap-2 mb-4">
                                                         {review.images.map((img, idx) => (
                                                             <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-100 cursor-zoom-in hover:opacity-90">
-                                                                <Image src={img} alt="User review image" fill className="object-cover" />
+                                                                <Image src={img} alt="User review image" fill sizes="80px" className="object-cover" />
                                                             </div>
                                                         ))}
                                                     </div>

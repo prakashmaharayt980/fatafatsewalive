@@ -3,11 +3,10 @@ import type { Metadata } from 'next';
 
 import BlogListingClient from './components/BlogListingClient';
 import type { Article } from '../types/Blogtypes';
-import type { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
-import BannerSectionClient from '@/components/BannerSectionClient';
-import Bannerfooter from '@/app/homepage/Bannerfooter';
-import { CategoryService } from '../api/services/category.service';
-import { BlogService } from '../api/services/blog.service';
+import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
+import BannerSectionServer from '@/components/BannerSectionServer';
+import { getCategoryProducts } from '../api/services/category.service';
+import { getBlogCategories, getBlogList } from '../api/services/blog.service';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
@@ -50,9 +49,9 @@ export default async function BlogPage() {
     const { latestArticles } = await getBlogPageData();
 
     // Fetch only non-cached data in parallel
-    const [categoriesResult, trendingResult] = await Promise.allSettled([
-        BlogService.getBlogCategories(),
-        CategoryService.getCategoryProducts('smartphones', { per_page: 10, page: 1 }),
+    const [categoriesResponse, trendingProductsResponse] = await Promise.all([
+        getBlogCategories(),
+        getCategoryProducts('smartphones', { per_page: 10, page: 1 }),
     ]);
 
     // Use cached latestArticles directly
@@ -62,17 +61,13 @@ export default async function BlogPage() {
     const brandArticles: Article[] = [...latestArticles].reverse().slice(0, 4);
 
     // Process categories
-    let categories: any[] = categoriesResult.status === 'fulfilled'
-        ? categoriesResult.value.data || []
-        : [];
+    let categories: any[] = categoriesResponse?.data?.slice(0, 8) || [];
     if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
         categories.unshift({ id: 'all', title: 'All', slug: 'all' });
     }
 
     // Process trending products
-    const trendingProducts = trendingResult.status === 'fulfilled'
-        ? (trendingResult.value.data || []).slice(0, 6)
-        : [];
+    const trendingProducts = trendingProductsResponse?.data?.products?.slice(0, 6) || [];
 
     // Generate JSON-LD structured data
     const jsonLd = {
@@ -103,9 +98,9 @@ export default async function BlogPage() {
     // Use API-fetched categories (already has 'All' prepended above)
 
     const SectionOne = (
-        <BannerSectionClient
+        <BannerSectionServer
             slug="home-banner-fourth-test"
-            Component={Bannerfooter}
+            type="Bannerfooter"
             className="mt-4"
         />
     );

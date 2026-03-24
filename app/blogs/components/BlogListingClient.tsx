@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { getBannerData } from '@/app/api/CachedHelper/getBannerData';
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import type { Article } from '../../types/Blogtypes';
-import type { formatDate } from '../../CommonVue/datetime';
+import { formatDate } from '../../CommonVue/datetime';
 import imglogo from '../../assets/logoimg.png';
 
 import LazySection from '@/components/LazySection';
@@ -16,16 +16,15 @@ import ProductDeals from './ProductDeals';
 import BlogProductBasket from './BlogProductBasket';
 import type { ProductDetails } from '../../types/ProductDetailsTypes';
 import { ProductService } from '../../api/services/product.service';
-import { CategoryService } from '../../api/services/category.service';
-import { MiscService } from '../../api/services/misc.service';
+import { getCategoryProducts } from '../../api/services/category.service';
 import StoryViewer from './StoryViewer';
 import BlogFastSaleProductCards from '@/app/products/ProductCards/BlogFastSaleProductCards';
-import type { Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import YouTubeVideoCard from './YouTubeVideoCard';
 import BlogCompareProducts from './BlogCompareProducts';
 import SectionHeader from './SectionHeader';
 import FeaturedArticleCard from './FeaturedArticleCard';
-import type { YOUTUBE_VIDEOS } from './youtubeData';
+import { YOUTUBE_VIDEOS } from './youtubeData';
 
 
 interface BlogListingClientProps {
@@ -100,7 +99,7 @@ export default function BlogListingClient({
                                 </div>
                                 <div className="hidden lg:block w-full lg:w-1/4">
                                     <LazySection
-                                        fetcher={() => CategoryService.getCategoryProducts('smartphones', { per_page: 8, page: 1 }).then(res => res.data)}
+                                        fetcher={() => getCategoryProducts('smartphones', { per_page: 8, page: 1 }).then((res: any) => res.data)}
                                         component={(data) => <ProductDeals products={data as any[]} limit={8} title="Latest Deals" />}
                                         fallback={<div className="h-[600px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                                     />
@@ -230,7 +229,7 @@ export default function BlogListingClient({
                                     {/* ─── Center: Top Picks (2 Product Cards) ─── */}
                                     <div className="flex flex-col gap-2.5 my-auto">
                                         <LazySection
-                                            fetcher={() => CategoryService.getCategoryProducts('smartphones', { per_page: 2, page: 1 }).then(res => res.data)}
+                                            fetcher={() => getCategoryProducts('smartphones', { per_page: 2, page: 1 }).then((res: any) => res.data)}
                                             component={(data) => (
                                                 <>
                                                     {data?.slice(0, 2).map((product: any, idx: number) => (
@@ -321,7 +320,7 @@ export default function BlogListingClient({
 
                                     <div className="hidden lg:block w-full lg:w-1/4">
                                         <LazySection
-                                             fetcher={() => CategoryService.getCategoryProducts('laptops', { per_page: 4, page: 1 }).then(res => res.data)}
+                                             fetcher={() => getCategoryProducts('laptops', { per_page: 4, page: 1 }).then((res: any) => res.data)}
                                              component={(data) => <ProductDeals products={data as any[]} limit={4} title="Video Deals" />}
                                              fallback={<div className="h-[400px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                                         />
@@ -341,7 +340,7 @@ export default function BlogListingClient({
 
                         {/* ═══ 9. Compare Products ═══ */}
                         <LazySection
-                            fetcher={() => CategoryService.getCategoryProducts('smartphones', { per_page: 3, page: 1 }).then(res => res.data)}
+                            fetcher={() => getCategoryProducts('smartphones', { per_page: 3, page: 1 }).then((res: any) => res.data)}
                             component={(data) => (
                                 <section id="blog-compare-products">
                                     <BlogCompareProducts products={data} />

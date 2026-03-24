@@ -157,6 +157,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                               src={typeof product.image === 'string' ? product.image : product.image.thumb || ""}
                               alt={product.name}
                               fill
+                              sizes="56px"
                               className="object-contain p-1.5 group-hover:scale-110 transition-transform"
                             />
                           ) : (
@@ -231,6 +232,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                     src={typeof product.image === 'string' ? product.image : product.image?.full || ""}
                     alt={product.name || "Product"}
                     fill
+                    sizes="(max-width: 640px) 176px, 240px"
                     className="object-contain p-2"
                     priority
 
@@ -309,6 +311,7 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                                   src={variantImage}
                                   alt={color}
                                   fill
+                                  sizes="40px"
                                   className="object-cover"
 
                                 />

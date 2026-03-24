@@ -1,4 +1,4 @@
-import { OffersService } from "@/app/api/services/offers.service";
+import { GetallOfferlist, GetOfferDetailsBySlug } from "@/app/api/services/offers.service";
 import OfferBannerClient from "./OfferBannerClient";
 import type { CampaignDetails } from "@/app/api/services/offers.interface";
 
@@ -10,18 +10,21 @@ const OfferBanner = async ({ data: preFetchedData }: { data?: CampaignDetails })
         }
 
         // Fetch all campaigns (cached for 2 hours)
-        const campaignsRes = await OffersService.GetallOfferlist();
+        const campaignsRes = await GetallOfferlist();
         
-        if (!campaignsRes?.success || !campaignsRes.data || campaignsRes.data.length === 0) {
+        if (!campaignsRes?.success || !Array.isArray(campaignsRes.data) || campaignsRes.data.length === 0) {
             return null;
         }
 
-        // Get the first active campaign or a specific one like 'pathao-offer'
-        // For now, let's take the first one as a primary banner
+        // Get the first active campaign
         const primaryCampaign = campaignsRes.data[0];
         
+        if (!primaryCampaign?.slug) {
+            return null;
+        }
+
         // Fetch full details of the primary campaign (cached for 2 hours)
-        const campaignDetailsRes = await OffersService.GetOfferDetailsBySlug(primaryCampaign.slug);
+        const campaignDetailsRes = await GetOfferDetailsBySlug(primaryCampaign.slug);
 
         if (!campaignDetailsRes?.success || !campaignDetailsRes.data) {
             return null;

@@ -17,7 +17,7 @@ const ProductSpotlight = ({ image, name, specs, price, shopLink }: SpotlightProp
     return (
         <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.04)] my-12 flex flex-col md:flex-row items-center gap-8 group hover:shadow-[0_15px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
             <div className="relative w-full md:w-1/3 aspect-square md:aspect-[4/3] bg-gray-50 rounded-2xl overflow-hidden">
-                <Image src={image} alt={name} fill className="object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
+                <Image src={image} alt={name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
             </div>
 
             <div className="flex-1 space-y-4 w-full text-center md:text-left">

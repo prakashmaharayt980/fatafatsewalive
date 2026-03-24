@@ -2,10 +2,9 @@
 
 import { unstable_cache } from 'next/cache';
 
-import { CategoryService } from '@/app/api/services/category.service';
-import { MiscService } from '../services/misc.service';
-import { ProductService } from '../services/product.service';
-import { BlogService } from '../services/blog.service';
+import { getBannerBySlug } from '../services/misc.service';
+
+import { getBlogList } from '../services/blog.service';
 
 // --- Homepage Data Fetcher ---
 export const getHomepageData = async () => {
@@ -17,7 +16,7 @@ export const getHomepageData = async () => {
 
     const bannerPromises = Object.entries(criticalSlugs).map(async ([key, slug]) => {
         try {
-            const res = await MiscService.getBannerBySlug(slug);
+            const res = await getBannerBySlug(slug);
             return { key, data: res.data || null };
         } catch (e) {
             console.error(`Failed to fetch critical banner: ${slug}`, e);
@@ -43,7 +42,7 @@ export const getBlogPageData = unstable_cache(
 
 
         const [blogRes] = await Promise.allSettled([
-            BlogService.getBlogList({ page: 1, per_page: 12 }),
+            getBlogList({ page: 1, per_page: 12 }),
         ]);
 
         const latestArticles = blogRes.status === 'fulfilled'

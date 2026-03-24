@@ -78,8 +78,8 @@ export default function ShareDialog({
                                     src={productImage}
                                     alt={productName}
                                     fill
+                                    sizes="128px"
                                     className="object-contain"
-
                                 />
                             ) : (
                                 <Share2 className="w-10 h-10 text-slate-300" />

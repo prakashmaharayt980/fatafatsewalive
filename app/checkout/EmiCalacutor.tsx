@@ -164,6 +164,7 @@ export default function EMICalculator() {
                               src={typeof product.image === 'string' ? product.image : product.image?.thumb || product.image?.full || ''}
                               alt={product.name}
                               fill
+                              sizes="32px"
                               className="object-contain rounded border border-gray-100"
                             />
                           ) : <div className="w-full h-full bg-gray-100 rounded" />}

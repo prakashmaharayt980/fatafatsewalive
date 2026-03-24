@@ -1,17 +1,13 @@
 
 import './globals.css';
 import React from 'react';
-import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import FacebookPixel from './layouts/FacebookPixels';
 
-import { AuthProvider } from '@/app/context/AuthContext';
 import { getGlobalData } from '@/app/context/GlobalData';
-
-import HeaderBody from './layouts/headerbody';
+import Header from './layouts/Header';
 import ClientSideDrawers from './clientlayout';
-import FooterBody from './layouts/FooterBody';
+import LazyFooter from './layouts/LazyFooter';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -52,27 +48,23 @@ export const metadata = {
   },
 };
 
-
-
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { navItems } = await getGlobalData();
 
   return (
     <html lang="en" className={inter.className}>
       <body className="flex flex-col min-h-screen">
+        {/* Using lazyOnload for non-critical analytics to prioritize FCP */}
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
-        {/* <FacebookPixel /> */}
-        <HeaderBody initialNavItems={navItems} />
+        
+        <Header initialNavItems={navItems} />
 
         <main className="flex-1 w-full mx-auto bg-gray-50">
           {children}
         </main>
 
-
-
         <ClientSideDrawers />
-        <FooterBody />
+        <LazyFooter />
       </body>
     </html>
   );

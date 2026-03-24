@@ -28,7 +28,7 @@ const PriceSpecCard = ({ image, name, price, specs, shopLink, product }: PriceSp
     return (
         <div className="bg-white rounded-lg border border-[var(--colour-border3)] p-4 sticky top-8">
             <div className="relative w-full aspect-[4/3] mb-3 bg-[var(--colour-bg4)] rounded-lg overflow-hidden">
-                <Image src={displayImage} alt={displayName} fill className="object-contain p-2" />
+                <Image src={displayImage} alt={displayName} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain p-2" />
             </div>
 
             <h3 className="font-semibold text-sm text-[var(--colour-text2)] mb-1 leading-snug line-clamp-2">{displayName}</h3>

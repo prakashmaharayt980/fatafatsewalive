@@ -92,7 +92,7 @@ export default function PartnersWidget() {
                                 title={item.name}
                                 className="relative w-12 h-8 bg-gray-50 border border-gray-100 rounded-lg overflow-hidden hover:border-[var(--colour-fsP2)]/30 transition-colors"
                             >
-                                <Image src={item.img} alt={item.name} fill className="object-contain p-1.5" />
+                                <Image src={item.img} alt={item.name} fill sizes="48px" className="object-contain p-1.5" />
                             </div>
                         ))}
                     </div>
@@ -106,7 +106,7 @@ export default function PartnersWidget() {
                                 title={item.name}
                                 className="relative w-12 h-8 bg-gray-50 border border-gray-100 rounded-lg overflow-hidden hover:border-[var(--colour-fsP2)]/30 transition-colors"
                             >
-                                <Image src={item.img} alt={item.name} fill className="object-contain p-1.5" />
+                                <Image src={item.img} alt={item.name} fill sizes="48px" className="object-contain p-1.5" />
                             </div>
                         ))}
                     </div>

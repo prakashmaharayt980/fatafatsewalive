@@ -5,7 +5,7 @@ import { useInView } from 'react-intersection-observer';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ProductData } from '@/app/types/ProductDetailsTypes';
-import { CategoryService } from '@/app/api/services/category.service';
+import { getCategoryProducts } from '@/app/api/services/category.service';
 import SkeletonCard from '@/app/skeleton/SkeletonCard';
 import { ChevronRight } from 'lucide-react';
 import { trackCategoryClick } from '@/lib/analytics';
@@ -102,7 +102,7 @@ export default function LazyCompareProducts({ categorySlug, currentProductId }: 
             setHasFetched(true);
             setIsLoading(true);
 
-            CategoryService.getCategoryProducts(categorySlug, { per_page: 8,min_price: 100 })
+            getCategoryProducts(categorySlug, { per_page: 8,min_price: 100 })
                 .then((res) => {
                     if (res && res.data) {
                         setData(res.data);

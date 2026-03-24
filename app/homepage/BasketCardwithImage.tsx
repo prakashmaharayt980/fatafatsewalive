@@ -17,10 +17,11 @@ interface BasketCardwithImageProps {
   title?: string;
   slug: string;
   imageUrl?: string;
-  initialData?: any; // the 'data' object from /v1/categories/[slug]/products Endpoint
+  initialData?: any;
+  isFirstSection?: boolean;
 }
 
-const BasketCardwithImage = ({ title, slug, imageUrl, initialData }: BasketCardwithImageProps) => {
+const BasketCardwithImage = ({ title, slug, imageUrl, initialData, isFirstSection = false }: BasketCardwithImageProps) => {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [windowWidth, setWindowWidth] = useState(0);

@@ -30,7 +30,7 @@ export default function PreOrderReceiptStep({ product, address, onNext, onBack }
                     <div className="flex gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50/50">
                         <div className="w-16 h-16 rounded-xl bg-white border border-gray-200 relative shrink-0 overflow-hidden shadow-sm p-1">
                             {product.image?.full && (
-                                <Image src={product.image.full} alt={product.name} fill className="object-contain" />
+                                <Image src={product.image.full} alt={product.name} fill sizes="64px" className="object-contain" />
                             )}
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-center">

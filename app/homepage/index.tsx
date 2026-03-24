@@ -47,34 +47,26 @@ const HomePage = ({
       <div className="absolute top-[300px] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none mix-blend-multiply z-0" />
       <div className="absolute top-[800px] left-[20%] w-[700px] h-[700px] bg-indigo-50/50 rounded-full blur-[130px] pointer-events-none z-0" />
 
-      <div className="relative z-10">
-        <div className="sm:px-2 ">
-          {mainBannerSection}
-
-          {basketSection0}
-
-          {sectionOne}
-
-          {basketSection1}
-
-          {basketSection2}
+      <div className="relative z-10 sm:px-2">
+        {mainBannerSection}
+        {basketSection0}
+        {sectionOne}
+        {basketSection1}
+        {basketSection2}
+        
+        {/* Full width section */}
+        <div className="mx-[-8px] sm:mx-0">
+          {offerSection}
         </div>
-        {offerSection}
-        <div className="sm:px-2 md:px-4">
+
+        <div className="md:px-2">
           {basketSection3}
-
           {sectionTwo}
-
           {basketSection4}
-
           {sectionThree}
-
           {basketSection5}
-
           {sectionFour}
-
           {ourArticlesSection}
-
         </div>
       </div>
     </main>

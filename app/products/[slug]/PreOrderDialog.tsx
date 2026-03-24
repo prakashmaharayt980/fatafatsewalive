@@ -101,6 +101,7 @@ const PreOrderDialog: React.FC<PreOrderDialogProps> = ({
                                     src={productImage}
                                     alt={productName || "Product"}
                                     fill
+                                    sizes="128px"
                                     className="object-contain"
                                 />
                             ) : (

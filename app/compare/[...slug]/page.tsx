@@ -101,7 +101,7 @@ export default function ComparisonPage() {
                                     <th key={p.id} className="p-4 border-b-2 border-gray-100 min-w-[200px] align-top">
                                         <div className="flex flex-col items-center text-center">
                                             <div className="relative w-32 h-32 mb-4 bg-gray-50 rounded-xl overflow-hidden">
-                                                <Image src={p.image?.full || ''} alt={p.name} fill className="object-contain p-2" />
+                                                <Image src={p.image?.full || ''} alt={p.name} fill sizes="128px" className="object-contain p-2" />
                                             </div>
                                             <h3 className="font-bold text-gray-900 leading-tight mb-2">{p.name}</h3>
                                             <p className="text-blue-600 font-bold mb-4">Rs. {p.discounted_price.toLocaleString()}</p>

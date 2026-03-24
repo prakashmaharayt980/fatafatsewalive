@@ -26,11 +26,11 @@ export default function FacebookPixel() {
       <Script
         id="facebook-pixel-base"
         src="https://connect.facebook.net/en_US/fbevents.js"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
       <Script
         id="facebook-pixel-init"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         dangerouslySetInnerHTML={{
           __html: `
             if (!window.fbq) {

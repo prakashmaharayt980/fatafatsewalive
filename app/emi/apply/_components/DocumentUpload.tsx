@@ -73,6 +73,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                       src={previews[previewKey] || ''}
                       alt={label || 'document img'}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       className="object-contain p-2"
                     />
 
@@ -90,6 +91,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                               src={previews[previewKey] || ''}
                               alt={label || 'preview'}
                               fill
+                              sizes="80vw"
                               className="object-contain"
                             />
                             <Button

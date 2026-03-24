@@ -1,16 +1,14 @@
 import { cookies } from 'next/headers';
 import { cache } from 'react'; // For per-request caching
 import { unstable_cache } from 'next/cache'; // For shared server caching
-import { CategoryService } from '../api/services/category.service';
+import { getAllCategories } from '../api/services/category.service';
 import type { NavbarItem } from './navbar.interface';
 
 export type { NavbarItem };
 
-
-
 const getCachedNavbar = unstable_cache(
     () => {
-        return CategoryService.getAllCategories()
+        return getAllCategories()
             .then(res => res.data as NavbarItem[])
             .catch(error => {
                 console.error("Error fetching navbar items:", error);

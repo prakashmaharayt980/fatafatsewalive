@@ -832,7 +832,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                     <div className="flex items-center gap-3 p-3">
                         <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
                             {product?.thumb?.url || product?.images?.[0]?.url ? (
-                                <Image src={product.thumb?.url || product.images?.[0]?.url || ''} alt={product?.name || 'Product'} fill className="object-contain p-0.5" />
+                                <Image src={product.thumb?.url || product.images?.[0]?.url || ''} alt={product?.name || 'Product'} fill sizes="48px" className="object-contain p-0.5" />
                             ) : (
                                 <ShoppingBag className="w-5 h-5 text-gray-300" />
                             )}
@@ -902,7 +902,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                                 `}
                                                             >
                                                                 <div className="relative w-10 h-10 rounded-md overflow-hidden bg-gray-100 border border-gray-100">
-                                                                    {variantImg ? <Image src={variantImg} alt={color} fill className="object-cover" /> : <div className="bg-gray-200 w-full h-full" />}
+                                                                    {variantImg ? <Image src={variantImg} alt={color} fill sizes="40px" className="object-cover" /> : <div className="bg-gray-200 w-full h-full" />}
                                                                 </div>
                                                                 <span className={`text-sm font-semibold ${isSelected ? 'text-[var(--colour-fsP2)]' : 'text-gray-700'}`}>
                                                                     {color}

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { X, Plus, Search, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { BasketProduct } from '@/app/types/ProductDetailsTypes';
-import { ProductService } from '../api/services/product.service';
+import { searchProducts } from '../api/services/product.service';
 import { useCartStore } from '@/app/context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -38,7 +38,7 @@ export default function GlobalCompareDrawer() {
         if (!q.trim()) { setResults([]); return; }
         setSearching(true);
         try {
-            const res = await ProductService.searchProducts({ search: q });
+            const res = await searchProducts({ search: q });
             setResults(res.data || res || []);
         } catch { /* silent */ } finally {
             setSearching(false);
@@ -102,6 +102,7 @@ export default function GlobalCompareDrawer() {
                                                 src={p.thumb.url}
                                                 alt={p.thumb?.alt_text || p.name}
                                                 fill
+                                                sizes="36px"
                                                 className="object-contain p-0.5"
                                             />
                                         )}
@@ -212,6 +213,7 @@ export default function GlobalCompareDrawer() {
                                                     src={product.thumb.url}
                                                     alt={product.thumb?.alt_text || product.name}
                                                     fill
+                                                    sizes="40px"
                                                     className="object-contain p-1"
                                                 />
                                             )}

@@ -15,6 +15,7 @@ export interface ProductCardProps {
     product: DecoratedProduct;
     index?: number;
     priority?: boolean;
+    isFirstSection?: boolean;
     hidePrice?: boolean;
     isWishlisted?: boolean;
     isCompared?: boolean;
@@ -26,8 +27,9 @@ export interface ProductCardProps {
 
 const ProductCard = ({
     product,
-    index,
+    index = 0,
     priority = false,
+    isFirstSection = false,
     hidePrice = false,
     isWishlisted = false,
     isCompared = false,
@@ -99,13 +101,15 @@ const ProductCard = ({
                     )}
                 </div>
 
-                <div className="relative w-full h-full  ">
+                <div className="relative w-full h-full">
                     <Image
                         src={product.thumb?.url || placeholderimg}
                         alt={product.thumb?.alt_text || 'Product'}
                         fill
-                        className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
-                        priority={priority}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                        className="object-contain transition-transform duration-500 group-hover:scale-105"
+                        priority={isFirstSection && index < 2}
+                        loading={isFirstSection && index < 2 ? undefined : 'lazy'}
                         onLoad={onLoad}
                     />
                 </div>

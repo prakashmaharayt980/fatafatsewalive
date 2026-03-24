@@ -33,6 +33,7 @@ const ProductWidget = ({ products }: ProductWidgetProps) => {
                                 src={product.image?.thumb || product.image?.full || '/placeholder.png'}
                                 alt={product.name}
                                 fill
+                                sizes="64px"
                                 className="object-contain p-2 group-hover:scale-110 transition-transform duration-500"
                             />
                         </div>
