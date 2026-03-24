@@ -15,8 +15,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CheckoutState, ShippingAddress } from '../checkoutTypes';
-import GoogleMapAddress, { LocationData } from '../GoogleMapAddress';
+import type { CheckoutState, ShippingAddress } from '../checkoutTypes';
+import GoogleMapAddress from '../GoogleMapAddress';
+import type { LocationData } from '../GoogleMapAddress';
 import { AddressService } from '@/app/api/services/address.service';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/app/context/AuthContext';
@@ -44,13 +45,10 @@ export default function AddressStep({
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Map state
     const [mapLocation, setMapLocation] = useState<LocationData | null>(null);
 
-    // Address entry mode: 'gps' (use map) or 'manual' (no map)
     const [addressEntryMode, setAddressEntryMode] = useState<'gps' | 'manual'>('gps');
 
-    // Delete confirmation dialog state
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [addressToDelete, setAddressToDelete] = useState<number | null>(null);
 
@@ -82,7 +80,6 @@ export default function AddressStep({
         }))
     );
 
-    // Fetch existing addresses on mount
     useEffect(() => {
         const fetchAddresses = async () => {
             if (!isLoggedIn) {
@@ -107,15 +104,14 @@ export default function AddressStep({
         fetchAddresses();
     }, [isLoggedIn, guestAddresses]);
 
-    // Check for existing address selection
     useEffect(() => {
         if (state.address) {
             setSelectedAddressId(state.address.id || null);
-            if (state.address.lat && state.address.lng) {
+            if (state.address.geo?.lat && state.address.geo?.lng) {
                 setMapLocation({
-                    lat: state.address.lat,
-                    lng: state.address.lng,
-                    address: state.address.address,
+                    lat: state.address.geo.lat,
+                    lng: state.address.geo.lng,
+                    address: state.address.address.landmark || state.address.address.city || '',
                 });
             }
         }
@@ -150,38 +146,43 @@ export default function AddressStep({
         setSelectedAddressId(address.id || null);
 
         setFormData({
-            label: address.label || 'Home',
-            province: address.province || address.state || '',
-            district: address.district || '',
-            city: address.city || '',
-            houseNo: address.house_no || '',
-            landmark: address.landmark || '',
-            full_address: address.address || '',
-            country: address.country || 'Nepal',
-            first_name: address.first_name || '',
-            last_name: address.last_name || '',
-            contact_number: address.contact_number || ''
+            label: address.address.label || 'Home',
+            province: address.address.province || address.address.state || '',
+            district: address.address.district || '',
+            city: address.address.city || '',
+            houseNo: address.address.house_no || '',
+            landmark: address.address.landmark || '',
+            full_address: address.address.landmark || address.address.city || '',
+            country: address.address.country || 'Nepal',
+            first_name: address.contact_info?.first_name || '',
+            last_name: address.contact_info?.last_name || '',
+            contact_number: address.contact_info?.contact_number || ''
         });
 
-        if (address.lat && address.lng) {
-            setMapLocation({ lat: address.lat, lng: address.lng, address: address.address });
+        if (address.geo?.lat && address.geo?.lng) {
+            setMapLocation({
+                lat: address.geo.lat,
+                lng: address.geo.lng,
+                address: address.address.landmark || address.address.city || ''
+            });
         }
     };
 
     const handleMapLocationSelect = (location: LocationData) => {
         setMapLocation(location);
 
-        // Auto-fill form from Google Maps address components
         if (location.addressComponents) {
             setFormData(prev => ({
                 ...prev,
                 province: location.addressComponents?.province || prev.province,
                 district: location.addressComponents?.district || prev.district,
-                city: location.addressComponents?.city || prev.city,
-                full_address: location.address
+                city: location.addressComponents?.municipality || location.addressComponents?.city || prev.city,
+                landmark: location.addressComponents?.tole || prev.landmark,
+                full_address: location.address,
+                country: 'Nepal'
             }));
         } else {
-            setFormData(prev => ({ ...prev, full_address: location.address }));
+            setFormData(prev => ({ ...prev, full_address: location.address, country: 'Nepal' }));
         }
     };
 
@@ -202,47 +203,59 @@ export default function AddressStep({
         }
 
         setIsSaving(true);
-        // Construct full address string if not already from map, or update it
-        // Ideally 'address' field in backend matches the full string from map or constructed one.
-        // User specific requirement: "prefers first location instead manually" for coordinates, but allow manual text override.
         const fullAddress = formData.full_address || `${formData.city}, ${formData.district}`;
 
         const addressPayload = {
-            full_address: fullAddress,
-            // Generic fields fallback
-            city: formData.city || formData.district,
-            state: formData.province,
-            postal_code: '00000',
-            country: formData.country || 'Nepal',
-
-            // Nepal Specific Fields
-            province: formData.province,
-            district: formData.district,
-
-            house_no: formData.houseNo,
-            landmark: formData.landmark,
-
+            first_name: formData.first_name || 'Customer',
+            last_name: formData.last_name || 'Customer last',
+            contact_number: formData.contact_number || 'Customer number',
+            lat: mapLocation?.lat || null,
+            lng: mapLocation?.lng || null,
             label: formData.label,
+            landmark: formData.landmark,
+            city: formData.city,
+            district: formData.district,
+            province: formData.province,
+            country: formData.country || 'Nepal',
             is_default: savedAddresses.length === 0,
-            // Optional GPS coordinates
-            lat: mapLocation?.lat,
-            lng: mapLocation?.lng,
-            first_name: formData.first_name || 'skdvdsv',
-            last_name: formData.last_name || 'cscsc',
-            contact_number: formData.contact_number || '123456789',
+            state: formData.province,
+            address: fullAddress,
+
         };
 
         try {
             let savedAddress: ShippingAddress;
 
             if (!isLoggedIn) {
+                // For guest users, we need to construct the nested structure to match ShippingAddress
+                const nestedGuestAddress: ShippingAddress = {
+                    id: selectedAddressId || Date.now(),
+                    contact_info: {
+                        first_name: addressPayload.first_name,
+                        last_name: addressPayload.last_name,
+                        contact_number: addressPayload.contact_number,
+                    },
+                    geo: {
+                        lat: addressPayload.lat,
+                        lng: addressPayload.lng,
+                    },
+                    address: {
+                        label: addressPayload.label,
+                        landmark: addressPayload.landmark,
+                        city: addressPayload.city,
+                        district: addressPayload.district,
+                        province: addressPayload.province,
+                        country: addressPayload.country,
+                        is_default: addressPayload.is_default,
+                        state: addressPayload.state,
+                    }
+                };
+
                 if (selectedAddressId) {
-                    savedAddress = { ...addressPayload, address: addressPayload.full_address, id: selectedAddressId } as ShippingAddress;
-                    updateGuestAddress(selectedAddressId, savedAddress);
+                    updateGuestAddress(selectedAddressId, nestedGuestAddress);
                     toast.success("Guest Address updated successfully");
                 } else {
-                    savedAddress = { ...addressPayload, address: addressPayload.full_address } as ShippingAddress; // id is generated in store
-                    addGuestAddress(savedAddress);
+                    addGuestAddress(nestedGuestAddress);
                     toast.success("Guest Address saved successfully");
                 }
 
@@ -310,10 +323,13 @@ export default function AddressStep({
         }
     };
 
-    const filteredAddresses = savedAddresses.filter(addr =>
-        (addr.address || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (addr.district || addr.city || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredAddresses = savedAddresses.filter(addr => {
+        const addrStr = String(addr.address?.landmark || addr.address?.city || '');
+        const cityDistStr = String(addr.address?.district || addr.address?.city || addr.address?.province || '');
+
+        return addrStr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            cityDistStr.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     const isComplete = state.address !== null;
 
@@ -374,12 +390,12 @@ export default function AddressStep({
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 gap-3">
-                                {filteredAddresses.slice(0, 4).map((address) => {
+                                {filteredAddresses.slice(0, 4).map((address, index) => {
                                     const isSelected = selectedAddressId === address.id;
-                                    const LabelIcon = address.label === 'Office' ? Building2 : address.label === 'Other' ? MapIcon : Home;
+                                    const LabelIcon = address.address?.label === 'Office' ? Building2 : address.address?.label === 'Other' ? MapIcon : Home;
                                     return (
                                         <div
-                                            key={address.id}
+                                            key={address.id || `addr-${index}`}
                                             className="relative group"
                                         >
                                             <div
@@ -399,9 +415,9 @@ export default function AddressStep({
                                                         </div>
                                                         <span className={`text-[10px] font-extrabold uppercase tracking-widest truncate ${isSelected ? 'text-white' : 'text-gray-600'
                                                             }`}>
-                                                            {address.label || 'Home'}
+                                                            {address.address?.label || 'Home'}
                                                         </span>
-                                                        {address.is_default && (
+                                                        {address.address?.is_default && (
                                                             <span className={`shrink-0 text-[8px] font-bold px-1 py-0.5 rounded-full uppercase ${isSelected ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700'
                                                                 }`}>
                                                                 ★ Default
@@ -422,15 +438,15 @@ export default function AddressStep({
                                                     }`}>
                                                     <div className="flex items-start justify-between gap-1">
                                                         <p className="text-xs font-bold text-gray-900 leading-snug line-clamp-1">
-                                                            {address.label || 'Address'}
+                                                            {address.address?.label || 'Address'}
                                                         </p>
                                                     </div>
                                                     <p className="text-[11px] text-gray-500 leading-snug line-clamp-2">
-                                                        {address.address}
+                                                        {address.address?.landmark || address.address?.city || 'No details'}
                                                     </p>
                                                     <p className="text-[10px] font-semibold text-gray-600 flex items-center gap-0.5 mt-auto pt-1.5 border-t border-gray-100">
                                                         <MapPin className="w-2.5 h-2.5 text-[var(--colour-fsP2)] shrink-0" />
-                                                        {address.city ? `${address.city}, ` : ''}{address.district || address.state}
+                                                        {address.address?.city ? `${address.address.city}, ` : ''}{address.address?.district || address.address?.province || ''}
                                                     </p>
                                                 </div>
                                             </div>

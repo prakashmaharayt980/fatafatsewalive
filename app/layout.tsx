@@ -62,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={inter.className}>
       <body className="flex flex-col min-h-screen">
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
-        <FacebookPixel />
+        {/* <FacebookPixel /> */}
         <HeaderBody initialNavItems={navItems} />
 
         <main className="flex-1 w-full mx-auto bg-gray-50">

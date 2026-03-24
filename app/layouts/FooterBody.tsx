@@ -68,11 +68,11 @@ const FooterBody = () => {
   ];
 
   const socialIcons = [
-    { name: "Facebook", Icon: <Image src={facebookIcon} alt="Facebook" width={24} height={24} />, url: "https://www.facebook.com/fatafatsewanpl" },
-    { name: "Twitter", Icon: <Image src={twitterIcon} alt="Twitter" width={24} height={24} />, url: "https://www.twitter.com/fatafatsewanp" },
-    { name: "TikTok", Icon: <Image src={tiktokIcon} alt="TikTok" width={24} height={24} />, url: "https://www.tiktok.com/@fatafatsewa" },
-    { name: "YouTube", Icon: <Image src={youtubeIcon} alt="Youtube" width={24} height={24} />, url: "https://www.youtube.com/@fatafatsewa" },
-    { name: "LinkedIn", Icon: <Image src={linkedinIcon} alt="LinkedIn" width={24} height={24} />, url: "https://www.linkedin.com/company/fatafatsewanp" },
+    { name: "Facebook", Icon: <Image src={facebookIcon} alt="Facebook" width={24} height={24} sizes='10vw' />, url: "https://www.facebook.com/fatafatsewanpl" },
+    { name: "Twitter", Icon: <Image src={twitterIcon} alt="Twitter" width={24} height={24} sizes='10vw' />, url: "https://www.twitter.com/fatafatsewanp" },
+    { name: "TikTok", Icon: <Image src={tiktokIcon} alt="TikTok" width={24} height={24} sizes='10vw' />, url: "https://www.tiktok.com/@fatafatsewa" },
+    { name: "YouTube", Icon: <Image src={youtubeIcon} alt="Youtube" width={24} height={24} sizes='10vw' />, url: "https://www.youtube.com/@fatafatsewa" },
+    { name: "LinkedIn", Icon: <Image src={linkedinIcon} alt="LinkedIn" width={24} height={24} sizes='10vw' />, url: "https://www.linkedin.com/company/fatafatsewanp" },
   ];
 
   return (
@@ -293,8 +293,8 @@ const FooterBody = () => {
                     <Image
                       src={src}
                       alt={`Payment Method ${i + 1}`}
-                      width={40}
-                      height={24}
+                      width={33}
+                      height={20}
                       className="object-contain h-5 w-auto"
                       quality={75}
                     />
@@ -320,8 +320,8 @@ const FooterBody = () => {
                       <Image
                         src={src}
                         alt={`Partner ${(i % (bankingEmiPartners.length + insurancePartners.length)) + 1}`}
-                        width={48}
-                        height={28}
+                        width={41}
+                        height={24}
                         className="object-contain h-6 w-auto"
                         quality={75}
                       />
@@ -339,7 +339,7 @@ const FooterBody = () => {
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
             <div className="flex items-center gap-3">
-              <Image src={imglogo} alt="FatafatSewa Logo" width={100} height={28} className="object-contain brightness-0 invert h-6 w-auto" />
+              <Image src={imglogo} alt="FatafatSewa Logo" width={86} height={24} className="object-contain brightness-0 invert h-6 w-auto" />
               <p className="text-blue-100 text-xs">
                 © {new Date().getFullYear()} FatafatSewa. All rights reserved.
               </p>

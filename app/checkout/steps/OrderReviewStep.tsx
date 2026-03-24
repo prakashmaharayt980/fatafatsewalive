@@ -147,10 +147,16 @@ export default function OrderReviewStep({
                             {address ? (
                                 <div className="space-y-1">
 
-                                    <p className="text-sm text-gray-700 font-medium leading-relaxed">{address.address}</p>
+                                    <p className="text-sm text-gray-700 font-medium leading-relaxed">
+                                        {address.address?.landmark || address.address?.city || 'No landmark specified'}
+                                    </p>
                                     <div className="flex items-center gap-2 pt-1">
-                                        <span className="text-[10px] font-bold text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded uppercase">{address.label || 'Home'}</span>
-                                        <span className="text-xs text-gray-500">{address.city}, {address.state}</span>
+                                        <span className="text-[10px] font-bold text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded uppercase">
+                                            {address.address?.label || 'Home'}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {address.address?.city}, {address.address?.district || address.address?.province || ''}
+                                        </span>
                                     </div>
 
                                 </div>

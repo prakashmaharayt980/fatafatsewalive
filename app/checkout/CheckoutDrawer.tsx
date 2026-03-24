@@ -68,7 +68,7 @@ const CheckoutDrawer = () => {
           <DrawerTitle className="flex items-center justify-center gap-2 text-lg font-bold text-gray-900">
             <ShoppingCart className="w-5 h-5 text-[var(--colour-fsP1)]" />
             Your Cart
-            {cartItems?.items?.length > 0 && (
+            {cartItems?.items && cartItems.items.length > 0 && (
               <span className="text-xs font-semibold bg-[var(--colour-fsP1)] text-white px-2 py-0.5 rounded-full">
                 {cartItems.items.length}
               </span>
@@ -77,7 +77,7 @@ const CheckoutDrawer = () => {
         </DrawerHeader>
 
         <div className="px-4 sm:px-6 py-4 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-200">
-          {cartItems?.items.length === 0 ? (
+          {!cartItems?.items || cartItems.items.length === 0 ? (
             <div className="text-center py-10 flex flex-col items-center justify-center space-y-3">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
                 <ShoppingCart className="w-8 h-8 text-gray-300" />
@@ -89,21 +89,23 @@ const CheckoutDrawer = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {cartItems?.items.map((item) => (
+              {cartItems?.items?.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => {
-                    const slug = item.product.slug || item.product.id;
-                    router.push(`/products/${slug}`);
-                    setIsCartOpen(false);
+                    const slug = item?.product?.slug || item?.product?.id;
+                    if (slug) {
+                      router.push(`/products/${slug}`);
+                      setIsCartOpen(false);
+                    }
                   }}
                   className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-all cursor-pointer group"
                 >
                   {/* Product Image */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-100 rounded-xl flex-shrink-0 overflow-hidden relative">
                     <Image
-                      src={item.product.thumb?.url || '/placeholder.png'}
-                      alt={item.product.name}
+                      src={item?.product?.thumb?.url || '/placeholder.png'}
+                      alt={item?.product?.name || 'Product'}
                       fill
                       sizes="80px"
                       className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
@@ -113,7 +115,7 @@ const CheckoutDrawer = () => {
                   {/* Product Details */}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-sm text-gray-900 truncate pr-2 group-hover:text-[var(--colour-fsP1)] transition-colors">
-                      {item.product.name}
+                      {item?.product?.name || 'Unnamed Product'}
                     </h4>
                     <p className="text-sm font-bold text-[var(--colour-fsP2)] mt-1">
                       Rs. {(item.price * item.quantity).toLocaleString()}
@@ -152,7 +154,7 @@ const CheckoutDrawer = () => {
         </div>
 
         {/* Footer Total */}
-        {cartItems?.items?.length > 0 && (
+        {cartItems?.items && cartItems.items.length > 0 && (
           <div className="bg-gray-50 border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
             <div className="flex items-center justify-between">
               <div>

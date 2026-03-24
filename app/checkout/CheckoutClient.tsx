@@ -9,15 +9,17 @@ import { useAuthStore } from '../context/AuthContext';
 
 import { trackInitiateCheckout } from '@/lib/Analytic';
 import {
-    CheckoutState,
-    CheckoutStep,
     CHECKOUT_STEPS,
     initialCheckoutState,
+    isStepComplete,
+    STEP_LABELS,
+} from './checkoutTypes';
+import type {
+    CheckoutState,
+    CheckoutStep,
     ShippingAddress,
     RecipientInfo,
     DeliverySelection,
-    isStepComplete,
-    STEP_LABELS,
 } from './checkoutTypes';
 
 // Step Components
@@ -86,7 +88,7 @@ export default function CheckoutClient() {
 
     const nextStep = useCallback(() => {
         const { currentStep } = checkoutState;
-        if (currentStep < CHECKOUT_STEPS.PAYMENT && isStepComplete(currentStep, checkoutState)) {
+        if (currentStep < CHECKOUT_STEPS.REVIEW && isStepComplete(currentStep, checkoutState)) {
             setCheckoutState((prev) => ({ ...prev, currentStep: (currentStep + 1) as CheckoutStep }));
         }
     }, [checkoutState]);
@@ -167,7 +169,7 @@ export default function CheckoutClient() {
                 ...checkoutState.address,
                 full_name: userInfo?.name || (checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : 'Guest'),
                 products: currentItems.map((item: any) => ({
-                    product_id: item.product?.id || item.id,
+                    product_id: item.product?.id || item?.product_id || item.id,
                     quantity: item.quantity || 1,
                 })),
                 shipping_address_id: checkoutState.address?.id,
@@ -180,6 +182,7 @@ export default function CheckoutClient() {
                     gift_recipient_name: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : null,
                     gift_recipient_phone: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.phone : null,
                     gift_message: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.message : null,
+                    receiver_number: checkoutState.recipient.phone || null,
                 },
 
 
@@ -188,17 +191,17 @@ export default function CheckoutClient() {
 
 
             const response = await OrderService.CreateOrder(payload).then((res) => {
-                if (res.data.order_status === 'Placed' && res.data.payment_type === 'nic-asia') {
+                if (res?.data?.order_status === 'Placed' && res?.data?.payment_type === 'nic-asia') {
                     // handlePayment(res.data.id, finalTotal);
                     setProcessingPaymentOrder(res.data.id);
                 }
-                if (res.success && res.data.payment_type !== 'cash') {
+                if (res?.success && res?.data?.payment_type !== 'cash') {
                     if (!isLoggedIn) {
                         clearGuestData();
                     }
                     toast.success('Order placed successfully!');
                     router.push(`/checkout/Successpage/${res.data.id}`);
-                } else if (res.success && res.data.payment_type === 'cash') {
+                } else if (res?.success && res?.data?.payment_type === 'cash') {
                     if (!isLoggedIn) {
                         clearGuestData();
                     }
@@ -272,9 +275,22 @@ export default function CheckoutClient() {
                     <PaymentStep
                         state={checkoutState}
                         onPaymentMethodChange={handlePaymentMethodChange}
-                        onPlaceOrder={handlePlaceOrder}
+                        onPlaceOrder={nextStep}
                         onBack={prevStep}
                         isSubmitting={isSubmitting}
+                    />
+                );
+
+            case CHECKOUT_STEPS.REVIEW:
+                return (
+                    <OrderReviewStep
+                        state={checkoutState}
+                        onGoToStep={goToStep}
+                        onBack={prevStep}
+                        onPlaceOrder={handlePlaceOrder}
+                        isSubmitting={isSubmitting}
+                        shippingCost={shippingCost}
+                        discount={appliedPromo?.discount || 0}
                     />
                 );
 
@@ -336,7 +352,7 @@ export default function CheckoutClient() {
                                 paymentmethod: checkoutState.paymentMethod,
                                 address: checkoutState.address,
                                 productsID: cartItems?.items || [],
-                                receiverNO: userInfo?.phone,
+                                receiverNO: userInfo?.phone || '',
                             }}
                             handleApplyPromo={handleApplyPromo}
                             Stepstate={checkoutState}

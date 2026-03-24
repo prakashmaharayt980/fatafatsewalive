@@ -8,6 +8,7 @@ export const CHECKOUT_STEPS = {
     ADDRESS: 0,
     RECIPIENT: 1,
     PAYMENT: 2,
+    REVIEW: 3,
 } as const;
 
 export type CheckoutStep = (typeof CHECKOUT_STEPS)[keyof typeof CHECKOUT_STEPS];
@@ -16,6 +17,7 @@ export const STEP_LABELS: Record<CheckoutStep, string> = {
     [CHECKOUT_STEPS.ADDRESS]: 'Shipping',
     [CHECKOUT_STEPS.RECIPIENT]: 'Recipient',
     [CHECKOUT_STEPS.PAYMENT]: 'Payment',
+    [CHECKOUT_STEPS.REVIEW]: 'Review',
 };
 
 // ========================
@@ -64,30 +66,28 @@ export interface DeliverySelection {
 
 export interface ShippingAddress {
     id?: number;
-
-    address: string;
-    city: string; // Keep for backward compatibility or display
-    state: string; // Keep for backward compatibility or display
-    postal_code: string;
-    country: string;
-    is_default: boolean;
-    label?: string;
-    lat?: number;
-    lng?: number;
-
-    // Nepal Specific Fields
-    province?: string;
-    district?: string;
-    // municipality removed in favor of city
-    ward?: number;
-    tole?: string;
-    house_no?: string;
-    landmark?: string;
-    
-    // User fields
-    first_name?: string;
-    last_name?: string;
-    contact_number?: string;
+    contact_info?: {
+        first_name: string;
+        last_name: string;
+        contact_number: string;
+    };
+    geo?: {
+        lat: number | null;
+        lng: number | null;
+    };
+    address: {
+        label: string | null;
+        landmark: string;
+        city: string;
+        district: string;
+        province: string;
+        country: string;
+        is_default: boolean;
+        house_no?: string;
+        // Optional helpers for UI
+        postal_code?: string;
+        state?: string;
+    };
 }
 
 // ========================
@@ -146,7 +146,8 @@ export function isStepComplete(step: CheckoutStep, state: CheckoutState): boolea
 
         case CHECKOUT_STEPS.PAYMENT:
             return state.paymentMethod !== '';
-
+        case CHECKOUT_STEPS.REVIEW:
+            return true; // Review step is complete by default to allow placement
         default:
             return false;
     }

@@ -1,13 +1,14 @@
 'use client'
 
 import Image from 'next/image';
-import React, { Dispatch, SetStateAction, use } from 'react';
+import React, { use } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShoppingBag, Tag, Ticket, X, AlertCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { CheckoutState } from './checkoutTypes';
+import type { CheckoutState } from './checkoutTypes';
 import { useShallow } from 'zustand/react/shallow';
 import { useCartStore } from '../context/CartContext';
 import { useAuthStore } from '../context/AuthContext';
@@ -21,7 +22,7 @@ interface CheckoutProduct {
     appliedPromo: { code: string; discount: number } | null;
     paymentmethod: string;
     address: any;
-    receiverNO: string;
+    receiverNO: Number;
     productsID: any[];
   };
   handleApplyPromo: () => void;
@@ -71,12 +72,14 @@ export default function CheckoutProduct({
         {/* Products List - Enhanced Size */}
         <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           {items.map((item, index) => {
-            const product = item.product;
+            const product = item?.product;
+            if (!product) return null; // Safe guard against missing product data
+
             const extractPrice = (p: any): number => {
-                if (typeof p === 'number') return p;
-                if (typeof p === 'string') return parseInt(p) || 0;
-                if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
-                return 0;
+              if (typeof p === 'number') return p;
+              if (typeof p === 'string') return parseInt(p) || 0;
+              if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
+              return 0;
             };
             const price = extractPrice((product as any).discounted_price || product.price);
             const quantity = item.quantity || 1;
@@ -85,13 +88,13 @@ export default function CheckoutProduct({
             return (
               <div key={item.id || index} className="flex gap-4 group">
                 {/* Image - Increased Size & Aspect Ratio */}
-                <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 shadow-sm group-hover:shadow-md transition-all duration-300">
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 shadow-sm group-hover:shadow-md transition-all duration-300">
                   <Image
                     src={(product as any).thumb?.url || (product as any).image?.thumb || (product as any).image?.full || '/placeholder.png'}
                     alt={product.name || 'Product'}
                     fill
-                    className="object-contain  group-hover:scale-110 transition-transform duration-500 ease-in-out"
-
+                    sizes="(max-width: 640px) 96px, 112px"
+                    className="object-contain p-2 group-hover:scale-110 transition-transform duration-500 ease-in-out"
                   />
                 </div>
 
@@ -101,7 +104,6 @@ export default function CheckoutProduct({
                     <p className="text-sm sm:text-base font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-[var(--colour-fsP2)] transition-colors">
                       {product.name || 'Unnamed Product'}
                     </p>
-                    {/* Optional: Add variants here if available */}
                   </div>
 
                   <div className="flex items-end justify-between mt-auto">
