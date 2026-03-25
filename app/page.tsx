@@ -85,21 +85,23 @@ const jsonLd = {
 
 import LazySection from '@/components/LazySection';
 
+import TopHeroSection from '@/components/TopHeroSection';
+
 async function Page() {
-  // Mobile (index 0) uses SSR — renders with banner in initial HTML after cache warms (~5ms)
+  const firstCategory = demoCategories[0];
+  
   // All other sections lazy-load on scroll
-  const basketSections = Object.fromEntries(demoCategories.map((cat, index) => [
-    `basketSection${index}`,
-    index === 0
-      ? <BasketSectionServer key={cat.slug} slug={cat.slug} title={cat.title} imgSlug={(cat as any).imgSlug} />
-      : <BasketSectionClient
-          key={cat.slug}
-          slug={cat.slug}
-          title={cat.title}
-          imgSlug={(cat as any).imgSlug}
-          isFirstSection={false}
-          sectionIndex={index}
-        />
+  const remainingCategories = demoCategories.slice(1);
+  const basketSections = Object.fromEntries(remainingCategories.map((cat, index) => [
+    `basketSection${index + 1}`,
+    <BasketSectionClient
+      key={cat.slug}
+      slug={cat.slug}
+      title={cat.title}
+      imgSlug={(cat as any).imgSlug}
+      isFirstSection={false}
+      sectionIndex={index + 1}
+    />
   ]));
 
   return (
@@ -111,12 +113,18 @@ async function Page() {
 
       <HomePage
         {...basketSections}
-        mainBannerSection={<BannerCarouselServer />}
+        mainBannerSection={
+          <TopHeroSection 
+            slug={firstCategory.slug} 
+            title={firstCategory.title} 
+          />
+        }
         sectionOne={
           <LazySection
             fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}
             aspectRatio="5/1"
-            rootMargin="50px"
+            rootMargin="100px"
+            priority={true} // Priority for the first banner below fold
           >
             <Suspense fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}>
               <BannerSectionServer slug={bannerSections[0].slug} type={bannerSections[0].type} />

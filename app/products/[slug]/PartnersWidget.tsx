@@ -13,7 +13,7 @@ function SectionLabel({ icon, label }: { icon: React.ReactNode; label: string })
     return (
         <div className="flex items-center gap-1.5 mb-2.5">
             <span className="text-[var(--colour-fsP2)]">{icon}</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</span>
         </div>
     );
 }

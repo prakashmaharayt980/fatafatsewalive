@@ -251,56 +251,66 @@ export default function MoreDetailsProduct({
         {/* Full Specifications Sidebar (1/3 width on desktop) */}
         <div className="lg:col-span-1">
           {hasAnyFeatures && (
-            <section ref={specsRef} className="lg:sticky lg:top-24 space-y-6">
-              <div className='relative'>
-                <div className="pb-3 mb-4 border-b border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
-                    <div className="p-1.5 bg-[var(--colour-fsP2)]/10 rounded-lg">
-                      <Scale className="w-5 h-5 text-[var(--colour-fsP2)]" />
-                    </div>
+            <section ref={specsRef} className="lg:sticky lg:top-24">
+              <div className="relative">
+
+                {/* Header */}
+                <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-gray-100">
+                  <Scale className="w-4 h-4 text-[var(--colour-fsP2)]" />
+                  <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
                     Specifications
                   </h2>
                 </div>
 
+                {/* Spec rows */}
                 <div className={cn(
-                  "grid grid-cols-1 gap-3 relative transition-all duration-500 ease-in-out",
+                  "relative transition-all duration-500 ease-in-out",
                   !isSpecsExpanded && "max-h-[500px] overflow-hidden"
                 )}>
-                  {Object.entries(specsData).map(([key, value], index) => (
-                    <div
-                      key={`spec-${index}`}
-                      className="bg-white p-3.5 rounded-xl border border-gray-100 hover:border-[var(--colour-fsP2)]/30 hover:shadow-sm transition-all duration-200 group"
-                    >
-                      <div className="flex flex-row gap-4">
-                        <IconRenderer iconKey={key} size={18} className="text-[var(--colour-fsP2)]" />
-                        <div className='flex flex-col items-start gap-2'>
-                          <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{key}</h4>
-                          <p className="text-sm font-medium text-gray-900 leading-snug break-words ">{value}</p>
+                  <dl className="divide-y divide-gray-100">
+                    {Object.entries(specsData).map(([key, value], index) => (
+                      <div
+                        key={`spec-${index}`}
+                        className="flex flex-col items-start gap-3 py-2.5 group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <IconRenderer
+                            iconKey={key}
+                            size={15}
+                            className="mt-0.5 shrink-0 text-[var(--colour-fsP2)]/70"
+                          />
+                          <dt className="w-28 shrink-0 text-[11px] font-medium text-gray-400 uppercase tracking-wide pt-px">
+                            {key}
+                          </dt>
                         </div>
+                        <dd className="text-sm text-gray-800 leading-snug break-words min-w-0 flex-1">
+                          {value}
+                        </dd>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </dl>
 
-                  {/* Gradient Overlay for Specifications */}
+                  {/* Fade overlay */}
                   {!isSpecsExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                   )}
                 </div>
 
-                {/* Mobile Toggle Button - Specifications */}
-                <div className="mt-4 lg:hidden">
-                  <Button
-                    variant="outline"
+                {/* Mobile toggle */}
+                <div className="mt-2 lg:hidden">
+                  <button
                     onClick={toggleSpecs}
-                    className="w-full border-none text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
+                    className="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-gray-500 hover:text-[var(--colour-fsP2)] transition-colors"
                   >
-                    {isSpecsExpanded ? 'Show Less' : 'Show More'}
-                    <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isSpecsExpanded && "rotate-180")} />
-                  </Button>
+                    {isSpecsExpanded ? 'Show less' : 'Show more'}
+                    <ChevronDown className={cn(
+                      "w-3.5 h-3.5 transition-transform",
+                      isSpecsExpanded && "rotate-180"
+                    )} />
+                  </button>
                 </div>
+
               </div>
-
-
             </section>
           )}
         </div>

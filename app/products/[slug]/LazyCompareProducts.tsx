@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useInView } from 'react-intersection-observer';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ProductData } from '@/app/types/ProductDetailsTypes';
@@ -9,8 +8,6 @@ import { getCategoryProducts } from '@/app/api/services/category.service';
 import SkeletonCard from '@/app/skeleton/SkeletonCard';
 import { ChevronRight } from 'lucide-react';
 import { trackCategoryClick } from '@/lib/analytics';
-import type { title } from 'process';
-import router from 'next/router';
 
 interface LazyCompareProductsProps {
     categorySlug?: string;
@@ -87,37 +84,31 @@ function CompareCard({ left, right }: { left: ProductData; right: ProductData })
     );
 }
 
+import CompareSkeleton from '@/app/skeleton/CompareSkeleton';
+
 export default function LazyCompareProducts({ categorySlug, currentProductId }: LazyCompareProductsProps) {
     const [data, setData] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [hasFetched, setHasFetched] = useState(false);
-
-    const { ref, inView } = useInView({
-        triggerOnce: true,
-        rootMargin: '200px 0px',
-    });
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (inView && !hasFetched && categorySlug) {
-            setHasFetched(true);
-            setIsLoading(true);
+        if (!categorySlug) return;
 
-            getCategoryProducts(categorySlug, { per_page: 8,min_price: 100 })
-                .then((res) => {
-                    if (res && res.data) {
-                        setData(res.data);
-                    }
-                })
-                .catch((error: any) => {
-                    if (error?.response?.status !== 404) {
-                        console.error('Failed to fetch compare products:', error);
-                    }
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        }
-    }, [inView, hasFetched, categorySlug, currentProductId]);
+        setIsLoading(true);
+        getCategoryProducts(categorySlug, { per_page: 8, min_price: 100 })
+            .then((res) => {
+                if (res && res.data) {
+                    setData(res.data);
+                }
+            })
+            .catch((error: any) => {
+                if (error?.response?.status !== 404) {
+                    console.error('Failed to fetch compare products:', error);
+                }
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    }, [categorySlug, currentProductId]);
 
 
     const productList = data && data.products ? data.products : [];
@@ -131,18 +122,13 @@ export default function LazyCompareProducts({ categorySlug, currentProductId }: 
         pairs.push([filteredProducts[i], filteredProducts[i + 1]]);
     }
 
-    if (hasFetched && !isLoading && pairs.length === 0) return null;
+    if (!isLoading && pairs.length === 0) return null;
+
+    if (isLoading) return <CompareSkeleton />;
 
     return (
-        <div ref={ref} className="w-full mt-10">
-            {isLoading || !hasFetched ? (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
-                </div>
-            ) : pairs.length > 0 ? (
+        <div className="w-full mt-10">
+            {pairs.length > 0 ? (
                 <div className="space-y-4">
 
 

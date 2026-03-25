@@ -31,7 +31,7 @@ export default function ProductCoupons() {
             {/* Header */}
             <div className="flex items-center gap-1.5 mb-2.5">
                 <Ticket className="w-3.5 h-3.5 text-[var(--colour-fsP2)]" />
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Coupons</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Coupons</span>
             </div>
 
             {/* Coupon list */}
@@ -44,7 +44,7 @@ export default function ProductCoupons() {
                         {/* Description */}
                         <div className="flex-1 px-3 py-2 min-w-0">
                             <p className="text-[13px] font-semibold text-slate-700 leading-tight">{coupon.description}</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">Apply at checkout</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Apply at checkout</p>
                         </div>
 
                         {/* Divider notch */}

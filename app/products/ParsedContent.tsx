@@ -1,9 +1,6 @@
-
 import React, { type JSX, useMemo } from 'react';
 import parse, { domToReact, type HTMLReactParserOptions, type Element, type DOMNode, type Text } from 'html-react-parser';
 import { sanitizeHtml } from '@/lib/dompurify';
-
-import Image from 'next/image';
 
 interface ParsedContentProps {
   description: string;
@@ -13,11 +10,9 @@ interface ParsedContentProps {
 const isElement = (node: DOMNode): node is Element => node.type === 'tag';
 const isText = (node: DOMNode): node is Text => node.type === 'text';
 
-// Strip Quill's injected UI spans: <span class="ql-ui">
 const isQuillUiSpan = (node: DOMNode): boolean =>
   isElement(node) && (node as Element).name === 'span' && (node as Element).attribs?.class === 'ql-ui';
 
-// Check if a <p> is just a Quill <p><br></p> spacer
 const isEmptyQuillParagraph = (node: Element): boolean => {
   const kids = node.children as DOMNode[];
   return (
@@ -44,12 +39,9 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
       replace: (domNode: DOMNode) => {
         if (!isElement(domNode)) return undefined;
         const { name, attribs, children } = domNode as Element;
-        // Strip ql-ui spans from every node's children
         const nodeChildren = (children as DOMNode[]).filter(n => !isQuillUiSpan(n));
 
         // ── QUILL FLAT LIST ITEMS (data-list) ────────────────────────────────
-        // Quill uses <li data-list="bullet|ordered"> inside <ol>. We style them
-        // as plain <li> since the parent <ol> handler sets list-style-type.
         if (attribs?.['data-list']) {
           const indent = parseInt(attribs?.['data-indent'] || '0', 10);
           return (
@@ -62,9 +54,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
           );
         }
 
-        // ── OL — detect whether it's really a bullet or numbered list ─────────
-        // Quill dumps ALL list types inside <ol>. Inspect data-list of first <li>
-        // to decide which list style to render.
+        // ── OL ────────────────────────────────────────────────────────────────
         if (name === 'ol') {
           const firstLi = nodeChildren.find(isElement);
           const isBullet = firstLi?.attribs?.['data-list'] === 'bullet';
@@ -82,7 +72,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
           );
         }
 
-        // ── UL ───────────────────────────────────────────────────────────────
+        // ── UL ────────────────────────────────────────────────────────────────
         if (name === 'ul') {
           return (
             <ul className="list-disc list-outside pl-5 my-3 space-y-1.5 text-gray-700 text-sm md:text-[15px] leading-relaxed marker:text-(--colour-fsP1,#f86014)">
@@ -109,14 +99,14 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
           const tbody = tableChildren.find(n => isElement(n) && n.name === 'tbody') as Element;
 
           return (
-            <div className="w-full overflow-x-auto m-2 rounded-lg border ga border-gray-200 shadow-sm scrollbar-hide">
+            <div className="w-full overflow-x-auto my-2 rounded-md border border-gray-200 scrollbar-hide">
               <table className="w-full min-w-[400px] border-collapse text-sm text-left">
                 {thead && (
                   <thead className="bg-[var(--colour-fsP2)] text-white">
                     {(thead.children as DOMNode[]).filter(isElement).map((tr, i) => (
                       <tr key={i}>
                         {(tr.children as DOMNode[]).filter(isElement).map((cell, j) => (
-                          <th key={j} className="px-2 py-2 font-medium tracking-wide border-r border-[rgba(255,255,255,0.1)] last:border-r-0 whitespace-nowrap">
+                          <th key={j} className="px-2 py-1.5 font-medium border-r border-white/10 last:border-r-0 whitespace-nowrap">
                             {domToReact(cell.children as DOMNode[], options)}
                           </th>
                         ))}
@@ -124,11 +114,11 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
                     ))}
                   </thead>
                 )}
-                <tbody className="divide-y-2 divide-gray-100 bg-white">
+                <tbody className="divide-y divide-gray-100 bg-white">
                   {tbody && (tbody.children as DOMNode[]).filter(isElement).map((tr, i) => (
                     <tr key={i} className="hover:bg-gray-50/80 transition-colors duration-150 group">
                       {(tr.children as DOMNode[]).filter(isElement).map((cell, j) => (
-                        <td key={j} className="px-2 py-2 text-gray-700 border-r border-gray-100 last:border-r-0 align-top group-hover:text-gray-900 leading-relaxed">
+                        <td key={j} className="px-2 py-1.5 text-gray-700 border-r border-gray-100 last:border-r-0 align-top group-hover:text-gray-900 leading-relaxed">
                           {domToReact(cell.children as DOMNode[], options)}
                         </td>
                       ))}
@@ -142,19 +132,18 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
 
         // ── IMAGE ─────────────────────────────────────────────────────────────
         if (name === 'img') {
-          const { src = '', alt = 'Content image' } = attribs;
+          const { src = '', alt = 'Content image', width, height, loading, style, ...restAttribs } = attribs;
           const baseUrl = 'https://fatafatsewa.com/';
           const absoluteUrl =
             src.startsWith('http') || src.startsWith('data:') ? src : `${baseUrl}${src}`;
           return (
-            <span className="block my-6 rounded-xl overflow-hidden shadow-md">
-              <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <span className="block my-3 rounded-lg overflow-hidden">
+              <img
                 src={absoluteUrl}
                 alt={alt}
-                width={900}
-                height={500}
-                className="w-full h-auto object-contain"
-                style={{ maxHeight: '480px' }}
+                loading="lazy"
+                className="w-full h-auto object-contain max-h-[480px]"
               />
             </span>
           );
@@ -164,7 +153,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
         if (name === 'iframe') {
           const { style, class: className, ...restAttribs } = attribs || {};
           return (
-            <span className="block w-full my-6 rounded-xl overflow-hidden shadow-md aspect-video">
+            <span className="block w-full my-4 rounded-lg overflow-hidden aspect-video">
               <iframe {...restAttribs} className="w-full h-full" style={{ minHeight: '300px' }} />
             </span>
           );
@@ -212,7 +201,6 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
 
         // ── PARAGRAPH ─────────────────────────────────────────────────────────
         if (name === 'p') {
-          // Collapse Quill's empty <p><br></p> spacers into a tiny gap
           if (isEmptyQuillParagraph(domNode)) {
             return <span className="block h-1.5" />;
           }
@@ -225,11 +213,11 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
 
         // ── HEADINGS ──────────────────────────────────────────────────────────
         if (/^h[1-6]$/.test(name)) {
-          if (name === 'h1') return null; // suppress h1
+          if (name === 'h1') return null;
 
           const headingStyles: Record<string, string> = {
             h2: 'text-xl md:text-2xl font-bold text-(--colour-fsP2,#1967b3) mt-2 mb-2 pb-2 border-b border-gray-100 leading-snug',
-            h3: 'text-lg md:text-xl font-semibold text-gray-800 mt-2 mb- leading-snug',
+            h3: 'text-lg md:text-xl font-semibold text-gray-800 mt-2 mb-1 leading-snug',
             h4: 'text-base md:text-lg font-semibold text-gray-800 mt-2 mb-2 leading-snug',
             h5: 'text-sm md:text-base font-semibold text-gray-700 mt-2 mb-2',
             h6: 'text-sm font-semibold text-gray-500 mt-2 mb-1 uppercase tracking-wider',
@@ -238,7 +226,7 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
 
           return React.createElement(
             Tag,
-            { className: `${headingStyles[name] || 'font-bold  text-gray-900'} ${className}`.trim() },
+            { className: `${headingStyles[name] || 'font-bold text-gray-900'} ${className}`.trim() },
             domToReact(nodeChildren, options)
           );
         }

@@ -20,6 +20,8 @@ interface LazySectionProps<T = any> {
   delay?: number;
   /** Visual Aspect Ratio to reserve space (e.g. '16/9' or '5/1') */
   aspectRatio?: string;
+  /** Whether to load this section immediately without waiting for intersection */
+  priority?: boolean;
 }
 
 /**
@@ -38,15 +40,42 @@ function LazySection<T = any>({
   rootMargin = '200px',
   delay = 0,
   aspectRatio,
+  priority = false,
 }: LazySectionProps<T>) {
-  const [inView, setInView] = useState(false);
+  const [inView, setInView] = useState(priority);
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const renderFn = render || component;
 
+  // Manual trigger if priority is set
   useEffect(() => {
+    if (priority && !data && !isLoading) {
+      const activate = async () => {
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        setInView(true);
+        if (fetcher) {
+          setIsLoading(true);
+          try {
+            const result = await fetcher();
+            setData(result);
+          } catch (err) {
+            console.error('LazySection fetch error:', err);
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      };
+      activate();
+    }
+  }, [priority, fetcher, data, isLoading, delay]);
+
+  useEffect(() => {
+    if (priority) return; // Skip observer if priority is handled
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -62,8 +91,8 @@ function LazySection<T = any>({
               try {
                 const result = await fetcher();
                 setData(result);
-              } catch (error) {
-                console.error("LazySection fetch error:", error);
+              } catch (err) {
+                console.error('LazySection fetch error:', err);
               } finally {
                 setIsLoading(false);
               }
@@ -75,7 +104,7 @@ function LazySection<T = any>({
         }
       },
       {
-        rootMargin: `${rootMargin} 0px`,
+        rootMargin,
         threshold: 0.01,
       }
     );
@@ -85,20 +114,22 @@ function LazySection<T = any>({
     }
 
     return () => observer.disconnect();
-  }, [rootMargin, delay, fetcher, data, isLoading]);
+  }, [fetcher, data, isLoading, rootMargin, delay, priority]);
 
   return (
     <div
       ref={containerRef}
-      className={cn('w-full', className)}
-      style={aspectRatio ? { aspectRatio } : { minHeight }}
+      className={className}
+      style={{ minHeight, aspectRatio }}
     >
-      {!inView || (fetcher && !data && isLoading) ? (
-        fallback
-      ) : (
+      {inView ? (
         <>
+          {isLoading && !data ? fallback : null}
           {renderFn && data ? renderFn(data) : children}
+          {!fetcher && children}
         </>
+      ) : (
+        fallback
       )}
     </div>
   );

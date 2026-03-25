@@ -106,16 +106,18 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                                     onClick={() => setSelectedImage(image)}
                                     aria-label={`View image ${idx + 1}`}
                                     className={cn(
-                                        "relative flex-shrink-0 w-[54px] h-[54px] rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-pointer bg-white",
+                                        "relative flex-shrink-0 w-[54px] h-[54px] rounded-lg overflow-hidden border-2 border-gray-100 transition-transform duration-200 cursor-pointer bg-white",
                                         isActive
-                                            ? "border-[var(--colour-fsP2)] shadow-sm shadow-[var(--colour-fsP2)]/20 scale-105"
-                                            : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                                            ? "shadow-sm shadow-[var(--colour-fsP2)]/20 scale-105"
+                                            : "hover:border-gray-200 hover:shadow-sm"
                                     )}
                                 >
-                                    <span className={cn(
-                                        "absolute inset-0 z-10 transition-opacity duration-200 bg-white rounded-md",
-                                        isActive ? "opacity-0" : "opacity-15 hover:opacity-0"
+                                    {/* Composited border transition */}
+                                    <div className={cn(
+                                        "absolute inset-0 border-2 border-[var(--colour-fsP2)] rounded-lg transition-opacity duration-200 pointer-events-none z-10",
+                                        isActive ? "opacity-100" : "opacity-0"
                                     )} />
+                                    
                                     <Image
                                         src={image || "/placeholder.png"}
                                         alt={`${productName} ${idx + 1}`}
@@ -202,37 +204,47 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                         )}
                     </div>
 
-                    {/* ─── Horizontal Thumbnail Strip (Mobile) ─── */}
-                    {thumbnailImages.length > 1 && (
-                        <div className="flex md:hidden gap-1.5 overflow-x-auto scrollbar-hide py-0.5 px-0.5">
-                            {thumbnailImages.map((image, idx) => {
-                                const isActive = selectedImage === image;
-                                return (
-                                    <button
-                                        key={`hthumb-${idx}`}
-                                        onClick={() => setSelectedImage(image)}
-                                        aria-label={`View image ${idx + 1}`}
-                                        className={cn(
-                                            "relative flex-shrink-0 w-[50px] h-[50px] rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-pointer bg-white",
-                                            isActive
-                                                ? "border-[var(--colour-fsP2)] shadow-sm shadow-[var(--colour-fsP2)]/20"
-                                                : "border-gray-200 hover:border-gray-300"
-                                        )}
-                                    >
-                                        <Image
-                                            src={image || "/placeholder.png"}
-                                            alt={`${productName} ${idx + 1}`}
-                                            fill
-                                            className="object-contain p-1"
-                                            sizes="50px"
-                                        />
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
                 </div>
             </div>
+
+            {/* ─── Horizontal Thumbnail Strip (Mobile) ─── */}
+            {thumbnailImages.length > 1 && (
+                <div className="md:hidden mt-2 -mx-1">
+                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1.5 px-1 snap-x snap-mandatory">
+                        {thumbnailImages.map((image, idx) => {
+                            const isActive = selectedImage === image;
+                            return (
+                                <button
+                                    key={`hthumb-${idx}`}
+                                    data-active={isActive}
+                                    onClick={() => setSelectedImage(image)}
+                                    aria-label={`View image ${idx + 1}`}
+                                    className={cn(
+                                        "relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 border-gray-100 transition-transform duration-200 cursor-pointer bg-white snap-start",
+                                        isActive
+                                            ? "scale-110"
+                                            : ""
+                                    )}
+                                >
+                                    {/* Composited border transition */}
+                                    <div className={cn(
+                                        "absolute inset-0 border-2 border-[var(--colour-fsP2)] rounded-lg transition-opacity duration-200 pointer-events-none z-10",
+                                        isActive ? "opacity-100" : "opacity-0"
+                                    )} />
+
+                                    <Image
+                                        src={image || "/placeholder.png"}
+                                        alt={`${productName} ${idx + 1}`}
+                                        fill
+                                        className="object-contain p-0.5"
+                                        sizes="48px"
+                                    />
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* ─── Zoom Panel (Desktop hover) ─── */}
             {showMagnifier && (

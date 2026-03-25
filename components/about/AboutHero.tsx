@@ -47,11 +47,14 @@ export default function AboutHero({ bannerData }: AboutHeroProps) {
 
         return [...bannerData.images]
             .sort((a, b) => a.order - b.order)
-            .map(img => ({
-                id: img.id.toString(),
-                src: img.image.full,
-                link: img.link || '#'
-            }));
+            .map(img => {
+                const imageSrc = (img.image && typeof img.image === 'object') ? img.image.full : null;
+                return {
+                    id: img.id.toString(),
+                    src: imageSrc || 'https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=2000&auto=format&fit=crop',
+                    link: img.link || '#'
+                };
+            });
     }, [bannerData]);
 
     // Auto-scroll logic continuously smoothly

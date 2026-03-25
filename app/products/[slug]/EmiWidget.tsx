@@ -46,7 +46,7 @@ export default function EmiWidget({ price }: { price: number }) {
                     </div>
                     <div>
                         <p className="text-xs font-bold text-slate-800 leading-none">No Cost EMI</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Zero downpayment</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Zero downpayment</p>
                     </div>
                 </div>
                 <span className="text-[10px] font-bold text-white bg-[var(--colour-fsP2)] px-2 py-0.5 rounded-full">
@@ -69,12 +69,12 @@ export default function EmiWidget({ price }: { price: number }) {
                             </span>
                             <div>
                                 <p className="text-[11px] font-bold text-slate-700 leading-none">months</p>
-                                <p className="text-[10px] text-slate-400 mt-0.5">{plan.label}</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5">{plan.label}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="text-right">
-                                <p className="text-[10px] text-slate-400 leading-none">/ month</p>
+                                <p className="text-[10px] text-slate-500 leading-none">/ month</p>
                                 <p className="text-sm font-extrabold text-slate-800 group-hover:text-[var(--colour-fsP2)] transition-colors leading-tight">
                                     Rs.{plan.rate.toLocaleString()}
                                 </p>

@@ -29,6 +29,9 @@ const BasketCardwithImage = ({ title, slug, imageUrl, initialData, isFirstSectio
 
   const productList = initialData?.products || [];
 
+  // Hydration readiness gate to prevent double render when productList is available from props
+  const [isReady, setIsReady] = useState(() => isFirstSection || !!initialData || !!productList.length);
+
   const { user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
     user: state.user,
     triggerLoginAlert: state.triggerLoginAlert
@@ -67,6 +70,13 @@ const BasketCardwithImage = ({ title, slug, imageUrl, initialData, isFirstSectio
     };
   }, []);
 
+  // Ensure isReady is true if data arrives late
+  useEffect(() => {
+    if (!isReady && productList.length > 0) {
+      setIsReady(true);
+    }
+  }, [productList.length, isReady]);
+
   // Memoize responsive logic
   const { itemsPerPage, totalPages } = useMemo(() => {
     let ipp = 2;
@@ -77,7 +87,7 @@ const BasketCardwithImage = ({ title, slug, imageUrl, initialData, isFirstSectio
     return { itemsPerPage: ipp, totalPages: tp };
   }, [windowWidth, productList.length]);
 
-  if (!productList.length) return <SkeletonCard />;
+  if (!isReady || !productList.length) return <SkeletonCard />;
 
   const scrollToPage = (pageIndex: number) => {
     if (scrollContainerRef.current) {

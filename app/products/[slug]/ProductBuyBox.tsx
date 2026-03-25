@@ -174,7 +174,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                             >
                                 <Star className="w-3 h-3 fill-current" />
                                 <span className="font-semibold">{product.average_rating}</span>
-                                <span className="text-gray-400 font-normal">/ 5</span>
+                                <span className="text-slate-500 font-normal">/ 5</span>
                             </button>
                         )}
                     </div>
@@ -208,7 +208,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     {product.name}
                 </h1>
                 {product.sku && (
-                    <p className="mt-1 text-[11px] text-slate-400 font-medium tracking-wide">SKU: {product.sku}</p>
+                    <p className="mt-1 text-[11px] text-slate-500 font-medium tracking-wide">SKU: {product.sku}</p>
                 )}
             </div>
 
@@ -220,7 +220,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     </span>
                     {originalPrice && originalPrice > currentPrice && (
                         <>
-                            <span className="text-sm text-slate-400 line-through pb-0.5">
+                            <span className="text-sm text-slate-500 line-through pb-0.5">
                                 Rs.{originalPrice.toLocaleString()}
                             </span>
                             <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-lg pb-0.5">
@@ -273,16 +273,22 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                                     }))
                                                 }
                                                 className={cn(
-                                                    "relative cursor-pointer rounded-xl transition-all duration-150 border-2 overflow-visible",
+                                                    "relative cursor-pointer rounded-xl transition-transform duration-150 border-2 border-gray-100 overflow-visible",
                                                     isColorAttr
                                                         ? "w-12 h-12 p-0.5"
                                                         : "px-3.5 py-1.5 text-sm font-semibold",
                                                     isSelected
-                                                        ? "border-[var(--colour-fsP1)] shadow-md shadow-orange-100"
-                                                        : "border-gray-200 hover:border-gray-300 text-gray-600"
+                                                        ? "shadow-md shadow-orange-100 active:scale-95"
+                                                        : "hover:border-gray-300 text-gray-600 active:scale-95"
                                                 )}
                                                 aria-label={`Select ${attrName}: ${optionValue}`}
                                             >
+                                                {/* Composited border transition */}
+                                                <div className={cn(
+                                                    "absolute -inset-[2px] border-2 border-[var(--colour-fsP1)] rounded-xl transition-opacity duration-200 pointer-events-none z-10",
+                                                    isSelected ? "opacity-100" : "opacity-0"
+                                                )} />
+
                                                 {isColorAttr && variantImage ? (
                                                     <div className="w-full h-full rounded-lg overflow-hidden bg-gray-50 relative">
                                                         <Image
@@ -297,7 +303,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                                     <span>{optionValue}</span>
                                                 )}
                                                 {isSelected && isColorAttr && (
-                                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--colour-fsP1)] rounded-full flex items-center justify-center z-10">
+                                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--colour-fsP1)] rounded-full flex items-center justify-center z-20">
                                                         <Check className="w-2.5 h-2.5 text-white" />
                                                     </span>
                                                 )}
@@ -348,7 +354,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                     <button
                         onClick={handleAddToCart}
                         disabled={currentStock === 0}
-                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl shadow-sm transition-transform active:scale-[0.98] cursor-pointer"
                     >
                         <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
                         {currentStock === 0 ? "Out of Stock" : "Add to Cart"}
@@ -356,7 +362,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
                     <button
                         onClick={() => setIsPreOrderOpen(true)}
-                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-xl transition-all active:scale-[0.98] cursor-pointer"
+                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-xl transition-transform active:scale-[0.98] cursor-pointer"
                     >
                         <CalendarClock className="w-3.5 h-3.5 shrink-0" />
                         Pre-Order
@@ -370,7 +376,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                                     : `/emi/apply/${product.slug}`
                             )
                         }
-                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP1)]/90 text-white text-[11px] font-bold rounded-xl transition-all active:scale-[0.98] cursor-pointer"
+                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-[var(--colour-fsP1)] hover:bg-[var(--colour-fsP1)]/90 text-white text-[11px] font-bold rounded-xl transition-transform active:scale-[0.98] cursor-pointer"
                     >
                         <CreditCard className="w-3.5 h-3.5 shrink-0" />
                         Apply EMI
@@ -381,7 +387,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 <button
                     onClick={handleCompareToggle}
                     className={cn(
-                        "w-full h-9 flex items-center justify-center gap-1.5 text-[11px] font-bold rounded-xl border transition-all active:scale-[0.98] cursor-pointer",
+                        "w-full h-9 flex items-center justify-center gap-1.5 text-[11px] font-bold rounded-xl border transition-transform active:scale-[0.98] cursor-pointer",
                         isInCompare
                             ? "bg-[var(--colour-fsP2)]/5 border-[var(--colour-fsP2)] text-[var(--colour-fsP2)]"
                             : "bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300"
@@ -401,7 +407,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
             {/* ── Highlights ── */}
             {highlights.length > 0 && (
                 <div className="px-4 pb-4 border-t border-gray-50 pt-3">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Highlights</p>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">Highlights</p>
                     <ul className="space-y-2">
                         {highlights.map((item, idx) => (
                             <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-600 leading-snug">

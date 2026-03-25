@@ -35,8 +35,8 @@ const BasketCard = ({ title, slug, initialData, isFirstSection = false }: Basket
   const [activeDot, setActiveDot] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(0);
   // isFirstSection=true → start ready immediately (SSR data already present, no delay)
-  // Otherwise, check if this section was previously loaded in the same session
-  const [isReady, setIsReady] = useState(() => isFirstSection || loadedSections.has(slug));
+  // Otherwise, check if this section was previously loaded or if initialData is provided
+  const [isReady, setIsReady] = useState(() => isFirstSection || !!initialData || loadedSections.has(slug));
   // How many products are currently injected into the DOM
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
 
@@ -89,11 +89,11 @@ const BasketCard = ({ title, slug, initialData, isFirstSection = false }: Basket
 
   const handleImageLoad = useCallback(() => setImagesLoaded(prev => prev + 1), []);
 
-  // Readiness gate — show content once first batch of images load.
-  // Fallback: 100ms if images are cached (cached images may not fire onLoad).
-  // isFirstSection = true skips delay entirely (products pre-rendered via SSR).
+  // Readiness gate — show content once first batch of images load or if data is already present.
   useEffect(() => {
     if (isReady || !products.length) return;
+    
+    // If not ready yet (e.g. initial render without data), wait for images or fallback
     const fallbackMs = isFirstSection ? 0 : 100;
     const timer = setTimeout(() => {
       setIsReady(true);

@@ -28,7 +28,7 @@ export default function TrustWidget() {
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Service & Warranty</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Service & Warranty</p>
             <div className="space-y-3">
                 {items.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3">
@@ -37,7 +37,7 @@ export default function TrustWidget() {
                         </span>
                         <div>
                             <p className="text-[12px] font-bold text-slate-700 leading-none">{item.title}</p>
-                            <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{item.desc}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">{item.desc}</p>
                         </div>
                     </div>
                 ))}

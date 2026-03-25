@@ -21,11 +21,7 @@ const MoreDetailsProduct = dynamic(() => import("./MoreDetailsProduct"), {
         </div>
     ),
 });
-
-const ProductSidebar = dynamic(() => import("./ProductSidebar"), {
-    ssr: false,
-    loading: () => <div className="animate-pulse bg-gray-100 rounded-2xl h-[400px] w-full" />,
-});
+import ProductSidebar from "./ProductSidebar";
 
 import { trackViewContent } from "@/lib/Analytic";
 import LazySection from "@/components/LazySection";
@@ -35,6 +31,7 @@ import SkeletonCard from "@/app/skeleton/SkeletonCard";
 const BasketCard = dynamic(() => import("@/app/homepage/BasketCard"), { ssr: false });
 const LazyCompareProducts = dynamic(() => import("./LazyCompareProducts"), { ssr: false });
 const EmiWidget = dynamic(() => import("./EmiWidget"), { ssr: false });
+import CompareSkeleton from "@/app/skeleton/CompareSkeleton";
 
 export default function ProductPageClient({ productDetails }: { productDetails: any }) {
     const [selectedImage, setSelectedImage] = useState<string>("");
@@ -114,6 +111,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
 
     return (
         <div className="min-h-screen bg-[#f7f7f8] pb-16">
+            {/* inital render section on desktop  */}
             <div className="max-w-8xl mx-auto px-3 sm:px-4 lg:px-8 py-4">
                 <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
                     <Link href="/" className="text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] whitespace-nowrap font-medium">Home</Link>
@@ -125,8 +123,8 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                     <span className="text-slate-600 font-semibold truncate">{productDetails.name}</span>
                 </nav>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2.5 mb-5">
-                    <div className="md:col-span-1 lg:col-span-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-8">
+                    <div className="md:col-span-1 lg:col-span-4 min-w-0">
                         <ProductMainImage
                             selectedImage={selectedImage}
                             setSelectedImage={setSelectedImage}
@@ -148,6 +146,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                             allVariantImages={allVariantImages}
                         />
                     </div>
+                    {/* Sidebar: Only visible on desktop (lg and up) */}
                     <div className="hidden lg:block lg:col-span-3">
                         <ProductSidebar product={productDetails} />
                     </div>
@@ -155,7 +154,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
 
                 <div ref={belowFoldRef}>
                     {isBelowFoldInView && (
-                        <>
+                        <React.Suspense fallback={<div className="h-screen animate-pulse bg-gray-50/50" />}>
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5">
                                 <MoreDetailsProduct
                                     productDescription={productDetails.description?.description}
@@ -168,45 +167,69 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                             </div>
 
                             <section className="space-y-6 mt-4">
-                                {relatedCategory.slug && (
-                                    <LazySection
-                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data)}
-                                        render={(data) => (
-                                            <BasketCard
-                                                title={`More from ${productDetails.brand?.name || "Brand"}`}
-                                                slug={relatedCategory.slug}
-                                                initialData={data}
-                                            />
-                                        )}
-                                        fallback={<SkeletonCard />}
-                                        minHeight="400px"
-                                    />
-                                )}
+                                {/* Deduplicated Section Component */}
+                                {(() => {
+                                    const ProductCarouselSection = ({
+                                        title,
+                                        fetcher,
+                                        slug
+                                    }: {
+                                        title: string;
+                                        fetcher: () => Promise<any>;
+                                        slug: string;
+                                    }) => (
+                                        <LazySection
+                                            fetcher={fetcher}
+                                            render={(data) => (
+                                                <BasketCard
+                                                    title={title}
+                                                    slug={slug}
+                                                    initialData={data}
+                                                />
+                                            )}
+                                            fallback={<SkeletonCard />}
+                                            minHeight="400px"
+                                        />
+                                    );
 
-                                <LazySection fallback={<SkeletonCard />} minHeight="600px">
-                                    <LazyCompareProducts categorySlug={relatedCategory.slug} currentProductId={productDetails.id} />
-                                </LazySection>
+                                    return (
+                                        <>
+                                            {relatedCategory.slug && (
+                                                <ProductCarouselSection
+                                                    title={`More from ${productDetails.brand?.name || "Brand"}`}
+                                                    slug={relatedCategory.slug}
+                                                    fetcher={() => getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data)}
+                                                />
+                                            )}
 
-                                {priceRange && relatedCategory.slug && (
-                                    <LazySection
-                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, max_price: priceRange.max, per_page: 10 }).then(r => r.data)}
-                                        render={(data) => (
-                                            <BasketCard
-                                                title="Similar Price Range"
-                                                slug={relatedCategory.slug}
-                                                initialData={data}
-                                            />
-                                        )}
-                                        fallback={<SkeletonCard />}
-                                        minHeight="400px"
-                                    />
-                                )}
+                                            {relatedCategory.slug && (
+                                                <ProductCarouselSection
+                                                    title="Related Products"
+                                                    slug={relatedCategory.slug}
+                                                    fetcher={() => getCategoryProducts(relatedCategory.slug, { per_page: 10 }).then(r => r.data)}
+                                                />
+                                            )}
 
-                                <LazySection fallback={<div className="h-64 animate-pulse bg-gray-50 rounded-xl" />} minHeight="400px">
+                                            <LazySection fallback={<CompareSkeleton />} minHeight="600px">
+                                                <LazyCompareProducts categorySlug={relatedCategory.slug} currentProductId={productDetails.id} />
+                                            </LazySection>
+
+                                            {priceRange && relatedCategory.slug && (
+                                                <ProductCarouselSection
+                                                    title="Similar Price Range"
+                                                    slug={relatedCategory.slug}
+                                                    fetcher={() => getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, max_price: priceRange.max, per_page: 10 }).then(r => r.data)}
+                                                />
+                                            )}
+                                        </>
+                                    );
+                                })()}
+
+                                <LazySection fallback={<div className="h-[400px] animate-pulse bg-gray-50 rounded-xl" />} minHeight="400px">
                                     <EmiWidget price={Number(productDetails.price?.current || productDetails.discounted_price || productDetails.price)} />
                                 </LazySection>
                             </section>
-                        </>
+                        </React.Suspense>
                     )}
                 </div>
             </div>

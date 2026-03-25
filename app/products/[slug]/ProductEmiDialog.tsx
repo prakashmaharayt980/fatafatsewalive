@@ -81,7 +81,7 @@ const ProductEmiDialog: React.FC<ProductEmiDialogProps> = ({
 
                 {/* EMI Plans List */}
                 <div className="px-5 py-4 space-y-2.5">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Choose Your Plan</p>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">Choose Your Plan</p>
                     {emiPlans.map((plan, idx) => (
                         <div
                             key={idx}
@@ -102,7 +102,7 @@ const ProductEmiDialog: React.FC<ProductEmiDialogProps> = ({
                             {/* Tenure badge */}
                             <div className={cn("w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0", plan.bg, "border", plan.border)}>
                                 <span className={cn("text-base font-extrabold leading-none", plan.color)}>{plan.months}</span>
-                                <span className="text-[8px] font-bold text-slate-400 uppercase">mo</span>
+                                <span className="text-[8px] font-bold text-slate-500 uppercase">mo</span>
                             </div>
 
                             {/* Info */}
@@ -114,11 +114,11 @@ const ProductEmiDialog: React.FC<ProductEmiDialogProps> = ({
                                     )}
                                 </div>
                                 <div className="flex items-baseline gap-1 mt-0.5">
-                                    <span className="text-[10px] text-slate-400">Rs.</span>
+                                    <span className="text-[10px] text-slate-500">Rs.</span>
                                     <span className="text-base font-extrabold text-slate-900 group-hover:text-[var(--colour-fsP2)] transition-colors">
                                         {plan.rate.toLocaleString()}
                                     </span>
-                                    <span className="text-[10px] text-slate-400">/month</span>
+                                    <span className="text-[10px] text-slate-500">/month</span>
                                 </div>
                             </div>
 

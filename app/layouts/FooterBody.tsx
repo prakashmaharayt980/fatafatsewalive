@@ -63,7 +63,7 @@ const FooterBody = () => {
   const DiscoverMore = [
     { title: "Blogs", url: "/blogs" },
     { title: "Trending Products", url: "/products" },
-    { title: "EMI Application", url: "/apply-emi" },
+    { title: "EMI Application", url: "/pages/emi" },
     { title: "Compare Products", url: "/compare" },
   ];
 
