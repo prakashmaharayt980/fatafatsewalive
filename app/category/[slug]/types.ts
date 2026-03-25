@@ -42,6 +42,7 @@ export interface SearchParams {
     emi_enabled?: boolean;
     pre_order?: boolean;
     exchange_available?: boolean;
+    offset?: number;
 }
 
 export const INITIAL_FILTERS: FilterState = {
@@ -71,4 +72,4 @@ export const GRID_CONFIGS = {
     list: 'grid-cols-1',
 } as const;
 
-export type ViewMode =  'grid3' |  'grid4' | 'grid5' | 'list';
+export type ViewMode = 'grid3' | 'grid4' | 'grid5' | 'list';

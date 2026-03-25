@@ -26,9 +26,7 @@ import type {
 import StepProgress from './steps/StepProgress';
 import AddressStep from './steps/AddressStep';
 import RecipientStep from './steps/RecipientStep';
-import DeliveryStep from './steps/DeliveryStep';
 import PaymentStep from './steps/PaymentStep';
-import OrderReviewStep from './steps/OrderReviewStep';
 import CheckoutProduct from './CheckoutProduct';
 import NicAsiaPayment from '../PaymentsBox/NicAsiaPayment';
 import EeswaPayment from '../PaymentsBox/EeswaPayment';
@@ -86,12 +84,68 @@ export default function CheckoutClient() {
         setCheckoutState((prev) => ({ ...prev, currentStep: step }));
     }, []);
 
+    // Order submission
+    const handlePlaceOrder = useCallback(async () => {
+        try {
+            setIsSubmitting(true);
+            const currentItems = cartItems?.items || [];
+            const subtotal = cartItems?.cart_total || 0;
+            const finalTotal = subtotal - (appliedPromo?.discount || 0);
+
+            const payload = {
+                ...checkoutState.address,
+                full_name: userInfo?.name || (checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : 'Guest'),
+                products: currentItems.map((item: any) => ({
+                    product_id: item.product?.id || item?.product_id || item.id,
+                    quantity: item.quantity || 1,
+                })),
+                shipping_address_id: checkoutState.address?.id,
+                total_amount: finalTotal,
+                payment_type: checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'),
+                promo_code: appliedPromo?.code || null,
+
+                recipient: {
+                    self_phone: checkoutState.recipient.type === 'self' ? checkoutState.recipient.phone : null,
+                    gift_recipient_name: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : null,
+                    gift_recipient_phone: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.phone : null,
+                    gift_message: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.message : null,
+                    receiver_number: checkoutState.recipient.phone || null,
+                },
+            };
+
+            await OrderService.CreateOrder(payload).then((res) => {
+                if (res?.data?.order_status === 'Placed' && res?.data?.payment_type === 'nic-asia') {
+                    setProcessingPaymentOrder(res.data.id);
+                }
+                if (res?.success && res?.data?.payment_type !== 'cash') {
+                    if (!isLoggedIn) clearGuestData();
+                    toast.success('Order placed successfully!');
+                    router.push(`/checkout/Successpage/${res.data.id}`);
+                } else if (res?.success && res?.data?.payment_type === 'cash') {
+                    if (!isLoggedIn) clearGuestData();
+                    toast.success('Cash order placed successfully!');
+                    router.push(`/checkout/Successpage/${res.data.id}`);
+                }
+            });
+        } catch (error) {
+            console.error('Order Error', error);
+            setIsSubmitting(false);
+        }
+    }, [cartItems, appliedPromo, checkoutState, userInfo, isLoggedIn, clearGuestData, router]);
+
     const nextStep = useCallback(() => {
         const { currentStep } = checkoutState;
-        if (currentStep < CHECKOUT_STEPS.REVIEW && isStepComplete(currentStep, checkoutState)) {
+        
+        // Final Step (Payment) -> Place Order
+        if (currentStep === CHECKOUT_STEPS.PAYMENT) {
+            handlePlaceOrder();
+            return;
+        }
+
+        if (isStepComplete(currentStep, checkoutState)) {
             setCheckoutState((prev) => ({ ...prev, currentStep: (currentStep + 1) as CheckoutStep }));
         }
-    }, [checkoutState]);
+    }, [checkoutState, handlePlaceOrder]);
 
     const prevStep = useCallback(() => {
         const { currentStep } = checkoutState;
@@ -138,88 +192,7 @@ export default function CheckoutClient() {
         }
     }, [promoCode, cartItems]);
 
-    // Payment handler
-    const handlePayment = async (orderId: number, amount: number) => {
-        const paymentMethodName = checkoutState.paymentMethod.toLowerCase();
 
-        if (paymentMethodName.includes('esewa')) {
-            // Set state to render the EeswaPayment component
-            setProcessingPaymentOrder(orderId);
-        } else if (paymentMethodName.includes('khalti')) {
-            alert('Khalti Test Mode Integration: Redirecting to mock success.');
-            window.location.href = `/checkout/Successpage/${orderId}`;
-        } else if (paymentMethodName.includes('nic-asia')) {
-            // Set state to render the NicAsiaPayment component which handles the redirection
-            setProcessingPaymentOrder(orderId);
-        } else {
-            window.location.href = `/checkout/Successpage/${orderId}`;
-        }
-    };
-
-    // Order submission
-    const handlePlaceOrder = async () => {
-        try {
-            setIsSubmitting(true);
-            const currentItems = cartItems?.items || [];
-            const subtotal = cartItems?.cart_total || 0;
-            const finalTotal = subtotal - (appliedPromo?.discount || 0);
-
-
-            const payload = {
-                ...checkoutState.address,
-                full_name: userInfo?.name || (checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : 'Guest'),
-                products: currentItems.map((item: any) => ({
-                    product_id: item.product?.id || item?.product_id || item.id,
-                    quantity: item.quantity || 1,
-                })),
-                shipping_address_id: checkoutState.address?.id,
-                total_amount: finalTotal,
-                payment_type: checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'),
-                promo_code: appliedPromo?.code || null,
-
-                recipient: {
-                    self_phone: checkoutState.recipient.type === 'self' ? checkoutState.recipient.phone : null,
-                    gift_recipient_name: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : null,
-                    gift_recipient_phone: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.phone : null,
-                    gift_message: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.message : null,
-                    receiver_number: checkoutState.recipient.phone || null,
-                },
-
-
-
-            };
-
-
-            const response = await OrderService.CreateOrder(payload).then((res) => {
-                if (res?.data?.order_status === 'Placed' && res?.data?.payment_type === 'nic-asia') {
-                    // handlePayment(res.data.id, finalTotal);
-                    setProcessingPaymentOrder(res.data.id);
-                }
-                if (res?.success && res?.data?.payment_type !== 'cash') {
-                    if (!isLoggedIn) {
-                        clearGuestData();
-                    }
-                    toast.success('Order placed successfully!');
-                    router.push(`/checkout/Successpage/${res.data.id}`);
-                } else if (res?.success && res?.data?.payment_type === 'cash') {
-                    if (!isLoggedIn) {
-                        clearGuestData();
-                    }
-                    toast.success('Cash order placed successfully!');
-                    router.push(`/checkout/Successpage/${res.data.id}`);
-                }
-            })
-
-
-
-
-
-
-        } catch (error) {
-            console.error('Order Error', error);
-            setIsSubmitting(false);
-        }
-    };
 
     // Loading state
     if (isLoading) {
@@ -257,16 +230,12 @@ export default function CheckoutClient() {
                         onBack={prevStep}
                     />
                 );
-
             case CHECKOUT_STEPS.PAYMENT:
-                // If we are processing a NIC Asia payment, show the loading component
+                // If we are processing a NIC Asia or eSewa payment, show the loading component
                 if (processingPaymentOrder) {
                     if (checkoutState.paymentMethod.toLowerCase().includes('esewa')) {
-                        // Calculate total amount (subtotal + shipping - discount)
                         const subtotal = cartItems?.cart_total || 0;
-                        const shipping = shippingCost;
-                        const discount = appliedPromo?.discount || 0;
-                        const totalAmount = subtotal + shipping - discount;
+                        const totalAmount = subtotal - (appliedPromo?.discount || 0);
                         return <EeswaPayment orderId={processingPaymentOrder} amount={totalAmount} />;
                     }
                     return <NicAsiaPayment orderId={processingPaymentOrder} />;
@@ -278,19 +247,6 @@ export default function CheckoutClient() {
                         onPlaceOrder={nextStep}
                         onBack={prevStep}
                         isSubmitting={isSubmitting}
-                    />
-                );
-
-            case CHECKOUT_STEPS.REVIEW:
-                return (
-                    <OrderReviewStep
-                        state={checkoutState}
-                        onGoToStep={goToStep}
-                        onBack={prevStep}
-                        onPlaceOrder={handlePlaceOrder}
-                        isSubmitting={isSubmitting}
-                        shippingCost={shippingCost}
-                        discount={appliedPromo?.discount || 0}
                     />
                 );
 

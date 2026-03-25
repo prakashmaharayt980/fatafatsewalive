@@ -124,9 +124,13 @@ function LazySection<T = any>({
     >
       {inView ? (
         <>
-          {isLoading && !data ? fallback : null}
-          {renderFn && data ? renderFn(data) : children}
-          {!fetcher && children}
+          {/* Fetcher-based: show fallback while loading, then render data */}
+          {fetcher ? (
+            isLoading || !data ? fallback : renderFn ? renderFn(data!) : null
+          ) : (
+            /* Children-only mode: render exactly once */
+            children
+          )}
         </>
       ) : (
         fallback

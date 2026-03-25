@@ -22,9 +22,11 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
       return []
     }
 
-    return data.images
+    const uniqueImages = Array.from(new Map((data.images || []).map(img => [img.url || img.image?.full || '', img])).values());
+
+    return uniqueImages
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      .slice(0, 2) // Ensure it only takes two images for this specific UI
+      .slice(0, 2) // Strictly ensure only two unique images are rendered for this specific layout
       .map((img) => {
         const cleanAlt = img.content ? img.content.replace(/<[^>]*>?/gm, '').trim() : '';
         return {
@@ -37,6 +39,8 @@ const TwoImageBanner = ({ data }: TwoImageBannerProps) => {
       });
 
   }, [data]);
+
+  if (images.length === 0) return null;
 
   return (
     <div className="w-full px-4 sm:px-6 py-4">

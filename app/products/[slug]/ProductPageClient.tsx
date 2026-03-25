@@ -23,15 +23,45 @@ const MoreDetailsProduct = dynamic(() => import("./MoreDetailsProduct"), {
 });
 import ProductSidebar from "./ProductSidebar";
 
+import { useCartStore } from "@/app/context/CartContext";
 import { trackViewContent } from "@/lib/Analytic";
 import LazySection from "@/components/LazySection";
 import { getCategoryProducts } from "@/app/api/services/category.service";
+import { decorateProduct } from "@/app/api/utils/productDecorator";
 import SkeletonCard from "@/app/skeleton/SkeletonCard";
 
 const BasketCard = dynamic(() => import("@/app/homepage/BasketCard"), { ssr: false });
 const LazyCompareProducts = dynamic(() => import("./LazyCompareProducts"), { ssr: false });
-const EmiWidget = dynamic(() => import("./EmiWidget"), { ssr: false });
-import CompareSkeleton from "@/app/skeleton/CompareSkeleton";
+
+/* ── Extracted Helper Components ── */
+const ProductCarouselSection = ({
+    title,
+    fetcher,
+    slug
+}: {
+    title: string;
+    fetcher: () => Promise<any>;
+    slug: string;
+}) => (
+    <LazySection
+        fetcher={async () => {
+            const resData = await fetcher();
+            // Category products API returns { products: [...] } or just an array
+            const products = resData?.products || (Array.isArray(resData) ? resData : []);
+            const decoratedProducts = products.map((p: any, idx: number) => decorateProduct(p, idx));
+            return { products: decoratedProducts };
+        }}
+        render={(data: any) => (
+            <BasketCard
+                title={title}
+                slug={slug}
+                initialData={data}
+            />
+        )}
+        fallback={<SkeletonCard />}
+        minHeight="400px"
+    />
+);
 
 export default function ProductPageClient({ productDetails }: { productDetails: any }) {
     const [selectedImage, setSelectedImage] = useState<string>("");
@@ -168,66 +198,23 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
 
                             <section className="space-y-6 mt-4">
                                 {/* Deduplicated Section Component */}
-                                {(() => {
-                                    const ProductCarouselSection = ({
-                                        title,
-                                        fetcher,
-                                        slug
-                                    }: {
-                                        title: string;
-                                        fetcher: () => Promise<any>;
-                                        slug: string;
-                                    }) => (
-                                        <LazySection
-                                            fetcher={fetcher}
-                                            render={(data) => (
-                                                <BasketCard
-                                                    title={title}
-                                                    slug={slug}
-                                                    initialData={data}
-                                                />
-                                            )}
-                                            fallback={<SkeletonCard />}
-                                            minHeight="400px"
-                                        />
-                                    );
+                                {relatedCategory.slug && (
+                                    <ProductCarouselSection
+                                        title={`More from ${productDetails.brand?.name || "Brand"}`}
+                                        slug={relatedCategory.slug}
+                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data)}
+                                    />
+                                )}
 
-                                    return (
-                                        <>
-                                            {relatedCategory.slug && (
-                                                <ProductCarouselSection
-                                                    title={`More from ${productDetails.brand?.name || "Brand"}`}
-                                                    slug={relatedCategory.slug}
-                                                    fetcher={() => getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data)}
-                                                />
-                                            )}
+                                <LazyCompareProducts categorySlug={relatedCategory.slug} currentProductId={productDetails.id} />
 
-                                            {relatedCategory.slug && (
-                                                <ProductCarouselSection
-                                                    title="Related Products"
-                                                    slug={relatedCategory.slug}
-                                                    fetcher={() => getCategoryProducts(relatedCategory.slug, { per_page: 10 }).then(r => r.data)}
-                                                />
-                                            )}
-
-                                            <LazySection fallback={<CompareSkeleton />} minHeight="600px">
-                                                <LazyCompareProducts categorySlug={relatedCategory.slug} currentProductId={productDetails.id} />
-                                            </LazySection>
-
-                                            {priceRange && relatedCategory.slug && (
-                                                <ProductCarouselSection
-                                                    title="Similar Price Range"
-                                                    slug={relatedCategory.slug}
-                                                    fetcher={() => getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, max_price: priceRange.max, per_page: 10 }).then(r => r.data)}
-                                                />
-                                            )}
-                                        </>
-                                    );
-                                })()}
-
-                                <LazySection fallback={<div className="h-[400px] animate-pulse bg-gray-50 rounded-xl" />} minHeight="400px">
-                                    <EmiWidget price={Number(productDetails.price?.current || productDetails.discounted_price || productDetails.price)} />
-                                </LazySection>
+                                {priceRange && relatedCategory.slug && (
+                                    <ProductCarouselSection
+                                        title="Similar Price Range"
+                                        slug={relatedCategory.slug}
+                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, per_page: 10 }).then(r => r.data)}
+                                    />
+                                )}
                             </section>
                         </React.Suspense>
                     )}

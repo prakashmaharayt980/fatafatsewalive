@@ -1,12 +1,7 @@
-import Imgbanner from './Imgbanner';
-
-
-
 
 interface HomePageProps {
   mainBannerSection?: React.ReactNode;
 
-  sectionOne?: React.ReactNode;
   offerSection?: React.ReactNode;
   sectionTwo?: React.ReactNode;
   sectionThree?: React.ReactNode;
@@ -23,7 +18,6 @@ interface HomePageProps {
 const HomePage = ({
   mainBannerSection,
   
-  sectionOne,
   offerSection,
   sectionTwo,
   sectionThree,
@@ -50,7 +44,6 @@ const HomePage = ({
       <div className="relative z-10 sm:px-2">
         {mainBannerSection}
         {basketSection0}
-        {sectionOne}
         {basketSection1}
         {basketSection2}
         

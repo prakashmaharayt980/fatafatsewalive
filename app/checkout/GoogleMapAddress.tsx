@@ -1,30 +1,29 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     APIProvider,
     Map,
-    Marker,
     useMap,
     useMapsLibrary,
+    AdvancedMarker,
+    Pin
 } from '@vis.gl/react-google-maps';
-import { Loader2, Crosshair } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2, Crosshair, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 // --- Types ---
-// Matches the structure expected by AddressStep.tsx
 export interface LocationData {
     lat: number;
     lng: number;
-    address: string; // Full address string
+    address: string;
     addressComponents?: {
         province: string;
         district: string;
         municipality: string;
         ward: number;
         tole: string;
-        city: string; // Keep for fallback
+        city: string;
     };
 }
 
@@ -33,232 +32,203 @@ interface GoogleMapAddressProps {
     initialPosition?: Partial<LocationData>;
 }
 
-const defaultCenter = {
-    lat: 27.7172, // Kathmandu
-    lng: 85.3240
-};
+const defaultCenter = { lat: 27.7172, lng: 85.3240 }; // Kathmandu
 
-// --- Main Component ---
 export default function GoogleMapAddress({ onLocationSelect, initialPosition }: GoogleMapAddressProps) {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+    const mapId = process.env.NEXT_PUBLIC_MAP_ID || 'YOUR_MAP_ID_HERE'; // MUST PROVIDE MAP ID
 
-    // Local state for the marker position to ensure UI updates immediately
     const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number }>({
         lat: initialPosition?.lat || defaultCenter.lat,
-        lng: initialPosition?.lng || defaultCenter.lng
+        lng: initialPosition?.lng || defaultCenter.lng,
     });
 
+    // Sync marker when editing an existing address (initialPosition changes)
     useEffect(() => {
         if (initialPosition?.lat && initialPosition?.lng) {
-            setMarkerPosition({
-                lat: initialPosition.lat,
-                lng: initialPosition.lng
-            });
+            setMarkerPosition({ lat: initialPosition.lat, lng: initialPosition.lng });
         }
-    }, [initialPosition]);
+    }, [initialPosition?.lat, initialPosition?.lng]);
 
     return (
-        <div className="w-full h-full rounded-xl overflow-hidden border border-gray-200 relative shadow-sm">
-            <APIProvider apiKey={apiKey} libraries={['places', 'geocoding']}>
+        /* Ensure the container has a fixed height for mobile rendering */
+        <div className="w-full h-52 sm:h-64 rounded-xl overflow-hidden border border-gray-200 relative shadow-sm">
+            <APIProvider apiKey={apiKey}>
                 <MapInternal
+                    mapId={mapId}
                     markerPosition={markerPosition}
                     setMarkerPosition={setMarkerPosition}
                     onLocationSelect={onLocationSelect}
+                    hasInitialPosition={!!(initialPosition?.lat && initialPosition?.lng)}
                 />
             </APIProvider>
         </div>
     );
 }
 
-// --- Map Internal Logic ---
-function MapInternal({ markerPosition, setMarkerPosition, onLocationSelect }: {
-    markerPosition: { lat: number; lng: number },
-    setMarkerPosition: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>,
-    onLocationSelect: (location: LocationData) => void
+function MapInternal({
+    mapId,
+    markerPosition,
+    setMarkerPosition,
+    onLocationSelect,
+    hasInitialPosition,
+}: {
+    mapId: string;
+    markerPosition: { lat: number; lng: number };
+    setMarkerPosition: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>;
+    onLocationSelect: (location: LocationData) => void;
+    hasInitialPosition: boolean;
 }) {
     const map = useMap();
-    const placesLib = useMapsLibrary('places');
     const geocodingLib = useMapsLibrary('geocoding');
 
     const [isLocating, setIsLocating] = useState(false);
-    const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+    const [isGeocoding, setIsGeocoding] = useState(false);
+    const [confirmedAddress, setConfirmedAddress] = useState<string | null>(null);
 
-    // Init Places Service
+    // Initial Sync
     useEffect(() => {
-        if (map && placesLib) {
-            placesServiceRef.current = new placesLib.PlacesService(map);
+        if (hasInitialPosition && map) {
+            map.panTo(markerPosition);
+            map.setZoom(17);
         }
-    }, [map, placesLib]);
+    }, [hasInitialPosition, map]);
 
-    // --- CORE LOGIC: EXTRACT DATA FROM GOOGLE ---
     const handleLocationUpdate = useCallback((lat: number, lng: number) => {
-        // Update local marker immediately
         setMarkerPosition({ lat, lng });
+        setIsGeocoding(true);
+        setConfirmedAddress(null);
 
-        if (!geocodingLib || !placesServiceRef.current) return;
+        if (!geocodingLib) {
+            setIsGeocoding(false);
+            return;
+        }
 
         const geocoder = new geocodingLib.Geocoder();
-
-        // 1. Geocode: Get the Administrative Areas (City, District, Province)
         geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-            if (status === 'OK' && results && results[0]) {
-                const result = results[0];
+            setIsGeocoding(false);
 
-                // Extraction Variables
-                let province = '';
-                let district = '';
-                let municipality = '';
-                let ward = 0;
-                let tole = '';
-                let city = ''; // Fallback
-
-                // Loop through address components to find specific types
-                result.address_components.forEach((comp) => {
-                    const t = comp.types;
-                    // Province
-                    if (t.includes('administrative_area_level_1')) province = comp.long_name;
-                    // District
-                    if (t.includes('administrative_area_level_2')) district = comp.long_name;
-                    // Municipality / City
-                    if (t.includes('administrative_area_level_3') || t.includes('locality')) {
-                        // Prefer level 3 for municipality in Nepal if available, else locality
-                        if (!municipality || t.includes('administrative_area_level_3')) {
-                            municipality = comp.long_name;
-                        }
-                        if (t.includes('locality')) city = comp.long_name;
-                    }
-
-                    // Ward
-                    if (t.includes('active_political') || t.includes('political') || t.includes('sublocality_level_1')) {
-                        // Often wards are just numbers in 'political' or 'sublocality_level_1'
-                        const wardMatch = comp.long_name.match(/\d+/);
-                        if (wardMatch) {
-                            ward = parseInt(wardMatch[0], 10);
-                        }
-                    }
-
-                    // Tole / Area
-                    if (t.includes('neighborhood') || t.includes('route') || t.includes('sublocality')) {
-                        if (!tole) tole = comp.long_name;
-                    }
-                });
-
-                // Fallback for Municipality if empty
-                if (!municipality) municipality = city;
-
-                // 2. Places API (New): Attempt to get a named place (POI)
-                // Using modern Place.searchNearby if available
-                const request = {
-                    fields: ['displayName', 'formattedAddress'],
-                    locationRestriction: {
-                        center: { lat, lng },
-                        radius: 50, // 50 meters
-                    },
-                    maxResultCount: 1,
-                };
-
-                // Check if the new library is loaded and Place is available
-                if (google.maps.places && google.maps.places.Place && google.maps.places.Place.searchNearby) {
-                    google.maps.places.Place.searchNearby(request)
-                        .then((response) => {
-                            let exactLocationName = "";
-                            if (response.places && response.places.length > 0) {
-                                exactLocationName = response.places[0].displayName || "";
-                            }
-
-                            // Construct a clean display address
-                            const displayAddress = (exactLocationName && exactLocationName !== municipality)
-                                ? `${exactLocationName}, ${result.formatted_address}`
-                                : result.formatted_address;
-
-                            emitLocation(displayAddress);
-                        })
-                        .catch((err) => {
-                            console.warn("Places API Search Error:", err);
-                            // Fallback to geocoded address
-                            emitLocation(result.formatted_address);
-                        });
-                } else {
-                    // Fallback if Place API not available or loaded
-                    emitLocation(result.formatted_address);
-                }
-
-                function emitLocation(finalAddress: string) {
-                    onLocationSelect({
-                        lat,
-                        lng,
-                        address: finalAddress,
-                        addressComponents: {
-                            province,
-                            district,
-                            municipality,
-                            ward,
-                            tole,
-                            city
-                        }
-                    });
-                }
+            if (status !== 'OK' || !results?.[0]) {
+                toast.error('Could not detect address for this location');
+                return;
             }
+
+            const result = results[0];
+            let province = '', district = '', municipality = '', city = '', tole = '';
+            let ward = 0;
+
+            result.address_components.forEach((comp) => {
+                const t = comp.types;
+                if (t.includes('administrative_area_level_1')) province = comp.long_name;
+                if (t.includes('administrative_area_level_2')) district = comp.long_name;
+                if (t.includes('locality')) city = comp.long_name;
+                if (t.includes('administrative_area_level_3')) municipality = comp.long_name;
+
+                // Ward logic for Nepal
+                if (t.includes('sublocality_level_1')) {
+                    const wardMatch = comp.long_name.match(/\d+/);
+                    if (wardMatch) ward = parseInt(wardMatch[0], 10);
+                }
+                // Tole / Landmark logic
+                if ((t.includes('neighborhood') || t.includes('sublocality_level_2') || t.includes('route') || t.includes('premise') || t.includes('subpremise') || t.includes('point_of_interest')) && !tole) {
+                    tole = comp.long_name;
+                }
+            });
+
+            const finalAddress = result.formatted_address;
+            setConfirmedAddress(finalAddress);
+
+            onLocationSelect({
+                lat, lng,
+                address: finalAddress,
+                addressComponents: { province, district, municipality: municipality || city, ward, tole, city },
+            });
         });
     }, [geocodingLib, onLocationSelect, setMarkerPosition]);
 
-    // Handle "Locate Me"
     const handleLocateMe = () => {
         if (!navigator.geolocation) {
-            toast.error("Geolocation not supported");
+            toast.error('Geolocation not supported');
             return;
         }
         setIsLocating(true);
+
+        // Critical for Mobile: HighAccuracy and Timeout
         navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const { latitude, longitude } = pos.coords;
-                map?.panTo({ lat: latitude, lng: longitude });
+            ({ coords }) => {
+                const newPos = { lat: coords.latitude, lng: coords.longitude };
+                map?.panTo(newPos);
                 map?.setZoom(17);
-                handleLocationUpdate(latitude, longitude);
+                handleLocationUpdate(newPos.lat, newPos.lng);
                 setIsLocating(false);
             },
-            () => {
-                toast.error("Could not get location");
+            (err) => {
+                toast.error('Permission denied or GPS signal weak.');
                 setIsLocating(false);
-            }
+                console.error(err);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     };
 
     return (
         <>
-            <div className="absolute top-4 right-4 z-[1]">
-                <Button
-                    size="icon"
-                    variant="secondary"
+            {/* Locate Button */}
+            <div className="absolute top-3 right-3 z-[1]">
+                <button
+                    type="button"
                     onClick={handleLocateMe}
-                    disabled={isLocating}
-                    className="h-10 w-10 bg-white shadow-md border-gray-200 hover:bg-gray-50"
-                    type="button" // Prevent form submission
+                    disabled={isLocating || isGeocoding}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-white text-gray-700 text-xs font-bold rounded-xl shadow-md border border-gray-200 hover:bg-gray-50 transition-all"
                 >
-                    {isLocating ? <Loader2 className="w-4 h-4 animate-spin text-blue-600" /> : <Crosshair className="w-4 h-4 text-gray-700" />}
-                </Button>
+                    {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crosshair className="w-3.5 h-3.5" />}
+                    {isLocating ? 'Locating...' : 'Use My Location'}
+                </button>
             </div>
 
+            {/* Status Overlay */}
+            {isGeocoding && (
+                <div className="absolute inset-0 z-[2] bg-black/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+                    <div className="bg-white px-4 py-2 rounded-lg shadow-lg text-xs font-bold flex items-center gap-2">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Fetching Address...
+                    </div>
+                </div>
+            )}
+
+            {/* Address Bar */}
+            {confirmedAddress && (
+                <div className="absolute bottom-4 left-4 right-4 z-[1]">
+                    <div className="bg-white/95 p-3 rounded-lg shadow-xl border border-gray-100 flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-[10px] md:text-xs text-gray-600 line-clamp-2">{confirmedAddress}</p>
+                    </div>
+                </div>
+            )}
+
             <Map
+                mapId={mapId} // REQUIRED for Advanced Markers
                 defaultCenter={defaultCenter}
-                defaultZoom={18}
-                gestureHandling={'greedy'}
-                disableDefaultUI={true}
-                mapTypeId={'satellite'}
-                className="w-full h-full"
+                defaultZoom={15}
+                gestureHandling="greedy"
+                disableDefaultUI
                 onClick={(e) => {
                     if (e.detail.latLng) {
                         handleLocationUpdate(e.detail.latLng.lat, e.detail.latLng.lng);
                     }
                 }}
             >
-                <Marker
+                {/* Advanced Marker Component */}
+                <AdvancedMarker
                     position={markerPosition}
                     draggable={true}
                     onDragEnd={(e) => {
-                        if (e.latLng) handleLocationUpdate(e.latLng.lat(), e.latLng.lng());
+                        if (e.latLng) {
+                            handleLocationUpdate(e.latLng.lat(), e.latLng.lng());
+                        }
                     }}
-                />
+                >
+                    <Pin background={'#fb2c36'} glyphColor={'#fff'} borderColor={'#000'} />
+                </AdvancedMarker>
             </Map>
         </>
     );

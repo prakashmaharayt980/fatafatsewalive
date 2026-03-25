@@ -2,7 +2,6 @@
 
 import React from "react";
 import type { ProductData } from "@/app/types/ProductDetailsTypes";
-import EmiWidget from "./EmiWidget";
 import TrustWidget from "./TrustWidget";
 import PartnersWidget from "./PartnersWidget";
 
@@ -19,7 +18,6 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({ product }) => {
 
     return (
         <div className="space-y-3 lg:sticky lg:top-24">
-            {product.emi_enabled && <EmiWidget price={Number(baseCurrentPrice)} />}
             <TrustWidget />
             <PartnersWidget />
         </div>

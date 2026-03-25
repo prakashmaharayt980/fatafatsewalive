@@ -8,7 +8,6 @@ export const CHECKOUT_STEPS = {
     ADDRESS: 0,
     RECIPIENT: 1,
     PAYMENT: 2,
-    REVIEW: 3,
 } as const;
 
 export type CheckoutStep = (typeof CHECKOUT_STEPS)[keyof typeof CHECKOUT_STEPS];
@@ -17,7 +16,6 @@ export const STEP_LABELS: Record<CheckoutStep, string> = {
     [CHECKOUT_STEPS.ADDRESS]: 'Shipping',
     [CHECKOUT_STEPS.RECIPIENT]: 'Recipient',
     [CHECKOUT_STEPS.PAYMENT]: 'Payment',
-    [CHECKOUT_STEPS.REVIEW]: 'Review',
 };
 
 // ========================
@@ -146,8 +144,6 @@ export function isStepComplete(step: CheckoutStep, state: CheckoutState): boolea
 
         case CHECKOUT_STEPS.PAYMENT:
             return state.paymentMethod !== '';
-        case CHECKOUT_STEPS.REVIEW:
-            return true; // Review step is complete by default to allow placement
         default:
             return false;
     }

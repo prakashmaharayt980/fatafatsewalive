@@ -277,9 +277,9 @@ export default function MoreDetailsProduct({
                           <IconRenderer
                             iconKey={key}
                             size={15}
-                            className="mt-0.5 shrink-0 text-[var(--colour-fsP2)]/70"
+                            className="mt-0.5 shrink-0 font-bold text-[var(--colour-fsP2)]"
                           />
-                          <dt className="w-28 shrink-0 text-[11px] font-medium text-gray-400 uppercase tracking-wide pt-px">
+                          <dt className=" shrink-0 text-[11px] font-bold text-[var(--colour-fsP2)] uppercase tracking-wide pt-px">
                             {key}
                           </dt>
                         </div>
@@ -331,73 +331,70 @@ export default function MoreDetailsProduct({
       </div>
 
 
-      {/* Reviews Section — Rating Summary + Review Cards */}
+      {/* Reviews Section */}
       <div className="mt-12" id="reviews">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-1.5 h-6 bg-[var(--colour-fsP2)] rounded-full"></div>
-          <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Ratings & Reviews</h2>
+
+        {/* Header */}
+        <div className="flex items-center gap-2.5 mb-6">
+          <h2 className="text-base font-bold text-slate-800 uppercase tracking-wide">Ratings & Reviews</h2>
           {reviews?.meta?.total ? (
-            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
               {reviews.meta.total} {reviews.meta.total === 1 ? 'review' : 'reviews'}
             </span>
           ) : null}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
 
-          {/* LEFT: Rating Summary Card */}
+          {/* LEFT: Rating Summary */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-7 space-y-6 lg:sticky lg:top-24 shadow-sm">
-              {/* Overall Rating */}
-              <div className="flex items-center gap-5">
-                <div className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm text-gray-900 text-3xl font-black tracking-tighter">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 lg:sticky lg:top-24">
+
+              {/* Score + stars */}
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-16 h-16 rounded-xl bg-[#EBF3FC] flex items-center justify-center text-2xl font-black text-[var(--colour-fsP2)] tracking-tighter flex-shrink-0">
                   {reviews?.meta?.average_rating?.toFixed(1) || product?.average_rating?.toFixed(1) || '0.0'}
                 </div>
                 <div>
-                  <div className="flex items-center gap-1 mb-1">
+                  <div className="flex items-center gap-0.5 mb-1.5">
                     {Array.from({ length: 5 }, (_, i) => {
                       const avg = reviews?.meta?.average_rating || product?.average_rating || 0;
                       return (
                         <Star
                           key={i}
-                          size={16}
+                          size={14}
                           className={cn(
-                            i < Math.round(avg) ? 'fill-[var(--colour-fsP2)] text-[var(--colour-fsP2)]' : 'text-gray-200'
+                            i < Math.round(avg)
+                              ? 'fill-[var(--colour-fsP2)] text-[var(--colour-fsP2)]'
+                              : 'text-gray-200 fill-gray-200'
                           )}
                         />
                       );
                     })}
                   </div>
-                  <p className="text-sm font-medium text-gray-900">Overall Rating</p>
-                  <p className="text-xs text-gray-500">
-                    Based on {reviews?.meta?.total || 0} reviews
-                  </p>
+                  <p className="text-xs font-semibold text-gray-700">Overall Rating</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Based on {reviews?.meta?.total || 0} reviews</p>
                 </div>
               </div>
 
-              {/* Separator */}
-              <div className="h-px bg-gray-100 w-full" />
+              <div className="h-px bg-gray-100 mb-4" />
 
-              {/* Star distribution bars */}
-              <div className="space-y-3">
+              {/* Bar distribution */}
+              <div className="space-y-2.5">
                 {[5, 4, 3, 2, 1].map((star) => {
                   const count = reviews?.data?.filter(r => r.rating === star).length || 0;
                   const total = reviews?.data?.length || 0;
                   const pct = total > 0 ? (count / total) * 100 : 0;
-
                   return (
-                    <div key={star} className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 w-8 flex-shrink-0">
-                        <span className="text-[11px] font-bold text-slate-600">{star}</span>
-                        <Star size={10} className="fill-slate-400 text-slate-400" />
-                      </div>
-                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden border border-gray-200/50">
+                    <div key={star} className="flex items-center gap-2.5">
+                      <span className="text-[10px] font-bold text-slate-400 w-3 text-right">{star}</span>
+                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-[var(--colour-fsP2)] transition-all duration-500 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)]"
+                          className="h-full rounded-full bg-[var(--colour-fsP2)] transition-all duration-500"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-400 w-8 text-right tabular-nums">{count}</span>
+                      <span className="text-[10px] font-semibold text-slate-400 w-4 text-right tabular-nums">{count}</span>
                     </div>
                   );
                 })}
@@ -405,87 +402,89 @@ export default function MoreDetailsProduct({
 
               {/* Write review CTA */}
               {!Rating.commentOpen && (
-                <Button
+                <button
                   onClick={handleWriteReviewClick}
-                  className="w-full h-11 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold rounded-xl shadow-sm text-sm transition-all active:scale-[0.98]"
+                  className="mt-5 w-full h-10 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
-                  <MessageCircleMore className="w-5 sm:w-5 h-5 sm:h-5 mr-2" /> Write a Review
-                </Button>
+                  <MessageCircleMore className="w-4 h-4" />
+                  Write a Review
+                </button>
               )}
             </div>
           </div>
 
-          {/* RIGHT: Review Form + Review Cards */}
-          <div className="lg:col-span-8 space-y-4">
+          {/* RIGHT: Form + Cards */}
+          <div className="lg:col-span-8 space-y-3">
 
-            {/* Review Form (Inline) */}
+            {/* Review Form */}
             {Rating.commentOpen && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                <h3 className="text-sm font-bold text-gray-900">Share your experience</h3>
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                <h3 className="text-sm font-bold text-gray-800">Share your experience</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
+
                   {/* Star picker */}
                   <div>
-                    <label className="text-xs font-medium text-gray-500 mb-2 block">Tap to rate</label>
+                    <label className="text-[11px] font-medium text-gray-400 mb-2 block">Your rating</label>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           type="button"
                           aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
-                          className="focus:outline-none cursor-pointer transition-transform hover:scale-110"
+                          className="focus:outline-none cursor-pointer"
                           onClick={() => setRating({ ...Rating, newRating: star })}
                           onMouseEnter={() => setRating({ ...Rating, hoverRating: star })}
                           onMouseLeave={() => setRating({ ...Rating, hoverRating: 0 })}
                         >
                           <Star
-                            size={28}
+                            size={26}
                             className={cn(
-                              "transition-colors duration-150",
+                              "transition-colors duration-100",
                               star <= (Rating.hoverRating || Rating.newRating)
-                                ? 'text-amber-400 fill-amber-400'
-                                : 'text-gray-200 hover:text-amber-200'
+                                ? 'text-[var(--colour-fsP2)] fill-[var(--colour-fsP2)]'
+                                : 'text-gray-200 fill-gray-200'
                             )}
                           />
                         </button>
                       ))}
                       {Rating.newRating > 0 && (
-                        <span className="ml-2 text-xs font-semibold text-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/10 px-2 py-0.5 rounded-full">
+                        <span className="ml-2 text-[10px] font-bold text-[var(--colour-fsP2)] bg-[#EBF3FC] px-2 py-0.5 rounded-full">
                           {Rating.newRating}/5
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Text */}
+                  {/* Textarea */}
                   <Textarea
                     ref={reviewTextareaRef}
                     placeholder="What did you like or dislike? How was the quality?"
                     value={Rating.newReview}
                     onChange={(e) => setRating({ ...Rating, newReview: e.target.value })}
-                    className="w-full min-h-[100px] resize-none bg-gray-50 border-gray-200 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20 rounded-xl text-sm"
+                    className="w-full min-h-[90px] resize-none bg-gray-50 border-gray-100 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20 rounded-xl text-sm"
                   />
 
                   {/* Image Upload */}
                   <div>
-                    <label className="text-xs font-medium text-gray-500 mb-2 block">Add Photos</label>
-                    <div className="flex flex-wrap gap-3">
+                    <label className="text-[11px] font-medium text-gray-400 mb-2 block">Add photos (optional)</label>
+                    <div className="flex flex-wrap gap-2.5">
                       {Rating.images.map((file, index) => (
-                        <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group">
+                        <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-100 group">
                           {file && (
                             <Image
                               src={URL.createObjectURL(file)}
                               alt="Preview"
-                              width={80}
-                              height={80}
+                              width={64}
+                              height={64}
                               className="w-full h-full object-cover"
                             />
                           )}
                           <button
                             type="button"
                             onClick={() => removeImage(index)}
-                            className="absolute cursor-pointer top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 w-4 h-4 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                           >
-                            <X size={12} />
+                            <X size={10} />
                           </button>
                         </div>
                       ))}
@@ -493,10 +492,10 @@ export default function MoreDetailsProduct({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="w-20 h-20 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-colors bg-gray-50"
+                          className="w-16 h-16 cursor-pointer rounded-lg border border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-300 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-colors bg-gray-50"
                         >
-                          <Camera size={20} />
-                          <span className="text-[10px] font-medium">Add</span>
+                          <Camera size={16} />
+                          <span className="text-[9px] font-medium">Add</span>
                         </button>
                       )}
                     </div>
@@ -510,29 +509,23 @@ export default function MoreDetailsProduct({
                     />
                   </div>
 
-
                   {/* Actions */}
-                  <div className="flex items-center justify-end gap-2 pt-2">
-                    <Button
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setRating({ ...Rating, commentOpen: false, newRating: 0, newReview: '', images: [] })
-                      }
-                      className="text-gray-500 cursor-pointer hover:text-gray-700"
+                      onClick={() => setRating({ ...Rating, commentOpen: false, newRating: 0, newReview: '', images: [] })}
+                      className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer px-3 py-1.5 transition-colors"
                     >
                       Cancel
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                       type="submit"
-                      size="sm"
                       disabled={!Rating.newReview.trim() || Rating.newRating === 0}
-                      className="bg-[var(--colour-fsP2)] cursor-pointer hover:bg-[var(--colour-fsP2)]/90 text-white font-semibold px-5 rounded-lg"
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--colour-fsP2)] text-white text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--colour-fsP2)]/90 cursor-pointer transition-colors"
                     >
-                      <Send className="w-3.5 h-3.5 mr-1.5" />
-                      Submit Review
-                    </Button>
+                      <Send className="w-3 h-3" />
+                      Submit
+                    </button>
                   </div>
                 </form>
               </div>
@@ -540,69 +533,61 @@ export default function MoreDetailsProduct({
 
             {/* Review Cards */}
             {reviews?.meta && reviews.meta.total > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {reviews.data.map((review, index) => {
-                  const ratingLabel =
-                    review.rating >= 4 ? 'text-emerald-700 bg-emerald-50 border-emerald-100' :
-                      review.rating === 3 ? 'text-amber-700 bg-amber-50 border-amber-100' :
-                        'text-red-700 bg-red-50 border-red-100';
+                  const pillStyle =
+                    review.rating >= 4 ? 'text-emerald-700 bg-emerald-50' :
+                      review.rating === 3 ? 'text-amber-700 bg-amber-50' :
+                        'text-red-700 bg-red-50';
 
                   return (
-                    <div key={review.id || index} className="bg-gray-50/50 rounded-2xl border border-gray-100/60 p-5 sm:p-6 transition-colors hover:bg-gray-50/80">
-                      {/* Top row: avatar + name + rating badge + date */}
-                      <div className="flex items-start gap-4">
-                        <Avatar className="w-10 h-10 flex-shrink-0 border bg-white border-white shadow-sm ring-1 ring-gray-100">
+                    <div
+                      key={review.id || index}
+                      className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5"
+                    >
+                      {/* Top: avatar + name + badge + date */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="w-9 h-9 flex-shrink-0">
                           <AvatarImage src={review.user.avatar_image?.thumb || menpersonIcon} className="object-cover" />
-                          <AvatarFallback className="bg-slate-100 text-slate-700 font-black text-xs">
+                          <AvatarFallback className="bg-[#EBF3FC] text-[var(--colour-fsP2)] font-black text-xs">
                             {review.user.name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                              <span className="text-sm font-bold text-gray-900 truncate tracking-tight">{review.user.name}</span>
-                              <span className={cn(
-                                "inline-flex items-center gap-1 text-[10px] font-black px-1.5 py-0.5 rounded border shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)]",
-                                ratingLabel
-                              )}>
-                                <Star size={10} className="fill-current" />
-                                {review.rating}
-                              </span>
-                            </div>
-                            <time className="text-[11px] font-medium text-slate-400 flex-shrink-0">
-                              {new Date(review.created_at).toLocaleDateString(undefined, {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </time>
-                          </div>
 
-                          {/* Verified badge */}
-                          <div className="flex items-center gap-1 mt-1">
-                            <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 text-white" />
-                            </div>
-                            <span className="text-[10px] text-emerald-600 font-bold tracking-tight">Verified Buyer</span>
-                          </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-bold text-gray-900 block truncate">{review.user.name}</span>
+                          <span className="text-[10px] text-emerald-600 font-semibold">✓ Verified Buyer</span>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <span className={cn("text-[10px] font-black px-1.5 py-0.5 rounded-md", pillStyle)}>
+                            ★ {review.rating}
+                          </span>
+                          <time className="text-[10px] text-gray-400">
+                            {new Date(review.created_at).toLocaleDateString(undefined, {
+                              year: 'numeric', month: 'short', day: 'numeric',
+                            })}
+                          </time>
                         </div>
                       </div>
 
-                      {/* Stars row */}
-                      <div className="flex items-center gap-0.5 mt-4 ml-[56px] opacity-90">
+                      {/* Stars */}
+                      <div className="flex items-center gap-0.5 mb-2">
                         {Array.from({ length: 5 }, (_, i) => (
                           <Star
                             key={i}
-                            size={14}
+                            size={12}
                             className={cn(
-                              i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'
+                              i < review.rating
+                                ? 'fill-[var(--colour-fsP2)] text-[var(--colour-fsP2)]'
+                                : 'text-gray-200 fill-gray-200'
                             )}
                           />
                         ))}
                       </div>
 
-                      {/* Review text */}
-                      <p className="text-sm text-slate-700 font-medium leading-relaxed mt-2.5 ml-[56px] whitespace-pre-line">
+                      {/* Text */}
+                      <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                         {review.review}
                       </p>
                     </div>
@@ -610,38 +595,32 @@ export default function MoreDetailsProduct({
                 })}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <MessageCircle className="w-6 h-6 text-gray-300" />
+              <div className="flex flex-col items-center justify-center py-14 text-center bg-white rounded-2xl border border-gray-100">
+                <div className="w-12 h-12 bg-[#EBF3FC] rounded-full flex items-center justify-center mb-3">
+                  <MessageCircle className="w-5 h-5 text-[var(--colour-fsP2)]" />
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-1">No reviews yet</h3>
-                <p className="text-sm text-gray-500 max-w-xs mb-5">
-                  Be the first to share your experience with this product.
-                </p>
+                <h3 className="text-sm font-bold text-gray-800 mb-1">No reviews yet</h3>
+                <p className="text-xs text-gray-400 max-w-xs mb-4">Be the first to share your experience.</p>
                 {!Rating.commentOpen && (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     onClick={handleWriteReviewClick}
-                    className="rounded-lg cursor-pointer border-gray-300 text-gray-700 font-medium"
+                    className="text-xs font-semibold text-[var(--colour-fsP2)] border border-[var(--colour-fsP2)]/30 px-4 py-1.5 rounded-lg hover:bg-[#EBF3FC] transition-colors cursor-pointer"
                   >
                     Write First Review
-                  </Button>
+                  </button>
                 )}
               </div>
             )}
 
             {/* Pagination */}
             {reviews?.meta && reviews.meta.last_page > 1 && (
-              <div className="flex items-center justify-center gap-1.5 pt-4">
+              <div className="flex items-center justify-center gap-1 pt-2">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className={cn(
-                    "w-8 h-8 rounded-lg flex cursor-pointer items-center justify-center text-sm transition-colors",
-                    currentPage === 1
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-600 hover:bg-gray-100"
+                    "w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors cursor-pointer",
+                    currentPage === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:bg-gray-100"
                   )}
                 >
                   <ChevronDown className="w-4 h-4 -rotate-90" />
@@ -658,10 +637,10 @@ export default function MoreDetailsProduct({
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={cn(
-                          "w-8 h-8 rounded-lg cursor-pointer text-sm font-medium transition-all",
+                          "w-8 h-8 rounded-lg text-xs font-semibold transition-colors cursor-pointer",
                           page === currentPage
-                            ? "bg-[var(--colour-fsP2)] text-white shadow-sm"
-                            : "text-gray-600 hover:bg-gray-100"
+                            ? "bg-[var(--colour-fsP2)] text-white"
+                            : "text-gray-500 hover:bg-gray-100"
                         )}
                       >
                         {page}
@@ -669,7 +648,7 @@ export default function MoreDetailsProduct({
                     );
                   } else if (page === currentPage - 2 || page === currentPage + 2) {
                     return (
-                      <span key={page} className="w-8 h-8 flex items-center justify-center text-gray-400 text-xs">
+                      <span key={page} className="w-8 h-8 flex items-center justify-center text-gray-300 text-xs">
                         ...
                       </span>
                     );
@@ -681,10 +660,8 @@ export default function MoreDetailsProduct({
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === reviews.meta.last_page}
                   className={cn(
-                    "w-8 h-8 rounded-lg flex cursor-pointer items-center justify-center text-sm transition-colors",
-                    currentPage === reviews.meta.last_page
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-600 hover:bg-gray-100"
+                    "w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors cursor-pointer",
+                    currentPage === reviews.meta.last_page ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:bg-gray-100"
                   )}
                 >
                   <ChevronDown className="w-4 h-4 rotate-90" />

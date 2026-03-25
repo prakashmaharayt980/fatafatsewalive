@@ -812,8 +812,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     );
 
     return (
-        <div className="bg-gray-50 min-h-screen py-3 sm:py-5">
-            <div className="max-w-6xl mx-auto px-3 sm:px-5 lg:px-6">
+        <div className="bg-gray-50 min-h-screen py-2 sm:py-4">
+            <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-5">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
                     <Button variant="link" className="p-0 h-auto text-(--colour-fsP2) hover:underline text-xs font-medium" onClick={() => router.push('/')}>
@@ -828,8 +828,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 </nav>
 
                 {/* Mobile-only product + monthly EMI summary bar */}
-                <div className="lg:hidden mb-3 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="flex items-center gap-3 p-3">
+                <div className="lg:hidden mb-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-2 p-2.5">
                         <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
                             {product?.thumb?.url || product?.images?.[0]?.url ? (
                                 <Image src={product.thumb?.url || product.images?.[0]?.url || ''} alt={product?.name || 'Product'} fill sizes="48px" className="object-contain p-0.5" />
@@ -851,18 +851,18 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 </div>
 
                 {/* Progress Bar */}
-                <div className="mb-4">
+                <div className="mb-3">
                     <ProgressBar currentstep={currentstep} onStepClick={setcurrentstep} />
                 </div>
 
                 {/* Main Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mt-2">
                     {/* Left Column - Steps */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-3">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
                             {/* Step Header */}
-                            <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50/20 flex items-center justify-between">
+                            <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50/20 flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-gray-900">
                                     {currentstep === 0 && 'Choose EMI Method'}
                                     {currentstep > 0 && currentstep < 4 && currentFormSection?.title}
@@ -873,7 +873,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                 </span>
                             </div>
 
-                            <div className="p-5 sm:p-6">
+                            <div className="p-3 sm:p-4">
                                 {/* Step 0: Option Selection */}
                                 {currentstep === 0 && (
                                     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
@@ -1020,7 +1020,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
                                 {/* Form Sections: Steps 1, 2, 3 */}
                                 {currentstep > 0 && currentstep < 4 && currentFormSection && (
-                                    <div className="animate-in slide-in-from-right-4 duration-300 space-y-6">
+                                    <div className="animate-in slide-in-from-right-4 duration-300 space-y-4">
 
                                         {currentFormSection.sectionKey === 'bankinfo' && selectedOption === 'creditCard' ? (
                                             <CreditCardform
@@ -1028,7 +1028,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                 errors={errors}
                                             />
                                         ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                                                 {currentFormSection.fields.map((field, index) => (
                                                     <FormField key={index} field={field} error={errors[field.name]} />
                                                 ))}
@@ -1039,7 +1039,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                         {currentFormSection.additionalContent}
 
                                         {/* Navigation Buttons */}
-                                        <div className="mt-6 flex items-center justify-between pt-5 border-t border-gray-100">
+                                        <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-100">
                                             <Button
                                                 variant="outline"
                                                 onClick={handleBack}

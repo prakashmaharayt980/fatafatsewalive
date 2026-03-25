@@ -33,6 +33,7 @@ const ProductCoupons = dynamic(() => import("./ProductCoupons"), { ssr: false })
 const ShareDialog = dynamic(() => import("./ShareDialog"), { ssr: false });
 const PreOrderDialog = dynamic(() => import("./PreOrderDialog"), { ssr: false });
 const ProductEmiDialog = dynamic(() => import("./ProductEmiDialog"), { ssr: false });
+const EmiWidget = dynamic(() => import("./EmiWidget"), { ssr: false });
 
 import useSWR from "swr";
 import type { CategorySlug_ID } from "@/app/types/category";
@@ -399,8 +400,14 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
             </div>
 
             {/* ── Coupons ── */}
-            <div className="px-4 pb-3 border-t border-gray-50 pt-3">
+            <div className="px-4 py-3 border-t border-gray-50">
                 <ProductCoupons />
+
+                {product.emi_enabled && (
+                    <div className="mt-3">
+                        <EmiWidget price={Number(currentPrice)} />
+                    </div>
+                )}
             </div>
 
 

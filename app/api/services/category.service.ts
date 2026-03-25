@@ -34,6 +34,7 @@ export const getCategoryProducts = async (slug: string, params?: SearchParams) =
     if (params?.emi_enabled !== undefined) queryParams.append('emi_enabled', params.emi_enabled.toString());
     if (params?.pre_order !== undefined) queryParams.append('pre_order', params.pre_order.toString());
     if (params?.exchange_available !== undefined) queryParams.append('exchange_available', params.exchange_available.toString());
+    if (params?.offset !== undefined) queryParams.append('offset', params.offset.toString());
     queryParams.append('include', 'brand,categories');
     const query = queryParams.toString();
     try {

@@ -2,15 +2,11 @@
 
 import type { Metadata } from 'next';
 import HomePage from './homepage';
-import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import SkeletonCard from '@/app/skeleton/SkeletonCard';
-import SkeletonBanner from '@/app/skeleton/SkeletonBanner';
-import BannerCarouselServer from '@/components/BannerCarouselServer';
+
+
 import BannerSectionServer from '@/components/BannerSectionServer';
 
 
-import BasketSectionServer from '@/components/BasketSectionServer';
 import BasketSectionClient from '@/components/BasketSectionClient';
 import OfferSectionClient from '@/components/OfferSectionClient';
 import OurArticlesSectionClient from '@/components/OurArticlesSectionClient';
@@ -89,7 +85,7 @@ import TopHeroSection from '@/components/TopHeroSection';
 
 async function Page() {
   const firstCategory = demoCategories[0];
-  
+
   // All other sections lazy-load on scroll
   const remainingCategories = demoCategories.slice(1);
   const basketSections = Object.fromEntries(remainingCategories.map((cat, index) => [
@@ -114,27 +110,19 @@ async function Page() {
       <HomePage
         {...basketSections}
         mainBannerSection={
-          <TopHeroSection 
-            slug={firstCategory.slug} 
-            title={firstCategory.title} 
+          <TopHeroSection
+            slug={firstCategory.slug}
+            title={firstCategory.title}
           />
-        }
-        sectionOne={
-          <LazySection
-            fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}
-            aspectRatio="5/1"
-            rootMargin="100px"
-            priority={true} // Priority for the first banner below fold
-          >
-            <Suspense fallback={<div className="w-full aspect-[5/1] bg-gray-100 animate-pulse rounded" />}>
-              <BannerSectionServer slug={bannerSections[0].slug} type={bannerSections[0].type} />
-            </Suspense>
-          </LazySection>
         }
         offerSection={<OfferSectionClient />}
         sectionTwo={
-          <LazySection fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />} aspectRatio="1000/250" rootMargin="0px">
-            <Suspense fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}><BannerSectionServer slug={bannerSections[1].slug} type={bannerSections[1].type} /></Suspense>
+          <LazySection
+            fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}
+            aspectRatio="1000/250"
+            rootMargin="0px"
+          >
+            <BannerSectionServer slug={bannerSections[1].slug} type={bannerSections[1].type} />
           </LazySection>
         }
         ourArticlesSection={<OurArticlesSectionClient />}

@@ -28,6 +28,8 @@ const TopBanner = ({ data }: TopBannerProps) => {
   // Fallback image if no banner data
   const bannerImage = images[0] || { src: '', name: 'Top Banner', link: '' };
 
+  if (!bannerImage.src) return null;
+
   const BannerContent = (
     <div
       className={cn(

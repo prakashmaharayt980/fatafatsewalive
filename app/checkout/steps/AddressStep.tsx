@@ -152,7 +152,12 @@ export default function AddressStep({
             city: address.address.city || '',
             houseNo: address.address.house_no || '',
             landmark: address.address.landmark || '',
-            full_address: address.address.landmark || address.address.city || '',
+            full_address: [
+                address.address.landmark,
+                address.address.city,
+                address.address.district,
+                address.address.province,
+            ].filter(Boolean).join(', ') || '',
             country: address.address.country || 'Nepal',
             first_name: address.contact_info?.first_name || '',
             last_name: address.contact_info?.last_name || '',
@@ -177,7 +182,7 @@ export default function AddressStep({
                 province: location.addressComponents?.province || prev.province,
                 district: location.addressComponents?.district || prev.district,
                 city: location.addressComponents?.municipality || location.addressComponents?.city || prev.city,
-                landmark: location.addressComponents?.tole || prev.landmark,
+                landmark: location.addressComponents?.tole || location.addressComponents?.city || prev.landmark,
                 full_address: location.address,
                 country: 'Nepal'
             }));
@@ -187,19 +192,12 @@ export default function AddressStep({
     };
 
     const handleSaveAddress = async () => {
-        // Different validation for GPS vs Manual mode
-        if (addressEntryMode === 'manual') {
-            // Manual mode: validate all detailed fields
-            if (!formData.province || !formData.district || !formData.city) {
-                toast.error("Please fill in all required fields (Province, District, City)");
-                return;
-            }
-        } else {
-            // GPS mode: only validate that we have an address
-            if (!formData.full_address) {
-                toast.error("Please select a location on the map or enter an address");
-                return;
-            }
+        // Unified form: validate map-selected OR manual fields
+        const hasGeoAddress = !!formData.full_address;
+        const hasManualAddress = !!(formData.province && formData.district && formData.city);
+        if (!hasGeoAddress && !hasManualAddress) {
+            toast.error("Please select a location on the map OR fill in Province, District and City");
+            return;
         }
 
         setIsSaving(true);
@@ -224,68 +222,72 @@ export default function AddressStep({
         };
 
         try {
-            let savedAddress: ShippingAddress;
+            // Build a properly-nested ShippingAddress object from form data
+            // This ensures the address list ALWAYS gets the correct structure
+            // regardless of what shape the API returns
+            const fullAddress = formData.full_address || [formData.landmark, formData.city, formData.district, formData.province].filter(Boolean).join(', ');
+            const localAddress: ShippingAddress = {
+                id: selectedAddressId || -1,
+                contact_info: {
+                    first_name: addressPayload.first_name,
+                    last_name: addressPayload.last_name,
+                    contact_number: addressPayload.contact_number,
+                },
+                geo: {
+                    lat: mapLocation?.lat || null,
+                    lng: mapLocation?.lng || null,
+                },
+                address: {
+                    label: formData.label,
+                    landmark: formData.landmark,
+                    city: formData.city,
+                    district: formData.district,
+                    province: formData.province,
+                    country: formData.country || 'Nepal',
+                    is_default: savedAddresses.length === 0,
+                    state: formData.province,
+                }
+            };
 
             if (!isLoggedIn) {
-                // For guest users, we need to construct the nested structure to match ShippingAddress
-                const nestedGuestAddress: ShippingAddress = {
-                    id: selectedAddressId || Date.now(),
-                    contact_info: {
-                        first_name: addressPayload.first_name,
-                        last_name: addressPayload.last_name,
-                        contact_number: addressPayload.contact_number,
-                    },
-                    geo: {
-                        lat: addressPayload.lat,
-                        lng: addressPayload.lng,
-                    },
-                    address: {
-                        label: addressPayload.label,
-                        landmark: addressPayload.landmark,
-                        city: addressPayload.city,
-                        district: addressPayload.district,
-                        province: addressPayload.province,
-                        country: addressPayload.country,
-                        is_default: addressPayload.is_default,
-                        state: addressPayload.state,
-                    }
-                };
+                const guestId = selectedAddressId || Date.now();
+                const guestAddress = { ...localAddress, id: guestId };
 
                 if (selectedAddressId) {
-                    updateGuestAddress(selectedAddressId, nestedGuestAddress);
-                    toast.success("Guest Address updated successfully");
+                    updateGuestAddress(selectedAddressId, guestAddress);
+                    toast.success('Address updated');
                 } else {
-                    addGuestAddress(nestedGuestAddress);
-                    toast.success("Guest Address saved successfully");
+                    addGuestAddress(guestAddress);
+                    toast.success('Address saved');
                 }
 
-                // Allow state effect to update it or manually select from payload
-                // In store it generates `id: Date.now()`, so for brand new guest addresses 
-                // we should let `filteredAddresses`/`guestAddresses` sync but we need an ID to select it.
-                // We'll just rely on user picking from the list next, or auto-pick the first local.
+                onAddressSelect(guestAddress);
+                setSelectedAddressId(guestId);
                 setViewMode('list');
                 return;
             }
 
             if (selectedAddressId) {
-                // Update existing
-                savedAddress = await AddressService.ShippingAddressUpdate(selectedAddressId, addressPayload);
-                setSavedAddresses(prev => prev.map(a => a.id === selectedAddressId ? savedAddress : a));
-                toast.success("Address updated successfully");
+                // API call for persistence — use local nested object for state
+                await AddressService.ShippingAddressUpdate(selectedAddressId, addressPayload);
+                const updatedAddress = { ...localAddress, id: selectedAddressId };
+                setSavedAddresses(prev => prev.map(a => a.id === selectedAddressId ? updatedAddress : a));
+                onAddressSelect(updatedAddress);
+                setSelectedAddressId(selectedAddressId);
+                toast.success('Address updated');
             } else {
-                // Create new
-                savedAddress = await AddressService.CreateShippingAddress(addressPayload);
-                setSavedAddresses(prev => [...prev, savedAddress]);
-                toast.success("Address saved successfully");
+                const apiResult = await AddressService.CreateShippingAddress(addressPayload);
+                const newAddress = { ...localAddress, id: apiResult?.id || Date.now() };
+                setSavedAddresses(prev => [...prev, newAddress]);
+                onAddressSelect(newAddress);
+                setSelectedAddressId(newAddress.id || null);
+                toast.success('Address saved');
             }
 
-            // Auto-select the newly saved address
-            onAddressSelect(savedAddress);
-            setSelectedAddressId(savedAddress.id || null);
             setViewMode('list');
         } catch (error) {
             console.error('Failed to save address:', error);
-            toast.error("Failed to save address. Please try again.");
+            toast.error('Failed to save address. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -340,37 +342,26 @@ export default function AddressStep({
             {viewMode === 'list' && (
                 <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
                     {/* Header */}
-                    <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-white to-blue-50/30">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                <MapPin className="w-6 h-6 text-[var(--colour-fsP2)]" />
-                                Select Delivery Address
+                    <div className="p-2.5 border-b border-gray-100 bg-gradient-to-r from-white to-blue-50/20">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
+                            <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-1.5">
+                                <MapPin className="w-4.5 h-4.5 text-[var(--colour-fsP2)]" />
+                                Delivery Address
                             </h2>
                             {savedAddresses.length < 4 && (
                                 <Button
                                     onClick={handleAddNewAddress}
-                                    className="bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl transition-all"
+                                    className="bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white shadow-sm rounded-lg transition-all h-8 text-xs px-3"
                                 >
-                                    <Plus className="w-5 h-5 mr-2" />
-                                    Add New Address
+                                    <Plus className="w-3.5 h-3.5 mr-1" />
+                                    Add New
                                 </Button>
                             )}
-                        </div>
-
-                        {/* Search */}
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <Input
-                                placeholder="Search your saved locations..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 h-11 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)]"
-                            />
                         </div>
                     </div>
 
                     {/* Address List — 2×2 Grid, max 4 */}
-                    <div className="p-4 sm:p-6 bg-gray-50/30 min-h-[300px]">
+                    <div className="p-1.5 bg-gray-50/30 min-h-[300px]">
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="w-8 h-8 text-[var(--colour-fsP2)] animate-spin" />
@@ -389,80 +380,96 @@ export default function AddressStep({
                                 </Button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {filteredAddresses.slice(0, 4).map((address, index) => {
                                     const isSelected = selectedAddressId === address.id;
                                     const LabelIcon = address.address?.label === 'Office' ? Building2 : address.address?.label === 'Other' ? MapIcon : Home;
+                                    const hasGeo = !!(address.geo?.lat && address.geo?.lng);
+                                    const fullLine = [
+                                        address.address?.landmark,
+                                        address.address?.house_no,
+                                        address.address?.city,
+                                        address.address?.district,
+                                        address.address?.province,
+                                    ].filter(Boolean).join(', ');
+                                    const geoLine = [
+                                        address.address?.city,
+                                        address.address?.district,
+                                        address.address?.province,
+                                    ].filter(Boolean).join(' · ');
+
                                     return (
                                         <div
                                             key={address.id || `addr-${index}`}
-                                            className="relative group"
+                                            onClick={() => handleSelectAddress(address)}
+                                            className={`relative flex items-start gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${isSelected
+                                                ? 'border-[var(--colour-fsP2)] bg-blue-50/40 shadow-[0_4px_16px_rgba(25,103,179,0.12)]'
+                                                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                                                }`}
                                         >
-                                            <div
-                                                onClick={() => handleSelectAddress(address)}
-                                                className={`w-full h-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer ${isSelected
-                                                    ? 'border-[var(--colour-fsP2)] shadow-[0_4px_16px_rgba(25,103,179,0.16)]'
-                                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-[0_2px_10px_rgba(0,0,0,0.06)]'
-                                                    }`}
-                                            >
-                                                {/* Top stripe */}
-                                                <div className={`flex items-center justify-between px-3 py-2 ${isSelected ? 'bg-[var(--colour-fsP2)]' : 'bg-gray-50 border-b border-gray-100'
-                                                    }`}>
-                                                    <div className="flex items-center gap-1.5 min-w-0">
-                                                        <div className={`p-0.5 rounded ${isSelected ? 'bg-white/20' : 'bg-white border border-gray-200'
-                                                            }`}>
-                                                            <LabelIcon className={`w-3 h-3 ${isSelected ? 'text-white' : 'text-gray-500'}`} />
-                                                        </div>
-                                                        <span className={`text-[10px] font-extrabold uppercase tracking-widest truncate ${isSelected ? 'text-white' : 'text-gray-600'
-                                                            }`}>
-                                                            {address.address?.label || 'Home'}
-                                                        </span>
-                                                        {address.address?.is_default && (
-                                                            <span className={`shrink-0 text-[8px] font-bold px-1 py-0.5 rounded-full uppercase ${isSelected ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700'
-                                                                }`}>
-                                                                ★ Default
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    {isSelected ? (
-                                                        <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
-                                                            <Check className="w-2.5 h-2.5 text-[var(--colour-fsP2)]" strokeWidth={3} />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-4 h-4 rounded-full border-2 border-gray-300 shrink-0 group-hover:border-[var(--colour-fsP2)] transition-colors" />
+                                            {/* Left: radio + icon */}
+                                            <div className="flex flex-col items-center gap-2 pt-0.5 shrink-0">
+                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]' : 'border-gray-300'}`}>
+                                                    {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                                </div>
+
+                                            </div>
+
+                                            {/* Middle: address content */}
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                {/* Label + Default badge */}
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isSelected ? 'text-[var(--colour-fsP2)]' : 'text-gray-500'}`}>
+                                                        {address.address?.label || 'Home'}
+                                                    </span>
+
+                                                </div>
+
+                                                {/* Full address */}
+                                                <div className="space-y-0.5">
+                                                    <p className="text-[12.5px] font-semibold text-gray-800 leading-snug">
+                                                        {[
+                                                            address.address?.city,
+                                                            address.address?.district,
+                                                            address.address?.province,
+                                                        ].filter(Boolean).join(', ') || 'No address details'}
+                                                    </p>
+                                                    {address.address?.landmark && (
+                                                        <p className="text-[11px] font-medium text-[var(--colour-fsP2)] flex items-center gap-1">
+                                                            <span className="opacity-70">Landmark:</span>
+                                                            <span className="font-bold uppercase tracking-tight">{address.address.landmark}</span>
+                                                        </p>
                                                     )}
                                                 </div>
 
-                                                {/* Card body */}
-                                                <div className={`px-3 py-2.5 flex flex-col gap-1.5 flex-1 ${isSelected ? 'bg-blue-50/30' : 'bg-white'
-                                                    }`}>
-                                                    <div className="flex items-start justify-between gap-1">
-                                                        <p className="text-xs font-bold text-gray-900 leading-snug line-clamp-1">
-                                                            {address.address?.label || 'Address'}
-                                                        </p>
+
+
+                                                {/* GPS coordinates pill — shown when lat/lng available */}
+                                                {hasGeo && (
+                                                    <div className="flex items-center gap-1 mt-0.5">
+                                                        <div className="flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                            <Crosshair className="w-2.5 h-2.5" />
+                                                            <span>GPS</span>
+                                                            <span className="font-mono text-[9.5px] text-green-600">
+                                                                {Number(address.geo!.lat).toFixed(5)}, {Number(address.geo!.lng).toFixed(5)}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <p className="text-[11px] text-gray-500 leading-snug line-clamp-2">
-                                                        {address.address?.landmark || address.address?.city || 'No details'}
-                                                    </p>
-                                                    <p className="text-[10px] font-semibold text-gray-600 flex items-center gap-0.5 mt-auto pt-1.5 border-t border-gray-100">
-                                                        <MapPin className="w-2.5 h-2.5 text-[var(--colour-fsP2)] shrink-0" />
-                                                        {address.address?.city ? `${address.address.city}, ` : ''}{address.address?.district || address.address?.province || ''}
-                                                    </p>
-                                                </div>
+                                                )}
                                             </div>
 
-                                            {/* Edit + Delete on hover */}
-                                            <div className="absolute top-10 right-1.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                            {/* Right: edit + delete */}
+                                            <div className="flex flex-col gap-1 shrink-0">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleEditAddress(address); }}
-                                                    className="p-1 rounded-lg bg-white/90 hover:bg-[var(--colour-fsP2)] hover:text-white text-gray-500 transition-colors shadow-sm border border-gray-100"
+                                                    className="p-1.5 rounded-lg bg-gray-50 hover:bg-[var(--colour-fsP2)] hover:text-white text-gray-400 transition-colors border border-gray-100"
                                                     aria-label="Edit address"
                                                 >
                                                     <Edit2 className="w-3 h-3" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDeleteAddress(address.id!); }}
-                                                    className="p-1 rounded-lg bg-white/90 hover:bg-red-500 hover:text-white text-gray-500 transition-colors shadow-sm border border-gray-100"
+                                                    className="p-1.5 rounded-lg bg-gray-50 hover:bg-red-500 hover:text-white text-gray-400 transition-colors border border-gray-100"
                                                     aria-label="Delete address"
                                                 >
                                                     <Trash2 className="w-3 h-3" />
@@ -485,211 +492,133 @@ export default function AddressStep({
             )}
 
 
-            {/* ===================== FORM VIEW (Redesigned) ===================== */}
-            {
-                viewMode === 'form' && (
-                    <div className="bg-white rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+            {/* ===================== FORM VIEW ===================== */}
+            {viewMode === 'form' && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
-                        {/* Header */}
-                        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-white to-blue-50/30 sticky top-0 z-20">
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:bg-[var(--colour-fsP2)] hover:text-white transition-all text-gray-600 shadow-sm"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <h3 className="text-lg font-bold text-gray-900 tracking-tight">
-                                    {selectedAddressId ? 'Edit Address' : 'New Address'}
-                                </h3>
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center hover:bg-[var(--colour-fsP2)] hover:text-white transition-all text-gray-500"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <h3 className="text-base font-bold text-gray-900">
+                            {selectedAddressId ? 'Edit Address' : 'New Delivery Address'}
+                        </h3>
+                    </div>
+
+                    {/* Map — always visible */}
+                    <div className="relative h-52 sm:h-64 border-b border-gray-100">
+                        <GoogleMapAddress
+                            onLocationSelect={handleMapLocationSelect}
+                            initialPosition={mapLocation || undefined}
+                        />
+                    </div>
+
+                    {/* Form fields */}
+                    <div className="p-4 sm:p-5 space-y-3">
+
+                        {/* Label */}
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Label</Label>
+                            <Input
+                                value={formData.label}
+                                onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
+                                placeholder="e.g., Home, Office..."
+                                className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium"
+                            />
+                        </div>
+
+                        {/* Province · District · City */}
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Province</Label>
+                                <Input
+                                    value={formData.province}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
+                                    placeholder="Bagmati"
+                                    className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">District</Label>
+                                <Input
+                                    value={formData.district}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
+                                    placeholder="Kathmandu"
+                                    className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">City</Label>
+                                <Input
+                                    value={formData.city}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                                    placeholder="City"
+                                    className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium"
+                                />
                             </div>
                         </div>
 
-                        {/* Address Entry Mode Selection */}
-                        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50/20">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                <button
-                                    onClick={() => setAddressEntryMode('gps')}
-                                    className={`flex-1 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${addressEntryMode === 'gps'
-                                        ? 'bg-[var(--colour-fsP2)] text-white rounded-xl shadow-blue-200'
-                                        : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-[var(--colour-fsP2)]/30 hover:bg-blue-50/30'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Navigation className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Use GPS Location</span>
-                                        <span className="sm:hidden">GPS</span>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => setAddressEntryMode('manual')}
-                                    className={`flex-1 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${addressEntryMode === 'manual'
-                                        ? 'bg-[var(--colour-fsP2)] text-white rounded-xl shadow-blue-200'
-                                        : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-[var(--colour-fsP2)]/30 hover:bg-blue-50/30'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Edit2 className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Manual Address</span>
-                                        <span className="sm:hidden">Manual</span>
-                                    </div>
-                                </button>
-                            </div>
+                        {/* Landmark */}
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Landmark <span className="normal-case text-gray-300">(optional)</span></Label>
+                            <Input
+                                value={formData.landmark}
+                                onChange={(e) => setFormData(prev => ({ ...prev, landmark: e.target.value }))}
+                                placeholder="Near temple, school, etc."
+                                className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium"
+                            />
                         </div>
 
-                        <div className={addressEntryMode === 'gps' ? 'grid lg:grid-cols-2' : ''}>
-                            {/* Map Section - Right Side (GPS Mode Only) */}
-                            {addressEntryMode === 'gps' && (
-                                <div className="relative h-64 lg:h-auto bg-gradient-to-br from-gray-50 to-blue-50/30 border-l border-gray-100 lg:order-2">
-                                    <div className="absolute inset-0">
-                                        <GoogleMapAddress
-                                            onLocationSelect={handleMapLocationSelect}
-                                            initialPosition={mapLocation || undefined}
-                                        />
-                                    </div>
-
-                                </div>
-                            )}
-
-                            {/* Form Section - Left Side */}
-                            <div className="p-4 sm:p-6 lg:p-8 space-y-4 lg:order-1 max-h-[85vh] overflow-y-auto custom-scrollbar">
-
-                                {/* Label Input */}
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Address Label</Label>
-                                    <Input
-                                        value={formData.label}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
-                                        placeholder="e.g., Home, Office, Apartment..."
-                                        className="h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium transition-all"
-                                    />
-                                </div>
-
-                                {/* Location Details - Only in Manual Mode */}
-                                {addressEntryMode === 'manual' && (
-                                    <div className="space-y-4">
-                                        {/* Administrative Areas - 3 Columns */}
-                                        <div className="grid grid-cols-3 gap-3">
-                                            <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Province</Label>
-                                                <Input
-                                                    value={formData.province}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
-                                                    placeholder="Bagmati"
-                                                    className="h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium transition-all"
-                                                />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">District</Label>
-                                                <Input
-                                                    value={formData.district}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
-                                                    placeholder="Kathmandu"
-                                                    className="h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium transition-all"
-                                                />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">City</Label>
-                                                <Input
-                                                    value={formData.city}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                                                    placeholder="City"
-                                                    className="h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium transition-all"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* House & Landmark - 2 Columns */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">House No. (Opt)</Label>
-                                                <Input
-                                                    value={formData.houseNo}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, houseNo: e.target.value }))}
-                                                    placeholder="123/A"
-                                                    className="h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium transition-all"
-                                                />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Landmark (Opt)</Label>
-                                                <Input
-                                                    value={formData.landmark}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, landmark: e.target.value }))}
-                                                    placeholder="Near Temple"
-                                                    className="h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium transition-all"
-                                                />
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                )}
-
-
-                                {/* Full Address - GPS Mode Only */}
-                                {addressEntryMode !== 'manual' && (
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Full Address / Location</Label>
-                                        <div className="relative">
-                                            <Input
-                                                value={formData.full_address}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, full_address: e.target.value }))}
-                                                placeholder="Enter full address or use map..."
-                                                className="h-10 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium pr-8 transition-all"
-                                            />
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                                <MapPin className="w-4 h-4" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Action Buttons */}
-                                <div className="pt-6 border-t border-gray-100 flex items-center justify-end gap-3">
-                                    <Button
-                                        onClick={() => setViewMode('list')}
-                                        variant="outline"
-                                        className="h-11 px-6 rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-bold tracking-wide"
-                                        disabled={isSaving}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={handleSaveAddress}
-                                        disabled={
-                                            addressEntryMode === 'manual'
-                                                ? (!formData.province || !formData.district || !formData.city) || isSaving
-                                                : !formData.full_address || isSaving
-                                        }
-                                        className="h-11 px-8 rounded-xl bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white shadow-lg shadow-blue-200 text-sm font-bold tracking-wide transition-all hover:scale-105 active:scale-95"
-                                    >
-                                        {isSaving ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
-                                            </>
-                                        ) : (
-                                            'Save Check'
-                                        )}
-                                    </Button>
-                                </div>
+                        {/* GPS hint if map location was selected */}
+                        {mapLocation && (
+                            <div className="flex items-center gap-1.5 text-[10.5px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                                <Navigation className="w-3 h-3 shrink-0" />
+                                <span>GPS pinned: {Number(mapLocation.lat).toFixed(5)}, {Number(mapLocation.lng).toFixed(5)}</span>
                             </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                            <Button
+                                onClick={() => setViewMode('list')}
+                                variant="outline"
+                                className="flex-1 h-10 rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold"
+                                disabled={isSaving}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSaveAddress}
+                                disabled={(!formData.full_address && (!formData.province || !formData.district || !formData.city)) || isSaving}
+                                className="flex-1 h-10 rounded-xl bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white text-sm font-bold transition-all active:scale-95"
+                            >
+                                {isSaving ? (
+                                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                                ) : (
+                                    selectedAddressId ? 'Update Address' : 'Save Address'
+                                )}
+                            </Button>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* Continue Button (Only in List View) */}
-            {
-                viewMode === 'list' && isComplete && (
-                    <div className="flex justify-end pt-6 border-t border-gray-100">
-                        <Button
-                            onClick={onNext}
-                            className="h-11 px-8 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all hover:shadow-lg active:scale-95"
-                        >
-                            Continue to Recipient
-                            <ChevronRight className="w-5 h-5 ml-2" />
-                        </Button>
-                    </div>
-                )
+            {viewMode === 'list' && isComplete && (
+                <div className="flex justify-end pt-4 border-t border-gray-100">
+                    <Button
+                        onClick={onNext}
+                        className="h-10 px-8 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white font-extrabold rounded-xl shadow-md transition-all active:scale-95 text-[13px] flex items-center gap-2"
+                    >
+                        <span>Continue to Recipient</span>
+                        <ChevronRight className="w-4 h-4 ml-0.5" />
+                    </Button>
+                </div>
+            )
             }
 
             {/* Delete Confirmation Dialog */}
@@ -720,6 +649,6 @@ export default function AddressStep({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div >
+        </div>
     );
 }
