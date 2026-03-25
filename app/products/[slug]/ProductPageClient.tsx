@@ -147,6 +147,17 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
         setSelectedImage(productDetails.thumb?.url || "");
     }, [productDetails]);
 
+    // Update selected image when color attribute changes
+    useEffect(() => {
+        const selectedColor = selectedAttributes["Color"] || selectedAttributes["color"];
+        if (selectedColor) {
+            const colorImage = allVariantImages.find(img => img.color === selectedColor);
+            if (colorImage) {
+                setSelectedImage(colorImage.url);
+            }
+        }
+    }, [selectedAttributes, allVariantImages]);
+
     // priceRange was moved up
 
     return (
@@ -188,25 +199,13 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                     </div>
                     {/* Sidebar: Responsive layout - at side on desktop, below on mobile */}
                     <div className="lg:col-span-3">
-                        {relatedCategory.slug ? (
-                            <LazySection
-                                fetcher={() => getCategoryProducts(relatedCategory.slug, { per_page: 6, page: 1 })}
-                                render={(res: any) => {
-                                    const products = res?.products || (Array.isArray(res) ? res : []);
-                                    return <ProductSidebar product={productDetails} trendingProducts={products} />;
-                                }}
-                                fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-xl" />}
-                                priority={true} // Priority for sidebar trending
-                            />
-                        ) : (
-                            <ProductSidebar product={productDetails} trendingProducts={[]} />
-                        )}
+                        <ProductSidebar product={productDetails} trendingProducts={[]} />
                     </div>
                 </div>
 
                 <div ref={belowFoldRef}>
                     {isBelowFoldInView && (
-                        <React.Suspense fallback={<div className="h-screen animate-pulse bg-gray-50/50" />}>
+                        <>
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5">
                                 <MoreDetailsProduct
                                     productDescription={productDetails.description?.description}
@@ -238,7 +237,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                                     />
                                 )}
                             </section>
-                        </React.Suspense>
+                        </>
                     )}
                 </div>
             </div>

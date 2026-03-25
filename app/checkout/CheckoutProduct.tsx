@@ -88,13 +88,13 @@ export default function CheckoutProduct({
             return (
               <div key={item.id || index} className="flex gap-4 group">
                 {/* Image - Increased Size & Aspect Ratio */}
-                <div className="relative w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0 overflow-hidden rounded-xl sm:rounded-2xl border border-gray-100 bg-gray-50 shadow-sm group-hover:shadow-md transition-all duration-300">
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm group-hover:shadow-md transition-all duration-300 flex items-center justify-center p-2">
                   <Image
                     src={(product as any).thumb?.url || (product as any).image?.thumb || (product as any).image?.full || '/placeholder.png'}
                     alt={product.name || 'Product'}
                     fill
-                    sizes="(max-width: 640px) 96px, 112px"
-                    className="object-contain p-2 group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                    sizes="(max-width: 640px) 80px, 80px"
+                    className="object-contain p-1 group-hover:scale-110 transition-transform duration-500 ease-in-out"
                   />
                 </div>
 

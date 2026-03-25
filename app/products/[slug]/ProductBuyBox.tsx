@@ -401,12 +401,6 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
             {/* ── Coupons ── */}
             <div className="px-4 py-3 border-t border-gray-50">
                 <ProductCoupons />
-
-                {product.emi_enabled && (
-                    <div className="mt-3">
-                        <EmiWidget price={Number(currentPrice)} />
-                    </div>
-                )}
             </div>
 
 

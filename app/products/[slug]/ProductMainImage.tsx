@@ -132,10 +132,10 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                 )}
 
                 {/* ─── Main Image ─── */}
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 min-w-0">
                     <div
                         ref={wrapperRef}
-                        className="relative w-full aspect-square bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group cursor-crosshair"
+                        className="relative w-full aspect-square bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm group cursor-crosshair flex items-center justify-center p-4 sm:p-8"
                         onMouseEnter={() => typeof window !== "undefined" && window.innerWidth >= 768 && setShowMagnifier(true)}
                         onMouseLeave={() => setShowMagnifier(false)}
                         onMouseMove={handleMouseMove}

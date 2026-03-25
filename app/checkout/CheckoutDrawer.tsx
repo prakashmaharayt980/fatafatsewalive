@@ -108,7 +108,7 @@ const CheckoutDrawer = () => {
                   {/* Product Image */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-100 rounded-xl flex-shrink-0 overflow-hidden relative">
                     <Image
-                      src={item?.product?.thumb?.url || '/placeholder.png'}
+                      src={item?.product?.thumb?.url || item?.product?.image?.thumb || item?.product?.image?.full || '/placeholder.png'}
                       alt={item?.product?.name || 'Product'}
                       fill
                       sizes="80px"
@@ -121,11 +121,18 @@ const CheckoutDrawer = () => {
                     <h4 className="font-semibold text-sm text-gray-900 truncate pr-2 group-hover:text-[var(--colour-fsP1)] transition-colors">
                       {item?.product?.name || 'Unnamed Product'}
                     </h4>
-                    {item.varientcolour && (
-                      <p className="text-[10px] font-bold text-[var(--colour-fsP2)] bg-blue-50/50 px-1.5 py-0.5 rounded-md inline-block mt-0.5 uppercase tracking-wider">
-                        Color: {item.varientcolour}
-                      </p>
-                    )}
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {item.varientcolour && (
+                        <p className="text-[10px] font-bold text-[var(--colour-fsP2)] bg-blue-50/50 px-1.5 py-0.5 rounded-md inline-block uppercase tracking-wider">
+                          Color: {item.varientcolour}
+                        </p>
+                      )}
+                      {item.product_attributes && Object.entries(item.product_attributes).map(([key, value]) => (
+                        <p key={key} className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md inline-block uppercase tracking-wider">
+                          {key}: {value as string}
+                        </p>
+                      ))}
+                    </div>
                     <p className="text-sm font-bold text-[var(--colour-fsP2)] mt-1">
                       Rs. {(item.price * item.quantity).toLocaleString()}
                     </p>

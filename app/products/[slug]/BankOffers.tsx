@@ -18,7 +18,7 @@ export default function BankOffers() {
     ];
 
     return (
-        <div className="space-y-2 mt-3 pt-3 border-t border-gray-100">
+        <div className="space-y-2 mt-3 pt-3 mx-2 border-t border-gray-100">
             <div className="flex items-center gap-2 mb-1">
                 <BadgePercent className="w-4 h-4 text-purple-600" />
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Bank Offers</h3>

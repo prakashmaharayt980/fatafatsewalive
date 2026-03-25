@@ -71,18 +71,23 @@ export default function ProductLoading() {
 
                     {/* Column 3: Sidebar */}
                     <div className="hidden lg:block lg:col-span-3">
-                        <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-                            <div className="h-5 w-28 bg-gray-200 rounded animate-pulse" />
-                            <div className="w-full aspect-[16/9] bg-gray-200 rounded-xl animate-pulse" />
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex gap-3">
-                                    <div className="w-16 h-14 bg-gray-200 rounded-lg animate-pulse flex-shrink-0" />
-                                    <div className="flex-1 space-y-2 py-1">
-                                        <div className="h-3.5 w-full bg-gray-200 rounded animate-pulse" />
-                                        <div className="h-3 w-2/3 bg-gray-200 rounded animate-pulse" />
+                        <div className="space-y-4">
+                            <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+                                <div className="h-5 w-28 bg-gray-200 rounded animate-pulse" />
+                                <div className="h-24 w-full bg-gray-100 rounded-xl animate-pulse" />
+                                <div className="h-20 w-full bg-gray-50 rounded-xl animate-pulse" />
+                            </div>
+                            <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="flex gap-3">
+                                        <div className="w-12 h-12 bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
+                                        <div className="flex-1 space-y-2 py-1">
+                                            <div className="h-3 w-full bg-gray-100 rounded animate-pulse" />
+                                            <div className="h-2.5 w-2/3 bg-gray-50 rounded animate-pulse" />
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
