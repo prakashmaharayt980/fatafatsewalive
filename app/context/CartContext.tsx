@@ -108,7 +108,13 @@ export const useCartStore = create<CartStore>()(
                     guestAddresses: state.guestAddresses.filter((a) => a.id !== id) 
                 })),
             clearGuestData: () => 
-                set({ guestAddresses: [], cartItems: undefined, wishlistItems: [], wishlistMap: {} }),
+                set({ 
+                    guestAddresses: [], 
+                    cartItems: undefined, 
+                    wishlistItems: [], 
+                    wishlistMap: {},
+                    compareItems: [] 
+                }),
 
             setIsCartOpen: (open) => set({ isCartOpen: open }),
             setIsWishlistOpen: (open) => set({ isWishlistOpen: open }),

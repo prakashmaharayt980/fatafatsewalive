@@ -98,29 +98,29 @@ export default function CheckoutProduct({
                   />
                 </div>
 
-                {/* Details */}
-                <div className="flex-1 min-w-0 py-1 flex flex-col justify-between">
+                {/* Details - Standardized Stacked Layout */}
+                <div className="flex-1 min-w-0 py-0.5 flex flex-col justify-start gap-1">
                   <div>
-                    <p className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-[var(--colour-fsP2)] transition-colors">
+                    <p className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-[var(--colour-fsP2)] transition-colors">
                       {product.name || 'Unnamed Product'}
                     </p>
                   </div>
 
-                  <div className="flex items-end justify-between mt-auto">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
-                        Qty: {quantity}
+                  {item.varientcolour && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-[var(--colour-fsP2)] bg-blue-50 px-2 py-0.5 rounded border border-blue-100/30 uppercase tracking-tight">
+                        Color: {item.varientcolour}
                       </span>
-                      {item.varientcolour && (
-                        <span className="text-[10px] font-bold text-[var(--colour-fsP2)] bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-wide">
-                          Color: {item.varientcolour}
-                        </span>
-                      )}
-                      <span className="text-xs text-gray-400">x Rs. {price.toLocaleString()}</span>
                     </div>
-                    <span className="text-sm font-bold text-[var(--colour-fsP2)]">
+                  )}
+
+                  <div className="flex items-center justify-between mt-auto pt-1">
+                    <p className="text-[12px] font-medium text-gray-500">
+                      {quantity} <span className="text-[10px] mx-0.5">×</span> Rs. {price.toLocaleString()}
+                    </p>
+                    <p className="text-[13px] font-black text-gray-900 group-hover:text-[var(--colour-fsP2)] transition-colors">
                       Rs. {itemTotal.toLocaleString()}
-                    </span>
+                    </p>
                   </div>
                 </div>
               </div>

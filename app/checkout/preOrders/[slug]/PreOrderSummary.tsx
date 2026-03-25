@@ -12,6 +12,8 @@ interface PreOrderSummaryProps {
     productPrice: number;
     currentStep: number;
     selectedAddress: ShippingAddress | null;
+    selectedColor?: string;
+    variantImage?: string;
 }
 
 export default function PreOrderSummary({
@@ -20,6 +22,8 @@ export default function PreOrderSummary({
     productPrice,
     currentStep,
     selectedAddress,
+    selectedColor,
+    variantImage,
 }: PreOrderSummaryProps) {
 
     return (
@@ -33,7 +37,9 @@ export default function PreOrderSummary({
                 </div>
                 <div className="flex gap-3">
                     <div className="w-20 h-20 rounded-xl bg-white border border-gray-200 relative shrink-0 overflow-hidden shadow-sm">
-                        {product.image?.full ? (
+                        {variantImage ? (
+                            <Image src={variantImage} alt={product.name} fill sizes="80px" className="object-contain p-1" />
+                        ) : product.image?.full ? (
                             <Image src={product.image.full} alt={product.name} fill sizes="80px" className="object-contain p-1" />
                         ) : (product as any).thumb?.url ? (
                             <Image src={(product as any).thumb.url} alt={product.name} fill sizes="80px" className="object-contain p-1" />
@@ -45,62 +51,46 @@ export default function PreOrderSummary({
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight">{product.name}</p>
-                        {(product as any).sku && (
-                            <p className="text-[10px] text-gray-400 font-medium mt-0.5">SKU: {(product as any).sku}</p>
+
+                        {selectedColor && (
+                            <p className="inline-block mt-1 text-[10px] font-bold text-[var(--colour-fsP2)] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/30 uppercase tracking-wider">
+                                Color: {selectedColor}
+                            </p>
                         )}
-                        <div className="mt-1.5 inline-flex items-center gap-1 bg-(--colour-fsP2)/10 text-(--colour-fsP2) text-[10px] font-bold px-2 py-0.5 rounded border border-(--colour-fsP2)/20">
-                            <ShieldCheck className="w-3 h-3" />
-                            Guaranteed Allocation
+
+                        <div className="mt-2 pt-1.5 border-t border-gray-100 flex items-center justify-between">
+                            <p className="text-[12px] font-medium text-gray-500">
+                                1 <span className="text-[10px] mx-0.5">×</span> Rs. {productPrice.toLocaleString()}
+                            </p>
+                            <p className="text-[13px] font-black text-gray-900">
+                                Rs. {productPrice.toLocaleString()}
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Financials */}
-            <div className="p-5 space-y-2.5">
-                <div className="flex justify-between text-sm items-center">
-                    <span className="text-gray-500">Estimated Price</span>
-                    <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-lg">
-                        <Clock className="w-3 h-3" />
+            <div className="p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm font-medium">Estimated Price</span>
+                    <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold px-3 py-1 rounded-full">
+                        <Clock className="w-3.5 h-3.5" />
                         Coming Soon
                     </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Shipping</span>
-                    <span className="font-semibold text-green-600">Free 🚚</span>
+                <div className="flex justify-between items-center">
+                    <span className="text-gray-500 text-sm font-medium">Shipping</span>
+                    <span className="font-bold text-emerald-600 text-sm italic">FREE DELIVERY</span>
                 </div>
-                <div className="h-px bg-gray-100" />
-                <div className="flex justify-between text-sm">
-                    <span className="font-bold text-gray-800">Pre-Order Deposit</span>
-                    <span className="font-bold text-gray-900">Rs. {depositAmount.toLocaleString()}</span>
-                </div>
-            </div>
 
-            {/* Deposit Bar — simplified since price is coming soon */}
-            <div className="px-5 pb-5">
-                <div className="rounded-xl overflow-hidden border border-(--colour-fsP2)/20">
-                    <div className="bg-(--colour-fsP2) px-4 py-3 flex items-center justify-between">
+                <div className="pt-4 border-t border-dashed border-gray-200">
+                    <div className="flex justify-between items-center bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
                         <div>
-                            <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">To Pay Now</p>
-                            <p className="text-2xl font-extrabold text-white">Rs. {depositAmount.toLocaleString()}</p>
+                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-0.5">Deposit Amount</p>
+                            <span className="text-gray-500 text-[10px] font-medium leading-none">To secure your allocation</span>
                         </div>
-                        <div className="text-right">
-                            <p className="text-[10px] font-semibold text-white/70">Pre-Order Deposit</p>
-                            <div className="flex items-center gap-1 justify-end mt-0.5">
-                                <Banknote className="w-3 h-3 text-white/60" />
-                                <p className="text-[10px] text-white/60">Digital payment</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-(--colour-fsP2)/5 px-4 py-3 flex justify-between items-center border-t border-(--colour-fsP2)/10">
-                        <div>
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Remaining Balance</p>
-                            <p className="text-sm font-semibold text-gray-600">To be announced</p>
-                        </div>
-                        <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded">
-                            <Clock className="w-2.5 h-2.5" />
-                            TBD
-                        </span>
+                        <span className="text-xl font-black text-(--colour-fsP2)">Rs. {depositAmount.toLocaleString()}</span>
                     </div>
                 </div>
             </div>

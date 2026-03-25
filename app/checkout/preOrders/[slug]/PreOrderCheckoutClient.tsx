@@ -20,7 +20,7 @@ import AddressStep from '@/app/checkout/steps/AddressStep';
 
 
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import NicAsiaPayment from '@/app/PaymentsBox/NicAsiaPayment';
 import EeswaPayment from '@/app/PaymentsBox/EeswaPayment';
 import DepositStep from './steps/DepositStep';
@@ -28,25 +28,24 @@ import PreOrderPaymentStep from './steps/PreOrderPaymentStep';
 import PreOrderSummary from './PreOrderSummary';
 import PreOrderReceiptStep from './steps/PreOrderReceiptStep';
 import RecipientStep from '../../steps/RecipientStep';
+import CheckoutFaq from '../../CheckoutFaq';
 
 interface PreOrderCheckoutClientProps {
     product: ProductDetails;
 }
 
-// Step order: ADDRESS → DEPOSIT (Receipt) → PAYMENT
+// Step order: ADDRESS → RECIPIENT → PAYMENT
 const PRE_ORDER_STEPS = {
     ADDRESS: 0,
-    RECIPT: 1,
-    DEPOSIT: 2,
-    PAYMENT: 3,
+    RECIPIENT: 1,
+    PAYMENT: 2,
 } as const;
 
 type PreOrderStep = (typeof PRE_ORDER_STEPS)[keyof typeof PRE_ORDER_STEPS];
 
 const STEP_LABELS: Record<PreOrderStep, string> = {
     [PRE_ORDER_STEPS.ADDRESS]: 'Shipping',
-    [PRE_ORDER_STEPS.RECIPT]: 'Receipt',
-    [PRE_ORDER_STEPS.DEPOSIT]: 'Deposit',
+    [PRE_ORDER_STEPS.RECIPIENT]: 'Recipient',
     [PRE_ORDER_STEPS.PAYMENT]: 'Payment',
 };
 
@@ -58,6 +57,29 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
     })));
     const userInfo = user;
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const selectedColor = searchParams.get('selectedcolor');
+
+    // Find the variant image for the selected color
+    const variantImage = React.useMemo(() => {
+        if (!selectedColor || !product) return null;
+        
+        // Check variants
+        if (product.variants) {
+            const variant = product.variants.find(v => 
+                v.attributes?.Color === selectedColor || v.attributes?.color === selectedColor
+            );
+            if (variant?.images?.[0]?.url) return variant.images[0].url;
+        }
+        
+        // Check product images with color property
+        if (product.images) {
+            const img = product.images.find(i => (i as any).color === selectedColor);
+            if (img?.url) return img.url;
+        }
+
+        return null;
+    }, [selectedColor, product]);
 
     const [currentStep, setCurrentStep] = useState<PreOrderStep>(PRE_ORDER_STEPS.ADDRESS);
     const [checkoutState, setCheckoutState] = useState<CheckoutState>(initialCheckoutState);
@@ -148,23 +170,11 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
                     />
                 );
 
-            case PRE_ORDER_STEPS.RECIPT:
+            case PRE_ORDER_STEPS.RECIPIENT:
                 return (
                     <RecipientStep
                         state={{ ...checkoutState, currentStep: 0 as CheckoutStep }}
                         onRecipientChange={handleRecipientChange}
-                        onNext={nextStep}
-                        onBack={prevStep}
-                    />
-                );
-
-            case PRE_ORDER_STEPS.DEPOSIT:
-                return (
-                    <DepositStep
-                        productPrice={productPrice}
-                        depositAmount={depositAmount}
-                        setDepositAmount={setDepositAmount}
-                        isFullPaymentRequired={false}
                         onNext={nextStep}
                         onBack={prevStep}
                     />
@@ -192,7 +202,7 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
         }
     };
 
-    const steps = [PRE_ORDER_STEPS.ADDRESS, PRE_ORDER_STEPS.RECIPT, PRE_ORDER_STEPS.DEPOSIT, PRE_ORDER_STEPS.PAYMENT] as PreOrderStep[];
+    const steps = [PRE_ORDER_STEPS.ADDRESS, PRE_ORDER_STEPS.RECIPIENT, PRE_ORDER_STEPS.PAYMENT] as PreOrderStep[];
 
     return (
         <div className="bg-gray-50 min-h-screen py-3 sm:py-5">
@@ -278,6 +288,8 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
                             productPrice={productPrice}
                             currentStep={currentStep}
                             selectedAddress={checkoutState.address}
+                            selectedColor={selectedColor || undefined}
+                            variantImage={variantImage || undefined}
                         />
                     </div>
 
@@ -295,11 +307,14 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
                                 productPrice={productPrice}
                                 currentStep={currentStep}
                                 selectedAddress={checkoutState.address}
+                                selectedColor={selectedColor || undefined}
+                                variantImage={variantImage || undefined}
                             />
                         </div>
                     </div>
 
                 </div>
+                <CheckoutFaq type="preorder" />
             </div>
         </div>
     );

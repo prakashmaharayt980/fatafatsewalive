@@ -57,8 +57,22 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             logout: () => {
                 deleteCookie('access_token');
                 deleteCookie('refresh_token');
+                
+                // Clear all session related data from other stores
+                try {
+                    const { useCartStore } = require('./CartContext');
+                    useCartStore.getState().clearGuestData();
+                } catch (e) {
+                    console.error('Failed to clear cart data on logout', e);
+                }
+
                 set({ user: null, isLoggedIn: false });
                 toast.info("Logged out");
+                
+                // Redirect to home and refresh to clear any local component states (like checkout)
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/';
+                }
             },
 
             syncSession: (session) => {

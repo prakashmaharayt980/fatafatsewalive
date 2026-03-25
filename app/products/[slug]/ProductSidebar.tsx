@@ -6,9 +6,9 @@ import TrustWidget from "./TrustWidget";
 import PartnersWidget from "./PartnersWidget";
 
 
-import ProductWidget from "@/app/blogs/components/widgets/ProductWidget";
+// import ProductWidget from "@/app/blogs/components/widgets/ProductWidget";
 
-import BankOffers from "./BankOffers";
+// import BankOffers from "./BankOffers";
 import EmiWidget from "./EmiWidget";
 
 interface ProductSidebarProps {
@@ -32,7 +32,7 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({ product, trendingProduc
             )}
             <TrustWidget />
             <PartnersWidget />
-            <ProductWidget products={trendingProducts} />
+            {/* <ProductWidget products={trendingProducts} /> */}
         </div>
     );
 };

@@ -35,6 +35,7 @@ import { useRouter } from 'next/navigation';
 import { OrderService } from '../api/services/order.service';
 import { useCartStore } from '../context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
+import CheckoutFaq from './CheckoutFaq';
 
 
 export default function CheckoutClient() {
@@ -366,6 +367,8 @@ export default function CheckoutClient() {
                     </div>
 
                 </div>
+                
+                <CheckoutFaq type="standard" />
             </div>
         </div>
     );

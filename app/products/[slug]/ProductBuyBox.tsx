@@ -50,8 +50,9 @@ interface ProductBuyBoxProps {
     setSelectedAttributes: React.Dispatch<React.SetStateAction<Record<string, string>>>;
     availableAttributes: Record<string, string[]>;
     quantity: number;
-    setQuantity: (qty: number) => void;
-    allVariantImages: Array<{ url: string; thumb: string; isDefault: boolean; color?: string }>;
+    setQuantity: React.Dispatch<React.SetStateAction<number>>;
+    allVariantImages: any[];
+    selectedImage?: string;
 }
 
 const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
@@ -63,6 +64,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
     quantity,
     setQuantity,
     allVariantImages,
+    selectedImage,
 }) => {
     const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
         isLoggedIn: state.isLoggedIn,
@@ -478,8 +480,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 isOpen={isPreOrderOpen}
                 onClose={() => setIsPreOrderOpen(false)}
                 productName={product.name}
-                productImage={product.image?.full}
-                productPrice={currentPrice}
+                productImage={selectedImage || product.image?.full}
                 productSlug={product.slug}
                 selectedColor={selectedAttributes["Color"] || selectedAttributes["color"] || selectedVariant?.attributes?.Color || selectedVariant?.attributes?.color || selectedVariant?.color}
             />

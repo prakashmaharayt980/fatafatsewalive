@@ -133,7 +133,10 @@ const CheckoutDrawer = () => {
                         </p>
                       ))}
                     </div>
-                    <p className="text-sm font-bold text-[var(--colour-fsP2)] mt-1">
+                    <p className="text-[11px] font-medium text-gray-400 mt-1">
+                      {item.quantity} × Rs. {item.price.toLocaleString()}
+                    </p>
+                    <p className="text-sm font-black text-[var(--colour-fsP2)]">
                       Rs. {(item.price * item.quantity).toLocaleString()}
                     </p>
                   </div>

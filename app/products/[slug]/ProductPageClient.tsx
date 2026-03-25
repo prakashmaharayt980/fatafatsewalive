@@ -195,6 +195,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                             quantity={quantity}
                             setQuantity={setQuantity}
                             allVariantImages={allVariantImages}
+                            selectedImage={selectedImage}
                         />
                     </div>
                     {/* Sidebar: Responsive layout - at side on desktop, below on mobile */}
