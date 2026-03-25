@@ -7,9 +7,8 @@ import type { Metadata } from "next";
 import { getProductBySlug } from "@/app/api/services/product.service";
 import ProductPageClient from "./ProductPageClient";
 
-// Force dynamic rendering — always fetch fresh product data
-export const dynamic = "force-dynamic";
-
+// Enable ISR with 60-second revalidation
+export const revalidate = 60;
 
 // Fetch product data on server — wrapped in cache() to deduplicate
 // between generateMetadata() and the page component
@@ -94,11 +93,6 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
       "itemCondition": "https://schema.org/NewCondition",
       "availability": productDetails.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
     },
-    // "aggregateRating": productDetails. ? {
-    //   "@type": "AggregateRating",
-    //   "ratingValue": productDetails.average_rating,
-    //   "reviewCount": productDetails.reviews?.meta?.total || 1
-    // } : undefined
   };
 
   return (
@@ -112,7 +106,3 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
     </>
   );
 }
-
-
-
-export const revalidate = 0;

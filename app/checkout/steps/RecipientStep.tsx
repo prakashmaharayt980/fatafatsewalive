@@ -127,7 +127,7 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
 
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-[#EBF3FC] flex items-center justify-center flex-shrink-0">
                         <UserCircle className="w-4 h-4 text-[var(--colour-fsP2)]" />
                     </div>
@@ -137,10 +137,10 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                     </div>
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-3 sm:p-5 space-y-3 sm:space-y-4">
 
-                    {/* Option Cards */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Option Cards - 2-col always for compact layout */}
+                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                         {recipientOptions.map((option) => {
                             const isSelected = recipient.type === option.type;
                             const Icon = option.icon;
@@ -148,7 +148,7 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                                 <button
                                     key={option.type}
                                     onClick={() => handleTypeSelect(option.type)}
-                                    className={`relative flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${isSelected
+                                    className={`relative flex items-center gap-2.5 p-3 sm:p-3.5 rounded-xl border text-left transition-all ${isSelected
                                             ? 'border-[var(--colour-fsP2)] bg-[#EBF3FC]/40'
                                             : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/60'
                                         }`}
@@ -175,7 +175,7 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
 
                     {/* SELF form */}
                     {recipient.type === RECIPIENT_TYPES.SELF && (
-                        <div className="bg-gray-50/60 rounded-xl border border-gray-100 p-4 space-y-3 animate-in fade-in duration-200">
+                        <div className="bg-gray-50/60 rounded-xl border border-gray-100 p-3 sm:p-4 space-y-3 animate-in fade-in duration-200">
                             <div className="flex items-center gap-2">
                                 <User className="w-3.5 h-3.5 text-[var(--colour-fsP2)]" />
                                 <p className="text-xs font-bold text-gray-700">You are the recipient</p>
@@ -184,17 +184,17 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                                 Please verify your contact number. Our delivery partner will use this to reach you.
                             </p>
                             <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">
-                                    Contact Number <span className="text-red-400">*</span>
+                                <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block">
+                                    Contact Number <span className="text-red-500">*</span>
                                 </span>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <Input
                                         placeholder="98XXXXXXXX"
                                         value={recipient.phone || ''}
                                         onChange={(e) => handleFieldChange('phone', e.target.value.replace(/\D/g, ''))}
                                         maxLength={10}
-                                        className="pl-9 h-10 bg-white border-gray-100 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/10 rounded-lg text-sm font-semibold tracking-widest text-gray-700 placeholder:text-gray-300"
+                                        className="pl-10 h-12 bg-white border-gray-200 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/10 rounded-xl text-sm font-bold tracking-widest text-gray-900 placeholder:text-gray-400 shadow-sm"
                                     />
                                 </div>
                             </div>
@@ -203,39 +203,39 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
 
                     {/* GIFT form */}
                     {recipient.type === RECIPIENT_TYPES.GIFT && (
-                        <div className="bg-gray-50/60 rounded-xl border border-gray-100 p-4 space-y-4 animate-in fade-in duration-200">
-                            <div className="flex items-center gap-2">
-                                <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400" />
-                                <p className="text-xs font-bold text-gray-700">Gift Details</p>
+                        <div className="bg-gray-50/60 rounded-xl border border-gray-100 p-3 sm:p-4 space-y-3 sm:space-y-4 animate-in fade-in duration-200">
+                            <div className="flex items-center gap-2 pb-1 border-b border-pink-100/50">
+                                <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+                                <p className="text-[13px] font-extrabold text-gray-900 uppercase tracking-tight">Gift Delivery Details</p>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">
-                                        Recipient Name <span className="text-red-400">*</span>
+                                    <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block">
+                                        Recipient Name <span className="text-red-500">*</span>
                                     </span>
                                     <div className="relative">
-                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                         <Input
                                             placeholder="e.g. John Doe"
                                             value={recipient.name || ''}
                                             onChange={(e) => handleFieldChange('name', e.target.value)}
-                                            className="pl-9 h-10 bg-white border-gray-100 focus:border-[var(--colour-fsP2)] rounded-lg text-sm"
+                                            className="pl-10 h-12 bg-white border-gray-200 focus:border-[var(--colour-fsP2)] rounded-xl text-sm font-bold text-gray-900 placeholder:text-gray-400 shadow-sm"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">
-                                        Recipient Phone <span className="text-red-400">*</span>
+                                    <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block">
+                                        Recipient Phone <span className="text-red-500">*</span>
                                     </span>
                                     <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                         <Input
                                             placeholder="98XXXXXXXX"
                                             value={recipient.phone || ''}
                                             onChange={(e) => handleFieldChange('phone', e.target.value.replace(/\D/g, ''))}
                                             maxLength={10}
-                                            className="pl-9 h-10 bg-white border-gray-100 focus:border-[var(--colour-fsP2)] rounded-lg text-sm tracking-widest font-semibold"
+                                            className="pl-10 h-12 bg-white border-gray-200 focus:border-[var(--colour-fsP2)] rounded-xl text-sm tracking-widest font-bold text-gray-900 placeholder:text-gray-400 shadow-sm"
                                         />
                                     </div>
                                 </div>
@@ -257,17 +257,17 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                             </div>
 
                             <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">
-                                    Personal Message <span className="font-normal normal-case">(optional)</span>
+                                <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block">
+                                    Personal Message <span className="font-normal normal-case text-gray-400">(optional)</span>
                                 </span>
                                 <div className="relative">
-                                    <MessageSquare className="absolute left-3 top-3 w-3.5 h-3.5 text-gray-300" />
+                                    <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                     <textarea
                                         placeholder="Write a sweet note..."
                                         value={recipient.message || ''}
                                         onChange={(e) => handleFieldChange('message', e.target.value)}
                                         rows={3}
-                                        className="w-full border border-gray-100 pl-9 pr-4 py-2.5 bg-white rounded-lg focus:border-[var(--colour-fsP2)] focus:ring-2 focus:ring-[var(--colour-fsP2)]/10 outline-none text-sm transition-all resize-none text-gray-700 placeholder:text-gray-300"
+                                        className="w-full border border-gray-200 pl-10 pr-4 py-3 bg-white rounded-xl focus:border-[var(--colour-fsP2)] focus:ring-2 focus:ring-[var(--colour-fsP2)]/10 outline-none text-sm transition-all resize-none text-gray-900 font-medium placeholder:text-gray-400 shadow-sm min-h-[88px]"
                                     />
                                 </div>
                             </div>
@@ -277,10 +277,10 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
             </div>
 
             {/* Navigation */}
-            <div className="flex justify-between gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-1.5 h-10 px-5 border border-gray-100 rounded-xl bg-white text-[13px] font-bold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-6 border border-gray-200 rounded-xl bg-white text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all cursor-pointer shadow-sm active:scale-95"
                 >
                     <ChevronLeft className="w-4 h-4" />
                     Back
@@ -288,7 +288,7 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                 <button
                     onClick={onNext}
                     disabled={!isComplete()}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 h-10 px-8 rounded-xl bg-[var(--colour-fsP2)] text-white text-[13px] font-extrabold hover:bg-[var(--colour-fsP1)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 cursor-pointer shadow-md shadow-blue-50"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-6 sm:px-10 rounded-xl bg-[var(--colour-fsP2)] text-white text-sm font-extrabold hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 cursor-pointer shadow-lg shadow-blue-100/50"
                 >
                     <span>Continue to Payment</span>
                     <ChevronRight className="w-4 h-4" />

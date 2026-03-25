@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Eye, Pencil, Trash, X, UploadCloud, FileCheck } from 'lucide-react';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface DocumentUploadProps {
   docTypes: string[];
@@ -91,6 +91,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none">
+                          <DialogTitle className="sr-only">Document Preview</DialogTitle>
+                          <DialogDescription className="sr-only">
+                            Full-screen preview of the uploaded document {label}.
+                          </DialogDescription>
                           <div className="relative w-full h-[80vh] flex items-center justify-center">
                             <Image
                               src={previews[previewKey] || ''}

@@ -609,13 +609,13 @@ export default function AddressStep({
 
             {/* Continue Button (Only in List View) */}
             {viewMode === 'list' && isComplete && (
-                <div className="flex justify-end pt-4 border-t border-gray-100">
+                <div className="flex justify-end pt-5 border-t border-gray-100">
                     <Button
                         onClick={onNext}
-                        className="h-10 px-8 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white font-extrabold rounded-xl shadow-md transition-all active:scale-95 text-[13px] flex items-center gap-2"
+                        className="w-full sm:w-auto h-12 px-6 sm:px-10 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-100/50 transition-all active:scale-95 text-sm flex items-center justify-center gap-2"
                     >
                         <span>Continue to Recipient</span>
-                        <ChevronRight className="w-4 h-4 ml-0.5" />
+                        <ChevronRight className="w-4 h-4" />
                     </Button>
                 </div>
             )

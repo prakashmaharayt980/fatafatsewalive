@@ -19,6 +19,7 @@ interface CartItem {
     product_attributes: [];
     product: BasketProduct;
     subtotal: number;
+    varientcolour?: string;
 }
 
 interface CartResponse {
@@ -59,10 +60,11 @@ interface CartStore {
         quantity: number,
         authState: { isLoggedIn: boolean },
         triggerLoginAlert: () => void,
-        product?: BasketProduct // New optional parameter for offline mode
+        product?: BasketProduct, // New optional parameter for offline mode
+        varientcolour?: string
     ) => Promise<void>;
     deleteFromCart: (id: number) => Promise<void>;
-    CartUpdateQuantity: (id: number, quantity: number) => Promise<void>;
+    CartUpdateQuantity: (id: number, quantity: number, varientcolour?: string) => Promise<void>;
 
     // Wishlist actions
     fetchWishlist: () => Promise<void>;
@@ -126,7 +128,7 @@ export const useCartStore = create<CartStore>()(
                 }
             },
 
-            CartUpdateQuantity: async (id, quantity) => {
+            CartUpdateQuantity: async (id, quantity, varientcolour) => {
                 const { cartItems } = get();
                 const item = cartItems?.items?.find((i) => i.id === id);
                 
@@ -134,7 +136,12 @@ export const useCartStore = create<CartStore>()(
                 if (item && item.cart_id === 0) {
                     const localItems = cartItems!.items.map(i => {
                         if (i.id === id) {
-                            return { ...i, quantity, subtotal: i.price * quantity };
+                            return { 
+                                ...i, 
+                                quantity, 
+                                subtotal: i.price * quantity,
+                                varientcolour: varientcolour || i.varientcolour
+                            };
                         }
                         return i;
                     });
@@ -144,7 +151,7 @@ export const useCartStore = create<CartStore>()(
                 }
 
                 try {
-                    const res = await CartService.CartUpdate(id, { quantity });
+                    const res = await CartService.CartUpdate(id, { quantity, varientcolour });
                     set({ cartItems: res.data });
                 } catch (err) {
                     console.error('Error updating cart quantity:', err);
@@ -152,7 +159,7 @@ export const useCartStore = create<CartStore>()(
                 }
             },
 
-            addToCart: async (id, quantity, authState, triggerLoginAlert, product) => {
+            addToCart: async (id, quantity, authState, triggerLoginAlert, product, varientcolour) => {
                 if (!authState.isLoggedIn) {
                     // ─── OFFLINE GUEST CART ───
                     const { cartItems } = get();
@@ -163,6 +170,7 @@ export const useCartStore = create<CartStore>()(
                     if (existingItem) {
                         existingItem.quantity += quantity;
                         existingItem.subtotal = existingItem.price * existingItem.quantity;
+                        if (varientcolour) existingItem.varientcolour = varientcolour;
                     } else if (product) {
                         const price = typeof product.price === 'object' ? (product.price as any).current : product.price;
                         const finalPrice = product.discounted_price && product.discounted_price > 0 ? product.discounted_price : price;
@@ -175,7 +183,8 @@ export const useCartStore = create<CartStore>()(
                             price: finalPrice,
                             product_attributes: [],
                             product: product,
-                            subtotal: finalPrice * quantity
+                            subtotal: finalPrice * quantity,
+                            varientcolour: varientcolour || (product.attributes?.Color as string) || (product.attributes?.color as string)
                         });
                     }
                     
@@ -204,14 +213,14 @@ export const useCartStore = create<CartStore>()(
                 const existingItem = cartItems?.items?.find((i) => i.product_id === id);
 
                 if (existingItem) {
-                    await CartUpdateQuantity(existingItem.id, existingItem.quantity + quantity);
+                    await CartUpdateQuantity(existingItem.id, existingItem.quantity + quantity, varientcolour);
                     set({ isCartOpen: true });
                     trackAddToCart(existingItem.product, quantity);
                     return;
                 }
 
                 try {
-                    const res = await CartService.CreateCart({ product_id: id, quantity });
+                    const res = await CartService.CreateCart({ product_id: id, quantity, varientcolour });
                     set({ cartItems: res.data, isCartOpen: true });
 
                     const newProduct = res.data?.items?.find(

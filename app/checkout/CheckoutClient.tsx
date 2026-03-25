@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -86,6 +86,11 @@ export default function CheckoutClient() {
 
     // Order submission
     const handlePlaceOrder = useCallback(async () => {
+        if (!isLoggedIn) {
+            triggerLoginAlert();
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             const currentItems = cartItems?.items || [];
@@ -98,6 +103,7 @@ export default function CheckoutClient() {
                 products: currentItems.map((item: any) => ({
                     product_id: item.product?.id || item?.product_id || item.id,
                     quantity: item.quantity || 1,
+                    varientcolour: item.varientcolour || null,
                 })),
                 shipping_address_id: checkoutState.address?.id,
                 total_amount: finalTotal,
@@ -110,6 +116,9 @@ export default function CheckoutClient() {
                     gift_recipient_phone: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.phone : null,
                     gift_message: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.message : null,
                     receiver_number: checkoutState.recipient.phone || null,
+                    recipent_type: checkoutState.recipient.type,
+                    gift_recipient_photo: checkoutState.recipient.recipientPhoto,
+                    gift_sender_photo: checkoutState.recipient.senderPhoto,
                 },
             };
 
@@ -135,7 +144,7 @@ export default function CheckoutClient() {
 
     const nextStep = useCallback(() => {
         const { currentStep } = checkoutState;
-        
+
         // Final Step (Payment) -> Place Order
         if (currentStep === CHECKOUT_STEPS.PAYMENT) {
             handlePlaceOrder();
@@ -260,14 +269,14 @@ export default function CheckoutClient() {
     const total = subtotal + shippingCost - discount;
 
     return (
-        <div className="bg-gray-50 min-h-screen py-3 sm:py-5">
-            <div className="max-w-6xl mx-auto px-3 sm:px-5 lg:px-6">
+        <div className="bg-gray-50 min-h-screen py-2 sm:py-5">
+            <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
 
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
                     <Link href="/" className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">Home</Link>
                     <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
-                    <Link href="/cart" className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">Cart</Link>
+                    <span onClick={() => router.back()} className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">{"Product-details"}</span>
                     <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
                     <span className="text-gray-700 font-semibold whitespace-nowrap">Checkout</span>
                     {checkoutState.currentStep > 0 && (
@@ -290,29 +299,40 @@ export default function CheckoutClient() {
                 </div>
 
                 {/* Two Column Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-3 lg:gap-4 items-start">
 
-                    {/* Right Column — Order Summary: shown first on mobile */}
+                    {/* Right Column — Collapsible Order Summary on mobile */}
                     <div className="lg:hidden">
-                        <CheckoutProduct
-                            setsubmittedvaluelist={(updater: any) => {
-                                if (typeof updater === 'function') {
-                                    const result = updater({ promoCode });
-                                    if (result.promoCode !== undefined) setPromoCode(result.promoCode);
-                                }
-                            }}
-                            submittedvaluelist={{
-                                promoCode,
-                                appliedPromo,
-                                totalpayment: total,
-                                paymentmethod: checkoutState.paymentMethod,
-                                address: checkoutState.address,
-                                productsID: cartItems?.items || [],
-                                receiverNO: userInfo?.phone || '',
-                            }}
-                            handleApplyPromo={handleApplyPromo}
-                            Stepstate={checkoutState}
-                        />
+                        <details className="group">
+                            <summary className="flex items-center justify-between w-full bg-white rounded-xl border border-gray-200 px-4 py-3 cursor-pointer list-none select-none">
+                                <span className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                    <ShoppingBag className="w-4 h-4 text-[var(--colour-fsP2)]" />
+                                    Order Summary
+                                </span>
+                                <ChevronRight className="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-90" />
+                            </summary>
+                            <div className="mt-2">
+                                <CheckoutProduct
+                                    setsubmittedvaluelist={(updater: any) => {
+                                        if (typeof updater === 'function') {
+                                            const result = updater({ promoCode });
+                                            if (result.promoCode !== undefined) setPromoCode(result.promoCode);
+                                        }
+                                    }}
+                                    submittedvaluelist={{
+                                        promoCode,
+                                        appliedPromo,
+                                        totalpayment: total,
+                                        paymentmethod: checkoutState.paymentMethod,
+                                        address: checkoutState.address,
+                                        productsID: cartItems?.items || [],
+                                        receiverNO: userInfo?.phone || '',
+                                    }}
+                                    handleApplyPromo={handleApplyPromo}
+                                    Stepstate={checkoutState}
+                                />
+                            </div>
+                        </details>
                     </div>
 
                     {/* Left Column — Step Content */}

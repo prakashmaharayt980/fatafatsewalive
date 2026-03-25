@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Tag, Truck, MapPin, AlertTriangle, Calendar, CheckCircle2, Clock } from 'lucide-react';
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle,
+    Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
     FilterBar, EmptyState, DRow, DSection,
@@ -36,6 +36,9 @@ function PreOrderDetailDialog({ pre, onClose }: { pre: PreOrder | null; onClose:
                 <DialogHeader className="px-5 py-4 border-b border-gray-100 bg-gray-50 shrink-0">
                     <div className="flex items-start justify-between gap-2">
                         <DialogTitle className="text-sm font-bold text-gray-900 leading-snug">{pre.product_name}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Details for your pre-order of {pre.product_name}, including payment breakdown and expected delivery.
+                        </DialogDescription>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded border shrink-0"
                             style={{ color: cfg.color, borderColor: `color-mix(in srgb, ${cfg.color} 30%, transparent)`, backgroundColor: `color-mix(in srgb, ${cfg.color} 8%, white)` }}>
                             {cfg.label.toUpperCase()}

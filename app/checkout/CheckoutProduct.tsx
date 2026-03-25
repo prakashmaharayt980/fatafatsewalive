@@ -65,12 +65,12 @@ export default function CheckoutProduct({
 
 
 
-      <div className="p-2 space-y-4 bg-white">
+      <div className="p-2.5 sm:p-3 space-y-3 sm:space-y-4 bg-white">
 
 
 
         {/* Products List - Enhanced Size */}
-        <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+        <div className="space-y-4 max-h-[280px] sm:max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           {items.map((item, index) => {
             const product = item?.product;
             if (!product) return null; // Safe guard against missing product data
@@ -88,7 +88,7 @@ export default function CheckoutProduct({
             return (
               <div key={item.id || index} className="flex gap-4 group">
                 {/* Image - Increased Size & Aspect Ratio */}
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 shadow-sm group-hover:shadow-md transition-all duration-300">
+                <div className="relative w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0 overflow-hidden rounded-xl sm:rounded-2xl border border-gray-100 bg-gray-50 shadow-sm group-hover:shadow-md transition-all duration-300">
                   <Image
                     src={(product as any).thumb?.url || (product as any).image?.thumb || (product as any).image?.full || '/placeholder.png'}
                     alt={product.name || 'Product'}
@@ -101,7 +101,7 @@ export default function CheckoutProduct({
                 {/* Details */}
                 <div className="flex-1 min-w-0 py-1 flex flex-col justify-between">
                   <div>
-                    <p className="text-sm sm:text-base font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-[var(--colour-fsP2)] transition-colors">
+                    <p className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-[var(--colour-fsP2)] transition-colors">
                       {product.name || 'Unnamed Product'}
                     </p>
                   </div>
@@ -111,6 +111,11 @@ export default function CheckoutProduct({
                       <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
                         Qty: {quantity}
                       </span>
+                      {item.varientcolour && (
+                        <span className="text-[10px] font-bold text-[var(--colour-fsP2)] bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-wide">
+                          Color: {item.varientcolour}
+                        </span>
+                      )}
                       <span className="text-xs text-gray-400">x Rs. {price.toLocaleString()}</span>
                     </div>
                     <span className="text-sm font-bold text-[var(--colour-fsP2)]">

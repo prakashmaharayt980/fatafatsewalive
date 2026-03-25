@@ -6,7 +6,7 @@ import { Search, Plus, Loader2, X, ChevronRight, Smartphone } from 'lucide-react
 import Image from 'next/image';
 import type { ProductDetails } from '../types/ProductDetailsTypes';
 import { cn } from '@/lib/utils';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ProductService } from '../api/services/product.service';
 
 // Simple debounce hook
@@ -113,6 +113,9 @@ export default function CompareSearchComponent({ onSelect, excludeSlugs, compact
                             <Search className="w-5 h-5 text-[var(--colour-fsP2)]" />
                             Search Products
                         </DrawerTitle>
+                        <DrawerDescription className="sr-only">
+                            Search for products to add to your comparison list.
+                        </DrawerDescription>
                     </DrawerHeader>
 
                     <div className="flex-1 flex flex-col px-6 py-4 gap-4 overflow-hidden bg-gray-50/30">

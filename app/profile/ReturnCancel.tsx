@@ -14,10 +14,9 @@ import {
 import {
     Dialog,
     DialogContent,
-
+    DialogDescription,
     DialogHeader,
     DialogTitle,
-
 } from "@/components/ui/dialog"
 
 function ReturnCancel() {
@@ -225,6 +224,9 @@ function ReturnCancel() {
                 <DialogContent className='border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm'>
                     <DialogHeader className=''>
                         <DialogTitle hidden>Product Details</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Detailed summary of your order including items, pricing, and payment method.
+                        </DialogDescription>
                         <h2 className="text-2xl sm:text-2xl font-black text-[var(--colour-fsP2)] ">Order Summary</h2>
                     </DialogHeader>
                     <div className="lg:col-span-3 ">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Search, ArrowLeft, Calculator, Percent, ArrowRight, Calendar } from 'lucide-react';
 import { useContextEmi } from '@/app/emi/_components/emiContext';
@@ -118,17 +118,20 @@ export default function EMICalculator() {
       onOpenChange={setIsDrawerOpen}
     >
       <DrawerContent className="max-h-[85vh] min-h-[60vh] max-w-6xl mx-auto bg-white border-0 shadow-xl">
-        <DrawerHeader className="text-center  m-0 p-0 items-center border-b-gray-200 border-b  ">
+        <DrawerHeader className="text-center m-0 p-0 items-center border-b-gray-200 border-b">
           <DrawerTitle className="flex items-center justify-center gap-2 m-0 p-0 text-xl text-[var(--colour-fsP2)] font-semibold">
             <CreditCard className="w-5 h-5 text-[var(--colour-fsP1)] mb-2" />
-            <span className=' items-center mb-2'>         EMI Calculator - {emiContextInfo.product?.name
-              ? emiContextInfo.product.name.length > 45
-                ? emiContextInfo.product.name.slice(0, 45) + '...'
-                : emiContextInfo.product.name
-              : 'Select Product'}
-
+            <span className='items-center mb-2'>
+              EMI Calculator - {emiContextInfo.product?.name 
+                ? (emiContextInfo.product.name.length > 45 
+                    ? emiContextInfo.product.name.slice(0, 45) + '...' 
+                    : emiContextInfo.product.name)
+                : 'Select Product'}
             </span>
           </DrawerTitle>
+          <DrawerDescription className="sr-only">
+            Calculate your Equated Monthly Installment (EMI) for {emiContextInfo.product?.name || "the selected product"}.
+          </DrawerDescription>
         </DrawerHeader>
 
         <div className="p-4 overflow-y-auto">
@@ -197,7 +200,7 @@ export default function EMICalculator() {
                 <div className="text-center">
                   {emiContextInfo.product.image && (
                     <Image
-                      src={emiContextInfo.product.image.full}
+                      src={typeof emiContextInfo.product.image === 'string' ? emiContextInfo.product.image : (emiContextInfo.product.image.full || emiContextInfo.product.image.thumb || '')}
                       alt={emiContextInfo.product.name}
                       className="object-contain mb-3 bg-white rounded border border-gray-200"
                       width={400}
@@ -205,7 +208,12 @@ export default function EMICalculator() {
                     />
                   )}
                   <h3 className="text-sm font-semibold text-gray-900 mb-1">{emiContextInfo.product.name}</h3>
-                  <p className="text-lg font-bold text-blue-600">  {currencySymbol}{(typeof emiContextInfo.product.price === 'object' ? emiContextInfo.product.price.current : emiContextInfo.product.price).toLocaleString()}</p>
+                  <p className="text-lg font-bold text-blue-600">
+                    {currencySymbol}
+                    {(typeof emiContextInfo.product.price === 'object' 
+                      ? (emiContextInfo.product.price as any).current 
+                      : (emiContextInfo.product.price || 0)).toLocaleString()}
+                  </p>
                 </div>
               </div>
 
@@ -245,7 +253,7 @@ export default function EMICalculator() {
                     }
                     className="h-9 border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
 
-                    max={Number(emiContextInfo.product.price)}
+                    max={Number(typeof emiContextInfo.product?.price === 'object' ? (emiContextInfo.product.price as any).current : (emiContextInfo.product?.price || 0))}
                   />
                 </div>
 

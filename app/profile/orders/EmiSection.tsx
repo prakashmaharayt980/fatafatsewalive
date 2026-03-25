@@ -6,7 +6,7 @@ import {
     Banknote, Upload, Loader2, AlertTriangle, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle,
+    Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
     FilterBar, EmptyState, StatusBadge, DRow, DSection,
@@ -51,6 +51,9 @@ function EmiDetailDialog({ emi, onClose }: { emi: EmiOrder | null; onClose: () =
                 <DialogHeader className="px-5 py-4 border-b border-gray-100 bg-gray-50 shrink-0">
                     <div className="flex items-start justify-between gap-2">
                         <DialogTitle className="text-sm font-bold text-gray-900 leading-snug">{emi.product_name}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Details for your EMI plan of {emi.product_name}, including repayment schedule and status info.
+                        </DialogDescription>
                         <StatusBadge status={emi.status} />
                     </div>
                     <div className="flex flex-wrap gap-2 mt-1.5">

@@ -8,12 +8,12 @@ import {
     RefreshCcw, CreditCard,
 } from 'lucide-react';
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import {
     AlertDialog, AlertDialogContent,
-    AlertDialogHeader, AlertDialogTitle,
+    AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import {
     StatusBadge, FilterBar, EmptyState,
     fmt, fmtRs, isDelivered, MOCK_ADDRESS, MOCK_USER, MOCK_ORDERS,
@@ -45,6 +45,9 @@ function CancelDialog({
                         </div>
                         <div>
                             <AlertDialogTitle className="text-sm font-bold text-gray-900 leading-tight">Cancel Order</AlertDialogTitle>
+                            <AlertDialogDescription className="sr-only">
+                                Are you sure you want to cancel order #{order.invoice_number}? This action cannot be undone.
+                            </AlertDialogDescription>
                             <p className="text-[11px] text-gray-400 mt-0.5">#{order.invoice_number}</p>
                         </div>
                     </div>
@@ -159,6 +162,9 @@ function OrderDetailDialog({ order, onClose, onCancelClick }: {
                             <DialogTitle className="text-[14px] font-bold text-gray-900 truncate">
                                 Order #{order.invoice_number}
                             </DialogTitle>
+                            <DialogDescription className="sr-only">
+                                Detailed view of your order including status journey, items, and billing summary.
+                            </DialogDescription>
                             <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1.5">
                                 <Calendar size={10} /> {fmt(order.created_at)}
                                 <span className="mx-1 text-gray-300">·</span>

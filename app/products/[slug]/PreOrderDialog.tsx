@@ -27,6 +27,7 @@ interface PreOrderDialogProps {
     productImage?: string;
     productPrice?: number;
     productSlug?: string;
+    selectedColor?: string;
 }
 
 const PRE_ORDER_PERKS = [
@@ -79,13 +80,17 @@ const PreOrderDialog: React.FC<PreOrderDialogProps> = ({
     productImage,
     productPrice,
     productSlug,
+    selectedColor,
 }) => {
     const router = useRouter();
 
     const handleProceed = () => {
         onClose();
         if (productSlug) {
-            router.push(`/checkout/preOrders/${productSlug}`);
+            const url = selectedColor 
+                ? `/checkout/preOrders/${productSlug}?selectedcolor=${selectedColor}` 
+                : `/checkout/preOrders/${productSlug}`;
+            router.push(url);
         }
     };
 

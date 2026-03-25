@@ -10,6 +10,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 
@@ -215,6 +216,9 @@ function Profile() {
                 <DialogContent className='border-0 rounded-3xl overflow-hidden bg-white shadow-2xl max-w-lg p-0'>
                     <DialogHeader className="p-6 pb-0">
                         <DialogTitle className='text-xl text-gray-900 font-bold'>Edit Personal Details</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Update your name, phone number, date of birth, and address.
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="p-6 space-y-5">

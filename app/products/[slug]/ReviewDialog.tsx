@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { X, Star, Check, ThumbsUp, Camera, ChevronLeft, Upload, Trash2, ImageIcon } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Review } from "@/app/types/ReviewTypes";
@@ -124,6 +124,12 @@ export default function ReviewDialog({
             onClose();
         }}>
             <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden bg-white max-h-[90vh] flex flex-col sm:rounded-2xl border-none shadow-2xl">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{isWriting ? "Write a Review" : "Ratings & Reviews"}</DialogTitle>
+                    <DialogDescription>
+                        {isWriting ? `Submit your personal experience and rating for ${productName}` : `Browse all customer reviews and total product ratings for ${productName}`}
+                    </DialogDescription>
+                </DialogHeader>
 
                 {/* --- Header --- */}
                 <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-20">

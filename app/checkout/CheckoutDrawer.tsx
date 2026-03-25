@@ -6,6 +6,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from '@/components/ui/drawer';
 
 import Image from 'next/image';
@@ -74,6 +75,9 @@ const CheckoutDrawer = () => {
               </span>
             )}
           </DrawerTitle>
+          <DrawerDescription className="sr-only">
+            Manage your selected items before proceeding to checkout.
+          </DrawerDescription>
         </DrawerHeader>
 
         <div className="px-4 sm:px-6 py-4 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-200">
@@ -117,6 +121,11 @@ const CheckoutDrawer = () => {
                     <h4 className="font-semibold text-sm text-gray-900 truncate pr-2 group-hover:text-[var(--colour-fsP1)] transition-colors">
                       {item?.product?.name || 'Unnamed Product'}
                     </h4>
+                    {item.varientcolour && (
+                      <p className="text-[10px] font-bold text-[var(--colour-fsP2)] bg-blue-50/50 px-1.5 py-0.5 rounded-md inline-block mt-0.5 uppercase tracking-wider">
+                        Color: {item.varientcolour}
+                      </p>
+                    )}
                     <p className="text-sm font-bold text-[var(--colour-fsP2)] mt-1">
                       Rs. {(item.price * item.quantity).toLocaleString()}
                     </p>

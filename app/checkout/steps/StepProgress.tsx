@@ -13,7 +13,7 @@ export default function StepProgress({ currentStep, state, onStepClick }: StepPr
     const steps = Object.values(CHECKOUT_STEPS).filter((v): v is CheckoutStep => typeof v === 'number');
 
     return (
-        <div className="w-full py-8 px-2 sm:px-0">
+        <div className="w-full py-4 px-2 sm:px-0">
             {/* Minimalist Style Bar - Theme Blue & Full Width */}
             <div className="relative w-full">
                 {/* Background Line */}

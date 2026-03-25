@@ -8,7 +8,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-
+    DialogDescription,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 
@@ -133,6 +133,9 @@ function Notifications() {
                 <DialogContent className='border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm'>
                     <DialogHeader>
                         <DialogTitle className='text-[var(--colour-fsP2)] text-center'>Rating Order Service</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Please provide your feedback and rating for the order service.
+                        </DialogDescription>
 
                     </DialogHeader>
                     <div className="flex items-center justify-center gap-2">

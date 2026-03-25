@@ -1,7 +1,7 @@
 "use client";
 import React, { useCallback } from "react";
 import { ShoppingCart, Trash2, Heart } from "lucide-react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 
 import Image from "next/image";
 import { useShallow } from "zustand/react/shallow";
@@ -54,6 +54,9 @@ const WishList = () => {
             <Heart className="w-4 sm:w-5 h-4 sm:h-5 text-[var(--colour-fsP1)]" />
             WishList
           </DrawerTitle>
+          <DrawerDescription className="sr-only">
+            View and manage your saved products.
+          </DrawerDescription>
         </DrawerHeader>
 
         <div className="px-2 sm:px-6 py-2 sm:py-4 overflow-y-auto flex-1">

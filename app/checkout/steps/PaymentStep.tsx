@@ -115,20 +115,20 @@ export default function PaymentStep({ state, onPaymentMethodChange, onPlaceOrder
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
                 <Button
                     onClick={onBack}
                     variant="outline"
-                    className="h-10 px-5 border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 text-[13px]"
+                    className="w-full sm:w-auto h-12 px-6 border border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 hover:text-gray-700 transition-all text-sm shadow-sm active:scale-95"
                     disabled={isSubmitting}
                 >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    <ChevronLeft className="w-4 h-4 mr-1.5" />
                     Back
                 </Button>
                 <Button
                     onClick={onPlaceOrder}
                     disabled={!isComplete || isSubmitting}
-                    className="flex-1 sm:flex-none h-10 px-8 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP1)] text-white font-extrabold rounded-xl shadow-md shadow-blue-100 transition-all hover:translate-y-[-1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed text-[13px] flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto h-12 px-6 sm:px-10 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-100/50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
                 >
                     {isSubmitting ? (
                         <>

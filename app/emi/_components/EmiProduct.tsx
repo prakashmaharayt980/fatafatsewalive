@@ -5,7 +5,7 @@ import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Search, X, Smartphone, Loader2, ChevronRight, Check, RefreshCw, Shield, ShoppingCart, Scale, Truck, Eye, Zap, Info } from "lucide-react";
 
 import { useContextEmi } from "./emiContext";
@@ -97,6 +97,9 @@ export default function ProductEMIUI({ chooseProduct, setProductPrice, product }
                 </div>
                 Search Products for EMI
               </DrawerTitle>
+              <DrawerDescription className="sr-only">
+                Find available products and calculate their EMI.
+              </DrawerDescription>
               <button onClick={() => setIsDrawerOpen(false)} className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors">
                 <X className="w-4 h-4 text-white" />
               </button>

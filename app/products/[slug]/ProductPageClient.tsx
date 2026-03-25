@@ -1,7 +1,7 @@
 // ProductPageClient.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ChevronsRight, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import ProductMainImage from "./ProductMainImage";
@@ -62,18 +62,32 @@ const ProductCarouselSection = ({
         minHeight="400px"
     />
 );
-
 export default function ProductPageClient({ productDetails }: { productDetails: any }) {
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState<number>(1);
+    const relatedCategory = productDetails.categories?.[0] || ({} as any);
+
+    const priceRange = useMemo(() => {
+        const currentPrice = productDetails.price?.current || productDetails.discounted_price || productDetails.price;
+        if (!currentPrice || typeof currentPrice !== 'number') return null;
+        return { min: currentPrice * 0.8, max: currentPrice * 1.2 };
+    }, [productDetails]);
+
+    const moreFromBrandFetcher = useCallback(() => 
+        getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data),
+        [relatedCategory.slug, productDetails.brand?.slug]
+    );
+
+    const similarPriceFetcher = useCallback(() => 
+        priceRange ? getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, per_page: 10 }).then(r => r.data) : Promise.resolve([]),
+        [relatedCategory.slug, priceRange]
+    );
 
     const { ref: belowFoldRef, inView: isBelowFoldInView } = useInView({
         triggerOnce: true,
         rootMargin: "300px",
     });
-
-    const relatedCategory = productDetails.categories?.[0] || ({} as any);
 
     /* ── Compute style/attributes helpers ── */
     const availableAttributes = useMemo(() => {
@@ -133,11 +147,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
         setSelectedImage(productDetails.thumb?.url || "");
     }, [productDetails]);
 
-    const priceRange = useMemo(() => {
-        const currentPrice = productDetails.price?.current || productDetails.discounted_price || productDetails.price;
-        if (!currentPrice || typeof currentPrice !== 'number') return null;
-        return { min: currentPrice * 0.8, max: currentPrice * 1.2 };
-    }, [productDetails]);
+    // priceRange was moved up
 
     return (
         <div className="min-h-screen bg-[#f7f7f8] pb-16">
@@ -176,9 +186,21 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                             allVariantImages={allVariantImages}
                         />
                     </div>
-                    {/* Sidebar: Only visible on desktop (lg and up) */}
-                    <div className="hidden lg:block lg:col-span-3">
-                        <ProductSidebar product={productDetails} />
+                    {/* Sidebar: Responsive layout - at side on desktop, below on mobile */}
+                    <div className="lg:col-span-3">
+                        {relatedCategory.slug ? (
+                            <LazySection
+                                fetcher={() => getCategoryProducts(relatedCategory.slug, { per_page: 6, page: 1 })}
+                                render={(res: any) => {
+                                    const products = res?.products || (Array.isArray(res) ? res : []);
+                                    return <ProductSidebar product={productDetails} trendingProducts={products} />;
+                                }}
+                                fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-xl" />}
+                                priority={true} // Priority for sidebar trending
+                            />
+                        ) : (
+                            <ProductSidebar product={productDetails} trendingProducts={[]} />
+                        )}
                     </div>
                 </div>
 
@@ -202,7 +224,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                                     <ProductCarouselSection
                                         title={`More from ${productDetails.brand?.name || "Brand"}`}
                                         slug={relatedCategory.slug}
-                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data)}
+                                        fetcher={moreFromBrandFetcher}
                                     />
                                 )}
 
@@ -212,7 +234,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                                     <ProductCarouselSection
                                         title="Similar Price Range"
                                         slug={relatedCategory.slug}
-                                        fetcher={() => getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, per_page: 10 }).then(r => r.data)}
+                                        fetcher={similarPriceFetcher}
                                     />
                                 )}
                             </section>

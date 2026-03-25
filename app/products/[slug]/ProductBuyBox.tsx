@@ -124,9 +124,8 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
     };
 
     const handleAddToCart = async () => {
-        await addToCart(product.id, quantity, { isLoggedIn }, triggerLoginAlert, product as unknown as BasketProduct);
-
-
+        const selectedColor = selectedAttributes["Color"] || selectedAttributes["color"] || selectedVariant?.attributes?.Color || selectedVariant?.attributes?.color || selectedVariant?.color;
+        await addToCart(product.id, quantity, { isLoggedIn }, triggerLoginAlert, product as unknown as BasketProduct, selectedColor);
     };
 
     const handleCompareToggle = () => {
@@ -488,6 +487,7 @@ const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
                 productImage={product.image?.full}
                 productPrice={currentPrice}
                 productSlug={product.slug}
+                selectedColor={selectedAttributes["Color"] || selectedAttributes["color"] || selectedVariant?.attributes?.Color || selectedVariant?.attributes?.color || selectedVariant?.color}
             />
 
             {/* ── EMI Details Dialog ── */}
