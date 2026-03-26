@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import NepaliDate from 'nepali-date-converter';
 
 import { EmiService } from '@/app/api/services/emi.service';
+import { useAuth } from '@/app/context/AuthContext';
 import {
     personalDetailsSchema,
     creditCardSchema,
@@ -17,7 +18,7 @@ import {
     emiConditionsCreditSchema,
 } from './validationSchemas';
 import { useContextEmi } from '../../_components/emiContext';
-import { BANK_PROVIDERS, calculateEMI } from '../../_components/_func_emiCalacutor';
+import { calculateEMI } from '../../_components/_func_emiCalacutor';
 import RenderReview from './ReviewApplyEmiDoc'
 import ProgressBar from './ProgressBar';
 import EmiProductDetails from './EmiProductDetails';
@@ -25,6 +26,8 @@ import CreditCardform from './CreditCardform';
 import DocumentUpload from './DocumentUpload';
 import SignaturePad from './SignaturePad';
 import FormField from './FormField';
+import EmiFaq from './EmiFaq';
+import NepaliDatePicker from '../../../CommonVue/NepaliDatePicker';
 import {
     ArrowBigLeft, Loader2, CheckCircle2, ChevronRight,
     CreditCard, Calendar, User, MapPin, Mail, Phone,
@@ -38,12 +41,30 @@ interface ApplyEmiClientProps {
 }
 
 const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selectedcolor }) => {
-    const { emiContextInfo, setEmiContextInfo } = useContextEmi();
+    const { isLoggedIn, setloginDailogOpen } = useAuth();
+    const { emiContextInfo, setEmiContextInfo, banks, fetchBanks } = useContextEmi();
+
+    useEffect(() => {
+        fetchBanks();
+    }, [fetchBanks]);
+    const [hasMounted, setHasMounted] = useState(false);
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
+
     const [currentstep, setcurrentstep] = useState(0);
     const [previews, setPreviews] = useState<{ [key: string]: string }>({});
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPaymentSubOptions, setShowPaymentSubOptions] = useState(false);
+
+    const [localUserInfo, setLocalUserInfo] = useState(emiContextInfo.userInfo);
+    const [localBankInfo, setLocalBankInfo] = useState(emiContextInfo.bankinfo);
+    const [localGranterInfo, setLocalGranterInfo] = useState(emiContextInfo.granterPersonalDetails);
+    const [localFiles, setLocalFiles] = useState(emiContextInfo.files);
+    const [localVariant, setLocalVariant] = useState(emiContextInfo.selectedVariant || '');
+    const [localEmiCalculation, setLocalEmiCalculation] = useState(emiContextInfo.emiCalculation);
+    const [localInterestRate, setLocalInterestRate] = useState(10);
 
     const [localCreditCardInfo, setLocalCreditCardInfo] = useState({
         cardHolderName: '',
@@ -56,10 +77,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const searchParams = useSearchParams();
 
     // Use prop product or fallback to context (though we prefer prop)
+    const selectedOption = emiContextInfo.hasCreditCard === 'yes' ? 'creditCard' : emiContextInfo.hasCreditCard === 'make' ? 'makeCard' : 'downPayment';
     const product = initialProduct || emiContextInfo.product;
-    const emiCalc = emiContextInfo.emiCalculation;
 
-    // Sync prop product to context if needed, or just use it directly
     useEffect(() => {
         if (initialProduct && initialProduct.id !== emiContextInfo.product?.id) {
             setEmiContextInfo(prev => ({ ...prev, product: initialProduct }));
@@ -71,29 +91,26 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         const colorParam = selectedcolor || searchParams.get('color') || searchParams.get('variant') || searchParams.get('selectedcolor');
 
         if (colorParam) {
-            setEmiContextInfo(prev => ({ ...prev, selectedVariant: colorParam }));
+            setLocalVariant(colorParam);
         }
 
         if (bankParam || tenureParam || downPaymentParam) {
-            setEmiContextInfo(prev => ({
+            if (bankParam) {
+                setLocalBankInfo(prev => ({ ...prev, bankname: bankParam }));
+                const bankMatch = banks.find(b => b.name === bankParam);
+                if (bankMatch) setLocalInterestRate(bankMatch.rate);
+            }
+            setLocalEmiCalculation(prev => ({
                 ...prev,
-                bankinfo: {
-                    ...prev.bankinfo,
-                    bankname: bankParam || prev.bankinfo.bankname
-                },
-                emiCalculation: {
-                    ...prev.emiCalculation,
-                    duration: tenureParam ? Number(tenureParam) : prev.emiCalculation.duration,
-                    downPayment: downPaymentParam ? Number(downPaymentParam) : prev.emiCalculation.downPayment
-                }
+                duration: tenureParam ? Number(tenureParam) : prev.duration,
+                downPayment: downPaymentParam ? Number(downPaymentParam) : prev.downPayment
             }));
         }
-    }, [initialProduct, searchParams, emiContextInfo.product?.id, setEmiContextInfo, selectedcolor]);
+    }, [initialProduct, searchParams, emiContextInfo.product?.id, setEmiContextInfo, selectedcolor, banks]);
 
-    // Handle file previews
     useEffect(() => {
         const newPreviews: { [key: string]: string } = {};
-        const files = emiContextInfo.files;
+        const files = localFiles;
         ['citizenshipFile', 'granterDocument'].forEach((docGroup) => {
             const docFiles = files[docGroup as keyof typeof files];
             if (docFiles && typeof docFiles === 'object') {
@@ -118,23 +135,28 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         return () => {
             Object.values(newPreviews).forEach(URL.revokeObjectURL);
         };
-    }, [emiContextInfo.files]);
+    }, [localFiles]);
+
+    const productPrice = useMemo(() => {
+        if (!product) return 0;
+        return typeof product.price === 'object'
+            ? Number((product.price as any).current || (product.price as any).price || 0)
+            : Number(product.price) || 0;
+    }, [product]);
 
     const getValidationSchema = (sectionKey: string, option: string) => {
         if (sectionKey === 'userInfo') return personalDetailsSchema();
         if (sectionKey === 'granterPersonalDetails') return personalDetailsSchema(true);
         if (sectionKey === 'bankinfo' && option === 'creditCard') return creditCardSchema;
         if (sectionKey === 'bankinfo') return bankDetailsSchema;
-
-        // EMI Calculation Scoping
         if (sectionKey === 'emiCalculation') {
-            if (option === 'creditCard') return emiConditionsCreditSchema(product?.price || 0);
-            return emiConditionsSchema(product?.price || 0);
+            if (option === 'downPayment') return emiConditionsSchema(productPrice);
+            return emiConditionsCreditSchema(productPrice);
         }
         return Yup.object();
     };
 
-    const validateFormSection = async (section: { sectionKey: string }, data: Record<string, unknown>) => {
+    const validateFormSection = async (section: { sectionKey: string }, data: any) => {
         try {
             const schema = getValidationSchema(section.sectionKey, selectedOption);
             await schema.validate(data, { abortEarly: false });
@@ -151,16 +173,18 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             return errors;
         }
     };
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, section: string) => {
         const { name, value } = e.target;
-        setEmiContextInfo((prev) => ({
-            ...prev,
-            [section]: {
-                ...(prev as unknown as Record<string, Record<string, unknown>>)[section],
-                [name]: value,
-            },
-        }));
+
+        const setter = section === 'userInfo' ? setLocalUserInfo :
+            section === 'bankinfo' ? setLocalBankInfo :
+                section === 'granterPersonalDetails' ? setLocalGranterInfo :
+                    section === 'emiCalculation' ? setLocalEmiCalculation : null;
+
+        if (setter) {
+            setter((prev: any) => ({ ...prev, [name]: value }));
+        }
+
         // Clear any previous error for this field on typing
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -189,48 +213,75 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 const adDay = String(adDate.date).padStart(2, '0');
 
                 const adDateString = `${adYear}-${adMonth}-${adDay}`;
-
-                // Set the corresponding AD date
-                setEmiContextInfo((prev) => ({
-                    ...prev,
-                    [sectionKey]: {
-                        ...(prev as unknown as Record<string, Record<string, unknown>>)[sectionKey],
-                        dob: adDateString,
-                    },
-                }));
+                if (sectionKey === 'userInfo') {
+                    setLocalUserInfo(prev => ({ ...prev, dob: adDateString }));
+                } else if (sectionKey === 'granterPersonalDetails') {
+                    setLocalGranterInfo(prev => ({ ...prev, dob: adDateString }));
+                }
             } catch (err) {
                 // Ignore invalid BS date conversion
             }
         }
     };
 
+    const handleADDateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, sectionKey: 'userInfo' | 'granterPersonalDetails') => {
+        const value = e.target.value;
+        const adDateStr = value; // Expected YYYY-MM-DD
+
+        // Update AD date in state and clear error
+        handleInputChange(e, sectionKey);
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(adDateStr)) {
+            try {
+                const parts = adDateStr.split('-');
+                const adYear = parseInt(parts[0]);
+                const adMonth = parseInt(parts[1]) - 1; // JS Date months are 0-11
+                const adDay = parseInt(parts[2]);
+
+                const adDateObj = new Date(adYear, adMonth, adDay);
+                const nd = new NepaliDate(adDateObj);
+
+                const bsYear = nd.getYear();
+                const bsMonth = String(nd.getMonth() + 1).padStart(2, '0');
+                const bsDay = String(nd.getDate()).padStart(2, '0');
+
+                const bsDateString = `${bsYear}-${bsMonth}-${bsDay}`;
+                if (sectionKey === 'userInfo') {
+                    setLocalUserInfo(prev => ({ ...prev, dob_bs: bsDateString }));
+                } else if (sectionKey === 'granterPersonalDetails') {
+                    setLocalGranterInfo(prev => ({ ...prev, dob_bs: bsDateString }));
+                }
+            } catch (err) {
+                // Ignore invalid AD date conversion
+            }
+        }
+    };
+
     const handleFileDelete = (docType: string, isGranter = false) => {
-        setEmiContextInfo((prev) => {
-            // Logic to cleanup previews handled by effect
-            const fileKey = docType === 'bankStatement' ? 'bankStatement' : isGranter ? 'granterDocument' : 'citizenshipFile';
+        setLocalFiles((prev) => {
+            if (docType === 'bankStatement') {
+                return { ...prev, bankStatement: null };
+            }
+            if (docType === 'userSignature') {
+                return { ...prev, userSignature: null };
+            }
+            const fileKey = isGranter ? 'granterDocument' : 'citizenshipFile';
             return {
                 ...prev,
-                files: {
-                    ...prev.files,
-                    [fileKey]: {
-                        ...(prev.files as unknown as Record<string, Record<string, File | null>>)[fileKey],
-                        [docType]: null,
-                    },
+                [fileKey]: {
+                    ...(prev as any)[fileKey],
+                    [docType]: null,
                 },
             };
         });
     };
 
-
     const handleBankSelect = async (section: string, name: string, value: string) => {
-        setEmiContextInfo((prev) => ({
+        setLocalBankInfo((prev) => ({
             ...prev,
-            [section]: {
-                ...(prev as unknown as Record<string, Record<string, unknown>>)[section],
-                [name]: value,
-            },
-            interestRate: BANK_PROVIDERS.find((b) => b.name === value)?.rate || 10,
+            [name]: value,
         }));
+        setLocalInterestRate(banks.find((b) => b.name === value)?.rate || 10);
         const currentOption = emiContextInfo.hasCreditCard === 'yes' ? 'creditCard' : emiContextInfo.hasCreditCard === 'make' ? 'makeCard' : 'downPayment';
         const schema = getValidationSchema(section, currentOption);
         try {
@@ -245,86 +296,116 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, docType: string, isGranter = false) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (docType === 'userSignature') {
-            setEmiContextInfo((prev) => ({
-                ...prev,
-                files: { ...prev.files, userSignature: file },
-            }));
-        } else if (docType === 'bankStatement') {
-            setEmiContextInfo((prev) => ({
-                ...prev,
-                files: { ...prev.files, bankStatement: file },
-            }));
-        } else {
-            setEmiContextInfo((prev) => ({
-                ...prev,
-                files: {
-                    ...prev.files,
-                    [isGranter ? 'granterDocument' : 'citizenshipFile']: {
-                        ...(prev.files as unknown as Record<string, Record<string, File | null>>)[isGranter ? 'granterDocument' : 'citizenshipFile'],
+
+        if (file.size > 300 * 1024) {
+            toast.error(`"${file.name}" exceeds 300KB limit. Please upload a smaller file.`, {
+                duration: 4000,
+                position: 'top-center'
+            });
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            toast.error(`"${file.name}" is not an image. Please upload an image file (e.g., JPEG, PNG).`, {
+                duration: 4000,
+                position: 'top-center'
+            });
+            return;
+        }
+
+        setLocalFiles((prev) => {
+            if (docType === 'userSignature') {
+                return { ...prev, userSignature: file };
+            } else if (docType === 'bankStatement') {
+                return { ...prev, bankStatement: file };
+            } else {
+                const fileKey = isGranter ? 'granterDocument' : 'citizenshipFile';
+                return {
+                    ...prev,
+                    [fileKey]: {
+                        ...(prev as any)[fileKey],
                         [docType]: file,
                     },
-                },
-            }));
-        }
+                };
+            }
+        });
     };
 
     const handleContinue = async () => {
         if (currentstep === 0) {
+            const hasVariants = product && product.variants && product.variants.length > 0;
+            const uniqueColors = hasVariants ? Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean) : [];
+            if (uniqueColors.length > 1 && !localVariant) {
+                toast.error('Please select a product color/variant before continuing.');
+                return;
+            }
+            if (uniqueColors.length === 1 && !localVariant) {
+                setLocalVariant(uniqueColors[0]);
+            }
             setcurrentstep(1);
             return;
         }
         const currentSection = formSections[selectedOption as keyof typeof formSections]?.find((section) => section.step === currentstep);
         if (currentSection) {
-            let data: Record<string, unknown> = {};
+            let data: any = {};
             if (currentSection.sectionKey === 'emiCalculation') {
-                data = { ...emiContextInfo.emiCalculation, bankname: emiContextInfo.bankinfo.bankname };
-            } else if (currentSection.sectionKey === 'bankinfo' && selectedOption === 'creditCard') {
-                data = { ...emiContextInfo.bankinfo, ...localCreditCardInfo };
+                data = {
+                    ...localEmiCalculation,
+                    downPayment: emiData.downPayment,
+                    bankname: localBankInfo.bankname,
+                    financeAmount: emiData.financeAmount,
+                };
             } else {
-                data = (emiContextInfo as unknown as Record<string, Record<string, unknown>>)[currentSection.sectionKey] || {};
+                data = (currentSection.sectionKey === 'userInfo' ? localUserInfo :
+                    currentSection.sectionKey === 'granterPersonalDetails' ? localGranterInfo :
+                        currentSection.sectionKey === 'bankinfo' ? localBankInfo : {}) as any;
             }
 
-            // 1. Validate Form Fields
             const sectionErrors = await validateFormSection(currentSection, data);
             setErrors(sectionErrors);
 
             if (Object.keys(sectionErrors).length > 0) {
-                // If form errors exist, stop here
                 return;
             }
 
-            // 2. Validate Files (if applicable for this step)
-            // check based on selectedOption and currentStep
             const fileErrors: string[] = [];
-            const files = emiContextInfo.files;
+            const files = localFiles;
 
-            if (selectedOption === 'downPayment') {
-                if (currentstep === 1) { // User Info -> needs ppphoto, front, back
+            if (selectedOption === 'creditCard') {
+                if (currentstep === 2) {
                     if (!files.citizenshipFile.ppphoto) fileErrors.push("Applicant Photo");
                     if (!files.citizenshipFile.front) fileErrors.push("Citizenship Front");
                     if (!files.citizenshipFile.back) fileErrors.push("Citizenship Back");
-                } else if (currentstep === 2) { // Granter Info -> needs ppphoto, front, back
+                }
+            } else if (selectedOption === 'downPayment') {
+                if (currentstep === 1) {
+                    if (!files.citizenshipFile.ppphoto) fileErrors.push("Applicant Photo");
+                    if (!files.citizenshipFile.front) fileErrors.push("Citizenship Front");
+                    if (!files.citizenshipFile.back) fileErrors.push("Citizenship Back");
+                } else if (currentstep === 2) {
                     if (!files.granterDocument.ppphoto) fileErrors.push("Guarantor Photo");
                     if (!files.granterDocument.front) fileErrors.push("Guarantor Citizenship Front");
                     if (!files.granterDocument.back) fileErrors.push("Guarantor Citizenship Back");
                 }
             } else if (selectedOption === 'makeCard') {
-                if (currentstep === 1) { // User Info -> needs ppphoto, front, back
+                if (currentstep === 1) {
                     if (!files.citizenshipFile.ppphoto) fileErrors.push("Applicant Photo");
                     if (!files.citizenshipFile.front) fileErrors.push("Citizenship Front");
                     if (!files.citizenshipFile.back) fileErrors.push("Citizenship Back");
-                } else if (currentstep === 2) { // Bank Info -> needs bankStatement
+                } else if (currentstep === 2) {
                     if (!files.bankStatement) fileErrors.push("Bank Statement");
                 }
             }
-            // Credit Card option has no file uploads in steps 1-3 usually (unless logic changes), so no check needed.
-            // Wait, credit card step 1 is bankinfo, step 2 userinfo, step 3 emi. Original code didn't show uploads for credit card flow.
+
+            // All options require signature in Step 3
+            if (currentstep === 3 && !files.userSignature) {
+                fileErrors.push("Your Digital Signature");
+            }
 
             if (fileErrors.length > 0) {
-                toast.error(`Missing Documents`, {
+                toast.error(`Missing Required Documents`, {
                     description: (
-                        <ul className="list-disc pl-4 mt-2 space-y-1">
+                        <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[11px] font-medium">
                             {fileErrors.map((err, i) => <li key={i}>{err}</li>)}
                         </ul>
                     ),
@@ -343,113 +424,86 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         setErrors({});
     };
 
+
+
     const handleSubmit = async () => {
+        if (!isLoggedIn) {
+            toast.error("Please login to submit your application.");
+            setloginDailogOpen(true);
+            return;
+        }
+
         if (!product) {
             toast.error("Product not found. Cannot submit application.");
             return;
         }
 
-
-
-
         const hasVariants = product.variants && product.variants.length > 0;
 
-        if (hasVariants && !emiContextInfo.selectedVariant && product.variants.length > 1) {
+        if (hasVariants && !localVariant && product.variants.length > 1) {
             toast.error("Please select a product color/variant option.");
-            // Maybe scroll to variant selector or open a drawer?
             return;
         }
 
         setIsSubmitting(true);
         try {
-            // Use FormData to properly send files
             const formData = new FormData();
-            const option = selectedOption;
 
-            let response;
+            // Map application type to API expected strings
+            const typeMapping: Record<string, string> = {
+                'creditCard': 'craditcard',
+                'downPayment': 'with_cittizen',
+                'makeCard': 'with_new_card_Apply'
+            };
 
-            if (option === 'creditCard') {
-                // Execute explicit EMI Service request per user specification
-                const payload = {
-                    name: emiContextInfo.userInfo.name,
-                    email: emiContextInfo.userInfo.email,
-                    contact_number: emiContextInfo.userInfo.phone,
-                    address: emiContextInfo.userInfo.address,
-                    dob_ad: emiContextInfo.userInfo.dob,
-                    dob_bs: emiContextInfo.userInfo.dob,
-                    gender: emiContextInfo.userInfo.gender,
-                    product_id: product.id,
-                    finance_amount: emiData?.financeAmount || 0,
-                    monthly_income: emiContextInfo.bankinfo.salaryAmount || 0,
-                    credit_card: localCreditCardInfo.creditCardNumber
+            const apiType = typeMapping[selectedOption] || selectedOption;
 
-                };
+            // Common Product Data
+            const productData = {
+                id: product.id,
+                varient: localVariant,
+                quntioy: 1, // Kept specific naming as requested
+                price: productPrice
+            };
 
-                response = await EmiService.EmiRequest(payload);
-            } else if (option === 'makeCard') {
-                // Common Data for legacy paths
-                formData.append('product_id', String(product.id));
-                formData.append('product_price', String(product.price));
-                formData.append('application_type', option);
-                formData.append('userInfo', JSON.stringify(emiContextInfo.userInfo));
-                formData.append('emiCalculation', JSON.stringify({
-                    ...emiContextInfo.emiCalculation,
-                    bank: emiContextInfo.bankinfo.bankname
-                }));
-                if (emiContextInfo.selectedVariant) {
-                    formData.append('selected_variant', emiContextInfo.selectedVariant);
-                }
 
-                formData.append('bankinfo', JSON.stringify({
-                    bankname: emiContextInfo.bankinfo.bankname,
-                    accountNumber: emiContextInfo.bankinfo.accountNumber,
-                    bankbranch: emiContextInfo.bankinfo.bankbranch,
-                    salaryAmount: emiContextInfo.bankinfo.salaryAmount
-                }));
-                // Add files
-                const files = emiContextInfo.files;
-                if (files.citizenshipFile.ppphoto) formData.append('citizenship_ppphoto', files.citizenshipFile.ppphoto);
-                if (files.citizenshipFile.front) formData.append('citizenship_front', files.citizenshipFile.front);
-                if (files.citizenshipFile.back) formData.append('citizenship_back', files.citizenshipFile.back);
-                if (files.bankStatement) formData.append('bank_statement', files.bankStatement);
-            } else if (option === 'downPayment') {
-                // Common Data for legacy paths
-                formData.append('product_id', String(product.id));
-                formData.append('product_price', String(product.price));
-                formData.append('application_type', option);
-                formData.append('userInfo', JSON.stringify(emiContextInfo.userInfo));
-                formData.append('emiCalculation', JSON.stringify({
-                    ...emiContextInfo.emiCalculation,
-                    bank: emiContextInfo.bankinfo.bankname
-                }));
-                if (emiContextInfo.selectedVariant) {
-                    formData.append('selected_variant', emiContextInfo.selectedVariant);
-                }
+            // 3. Append Common Files
+            const files = localFiles;
 
-                formData.append('granterPersonalDetails', JSON.stringify(emiContextInfo.granterPersonalDetails));
-                formData.append('bankinfo', JSON.stringify({
-                    bankname: emiContextInfo.bankinfo.bankname
-                }));
-                // Add files - User documents
-                const files = emiContextInfo.files;
-                if (files.citizenshipFile.ppphoto) formData.append('citizenship_ppphoto', files.citizenshipFile.ppphoto);
-                if (files.citizenshipFile.front) formData.append('citizenship_front', files.citizenshipFile.front);
-                if (files.citizenshipFile.back) formData.append('citizenship_back', files.citizenshipFile.back);
-                // Guarantor documents
+            if (files?.citizenshipFile?.ppphoto) formData.append('citizenship_ppphoto', files.citizenshipFile.ppphoto);
+            if (files?.citizenshipFile?.front) formData.append('citizenship_front', files.citizenshipFile.front);
+            if (files?.citizenshipFile?.back) formData.append('citizenship_back', files.citizenshipFile.back);
+
+            if (files?.bankStatement) formData.append('bank_statement', files.bankStatement);
+            if (files?.userSignature) formData.append('user_signature', files.userSignature);
+
+            // 4. Append Type-Specific Files (Only for downPayment/with_cittizen)
+            if (selectedOption === 'downPayment' && files?.granterDocument) {
                 if (files.granterDocument.ppphoto) formData.append('granter_ppphoto', files.granterDocument.ppphoto);
                 if (files.granterDocument.front) formData.append('granter_front', files.granterDocument.front);
                 if (files.granterDocument.back) formData.append('granter_back', files.granterDocument.back);
-                // Signature
-                if (files.userSignature) formData.append('user_signature', files.userSignature);
             }
 
-            if (option !== 'creditCard') {
-                response = await EmiService.ApplyEmiDownPayment(formData);
-            }
+            // Append JSON parts to FormData
+            formData.append('product', JSON.stringify(productData));
+            formData.append('applicationtype', apiType);
+            formData.append('formdata', JSON.stringify({
+                personalInfo: localUserInfo,
+                bankInfo: localBankInfo,
+                emiCalculation: localEmiCalculation,
+                ...(selectedOption === 'creditCard' && { creditCard: localCreditCardInfo }),
+                ...(selectedOption === 'downPayment' && { granterInfo: localGranterInfo }),
+                // for makeCard, bankInfo is already included above
+            }));
 
-            if (response) {
-                toast.success('Application Submitted Successfully!');
-                router.push('/');
+            // Execute API Request
+            const response = await EmiService.EmiRequest(formData);
+
+            if (response && (response.success || response.id || response.status)) {
+                toast.success(response.message || 'Application Submitted Successfully!');
+                router.push('/profile/emi-requests');
+            } else {
+                toast.error(response?.message || 'Failed to submit application.');
             }
         } catch (error: unknown) {
             console.error("Submission error:", error);
@@ -461,28 +515,38 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     };
 
     const handleOptionSelect = (option: string) => {
+        const hasVariants = product && product.variants && product.variants.length > 0;
+        const uniqueColors = hasVariants ? Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean) : [];
+        if (uniqueColors.length > 1 && !localVariant) {
+            toast.error('Please select a product color/variant before choosing an EMI option.');
+            return;
+        }
+
+        const minDownPayment = option === 'downPayment' ? '40%' : 0;
+        setLocalEmiCalculation(prev => ({ ...prev, downPayment: minDownPayment }));
         setEmiContextInfo((prev) => ({
             ...prev,
             hasCreditCard: option === 'creditCard' ? 'yes' : option === 'makeCard' ? 'make' : 'no',
-            emiCalculation: {
-                ...prev.emiCalculation,
-                downPayment: option === 'downPayment' ? 40 : prev.emiCalculation.downPayment,
-            },
         }));
-        setErrors({}); // Clear validation errors on mode switch
+        setErrors({});
         setcurrentstep(1);
-        setShowPaymentSubOptions(false); // reset for subsequent visits
+        setShowPaymentSubOptions(false);
     };
 
     const tumerOptions = useMemo(() => {
-        const tumer = BANK_PROVIDERS.find((bank) => bank.name === emiContextInfo.bankinfo.bankname)?.tenureOptions || [];
+        const tumer = banks.find((bank) => bank.name === localBankInfo.bankname)?.tenureOptions || [];
         return tumer.map(String);
-    }, [emiContextInfo.bankinfo.bankname]);
+    }, [localBankInfo.bankname, banks]);
 
     const emiData = useMemo(() => {
         if (!product) return { downPayment: 0, financeAmount: 0, tenure: 0, principal: 0, paymentpermonth: 0 };
-        const pPrice = typeof product.price === 'object' ? (product.price as any).current : product.price;
-        const result = calculateEMI({ principal: Number(pPrice) || 0, tenure: emiCalc.duration, downPayment: emiCalc.downPayment, bankId: emiContextInfo.bankinfo.bankname });
+        // Always use resolved numeric price
+        const result = calculateEMI({
+            principal: productPrice,
+            tenure: localEmiCalculation.duration,
+            downPayment: localEmiCalculation.downPayment,
+            bankId: localBankInfo.bankname
+        });
         return {
             principal: result.principal,
             tenure: result.tenure,
@@ -490,16 +554,16 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             financeAmount: result.financeAmount,
             paymentpermonth: result.paymentPerMonth,
         };
-    }, [product, emiCalc.duration, emiCalc.downPayment, emiContextInfo.bankinfo.bankname]);
+    }, [product, productPrice, localEmiCalculation.duration, localEmiCalculation.downPayment, localBankInfo.bankname]);
 
-    const bankOptions = useMemo(() => BANK_PROVIDERS.map((b) => b.name), []);
+    const bankOptions = useMemo(() => banks.map((b) => b.name), [banks]);
 
     // ── Form Field Definitions ────────────────────────────────────────────────
     const personalDetailsInfolist = [
         {
             label: 'User Name',
             name: 'name',
-            value: emiContextInfo.userInfo.name,
+            value: localUserInfo.name,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter user name',
             maxLength: 50,
@@ -509,7 +573,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Email',
             name: 'email',
-            value: emiContextInfo.userInfo.email,
+            value: localUserInfo.email,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter email',
             svgicon: <Mail className="w-5 h-5" />,
@@ -519,7 +583,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Gender',
             name: 'gender',
-            value: emiContextInfo.userInfo.gender,
+            value: localUserInfo.gender,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             type: 'select',
             options: ['Male', 'Female', 'Other'],
@@ -529,7 +593,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Marriage Status',
             name: 'marriageStatus',
-            value: emiContextInfo.userInfo.marriageStatus,
+            value: localUserInfo.marriageStatus,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             type: 'select',
             options: ['Single', 'Married'],
@@ -537,27 +601,28 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             extenduserinfo: '',
         },
         {
-            label: emiContextInfo.userInfo.gender === 'Male' ? 'Wife Name' : 'Husband Name',
+            label: localUserInfo.gender === 'Male' ? 'Wife Name' : 'Husband Name',
             name: 'userpartnerName',
-            value: emiContextInfo.userInfo.userpartnerName,
+            value: localUserInfo.userpartnerName,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
-            extenduserinfo: emiContextInfo.userInfo.marriageStatus === 'Single' ? 'hidden' : '',
+            extenduserinfo: localUserInfo.marriageStatus === 'Single' ? 'hidden' : '',
             svgicon: <User className="w-5 h-5" />,
         },
         {
             label: 'Phone Number',
             name: 'phone',
-            value: emiContextInfo.userInfo.phone,
+            value: localUserInfo.phone,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter phone number',
             svgicon: <Phone className="w-5 h-5" />,
             extenduserinfo: '',
             type: 'tel',
+            maxLength: 10,
         },
         {
             label: 'National ID Number',
             name: 'nationalID',
-            value: emiContextInfo.userInfo.nationalID,
+            value: localUserInfo.nationalID,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter national ID number',
             svgicon: <Hash className="w-5 h-5" />,
@@ -566,17 +631,17 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Date of Birth (BS)',
             name: 'dob_bs',
-            value: emiContextInfo.userInfo.dob_bs,
+            value: localUserInfo.dob_bs,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBSDateChange(e, 'userInfo'),
-            placeholder: 'YYYY-MM-DD',
+            placeholder: 'Select BS date',
             svgicon: <Calendar className="w-5 h-5" />,
             extenduserinfo: '',
         },
         {
             label: 'Date of Birth (AD)',
             name: 'dob',
-            value: emiContextInfo.userInfo.dob,
-            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
+            value: localUserInfo.dob,
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleADDateChange(e, 'userInfo'),
             type: 'date',
             svgicon: <Calendar className="w-5 h-5" />,
             extenduserinfo: '',
@@ -584,7 +649,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Address',
             name: 'address',
-            value: emiContextInfo.userInfo.address,
+            value: localUserInfo.address,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'userInfo'),
             placeholder: 'Enter full address',
             maxLength: 100,
@@ -597,7 +662,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         {
             label: 'Bank Name',
             name: 'bankname',
-            value: emiContextInfo.bankinfo.bankname,
+            value: localBankInfo.bankname,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value),
             type: 'select',
             options: bankOptions,
@@ -666,97 +731,124 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
 
     const bankdetailsInfo = [
-        { label: 'Bank Name', name: 'bankname', value: emiContextInfo.bankinfo.bankname, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Account Number', name: 'accountNumber', value: emiContextInfo.bankinfo.accountNumber, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter account number', svgicon: <Hash className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Bank Branch', name: 'bankbranch', value: emiContextInfo.bankinfo.bankbranch, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter Bank Branch', svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Salary Amount', name: 'salaryAmount', value: emiContextInfo.bankinfo.salaryAmount, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter salary amount', svgicon: <DollarSign className="w-5 h-5" />, extenduserinfo: '', type: 'number' },
+        { label: 'Bank Name', name: 'bankname', value: localBankInfo.bankname, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Account Number', name: 'accountNumber', value: localBankInfo.accountNumber, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter account number', svgicon: <Hash className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Bank Branch', name: 'bankbranch', value: localBankInfo.bankbranch, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter Bank Branch', svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Salary Amount', name: 'salaryAmount', value: localBankInfo.salaryAmount, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter salary amount', svgicon: <DollarSign className="w-5 h-5" />, extenduserinfo: '', type: 'number' },
     ];
 
-    const granterPersonalDetails = [
-        { label: 'Guarantors Full Name', name: 'name', value: emiContextInfo.granterPersonalDetails.name, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Guarantor name', svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Phone Number', name: 'phone', value: emiContextInfo.granterPersonalDetails.phone, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Phone Number', svgicon: <Phone className="w-5 h-5" />, extenduserinfo: '', type: 'tel' },
-        { label: 'Gender', name: 'gender', value: emiContextInfo.granterPersonalDetails.gender, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Male', 'Female'], svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Marriage Status', name: 'marriageStatus', value: emiContextInfo.granterPersonalDetails.marriageStatus, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Single', 'Married'], svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Wife Name / Husband Name', name: 'userpartnerName', value: emiContextInfo.granterPersonalDetails.userpartnerName, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), extenduserinfo: emiContextInfo.granterPersonalDetails.marriageStatus === 'Single' ? 'hidden' : '', svgicon: <User className="w-5 h-5" /> },
-        { label: 'Citizenship Number', name: 'nationalID', value: emiContextInfo.granterPersonalDetails.nationalID, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter citizenship number', svgicon: <Hash className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Date of Birth (BS)', name: 'dob_bs', value: emiContextInfo.granterPersonalDetails.dob_bs, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBSDateChange(e, 'granterPersonalDetails'), placeholder: 'YYYY-MM-DD', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Date of Birth (AD)', name: 'dob', value: emiContextInfo.granterPersonalDetails.dob, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'date', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Address', name: 'address', value: emiContextInfo.granterPersonalDetails.address, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Address', maxLength: 100, svgicon: <MapPin className="w-5 h-5" />, extenduserinfo: 'md:col-span-2' },
+    const granterPersonalDetailsList = [
+        { label: 'Guarantors Full Name', name: 'name', value: localGranterInfo.name, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Guarantor name', svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Phone Number', name: 'phone', value: localGranterInfo.phone, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Phone Number', svgicon: <Phone className="w-5 h-5" />, extenduserinfo: '', type: 'tel', maxLength: 10 },
+        { label: 'Gender', name: 'gender', value: localGranterInfo.gender, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Male', 'Female'], svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Marriage Status', name: 'marriageStatus', value: localGranterInfo.marriageStatus, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Single', 'Married'], svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Wife Name / Husband Name', name: 'userpartnerName', value: localGranterInfo.userpartnerName, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), extenduserinfo: localGranterInfo.marriageStatus === 'Single' ? 'hidden' : '', svgicon: <User className="w-5 h-5" /> },
+        { label: 'Citizenship Number', name: 'nationalID', value: localGranterInfo.nationalID, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter citizenship number', svgicon: <Hash className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Date of Birth (BS)', name: 'dob_bs', value: localGranterInfo.dob_bs, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBSDateChange(e, 'granterPersonalDetails'), placeholder: 'Select BS date', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Date of Birth (AD)', name: 'dob', value: localGranterInfo.dob, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleADDateChange(e, 'granterPersonalDetails'), type: 'date', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Address', name: 'address', value: localGranterInfo.address, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Address', maxLength: 100, svgicon: <MapPin className="w-5 h-5" />, extenduserinfo: 'md:col-span-2' },
     ];
 
     const EmiConditionFields = [
         {
-            label: 'Down Payment Amount',
+            label: 'Down Payment (Rs.)',
             name: 'downPayment',
-            value: emiContextInfo.emiCalculation.downPayment,
+            value: localEmiCalculation.downPayment,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'),
             svgicon: <DollarSign className="w-5 h-5" />,
             extenduserinfo: '',
-            placeholder: 'Enter down payment amount (e.g. 40% or 5000)',
-            maxvalue: (product && typeof product.price === 'number') ? product.price : (product && typeof product.price === 'object' && 'current' in product.price) ? Number((product.price as any).current) : 0,
+            placeholder: 'Min 40% required',
             type: 'number',
-            helper: typeof emiContextInfo.emiCalculation.downPayment === 'string' && emiContextInfo.emiCalculation.downPayment.includes('%')
-                ? `Calculated: Rs. ${emiData.downPayment.toLocaleString()}`
-                : null
+            helper: emiData.downPayment > 0
+                ? `Min: Rs. ${Math.ceil(productPrice * 0.4).toLocaleString()} — Computed: Rs. ${Math.round(emiData.downPayment).toLocaleString()}`
+                : `Minimum 40% = Rs. ${Math.ceil(productPrice * 0.4).toLocaleString()}`,
         },
-        { label: 'Bank', name: 'bankname', value: emiContextInfo.bankinfo.bankname, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, placeholder: 'Select Bank', svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Duration (months)', name: 'duration', value: emiCalc.duration, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Finance Amount', name: 'financeAmount', value: emiData.financeAmount, onChange: () => { }, svgicon: <DollarSign className="w-5 h-5" />, extenduserinfo: '', disabled: true },
+        { label: 'Bank', name: 'bankname', value: localBankInfo.bankname, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, placeholder: 'Select Bank', svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
+        { label: 'Duration (months)', name: 'duration', value: localEmiCalculation.duration, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
+        {
+            label: 'Finance Amount (auto)',
+            name: 'financeAmount',
+            value: emiData.financeAmount > 0 ? `Rs. ${Math.round(emiData.financeAmount).toLocaleString()}` : '',
+            onChange: () => { },
+            svgicon: <DollarSign className="w-5 h-5" />,
+            extenduserinfo: '',
+            disabled: true,
+            placeholder: 'Calculated automatically',
+        },
     ];
 
     const EmiConditionFieldCredit = [
         {
-            label: 'Down Payment Amount',
+            label: 'Down Payment (Rs.)',
             name: 'downPayment',
-            value: emiContextInfo.emiCalculation.downPayment,
+            value: localEmiCalculation.downPayment,
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'),
             svgicon: <DollarSign className="w-5 h-5" />,
             extenduserinfo: '',
-            placeholder: 'Enter down payment amount',
-            maxvalue: (product && typeof product.price === 'number') ? product.price : (product && typeof product.price === 'object' && 'current' in product.price) ? Number((product.price as any).current) : 0,
-            type: 'text',
-            helper: typeof emiContextInfo.emiCalculation.downPayment === 'string' && emiContextInfo.emiCalculation.downPayment.includes('%')
-                ? `Calculated: Rs. ${emiData.downPayment.toLocaleString()}`
-                : null
+            placeholder: 'Enter down payment (0 for full credit card)',
+            type: 'number',
+            helper: emiData.financeAmount > 0
+                ? `Finance Amount: Rs. ${Math.round(emiData.financeAmount).toLocaleString()}`
+                : null,
         },
-        { label: 'Duration (months)', name: 'duration', value: emiCalc.duration, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
-        { label: 'Finance Amount', name: 'financeAmount', value: emiData.financeAmount, onChange: () => { }, svgicon: <DollarSign className="w-5 h-5" />, extenduserinfo: '', disabled: true },
+        { label: 'Duration (months)', name: 'duration', value: localEmiCalculation.duration, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'emiCalculation'), placeholder: 'Select Duration', type: 'select', options: tumerOptions, svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
+        {
+            label: 'Finance Amount (auto)',
+            name: 'financeAmount',
+            value: emiData.financeAmount > 0 ? `Rs. ${Math.round(emiData.financeAmount).toLocaleString()}` : '',
+            onChange: () => { },
+            svgicon: <DollarSign className="w-5 h-5" />,
+            extenduserinfo: '',
+            disabled: true,
+            placeholder: 'Calculated automatically',
+        },
     ];
 
 
 
     const formSections = {
         creditCard: [
-            { title: 'Credit Card Details', sectionKey: 'bankinfo', step: 1, fields: creditCardDetailsInfo, additionalContent: <></> },
-            { title: 'Personal Details', sectionKey: 'userInfo', step: 2, fields: personalDetailsInfolist, additionalContent: <></> },
-            { title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit },
+            { title: 'Bank Info', sectionKey: 'bankinfo', step: 1, fields: bankdetailsInfo },
+            {
+                title: 'Personal Details', sectionKey: 'userInfo', step: 2, fields: personalDetailsInfolist, additionalContent: (
+                    <div className="mt-6">
+                        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Required Documents</h3>
+                        <DocumentUpload docTypes={['ppphoto', 'front', 'back']} isGranter={false} files={localFiles} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} />
+                    </div>
+                )
+            },
+            {
+                title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit, additionalContent: (
+                    <div className="mt-6">
+                        <SignaturePad
+                            onSignatureChange={(file) => setLocalFiles(prev => ({ ...prev, userSignature: file }))}
+                            existingSignature={previews['userSignature']}
+                        />
+                    </div>
+                )
+            },
         ],
         downPayment: [
             {
                 title: 'Personal Details', sectionKey: 'userInfo', step: 1, fields: personalDetailsInfolist, additionalContent: (
-                    <div className="mt-6"><h3 className="text-lg font-semibold text-gray-800 mb-4">Required Documents</h3><DocumentUpload docTypes={['ppphoto', 'front', 'back']} isGranter={false} files={emiContextInfo.files} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} /></div>
+                    <div className="mt-6"><h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Required Documents</h3><DocumentUpload docTypes={['ppphoto', 'front', 'back']} isGranter={false} files={localFiles} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} /></div>
                 )
             },
             {
-                title: 'Guarantor Information', sectionKey: 'granterPersonalDetails', step: 2, fields: granterPersonalDetails, additionalContent: (
-                    <div className="mt-6"><h3 className="text-lg font-semibold text-gray-800 mb-4">Required Documents</h3><DocumentUpload docTypes={['ppphoto', 'front', 'back']} isGranter={true} files={emiContextInfo.files} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} /></div>
+                title: 'Guarantor Information', sectionKey: 'granterPersonalDetails', step: 2, fields: granterPersonalDetailsList, additionalContent: (
+                    <div className="mt-6">
+                        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Required Documents</h3>
+                        <DocumentUpload docTypes={['ppphoto', 'front', 'back']} isGranter={true} files={localFiles} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} />
+                    </div>
                 )
             },
             {
                 title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFields, additionalContent: (
-                    <div className="space-y-5">
-
-                        <div className="mt-2">
-                            <SignaturePad
-                                onSignatureChange={(file) => {
-                                    setEmiContextInfo(prev => ({
-                                        ...prev,
-                                        files: { ...prev.files, userSignature: file }
-                                    }));
-                                }}
-                                existingSignature={previews['userSignature']}
-                            />
-                        </div>
+                    <div className="mt-6">
+                        <SignaturePad
+                            onSignatureChange={(file) => setLocalFiles(prev => ({ ...prev, userSignature: file }))}
+                            existingSignature={previews['userSignature']}
+                        />
                     </div>
                 )
             },
@@ -764,19 +856,33 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         makeCard: [
             {
                 title: 'Personal Details', sectionKey: 'userInfo', step: 1, fields: personalDetailsInfolist, additionalContent: (
-                    <div className="mt-6"><h3 className="text-lg font-semibold text-gray-800 mb-4">Required Documents</h3><DocumentUpload docTypes={['ppphoto', 'front', 'back']} isGranter={false} files={emiContextInfo.files} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} /></div>
+                    <div className="mt-6">
+                        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Required Documents</h3>
+                        <DocumentUpload docTypes={['ppphoto', 'front', 'back']} isGranter={false} files={localFiles} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} />
+                    </div>
                 )
             },
             {
                 title: 'Bank Details', sectionKey: 'bankinfo', step: 2, fields: bankdetailsInfo, additionalContent: (
-                    <div className="mt-5"><h3 className="text-sm font-bold text-gray-700 mb-3">Required Documents</h3><DocumentUpload docTypes={['bankStatement']} isGranter={false} files={emiContextInfo.files} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} /></div>
+                    <div className="mt-6">
+                        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Required Documents</h3>
+                        <DocumentUpload docTypes={['bankStatement']} isGranter={false} files={localFiles} previews={previews} handleFileChange={handleFileChange} handleFileDelete={handleFileDelete} />
+                    </div>
                 )
             },
-            { title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit },
+            {
+                title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit, additionalContent: (
+                    <div className="mt-6">
+                        <SignaturePad
+                            onSignatureChange={(file) => setLocalFiles(prev => ({ ...prev, userSignature: file }))}
+                            existingSignature={previews['userSignature']}
+                        />
+                    </div>
+                )
+            },
         ]
     };
 
-    const selectedOption = emiContextInfo.hasCreditCard === 'yes' ? 'creditCard' : emiContextInfo.hasCreditCard === 'make' ? 'makeCard' : 'downPayment';
     const currentFormSection = currentstep > 0 && currentstep < 4 ? formSections[selectedOption as keyof typeof formSections]?.find((section) => section.step === currentstep) : null;
 
     if (!product) {
@@ -827,28 +933,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                     <span className="text-gray-700 font-semibold whitespace-nowrap">Apply EMI</span>
                 </nav>
 
-                {/* Mobile-only product + monthly EMI summary bar */}
-                <div className="lg:hidden mb-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="flex items-center gap-2 p-2.5">
-                        <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
-                            {product?.thumb?.url || product?.images?.[0]?.url ? (
-                                <Image src={product.thumb?.url || product.images?.[0]?.url || ''} alt={product?.name || 'Product'} fill sizes="48px" className="object-contain p-0.5" />
-                            ) : (
-                                <ShoppingBag className="w-5 h-5 text-gray-300" />
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-gray-800 truncate">{product?.name}</p>
-                            <p className="text-xs text-gray-500">Rs. {Number(product?.price).toLocaleString()}</p>
-                        </div>
-                        {emiData.paymentpermonth > 0 && (
-                            <div className="shrink-0 text-right">
-                                <p className="text-[10px] text-gray-400">Monthly EMI</p>
-                                <p className="text-base font-black text-(--colour-fsP2)">Rs. {Math.round(emiData.paymentpermonth).toLocaleString()}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
 
                 {/* Progress Bar */}
                 <div className="mb-3">
@@ -862,7 +946,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
                             {/* Step Header */}
-                            <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50/20 flex items-center justify-between">
+                            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-gray-900">
                                     {currentstep === 0 && 'Choose EMI Method'}
                                     {currentstep > 0 && currentstep < 4 && currentFormSection?.title}
@@ -880,34 +964,40 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
                                         {/* Variant Selection if Variants exist */}
                                         {product && product.variants && product.variants.length > 0 && (
-                                            <div className="space-y-4">
-                                                <h2 className="text-lg font-bold text-gray-800">Select Color / Variant</h2>
-                                                <div className="flex flex-wrap gap-4">
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <h2 className="text-base font-bold text-gray-800">Select Color / Variant</h2>
+                                                    {localVariant && (
+                                                        <span className="text-xs font-semibold text-white bg-[var(--colour-fsP2)] px-3 py-1 rounded-full">
+                                                            {localVariant}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap gap-3">
                                                     {Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean).map((color: string) => {
-                                                        const isSelected = emiContextInfo.selectedVariant === color;
-                                                        // Find image for this color
+                                                        const isSelected = localVariant === color;
                                                         const variantImgRecord = product.images?.find(img => img.color === color || img.custom_properties?.color === color);
                                                         const variantImg = variantImgRecord?.url || variantImgRecord?.thumb || product.thumb?.url || product.images?.[0]?.url;
 
                                                         return (
                                                             <button
                                                                 key={color}
-                                                                onClick={() => setEmiContextInfo(prev => ({ ...prev, selectedVariant: color }))}
+                                                                onClick={() => setLocalVariant(color)}
                                                                 className={`
-                                                                    relative flex items-center gap-3 pl-2 pr-6 py-2 rounded-lg border transition-all duration-300
+                                                                    relative flex items-center gap-3 pl-2 pr-5 py-2 rounded-xl border-2 transition-all duration-200
                                                                     ${isSelected
-                                                                        ? 'border-[var(--colour-fsP2)] bg-blue-50 shadow-md shadow-blue-100'
+                                                                        ? 'border-[var(--colour-fsP2)] bg-blue-50 shadow-md shadow-blue-100 ring-2 ring-blue-100'
                                                                         : 'border-gray-200 hover:border-gray-300 bg-white'
                                                                     }
                                                                 `}
                                                             >
-                                                                <div className="relative w-10 h-10 rounded-md overflow-hidden bg-gray-100 border border-gray-100">
-                                                                    {variantImg ? <Image src={variantImg} alt={color} fill sizes="40px" className="object-cover" /> : <div className="bg-gray-200 w-full h-full" />}
+                                                                <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+                                                                    {variantImg ? <Image src={variantImg} alt={color} fill sizes="40px" className="object-contain p-0.5" /> : <div className="bg-gray-200 w-full h-full" />}
                                                                 </div>
-                                                                <span className={`text-sm font-semibold ${isSelected ? 'text-[var(--colour-fsP2)]' : 'text-gray-700'}`}>
+                                                                <span className={`text-sm font-bold ${isSelected ? 'text-[var(--colour-fsP2)]' : 'text-gray-700'}`}>
                                                                     {color}
                                                                 </span>
-                                                                {isSelected && <div className="absolute top-0 right-0 -mt-1 -mr-1 bg-[var(--colour-fsP2)] text-white rounded-full p-0.5 shadow-sm"><CheckCircle2 size={12} /></div>}
+                                                                {isSelected && <div className="absolute -top-1 -right-1 bg-[var(--colour-fsP2)] text-white rounded-full p-0.5 shadow-sm"><CheckCircle2 size={14} /></div>}
                                                             </button>
                                                         )
                                                     })}
@@ -934,7 +1024,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                                 <CreditCard className="w-5 h-5" />
                                                             </div>
                                                             <h3 className="font-bold text-gray-900">Credit Card</h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Use your existing bank credit card for instant EMI.</p>
+                                                            <p className="text-xs text-gray-600 mt-1">Use your existing bank credit card for instant EMI.</p>
                                                             {selectedOption === 'creditCard' && (
                                                                 <div className="absolute top-3 right-3 text-(--colour-fsP2)">
                                                                     <CheckCircle2 size={20} />
@@ -942,7 +1032,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                             )}
                                                         </div>
 
-                                                        {/* Down Payment */}
+                                                        {/* With Citizenship */}
                                                         <div
                                                             onClick={() => setShowPaymentSubOptions(true)}
                                                             className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'downPayment' || selectedOption === 'makeCard'
@@ -952,10 +1042,10 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                         >
                                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all ${selectedOption === 'downPayment' || selectedOption === 'makeCard' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-500 group-hover:bg-orange-100'
                                                                 }`}>
-                                                                <Banknote className="w-5 h-5" />
+                                                                <User className="w-5 h-5" />
                                                             </div>
-                                                            <h3 className="font-bold text-gray-900">Down Payment</h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Pay upfront or provide collateral documents.</p>
+                                                            <h3 className="font-bold text-gray-900">With Citizenship</h3>
+                                                            <p className="text-xs text-gray-600 mt-1">Apply for EMI using your citizenship documents.</p>
                                                             <div className="mt-3 flex items-center text-xs font-semibold text-orange-500">
                                                                 View Options <ChevronRight className="w-3 h-3 ml-1" />
                                                             </div>
@@ -970,11 +1060,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                         </Button>
                                                         <div>
                                                             <h3 className="text-gray-900 font-bold">Down Payment Options</h3>
-                                                            <p className="text-xs text-gray-500">Select how you want to proceed</p>
+                                                            <p className="text-xs text-gray-600">Select how you want to proceed</p>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                        {/* With Citizenship Card */}
+                                                        {/* Apply for Credit Card */}
                                                         <div
                                                             onClick={() => handleOptionSelect('makeCard')}
                                                             className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'makeCard'
@@ -984,10 +1074,10 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                         >
                                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all ${selectedOption === 'makeCard' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-500 group-hover:bg-orange-100'
                                                                 }`}>
-                                                                <User className="w-5 h-5" />
+                                                                <CreditCard className="w-5 h-5" />
                                                             </div>
-                                                            <h3 className="font-bold text-gray-900">With Citizenship</h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Apply using citizenship documents.</p>
+                                                            <h3 className="font-bold text-gray-900">Apply for Credit Card</h3>
+                                                            <p className="text-xs text-gray-600 mt-1">Don't have a credit card? Apply for one now.</p>
                                                             {selectedOption === 'makeCard' && (
                                                                 <div className="absolute top-3 right-3 text-orange-500"><CheckCircle2 size={20} /></div>
                                                             )}
@@ -1006,7 +1096,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                                 <Banknote className="w-5 h-5" />
                                                             </div>
                                                             <h3 className="font-bold text-gray-900">40% Downpayment</h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Pay 40% upfront, rest over months.</p>
+                                                            <p className="text-xs text-gray-600 mt-1">Pay 40% upfront, rest over months.</p>
                                                             {selectedOption === 'downPayment' && (
                                                                 <div className="absolute top-3 right-3 text-(--colour-fsP2)"><CheckCircle2 size={20} /></div>
                                                             )}
@@ -1028,9 +1118,21 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                 errors={errors}
                                             />
                                         ) : (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1">
                                                 {currentFormSection.fields.map((field, index) => (
-                                                    <FormField key={index} field={field} error={errors[field.name]} />
+                                                    (field.name === 'dob_bs' || field.name === 'dob') ? (
+                                                        <NepaliDatePicker
+                                                            key={index}
+                                                            label={field.label}
+                                                            name={field.name}
+                                                            value={String(field.value ?? '')}
+                                                            onChange={field.onChange}
+                                                            error={errors[field.name]}
+                                                            mode={field.name === 'dob' ? 'AD' : 'BS'}
+                                                        />
+                                                    ) : (
+                                                        <FormField key={index} field={field} error={errors[field.name]} />
+                                                    )
                                                 ))}
                                             </div>
                                         )}
@@ -1041,10 +1143,10 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                         {/* Navigation Buttons */}
                                         <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-100">
                                             <Button
-                                                variant="outline"
+                                                variant="ghost"
                                                 onClick={handleBack}
                                                 disabled={currentstep === 0}
-                                                className={`gap-2 rounded-xl h-11 border-gray-200 hover:bg-gray-50 text-gray-600 font-semibold ${currentstep === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                                                className={`gap-2 rounded-xl h-11 text-gray-600 font-semibold hover:bg-gray-100 hover:text-gray-800 ${currentstep === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                                             >
                                                 <ArrowBigLeft className="w-4 h-4" />
                                                 Back
@@ -1079,13 +1181,21 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                             onSubmit={handleSubmit}
                                             previews={previews}
                                             localCreditCardInfo={localCreditCardInfo}
+                                            userInfo={localUserInfo}
+                                            bankinfo={localBankInfo}
+                                            granterPersonalDetails={localGranterInfo}
+                                            hasCreditCard={emiContextInfo.hasCreditCard}
+                                            selectedVariant={localVariant}
+                                            onSignatureChange={(file: File | null) => {
+                                                setLocalFiles(prev => ({ ...prev, userSignature: file }));
+                                            }}
                                         />
                                         {isSubmitting && (
                                             <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[50] rounded-3xl">
                                                 <div className="flex flex-col items-center">
                                                     <Loader2 className="w-10 h-10 text-[var(--colour-fsP2)] animate-spin mb-4" />
                                                     <h3 className="text-xl font-bold text-gray-900">Submitting Application...</h3>
-                                                    <p className="text-sm text-gray-500">Please wait while we process your details.</p>
+                                                    <p className="text-sm text-gray-600">Please wait while we process your details.</p>
                                                 </div>
                                             </div>
                                         )}
@@ -1100,12 +1210,14 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                         <EmiProductDetails
                             emiData={emiData}
                             product={product}
-                            selectedVariant={emiContextInfo.selectedVariant || selectedcolor}
+                            selectedVariant={localVariant}
                         />
                     </div>
                 </div>
 
-
+                {/* FAQ Section */}
+                <hr className="border-t border-gray-200 mt-8" />
+                <EmiFaq params={useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])} />
             </div>
         </div>
     );

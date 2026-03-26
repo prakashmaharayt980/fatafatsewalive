@@ -70,7 +70,7 @@ const FormField: React.FC<FormFieldProps> = React.memo(({ field, error }) => (
             {error && <p className="text-red-500 text-[11px] leading-tight">{error}</p>}
         </div>
         {field.helper && !error && (
-            <p className="text-[11px] text-gray-400 -mt-3.5 ml-1">{field.helper}</p>
+            <p className="text-[11px] text-gray-600 -mt-3.5 ml-1">{field.helper}</p>
         )}
     </div>
 ));

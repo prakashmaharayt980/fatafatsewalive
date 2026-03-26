@@ -43,17 +43,17 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <p className="text-sm font-semibold text-gray-800 line-clamp-2 mb-1">
+          <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+            <p className="text-sm font-semibold text-gray-800 line-clamp-2">
               {product.name}
             </p>
             {selectedVariant && (
-              <span className="text-xs font-medium text-gray-500 block">
-                Color: <span className="text-gray-900">{selectedVariant}</span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-[var(--colour-fsP2)] px-2.5 py-0.5 rounded-full w-fit">
+                <span className="opacity-70">Color:</span> {selectedVariant}
               </span>
             )}
-            <p className="text-sm font-bold text-[var(--colour-fsP2)] mt-1">
-              Rs. {typeof product.price === 'object' ? product.price?.current : product.price}
+            <p className="text-sm font-bold text-[var(--colour-fsP2)]">
+              Rs. {Number(typeof product.price === 'object' ? (product.price as any)?.current : product.price).toLocaleString()}
             </p>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
           </div>
         </div>
 
-        <div className="bg-blue-50/50 rounded-lg p-3 text-xs text-blue-800 border border-blue-100">
+        <div className="bg-blue-50 rounded-lg p-3 text-xs font-medium text-blue-900 border border-blue-200">
           Final approval subject to bank policies.
         </div>
       </div>

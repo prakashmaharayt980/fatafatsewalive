@@ -7,14 +7,13 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Search, ArrowLeft, Calculator, Percent, ArrowRight, Calendar } from 'lucide-react';
 import { useContextEmi } from '@/app/emi/_components/emiContext';
-import { BANK_PROVIDERS as AvailablebankProvider } from '@/app/emi/_components/_func_emiCalacutor';
 
 import Image from 'next/image';
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import { ProductService } from '../api/services/product.service';
 
 export default function EMICalculator() {
-  const { emiContextInfo, setEmiContextInfo } = useContextEmi();
+  const { emiContextInfo, setEmiContextInfo, banks, fetchBanks } = useContextEmi();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loanAmount, setLoanAmount] = useState(100000);
   const [interestRate, setInterestRate] = useState(10);
@@ -26,13 +25,17 @@ export default function EMICalculator() {
 
   // Update loan amount and interest rate when product or bank is selected
   useEffect(() => {
+    fetchBanks();
+  }, [fetchBanks]);
+
+  useEffect(() => {
     if (emiContextInfo.product) {
       // Assuming emiContextInfo.emiCalculation.downPayment is what was emicalclatorinfo.emirequiredinfo.Downpayment
       // Casting to number if needed, though context types say number
       setLoanAmount(Number(emiContextInfo.product.price) - Number(emiContextInfo.emiCalculation.downPayment));
     }
-    if (selectedBank) {
-      const bank = AvailablebankProvider.find((b) => b.id === selectedBank);
+    if (selectedBank && banks.length > 0) {
+      const bank = banks.find((b) => b.id === selectedBank);
       if (bank) {
         setInterestRate(bank.rate);
         setEmiContextInfo((prev) => ({
@@ -41,7 +44,7 @@ export default function EMICalculator() {
         }));
       }
     }
-  }, [emiContextInfo.product, emiContextInfo.emiCalculation.downPayment, selectedBank, setEmiContextInfo, AvailablebankProvider]);
+  }, [emiContextInfo.product, emiContextInfo.emiCalculation.downPayment, selectedBank, setEmiContextInfo, banks]);
 
   // Search and filter products
   useEffect(() => {
@@ -228,7 +231,7 @@ export default function EMICalculator() {
                       <SelectValue placeholder="Select your bank" />
                     </SelectTrigger>
                     <SelectContent className="border-gray-300 bg-blue-50 focus:ring-gray-200 focus:border-none w-full">
-                      {AvailablebankProvider.map(bank => (
+                      {banks.map(bank => (
                         <SelectItem key={bank.id} value={bank.id}>{bank.name}</SelectItem>
                       ))}
                       <SelectItem value="other">Other</SelectItem>

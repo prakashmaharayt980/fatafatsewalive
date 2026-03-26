@@ -3,6 +3,17 @@
 
 import { create } from 'zustand';
 import type { EmiContextState } from '../types';
+import { PaymentService } from '@/app/api/services/payments.service';
+import { BANK_PROVIDERS } from './_func_emiCalacutor';
+
+export interface FetchedBank {
+    id: string;
+    name: string;
+    rate: number;
+    tenureOptions: number[];
+    rateByTenure: Record<number, number>;
+    img?: any;
+}
 
 const defaultState: EmiContextState = {
     userInfo: {
@@ -50,22 +61,64 @@ interface EmiStore {
     emiContextInfo: EmiContextState;
     setEmiContextInfo: (updater: EmiContextState | ((prev: EmiContextState) => EmiContextState)) => void;
     resetEmi: () => void;
+    banks: FetchedBank[];
+    isBanksLoading: boolean;
+    fetchBanks: () => Promise<void>;
 }
 
-export const useEmiStore = create<EmiStore>((set) => ({
+export const useEmiStore = create<EmiStore>((set, get) => ({
     emiContextInfo: defaultState,
     setEmiContextInfo: (updater) =>
         set((state) => ({
             emiContextInfo: typeof updater === 'function' ? updater(state.emiContextInfo) : updater,
         })),
     resetEmi: () => set({ emiContextInfo: defaultState }),
+    banks: [],
+    isBanksLoading: false,
+    fetchBanks: async () => {
+        if (get().banks.length > 0 || get().isBanksLoading) return;
+        set({ isBanksLoading: true });
+        try {
+            const res = await PaymentService.GetEMiBanks();
+            if (res && res.data) {
+                const mapped: FetchedBank[] = res.data.map((b: any) => {
+                    const rateByTenure: Record<number, number> = {
+                        6: parseFloat(b.finance_percentage?.month_6 || "0"),
+                        9: parseFloat(b.finance_percentage?.month_9 || "0"),
+                        12: parseFloat(b.finance_percentage?.month_12 || "0"),
+                        18: parseFloat(b.finance_percentage?.month_18 || "0"),
+                        24: parseFloat(b.finance_percentage?.month_24 || "0"),
+                        36: parseFloat(b.finance_percentage?.month_36 || "0"),
+                    };
+                    const localMatch = BANK_PROVIDERS.find(lb => lb.name.toLowerCase().includes(b.name.toLowerCase()) || b.name.toLowerCase().includes(lb.name.toLowerCase()));
+                    return {
+                        id: String(b.id),
+                        name: b.name,
+                        rate: rateByTenure[12] || 0,
+                        tenureOptions: Object.keys(rateByTenure).map(Number).filter(k => rateByTenure[k] > 0),
+                        rateByTenure,
+                        img: localMatch?.img || null,
+                    };
+                });
+                set({ banks: mapped });
+            }
+        } catch (error) {
+            console.error("Failed to fetch EMI banks globally:", error);
+        } finally {
+            set({ isBanksLoading: false });
+        }
+    }
 }));
 
 // Backward-compatible hook — drop-in replacement for useContextEmi()
 export const useContextEmi = () => {
-    const emiContextInfo = useEmiStore((s) => s.emiContextInfo);
-    const setEmiContextInfo = useEmiStore((s) => s.setEmiContextInfo);
-    return { emiContextInfo, setEmiContextInfo };
+    return {
+        emiContextInfo: useEmiStore((s) => s.emiContextInfo),
+        setEmiContextInfo: useEmiStore((s) => s.setEmiContextInfo),
+        banks: useEmiStore((s) => s.banks),
+        isBanksLoading: useEmiStore((s) => s.isBanksLoading),
+        fetchBanks: useEmiStore((s) => s.fetchBanks),
+    };
 };
 
 // Dummy provider — does nothing, kept for backward compat so pages don't break
