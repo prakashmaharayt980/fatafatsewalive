@@ -4,7 +4,7 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import LazySection from './LazySection';
 import SkeletonCard from '@/app/skeleton/SkeletonCard';
-import { getCachedCategoryProducts } from '@/app/api/utils/categoryCache';
+import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 import { getBannerBySlug } from '@/app/api/services/misc.service';
 import { decorateProduct } from '@/app/api/utils/productDecorator';
 
@@ -30,7 +30,7 @@ export default function BasketSectionClient({ slug, title, imgSlug, isFirstSecti
             rootMargin={rootMargin}
             fetcher={async () => {
                 const [prodRes, bannerRes] = await Promise.allSettled([
-                    getCachedCategoryProducts(slug, { per_page: 10 }),
+                    getRandomBasketProducts(slug),
                     imgSlug ? getBannerBySlug(imgSlug).then(res => res.data) : Promise.resolve(null)
                 ]);
 

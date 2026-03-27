@@ -42,7 +42,7 @@ export const getBlogPageData = unstable_cache(
 
 
         const [blogRes] = await Promise.allSettled([
-            getBlogList({ page: 1, per_page: 12 }),
+            getBlogList({ page: 1, per_page: 30 }),
         ]);
 
         const latestArticles = blogRes.status === 'fulfilled'

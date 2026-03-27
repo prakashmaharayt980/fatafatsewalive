@@ -8,42 +8,31 @@ import type { ProductData } from '../../types/ProductDetailsTypes';
 
 
 import { cn } from '@/lib/utils';
-import { useCartStore } from '@/app/context/CartContext';
-import { useShallow } from 'zustand/react/shallow';
 
 interface ProductDealsProps {
-    products: ProductData[];
-    limit?: number;
+    deals?: Array<{
+        product: ProductData;
+        sellPrice: number;
+    }>;
+    products?: ProductData[];
     title: string;
 }
 
-const ProductDeals = React.memo(({ products, limit = 8, title }: ProductDealsProps) => {
-    const { compareList, addToCompare, removeFromCompare } = useCartStore(useShallow(state => ({
-        compareList: state.compareItems,
-        addToCompare: state.addToCompare,
-        removeFromCompare: state.removeFromCompare
-    })));
+const ProductDeals = React.memo(({ deals, products, title }: ProductDealsProps) => {
 
-    const compareItems = compareList;
+    // Harmonize data source (The "Func" Improvement)
+    const items = useMemo(() => {
+        if (deals) return deals;
+        if (products) {
+            return products.map(p => ({
+                product: p,
+                sellPrice: (p as any).discountedPriceVal ?? p.discounted_price ?? (typeof p.price === 'object' ? p.price?.current : p.price) ?? 0
+            }));
+        }
+        return [];
+    }, [deals, products]);
 
-    // Memoize the sliced products with computed prices
-    const displayProducts = useMemo(() => {
-        if (!products || products.length === 0) return [];
-        return products.slice(0, limit).map((product) => {
-            const basePrice = typeof product.price === 'object'
-                ? (product.price as any)?.original_price || (product.price as any)?.current || 0
-                : Number(product.price || 0);
-            const sellPrice = product.discounted_price
-                || (typeof product.price === 'object' ? (product.price as any)?.current : Number(product.price || 0));
-            const hasDiscount = basePrice > sellPrice;
-            const discountPercent = hasDiscount
-                ? Math.round(((basePrice - sellPrice) / basePrice) * 100)
-                : 0;
-            return { product, basePrice, sellPrice, hasDiscount, discountPercent };
-        });
-    }, [products, limit]);
-
-    if (displayProducts.length === 0) return null;
+    if (!items || items.length === 0) return null;
 
     return (
         <div className="sticky top-24  overflow-hidden">
@@ -59,11 +48,14 @@ const ProductDeals = React.memo(({ products, limit = 8, title }: ProductDealsPro
 
             {/* Product Cards */}
             <div className="flex flex-col gap-2.5">
-                {displayProducts.map(({ product, basePrice, sellPrice, hasDiscount, discountPercent }) => {
+                {items.map(({ product, sellPrice }: any) => {
                     const brandName = product.brand?.name;
+                    
+                    // Robust Data Logic (The "Func")
                     const rating = product.average_rating || 0;
                     const ratingCount = product.rating_count || 0;
-                    const emiPrice = product.emi_enabled ? Math.round(basePrice / 12) : 0;
+                    const imageUrl = product.thumb?.url || (product as any).image?.thumb || (product as any).image?.full || (product as any).thumb_url || '/placeholder.png';
+                    const displayPrice = product.displayPrice ?? (typeof sellPrice === 'string' ? sellPrice : sellPrice.toLocaleString());
 
                     return (
                         <Link
@@ -74,39 +66,12 @@ const ProductDeals = React.memo(({ products, limit = 8, title }: ProductDealsPro
                             {/* Product Image Container */}
                             <div className="relative flex-shrink-0 w-[72px] h-[72px] rounded-base bg-[var(--colour-bg4)] overflow-hidden border border-[var(--colour-border3)]">
                                 <Image
-                                    src={product.thumb?.url || '/placeholder.png'}
+                                    src={imageUrl}
                                     alt={product.name}
                                     fill
                                     className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
                                     sizes="72px"
                                 />
-                                {hasDiscount && (
-                                    <span className="absolute top-0.5 left-0.5 bg-[var(--colour-fsP1)] text-white text-[8px] font-bold px-1 py-0.5 rounded">
-                                        -{discountPercent}%
-                                    </span>
-                                )}
-                                {/* Compare Button */}
-                                <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        const isIn = compareItems?.some(i => i.id === product.id);
-                                        if (isIn) {
-                                            removeFromCompare(product.id);
-                                        } else {
-                                            addToCompare(product as any);
-                                        }
-                                    }}
-                                    className={cn(
-                                        "absolute top-0.5 right-0.5 p-1 rounded-full shadow-sm transition-all duration-200 z-10",
-                                        compareItems?.some(i => i.id === product.id)
-                                            ? "bg-[var(--colour-fsP2)] text-white opacity-100"
-                                            : "bg-white/90 text-gray-400 hover:text-[var(--colour-fsP2)] opacity-0 group-hover:opacity-100"
-                                    )}
-                                    title="Compare"
-                                >
-                                    <Scale className="w-3 h-3 stroke-[2.5]" />
-                                </button>
                             </div>
 
                             {/* Content Side */}
@@ -141,20 +106,9 @@ const ProductDeals = React.memo(({ products, limit = 8, title }: ProductDealsPro
                                     <div className="flex flex-col gap-0.5 leading-none">
                                         <div className="flex items-baseline gap-1.5">
                                             <span className="text-[13px] font-bold text-[var(--colour-fsP2)]">
-                                                Rs. {sellPrice.toLocaleString()}
+                                                Rs. {displayPrice}
                                             </span>
-                                            {hasDiscount && (
-                                                <span className="text-[9px] text-[var(--colour-text3)] line-through">
-                                                    Rs. {basePrice.toLocaleString()}
-                                                </span>
-                                            )}
                                         </div>
-                                        {/* EMI Badge */}
-                                        {emiPrice > 0 && (
-                                            <span className="text-[8px] font-semibold text-white bg-[#1967b3] px-1 py-[1px] rounded-sm w-fit">
-                                                EMI fr. Rs. {emiPrice.toLocaleString()}
-                                            </span>
-                                        )}
                                     </div>
                                     <div className="w-5 h-5 rounded-full bg-[var(--colour-fsP2)]/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                         <ArrowUpRight className="w-3 h-3 text-[var(--colour-fsP2)]" />
@@ -168,7 +122,7 @@ const ProductDeals = React.memo(({ products, limit = 8, title }: ProductDealsPro
 
             {/* View All */}
             < Link
-                href="/category/smartphones?id=1"
+                href="/category/mobile-price-in-nepal?id=1"
                 className="flex items-center justify-center gap-1.5 mt-3 py-2 text-[11px] font-semibold text-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 rounded-lg border border-[var(--colour-fsP2)]/15 hover:bg-[var(--colour-fsP2)]/10 transition-colors"
             >
                 View All Deals < ArrowUpRight className="w-3 h-3" />

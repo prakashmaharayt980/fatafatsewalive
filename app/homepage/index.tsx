@@ -13,11 +13,12 @@ interface HomePageProps {
   basketSection4?: React.ReactNode;
   basketSection5?: React.ReactNode;
   ourArticlesSection?: React.ReactNode;
+  sectionOne?: React.ReactNode;
 }
 
 const HomePage = ({
   mainBannerSection,
-  
+
   offerSection,
   sectionTwo,
   sectionThree,
@@ -29,6 +30,7 @@ const HomePage = ({
   basketSection4,
   basketSection5,
   ourArticlesSection,
+  sectionOne,
 }: HomePageProps) => {
 
 
@@ -44,9 +46,10 @@ const HomePage = ({
       <div className="relative z-10 sm:px-2">
         {mainBannerSection}
         {basketSection0}
+        {sectionOne}
         {basketSection1}
         {basketSection2}
-        
+
         {/* Full width section */}
         <div className="mx-[-8px] sm:mx-0">
           {offerSection}

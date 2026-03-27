@@ -11,6 +11,7 @@ import type { ProductDetails } from '../../types/ProductDetailsTypes';
 import type { BannerItem } from '@/app/types/BannerTypes';
 import { formatDate } from '../../CommonVue/datetime';
 import imglogo from '../../assets/logoimg.png';
+import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 
 import BlogCard from './BlogCard';
 import BlogCompareProducts from './BlogCompareProducts';
@@ -41,8 +42,18 @@ interface TocItem {
 export default function BlogDetailsClient({ article, relatedArticles = [], authorArticles = [], dealProducts = [], bannerData }: BlogDetailsClientProps) {
     if (!article) return null;
 
-    const heroImage = article?.thumbnail_image?.full || imglogo.src;
+    const heroImage = article?.thumb?.url || article?.thumbnail_image?.full || imglogo.src;
     const readTime = article?.reading_time || '5 min read';
+
+    // Helper to ensure clean array from varying API shapes
+    const ensureArray = (data: any) => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        return data.data?.products || data.data?.data || data.products || data.data || [];
+    };
+
+    // Camera Deals Sidebar Fetcher (matching listing focus)
+    const cameraDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
 
     // ── Parse TOC headings ──
     const tocItems = useMemo<TocItem[]>(() => {
@@ -121,7 +132,9 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
     const nextArticle = relatedArticles.length > 0 ? relatedArticles[0] : null;
 
     // Derive category-specific articles for "Trending in [Category]"
-    const trendingInCategory = relatedArticles.filter(a => a.category?.id === article.category?.id).slice(0, 6);
+    const trendingInCategory = (relatedArticles || [])
+        .filter(a => a.category?.slug === article.category?.slug && a.id !== article.id)
+        .slice(0, 6);
 
     // Featured product from deals (the top-rated or first deal product)
     const featuredProduct = dealProducts.length > 0
@@ -287,12 +300,21 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
 
                     </main>
 
-                    {/* ─── Right: Product Deals ─── */}
-                    {dealProducts.length > 0 && (
-                        <aside className="w-full lg:w-72 shrink-0 sm:pt-10">
-                            <ProductDeals products={dealProducts as any[]} limit={6} title="Top Deals" />
-                        </aside>
-                    )}
+                    {/* ─── Right: Sidebar Widgets ─── */}
+                    <aside className="w-full lg:w-72 shrink-0 sm:pt-6 space-y-6">
+                        <LazySection
+                            fetcher={cameraDealsFetcher}
+                            render={(data) => {
+                                const products = ensureArray(data).slice(0, 8);
+                                const deals = products.map((p: any) => ({
+                                    product: p,
+                                    sellPrice: p.discountedPriceVal ?? p.discounted_price ?? (typeof p.price === 'object' ? p.price?.current : p.price) ?? 0
+                                }));
+                                return <ProductDeals deals={deals} title="Camera Deals" />;
+                            }}
+                            fallback={<div className="h-[500px] w-full bg-gray-100 rounded-lg animate-pulse" />}
+                        />
+                    </aside>
                 </div>
             </div>
 
@@ -311,9 +333,9 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                                 linkHref={`/blogs?category=${article.category?.slug}`}
                                 linkText="More"
                             />
-                            {/* Responsive grid: 2 cols mobile → 3 tablet → 4 desktop */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                                {relatedArticles.slice(0, 8).map((post) => (
+                            {/* Responsive grid: 2 cols mobile → 3 tablet → 5 desktop */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                                {relatedArticles.slice(0, 10).map((post) => (
                                     <FeaturedArticleCard
                                         key={post.id}
                                         article={post}

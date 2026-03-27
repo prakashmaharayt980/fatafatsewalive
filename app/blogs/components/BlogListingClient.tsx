@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import type { Article } from '../../types/Blogtypes';
-import { formatDate } from '../../CommonVue/datetime';
 import imglogo from '../../assets/logoimg.png';
 
 import LazySection from '@/components/LazySection';
@@ -14,51 +13,60 @@ import HeroBanner from './HeroBanner';
 import BlogCard from './BlogCard';
 import ProductDeals from './ProductDeals';
 import BlogProductBasket from './BlogProductBasket';
-import type { ProductDetails } from '../../types/ProductDetailsTypes';
-import { ProductService } from '../../api/services/product.service';
 import { getCategoryProducts } from '../../api/services/category.service';
 import StoryViewer from './StoryViewer';
-import BlogFastSaleProductCards from '@/app/products/ProductCards/BlogFastSaleProductCards';
-import { Star } from 'lucide-react';
 import YouTubeVideoCard from './YouTubeVideoCard';
 import BlogCompareProducts from './BlogCompareProducts';
 import SectionHeader from './SectionHeader';
 import FeaturedArticleCard from './FeaturedArticleCard';
 import { YOUTUBE_VIDEOS } from './youtubeData';
+import { getRandomBasketProducts, getRandomBlogList } from '../../api/utils/productFetchers';
 
 
 interface BlogListingClientProps {
     articles: Article[];
-    brandArticles: Article[];
     categories: any[];
-    trendingProducts?: any[];
     SectionOne?: React.ReactNode;
 }
 
 export default function BlogListingClient({
     articles,
-    brandArticles,
     categories,
-    trendingProducts,
     SectionOne,
 }: BlogListingClientProps) {
 
     const [storyViewerOpen, setStoryViewerOpen] = useState(false);
     const [storyStartIndex, setStoryStartIndex] = useState(0);
-    const webStories = articles?.slice(0, 10) || [];
+    const webStories = articles?.slice(0, 5) || [];
 
     const openStory = (idx: number) => {
         setStoryStartIndex(idx);
         setStoryViewerOpen(true);
     };
 
+    // Helper to ensure we have a clean array of products/articles from varying API shapes
+    const ensureArray = (data: any) => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        return data.data?.products || data.data?.data || data.products || data.data || [];
+    };
+
+    // Randomized Fetchers (The "Func" Improvements)
+    const latestDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
+    const emiFetcher = React.useMemo(() => () => getRandomBasketProducts('mobile-price-in-nepal', 5), []);
+    const laptopsFetcher = React.useMemo(() => () => getRandomBasketProducts('laptop-price-in-nepal', 5).then(res => res.data || res), []);
+    const newsArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'news', per_page: 9 }), []);
+    const featuredArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'buying-guides', per_page: 7 }), []);
+    const youtubeSidebarFetcher = React.useMemo(() => () => getRandomBasketProducts('speaker-price-in-nepal', 8).then(res => res.data || res), []);
+
     return (
         <>
             {/* Story Viewer Dialog */}
             {storyViewerOpen && webStories.length > 0 && (
                 <StoryViewer
-                    stories={webStories}
-                    initialIndex={storyStartIndex}
+                    isOpen={storyViewerOpen}
+                    webStories={webStories}
+                    initialStoryIndex={storyStartIndex}
                     onClose={() => setStoryViewerOpen(false)}
                 />
             )}
@@ -72,10 +80,40 @@ export default function BlogListingClient({
                         component={(data) => <HeroBanner data={data} />}
                         fallback={<div className="h-[200px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                     />
+                    {/* ─── Category Navigation ─── */}
+                    {categories?.length > 0 && (
+                        <nav
+                            id="blog-categories"
+                            className="mt-4 mb-2 flex items-center gap-1.5 overflow-x-auto pb-2 no-scrollbar scroll-smooth"
+                        >
+
+
+                            {categories.filter((c: any) => c.status !== false).map((cat: any) => (
+                                <Link
+                                    key={cat.id}
+                                    href={`/blogs?category=${cat.slug}`}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium text-[var(--colour-text2)] border border-[var(--colour-border3)] hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-colors bg-white"
+                                >
+                                    {(cat.thumbnail_image || cat.thumb?.url) && (
+                                        <div className="relative w-3.5 h-3.5 rounded-full overflow-hidden flex-shrink-0">
+                                            <Image
+                                                src={cat.thumb?.url || cat.thumbnail_image?.thumb || imglogo.src}
+                                                alt={cat.title}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                    {cat.title}
+
+                                </Link>
+                            ))}
+                        </nav>
+                    )}
 
 
                     {/* ─── Main Content ─── */}
-                    <div className="space-y-4 mt-4">
+                    <div className="space-y-4">
 
                         {/* ═══ 1. Blog Grid + ProductDeals Sidebar ═══ */}
                         <section id="blog-articles">
@@ -85,8 +123,8 @@ export default function BlogListingClient({
                                         title="Latest Articles"
                                         accentColor="var(--colour-fsP1)"
                                         rightElement={
-                                            <span className="text-[11px] font-semibold text-[var(--colour-text3)] bg-[var(--colour-bg4)] px-3 py-1 rounded-full border border-[var(--colour-border3)]">
-                                                {articles?.length} {articles?.length === 1 ? 'Article' : 'Articles'}
+                                            <span className="text-[11px] font-medium text-[var(--colour-text3)]">
+                                                {articles?.length || 0} {articles?.length === 1 ? 'Article' : 'Articles'}
                                             </span>
                                         }
                                     />
@@ -99,8 +137,16 @@ export default function BlogListingClient({
                                 </div>
                                 <div className="hidden lg:block w-full lg:w-1/4">
                                     <LazySection
-                                        fetcher={() => getCategoryProducts('smartphones', { per_page: 8, page: 1 }).then((res: any) => res.data)}
-                                        component={(data) => <ProductDeals products={data as any[]} limit={8} title="Latest Deals" />}
+                                        fetcher={latestDealsFetcher}
+                                        render={(data) => {
+                                            const products = ensureArray(data).slice(0, 8);
+                                            const deals = products.map((p: any) => ({
+                                                product: p,
+                                                sellPrice: p.discountedPriceVal ?? p.discounted_price ?? (typeof p.price === 'object' ? p.price?.current : p.price) ?? 0
+                                            }));
+                                            return <ProductDeals deals={deals} title="Camera Deals" />;
+                                        }}
+                                        minHeight="600px"
                                         fallback={<div className="h-[600px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                                     />
                                 </div>
@@ -112,6 +158,35 @@ export default function BlogListingClient({
                             {SectionOne}
                         </section>
 
+
+                        {/* ═══ 4. Smartwatch EMI Deals ═══ */}
+                        <LazySection
+                            fetcher={emiFetcher}
+                            render={(data) => {
+                                const finalProducts = ensureArray(data).slice(0, 5);
+                                return (
+                                    <section id="mobile-emi-deals">
+                                        <SectionHeader
+                                            title="Mobile EMI Deals"
+                                            accentColor="var(--colour-fsP1)"
+                                            linkHref="/category/mobile-price-in-nepal"
+                                            linkText="Shop All Mobiles"
+                                            rightElement={<span className="text-[10px] font-bold text-green-600 uppercase">0% Interest EMI</span>}
+                                        />
+                                        <div className="w-full">
+                                            <BlogProductBasket
+                                                slug="mobile-price-in-nepal"
+                                                id="mobile-b-1"
+                                                data={finalProducts}
+                                                random={true}
+                                                isEmi={true}
+                                            />
+                                        </div>
+                                    </section>
+                                );
+                            }}
+                            fallback={<div className="h-[380px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                        />
                         {/* ═══ 3. Web Stories ═══ */}
                         <LazySection
                             fallback={<div className="h-[400px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
@@ -128,7 +203,7 @@ export default function BlogListingClient({
                                             className="group relative rounded overflow-hidden aspect-[9/16] border border-[var(--colour-border3)] hover:shadow-lg transition-all duration-300 cursor-pointer"
                                         >
                                             <Image
-                                                src={post.thumbnail_image?.full}
+                                                src={post.thumb?.url || imglogo.src}
                                                 alt={post.title}
                                                 fill
                                                 className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
@@ -149,7 +224,7 @@ export default function BlogListingClient({
                                                         <rect x="2" y="2" width="20" height="20" rx="2" />
                                                         <path d="M7 2v20M17 2v20" />
                                                     </svg>
-                                                    {Math.floor(5 + Math.random() * 15)} Stories
+                                                    {(post.id % 15) + 5} Stories
                                                 </span>
                                             </div>
                                         </div>
@@ -158,152 +233,109 @@ export default function BlogListingClient({
                             </section>
                         </LazySection>
 
-                        {/* ═══ 4. Featured Stories — 5-Item Grid (Responsive) ═══ */}
+
+
+                        {/* ═══ 5. Premium Laptops ═══ */}
                         <LazySection
-                            fallback={<div className="h-[380px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
-                        >
-                            <section id="blogs-laptops">
-                                <SectionHeader title="Mobile Phones" accentColor="var(--colour-yellow1)" linkHref="/blogs" linkText="More Stories" />
-
-                                <div className="w-full">
-                                    <BlogProductBasket
-                                        title="More from "
-                                        slug="related-category"
-                                        id="1"
-                                    />
-                                </div>
-                            </section>
-                        </LazySection>
-
-                        {/* ═══ 5. 5-Item Featured Grid + Banner ═══ */}
-                        <LazySection
-                            fallback={<div className="h-[400px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
-                        >
-                            <div className="flex flex-col gap-4">
-                                {/* 5-Item CSS Grid — Responsive */}
-                                <div
-                                    className="hidden lg:grid gap-1"
-                                    style={{
-                                        gridTemplateColumns: 'repeat(5, 1fr)',
-                                        gridTemplateRows: 'auto auto',
-                                        gridTemplateAreas: `
-                                        "hero hero side1 side2 side3"
-                                        "bot1 bot2 side1 side2 side3"
-                                    `,
-                                    }}
-                                >
-                                    {articles?.[0] && <FeaturedArticleCard article={articles[0]} variant="hero" gridArea="hero" />}
-                                    {articles?.[1] && <FeaturedArticleCard article={articles[1]} variant="compact" gridArea="bot1" />}
-                                    {articles?.[2] && <FeaturedArticleCard article={articles[2]} variant="compact" gridArea="bot2" />}
-                                    {articles?.[3] && <FeaturedArticleCard article={articles[3]} variant="tall" gridArea="side1" />}
-                                    {articles?.[5] && <FeaturedArticleCard article={articles[5]} variant="tall" gridArea="side2" badgeColor="var(--colour-fsP1)" />}
-                                    {articles?.[6] && <FeaturedArticleCard article={articles[6]} variant="tall" gridArea="side3" badgeColor="var(--colour-fsP1)" />}
-                                </div>
-
-                                {/* Mobile/Tablet fallback: simple 2-col grid */}
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:hidden">
-                                    {articles?.slice(0, 6).map((post) => (
-                                        <FeaturedArticleCard key={post.id} article={post} variant="compact" />
-                                    ))}
-                                </div>
-                            </div>
-                        </LazySection>
-
-                        {/* ═══ 6. Reviews Section ═══ */}
-                        <LazySection
-                            fallback={<div className="h-[300px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
-                        >
-                            <section id="reviews-section">
-                                <SectionHeader title="Reviews" accentColor="var(--colour-fsP2)" linkHref="/blogs?category=reviews" />
-
-                                {/* 3-Column Layout */}
-                                <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr_2fr] gap-3">
-
-                                    {/* ─── Left: 3×3 Review Grid ─── */}
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {articles?.slice(0, 6).map((post) => (
-                                            <BlogCard key={post.id} post={post} />
-                                        ))}
-                                    </div>
-
-                                    {/* ─── Center: Top Picks (2 Product Cards) ─── */}
-                                    <div className="flex flex-col gap-2.5 my-auto">
-                                        <LazySection
-                                            fetcher={() => getCategoryProducts('smartphones', { per_page: 2, page: 1 }).then((res: any) => res.data)}
-                                            component={(data) => (
-                                                <>
-                                                    {data?.slice(0, 2).map((product: any, idx: number) => (
-                                                        <BlogFastSaleProductCards key={product.id || idx} product={product} index={idx} />
-                                                    ))}
-                                                </>
-                                            )}
-                                            fallback={<div className="h-[300px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fetcher={laptopsFetcher}
+                            render={(data) => {
+                                const finalProducts = ensureArray(data).slice(0, 5);
+                                return (
+                                    <section id="blog-laptops">
+                                        <SectionHeader
+                                            title="Premium Laptops"
+                                            accentColor="var(--colour-yellow1)"
+                                            linkHref="/category/laptop-price-in-nepal"
+                                            linkText="View All Laptops"
                                         />
+                                        <div className="w-full">
+                                            <BlogProductBasket
+                                                slug="laptop-price-in-nepal"
+                                                data={finalProducts}
+                                                id="laptop-b-1"
+                                                random={true}
+                                            />
+                                        </div>
+                                    </section>
+                                );
+                            }}
+                            fallback={<div className="h-[380px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                        />
+
+                        {/* ═══ 6. Featured Stories — 5-Item Grid (Responsive) ═══ */}
+                        <LazySection
+                            fetcher={featuredArticlesFetcher}
+                            render={(data) => {
+                                const featured = ensureArray(data).slice(0, 7);
+                                if (!featured.length) return null;
+                                return (
+                                    <div className="flex flex-col gap-4">
+                                        <SectionHeader title="Buying Guides & Tips" accentColor="var(--colour-fsP2)" />
+                                        {/* 5-Item CSS Grid — Responsive */}
+                                        <div
+                                            className="hidden lg:grid gap-1"
+                                            style={{
+                                                gridTemplateColumns: 'repeat(5, 1fr)',
+                                                gridTemplateRows: 'auto auto',
+                                                gridTemplateAreas: `
+                                                "hero hero side1 side2 side3"
+                                                "bot1 bot2 side1 side2 side3"
+                                            `,
+                                            }}
+                                        >
+                                            {featured[0] && <FeaturedArticleCard article={featured[0]} variant="hero" gridArea="hero" />}
+                                            {featured[1] && <FeaturedArticleCard article={featured[1]} variant="compact" gridArea="bot1" />}
+                                            {featured[2] && <FeaturedArticleCard article={featured[2]} variant="compact" gridArea="bot2" />}
+                                            {featured[3] && <FeaturedArticleCard article={featured[3]} variant="tall" gridArea="side1" />}
+                                            {featured[4] && <FeaturedArticleCard article={featured[4]} variant="tall" gridArea="side2" badgeColor="var(--colour-fsP1)" />}
+                                            {featured[5] && <FeaturedArticleCard article={featured[5]} variant="tall" gridArea="side3" badgeColor="var(--colour-fsP1)" />}
+                                        </div>
+
+                                        {/* Mobile/Tablet fallback: simple 2-col grid */}
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:hidden">
+                                            {featured.map((post: any) => (
+                                                <FeaturedArticleCard key={post.id} article={post} variant="compact" />
+                                            ))}
+                                        </div>
                                     </div>
+                                );
+                            }}
+                            fallback={<div className="h-[400px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                        />
 
-                                    {/* ─── Right: Vertical Stack with Stars ─── */}
-                                    <div className="flex flex-col gap-1 ">
-                                        {articles?.slice(0, 6).map((post, idx) => {
-                                            const mockRating = (4.0 + (idx * 0.2)).toFixed(1);
-                                            const stars = Math.floor(parseFloat(mockRating));
-                                            return (
-                                                <Link
-                                                    key={post.id}
-                                                    href={`/blogs/${post.slug}`}
-                                                    className="group flex gap-2.5 p-2 rounded-sm border border-[var(--colour-border3)] bg-white hover:shadow-sm hover:border-[var(--colour-fsP2)]/30 transition-all duration-300"
-                                                >
-                                                    {/* Thumbnail */}
-                                                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-sm overflow-hidden bg-[var(--colour-bg4)]">
-                                                        <Image
-                                                            src={post.thumbnail_image?.full || imglogo.src}
-                                                            alt={post.title}
-                                                            fill
-                                                            className="object-cover transition-transform duration-500 "
-                                                            sizes="80px"
-                                                        />
-                                                    </div>
-                                                    {/* Info */}
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                                                        <h4 className="text-[11px] sm:text-[12px] font-semibold text-[var(--colour-text2)] leading-snug line-clamp-2 group-hover:text-[var(--colour-fsP2)] transition-colors">
-                                                            {post.title}
-                                                        </h4>
+                        {/* ═══ 6. Compare Products (Repositioned) ═══ */}
+                        <LazySection
+                            fetcher={() => getCategoryProducts('drone-price-in-nepal', { per_page: 8, page: 1 }).then((res: any) => res.data)}
+                            component={(data) => (
+                                <section id="blog-compare-products">
+                                    <BlogCompareProducts products={ensureArray(data).slice(0, 8)} />
+                                </section>
+                            )}
+                            fallback={<div className="h-[200px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                        />
 
-                                                        {/* Stars + Date */}
-                                                        <div className="flex items-center justify-between ">
-                                                            <div className="flex items-center gap-0.5">
-                                                                {[...Array(5)].map((_, i) => (
-                                                                    <Star
-                                                                        key={i}
-                                                                        className={`w-2.5 h-2.5 ${i < stars
-                                                                            ? 'text-amber-400 fill-amber-400'
-                                                                            : 'text-gray-200 fill-gray-200'
-                                                                            }`}
-                                                                    />
-                                                                ))}
-                                                                <span className="text-[9px] text-[var(--colour-text3)] ml-1 font-semibold">
-                                                                    {mockRating}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex flex-col items-end gap-0.5">
-                                                                <span className="text-[9px]  font-semibold text-[var(--colour-text2)] leading-snug line-clamp-2 group-hover:text-[var(--colour-fsP2)] transition-colors">
-                                                                    {post.author}
-                                                                </span>
-                                                                <span className="text-[9px] text-[var(--colour-text3)]">
-                                                                    {formatDate(post.publish_date)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </Link>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </section>
-                        </LazySection>
+                        {/* ═══ 7. Tech News Highlights ═══ */}
+                        <LazySection
+                            fetcher={newsArticlesFetcher}
+                            render={(data) => {
+                                const newsArray = ensureArray(data).slice(0, 4);
+                                if (!newsArray.length) return null;
+                                return (
+                                    <section id="tech-news">
+                                        <SectionHeader title="Latest Tech News" accentColor="var(--colour-fsP2)" />
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                                            {newsArray.map((post: any) => (
+                                                <BlogCard key={post.id} post={post} />
+                                            ))}
+                                        </div>
+                                    </section>
+                                );
+                            }}
+                            fallback={<div className="h-[300px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                        />
 
 
-                        {/* ═══ 7. YouTube Content Section ═══ */}
+                        {/* ═══ 8. YouTube Content Section ═══ */}
                         <LazySection
                             fallback={<div className="h-[400px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                         >
@@ -320,16 +352,24 @@ export default function BlogListingClient({
 
                                     <div className="hidden lg:block w-full lg:w-1/4">
                                         <LazySection
-                                             fetcher={() => getCategoryProducts('laptops', { per_page: 4, page: 1 }).then((res: any) => res.data)}
-                                             component={(data) => <ProductDeals products={data as any[]} limit={4} title="Video Deals" />}
-                                             fallback={<div className="h-[400px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                                            fetcher={youtubeSidebarFetcher}
+                                            render={(data) => {
+                                                const products = ensureArray(data).slice(0, 8);
+                                                const deals = products.map((p: any) => ({
+                                                    product: p,
+                                                    sellPrice: p.discountedPriceVal ?? p.discounted_price ?? (typeof p.price === 'object' ? p.price?.current : p.price) ?? 0
+                                                }));
+                                                return <ProductDeals deals={deals} title="Speaker Highlights" />;
+                                            }}
+                                            minHeight="400px"
+                                            fallback={<div className="h-[400px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                                         />
                                     </div>
                                 </div>
                             </section>
                         </LazySection>
 
-                        {/* ═══ 8. Banner (lazy) ═══ */}
+                        {/* ═══ 9. Banner (lazy) ═══ */}
                         <LazySection
                             fallback={<div className="h-[200px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                         >
@@ -338,18 +378,7 @@ export default function BlogListingClient({
                             </section>
                         </LazySection>
 
-                        {/* ═══ 9. Compare Products ═══ */}
-                        <LazySection
-                            fetcher={() => getCategoryProducts('smartphones', { per_page: 3, page: 1 }).then((res: any) => res.data)}
-                            component={(data) => (
-                                <section id="blog-compare-products">
-                                    <BlogCompareProducts products={data} />
-                                </section>
-                            )}
-                            fallback={<div className="h-[200px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
-                        />
-
-                        {/* ═══ 10. Remaining Blog Cards ═══ */}
+                        {/* ═══ 11. Remaining Blog Cards ═══ */}
                         <LazySection
                             fallback={
                                 <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">

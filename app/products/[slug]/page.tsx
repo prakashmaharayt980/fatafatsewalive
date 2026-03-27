@@ -12,16 +12,7 @@ export const revalidate = 60;
 
 // Fetch product data on server — wrapped in cache() to deduplicate
 // between generateMetadata() and the page component
-const getProduct = cache(async (slug: string): Promise<ProductData | null> => {
-  if (!slug) return null;
-  try {
-    const data = await getProductBySlug(slug);
-    return data;
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    return null;
-  }
-});
+const getProduct = cache((slug: string) => getProductBySlug(slug));
 
 export async function generateMetadata({ params }: SlugProps): Promise<Metadata> {
   const resolvedParams = await params;

@@ -1,17 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronRight } from 'lucide-react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 
-
 import { cn } from '@/lib/utils';
-
 import BlogProductCard from '@/app/products/ProductCards/blogProducts';
-import SkeltonBasket from '@/app/skeleton/skelettonBasket';
 import { getCategoryProducts } from '@/app/api/services/category.service';
+import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 import type { BasketProduct } from '@/app/types/ProductDetailsTypes';
 
 interface BlogProductBasketProps {
@@ -21,99 +18,130 @@ interface BlogProductBasketProps {
   brandSlug?: string;
   minPrice?: number;
   maxPrice?: number;
+  data?: any[];
+  random?: boolean;
+  isEmi?: boolean;
 }
 
-const fetcher = async ({ id, brandSlug, minPrice, maxPrice }: { id: string; brandSlug?: string; minPrice?: number; maxPrice?: number }) => {
-  const response = await getCategoryProducts({
-    categories: id,
+const fetcher = async ({
+  slug,
+  brandSlug,
+  minPrice,
+  maxPrice,
+  random,
+}: {
+  slug: string;
+  brandSlug?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  random?: boolean;
+}) => {
+  if (random) return getRandomBasketProducts(slug, 6);
+  return getCategoryProducts(slug, {
     brand: brandSlug,
     min_price: minPrice,
     max_price: maxPrice,
-    per_page: 6
+    per_page: 6,
   } as any);
-  return response;
 };
 
-const BlogProductBasket = ({ title, slug, id, brandSlug, minPrice, maxPrice }: BlogProductBasketProps) => {
-  const router = useRouter();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { ref, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
-  const [windowWidth, setWindowWidth] = useState(0);
-  const [activeDot, setActiveDot] = useState(0);
+/* ── Skeleton card ─────────────────────────────────────────── */
+const CardSkeleton = () => (
+  <div className="flex flex-col bg-white rounded-xl border border-[var(--colour-border3)] overflow-hidden animate-pulse">
+    <div className="aspect-square bg-[var(--colour-bg4)]" />
+    <div className="p-2.5 flex flex-col gap-2">
+      <div className="h-2 w-2/3 rounded bg-[var(--colour-bg4)]" />
+      <div className="h-2.5 w-full rounded bg-[var(--colour-bg4)]" />
+      <div className="h-2.5 w-4/5 rounded bg-[var(--colour-bg4)]" />
+      <div className="mt-1 h-3 w-1/2 rounded bg-[var(--colour-bg4)]" />
+    </div>
+  </div>
+);
 
-  // Fetch data with SWR
+/* ── Main component ────────────────────────────────────────── */
+const BlogProductBasket = ({
+  title,
+  slug,
+  id,
+  brandSlug,
+  minPrice,
+  maxPrice,
+  data,
+  random = true,
+  isEmi = false,
+}: BlogProductBasketProps) => {
+  const router = useRouter();
+  const { ref, inView } = useInView({ threshold: 0.05, triggerOnce: true });
+
   const { data: productList, error } = useSWR(
-    inView ? { id, brandSlug, minPrice, maxPrice } : null,
+    inView && !data ? { slug, brandSlug, minPrice, maxPrice, random } : null,
     fetcher,
-    {
-      dedupingInterval: 60000,
-      revalidateOnFocus: false,
-    }
+    { dedupingInterval: 60000, revalidateOnFocus: false }
   );
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
+  const products: BasketProduct[] =
+    data || productList?.data?.products || productList?.data || [];
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Loading state
-  if (!productList && inView) {
-    return (
-      <div ref={ref} className="w-full bg-gray-50/50 py-6 sm:py-10 border-t border-gray-100">
-        <div className="mx-auto px-2 sm:px-6 lg:px-8">
-          <SkeltonBasket />
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div ref={ref} className="w-full bg-white text-red-600 text-center p-4">
-        Error loading products: {error.message}
-      </div>
-    );
-  }
-
-  // No data yet
-  if (!productList) {
-    return <div ref={ref} className="min-h-[200px] bg-white" />;
-  }
-
-  // Empty products
-  const products = productList?.data || [];
-  if (!products.length) {
-    return (
-      <div ref={ref} className="w-full bg-white text-gray-600 text-center p-4">
-        No products found for this category.
-      </div>
-    );
-  }
-
+  const isLoading = !data && !productList && !error && inView;
+  const isEmpty = !isLoading && !error && products.length === 0;
 
   return (
-    <div ref={ref} className="w-full bg-white py-1 sm:py-1 border-t border-gray-100">
-      <div className={cn('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-2')}>
-        {products.slice(0, 6).map((product: BasketProduct, index: number) => (
-          <div
-            key={`${product.slug}-${index}`}
-            className="w-full transform transition-all duration-300 hover:-translate-y-1"
+    <section ref={ref} className="w-full">
+      {/* Header */}
+      {title && (
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-[var(--colour-text1)] tracking-tight">
+            {title}
+          </h2>
+          <button
+            onClick={() => router.push(`/category/${slug}`)}
+            className="text-[11px] text-[var(--colour-text3)] hover:text-[var(--colour-fsP2)] transition-colors"
           >
-            <BlogProductCard product={product as any} index={index} />
-          </div>
-        ))}
-      </div>
-    </div>
+            View all →
+          </button>
+        </div>
+      )}
+
+      {/* Loading skeletons */}
+      {isLoading && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+          {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <p className="text-xs text-red-400 text-center py-6">
+          Failed to load products.
+        </p>
+      )}
+
+      {/* Empty */}
+      {isEmpty && (
+        <p className="text-xs text-[var(--colour-text3)] text-center py-6">
+          No products found.
+        </p>
+      )}
+
+      {/* Pre-visible placeholder */}
+      {!inView && !data && (
+        <div className="min-h-[200px]" />
+      )}
+
+      {/* Product grid */}
+      {products.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+          {products.map((product, index) => (
+            <BlogProductCard
+              key={`${product.slug}-${index}`}
+              product={product as any}
+              index={index}
+              isEmi={isEmi}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 };
 

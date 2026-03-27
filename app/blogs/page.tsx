@@ -1,101 +1,113 @@
 import React from 'react';
 import type { Metadata } from 'next';
-
 import BlogListingClient from './components/BlogListingClient';
 import type { Article } from '../types/Blogtypes';
 import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import BannerSectionServer from '@/components/BannerSectionServer';
 import { getCategoryProducts } from '../api/services/category.service';
 import { getBlogCategories, getBlogList } from '../api/services/blog.service';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
-export const metadata: Metadata = {
-    title: 'Latest Tech News, Reviews & Buying Guides | Fatafat Sewa Blog',
-    description: 'Discover the latest technology news, in-depth product reviews, expert buying guides, and exclusive deals. Stay updated with Fatafat Sewa\'s comprehensive tech blog.',
-    keywords: ['tech news', 'product reviews', 'buying guides', 'technology blog', 'gadget reviews', 'Nepal tech news'],
-    authors: [{ name: 'Fatafat Sewa' }],
-    alternates: {
-        canonical: `${SITE_URL}/blogs`,
-    },
-    openGraph: {
-        title: 'Latest Tech News, Reviews & Buying Guides | Fatafat Sewa',
-        description: 'Your source for technology news, reviews, and expert buying guides.',
-        url: `${SITE_URL}/blogs`,
-        siteName: 'Fatafat Sewa',
-        locale: 'en_US',
-        type: 'website',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Latest Tech News & Reviews | Fatafat Sewa Blog',
-        description: 'Technology news, reviews, and buying guides.',
-    },
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-            index: true,
-            follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }): Promise<Metadata> {
+    const resolvedParams = await searchParams;
+    const categoryName = resolvedParams.category ? resolvedParams.category.charAt(0).toUpperCase() + resolvedParams.category.slice(1).replace(/-/g, ' ') : '';
+    const query = resolvedParams.q;
+
+    let title = 'Latest Tech News, Reviews & Buying Guides | Fatafat Sewa Blog';
+    if (categoryName && categoryName !== 'All') title = `${categoryName} - Tech News & Reviews | Fatafat Sewa Blog`;
+    if (query) title = `Search results for "${query}" | Fatafat Sewa Blog`;
+
+    return {
+        title,
+        description: 'Discover the latest technology news, in-depth product reviews, expert buying guides, and exclusive deals. Stay updated with Fatafat Sewa\'s tech community.',
+        alternates: { canonical: `${SITE_URL}/blogs` },
+        openGraph: {
+            title,
+            description: 'Your source for technology news, reviews, and expert buying guides.',
+            url: `${SITE_URL}/blogs`,
+            type: 'website',
         },
-    },
-};
+    };
+}
 
-export default async function BlogPage() {
-    // Fetch cached data (latest articles — cached for 1 hour)
+export default async function BlogPage({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }) {
+    const resolvedParams = await searchParams;
+    const activeCategory = resolvedParams.category;
+    const searchQuery = resolvedParams.q;
+
+    // Fetch primary data
     const { latestArticles } = await getBlogPageData();
+    const heroBannerData = await getBannerData('blog-banner-test');
 
-    // Fetch only non-cached data in parallel
-    const [categoriesResponse, trendingProductsResponse] = await Promise.all([
-        getBlogCategories(),
-        getCategoryProducts('smartphones', { per_page: 10, page: 1 }),
-    ]);
+    // Fetch dynamic data in parallel
+    let categoriesResponse = null;
+    let trendingProductsResponse = null;
+    let blogListResponse = null;
 
-    // Use cached latestArticles directly
-    const articles: Article[] = latestArticles;
+    try {
+        [categoriesResponse, trendingProductsResponse, blogListResponse] = await Promise.all([
+            getBlogCategories(),
+            getCategoryProducts('mobile-price-in-nepal', { per_page: 10, page: 1 }),
+            getBlogList({
+                category: activeCategory !== 'all' ? activeCategory : undefined,
+                search: searchQuery || undefined,
+                per_page: 30
+            })
+        ]);
+    } catch (e) {
+        console.error("Critical fetch failure in BlogPage", e);
+    }
 
-    // Derive brand articles from cached latestArticles (no duplicate fetch)
-    const brandArticles: Article[] = [...latestArticles].reverse().slice(0, 4);
+    const allArticles: Article[] = blogListResponse?.data || latestArticles || [];
 
-    // Process categories
-    let categories: any[] = categoriesResponse?.data?.slice(0, 8) || [];
+    // ─── Server-Side Article Filtering (Performance Optimization) ───
+    // This removes redundant high-cost calculations from the client's JS bundle
+    const reviewArticles = allArticles.filter(a => a.category?.slug === 'news' || a.title?.toLowerCase().includes('news')).slice(0, 9);
+    const guideArticles = allArticles.filter(a => a.category?.slug === 'buying-guides' || a.title?.toLowerCase().includes('guide')).slice(0, 5);
+    const newsArticles = allArticles.filter(a => a.category?.slug === 'tech-news' || a.category?.slug === 'news').slice(0, 8);
+    const initialStories = allArticles.filter(a => a.category?.slug === 'web-stories').slice(0, 10);
+    const brandArticles = latestArticles?.slice(0, 4) || allArticles.slice(0, 4);
+
+    // ─── Category Processing ───
+    const derivedCategories = Array.from(
+        new Map(
+            (latestArticles || [])
+                .filter((a: Article) => a.category)
+                .map((a: Article) => [a.category.id || a.category.slug, {
+                    id: a.category.id || a.category.slug,
+                    title: a.category.title || (a.category as any).name,
+                    slug: a.category.slug,
+                    blogs_count: 0,
+                    status: true
+                }])
+        ).values()
+    );
+
+    let categories: any[] = categoriesResponse?.success ? categoriesResponse.data : derivedCategories;
     if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
         categories.unshift({ id: 'all', title: 'All', slug: 'all' });
     }
 
-    // Process trending products
     const trendingProducts = trendingProductsResponse?.data?.products?.slice(0, 6) || [];
 
-    // Generate JSON-LD structured data
+    // SEO Structured Data
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Blog',
         name: 'Fatafat Sewa Tech Blog',
         description: 'Latest technology news, reviews, and buying guides',
-        url: `${SITE_URL}/blogs`,
-        publisher: {
-            '@type': 'Organization',
-            name: 'Fatafat Sewa',
-            url: SITE_URL,
-        },
-        blogPost: articles.slice(0, 10).map((article) => ({
+        publisher: { '@type': 'Organization', name: 'Fatafat Sewa', url: SITE_URL },
+        blogPost: allArticles.slice(0, 10).map((article) => ({
             '@type': 'BlogPosting',
             headline: article.title,
-            description: article.short_desc || article.title,
-            image: article.thumbnail_image?.full,
+            image: article.thumb?.url || article.thumbnail_image?.full,
             datePublished: article.publish_date,
-            author: {
-                '@type': 'Person',
-                name: article.author,
-            },
+            author: { '@type': 'Person', name: article.author },
             url: `${SITE_URL}/blogs/${article.slug}`,
         })),
     };
-
-    // Use API-fetched categories (already has 'All' prepended above)
 
     const SectionOne = (
         <BannerSectionServer
@@ -107,18 +119,17 @@ export default async function BlogPage() {
 
     return (
         <>
-            {/* Structured Data */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <BlogListingClient
-                articles={articles}
-                brandArticles={brandArticles}
+                articles={allArticles}
                 categories={categories}
-                trendingProducts={trendingProducts}
                 SectionOne={SectionOne}
             />
         </>
     );
 }
+
+export const revalidate = 60;

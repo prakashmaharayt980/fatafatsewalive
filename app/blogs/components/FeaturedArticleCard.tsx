@@ -31,7 +31,7 @@ export default function FeaturedArticleCard({
     gridArea,
     badgeColor = 'var(--colour-fsP2)',
 }: FeaturedArticleCardProps) {
-    const imgSrc = article.thumbnail_image?.full || imglogo.src;
+    const imgSrc = article.thumb?.url || article.thumbnail_image?.full || imglogo.src;
 
     const isHero = variant === 'hero';
     const isTall = variant === 'tall';

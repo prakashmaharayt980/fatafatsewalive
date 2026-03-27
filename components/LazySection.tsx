@@ -37,7 +37,7 @@ function LazySection<T = any>({
   fallback = null,
   className,
   minHeight = '100px',
-  rootMargin = '200px',
+  rootMargin = '800px',
   delay = 0,
   aspectRatio,
   priority = false,
@@ -45,18 +45,20 @@ function LazySection<T = any>({
   const [inView, setInView] = useState(priority);
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const didFetch = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const renderFn = render || component;
 
   // Manual trigger if priority is set
   useEffect(() => {
-    if (priority && !data && !isLoading) {
+    if (priority && !didFetch.current) {
       const activate = async () => {
         if (delay > 0) {
           await new Promise(resolve => setTimeout(resolve, delay));
         }
         setInView(true);
+        didFetch.current = true;
         if (fetcher) {
           setIsLoading(true);
           try {
@@ -71,28 +73,31 @@ function LazySection<T = any>({
       };
       activate();
     }
-  }, [priority, fetcher, data, isLoading, delay]);
+  }, [priority, fetcher, delay]);
 
   useEffect(() => {
-    if (priority) return; // Skip observer if priority is handled
+    if (priority || didFetch.current) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !didFetch.current) {
           const activate = async () => {
             if (delay > 0) {
               await new Promise(resolve => setTimeout(resolve, delay));
             }
             
             setInView(true);
+            didFetch.current = true; // Mark as activated early to avoid race conditions
 
-            if (fetcher && !data && !isLoading) {
+            if (fetcher) {
               setIsLoading(true);
               try {
                 const result = await fetcher();
                 setData(result);
               } catch (err) {
                 console.error('LazySection fetch error:', err);
+                // Optional: reset didFetch on critical failure to allow retry
+                // didFetch.current = false; 
               } finally {
                 setIsLoading(false);
               }
@@ -114,7 +119,7 @@ function LazySection<T = any>({
     }
 
     return () => observer.disconnect();
-  }, [fetcher, data, isLoading, rootMargin, delay, priority]);
+  }, [fetcher, rootMargin, delay, priority]);
 
   return (
     <div

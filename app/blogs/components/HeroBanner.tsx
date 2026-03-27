@@ -30,7 +30,7 @@ export default function HeroBanner({ data }: HeroBannerProps) {
             .map((img) => ({
                 id: img.id.toString(),
                 name: img.content || 'Banner Image',
-                src: img.url || img.image?.full || '',
+                src: img.url || img.image?.full || imglist.img1,
                 link: img.link || '#',
             }));
     }, [data]);

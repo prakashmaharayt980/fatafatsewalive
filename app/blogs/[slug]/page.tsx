@@ -3,10 +3,9 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 
-import { getBlogList } from '../../api/services/blog.service';
+import { getBlogBySlug } from '../../api/services/blog.service';
 import BlogDetailsClient from '../components/BlogDetailsClient';
 import type { Article } from '../../types/Blogtypes';
-import type { ProductDetails } from '../../types/ProductDetailsTypes';
 import imglogo from '../../assets/logoimg.png';
 import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
 
@@ -16,15 +15,23 @@ interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
-// Data Fetching Helper
-const getArticleData = async (slug: string) => {
+// Optimized Data Fetcher — Returns full response for article + related items
+const getArticleResponse = async (slug: string) => {
     try {
-        const blogRes = await getBlogList();
-        const articles: Article[] = Array.isArray(blogRes) ? blogRes : blogRes.data || [];
-        const article = articles.find((a) => a.slug === slug);
-        return article;
+        const response = await getBlogBySlug(slug);
+        // Robust extraction: Handle { data: {...}, related: [...] } or direct {...}
+        if (!response) return null;
+        
+        const data = response.data || response;
+        const related = response.related || [];
+        
+        return {
+            data,
+            related,
+            raw: response
+        };
     } catch (e) {
-        console.error("Failed to fetch article", e);
+        console.error(`Failed to fetch blog response for slug: ${slug}`, e);
         return null;
     }
 }
@@ -32,7 +39,8 @@ const getArticleData = async (slug: string) => {
 // Dynamic Metadata with Enhanced SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const article = await getArticleData(slug);
+    const response = await getArticleResponse(slug);
+    const article = response?.data;
 
     if (!article) {
         return {
@@ -42,7 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     const articleUrl = `${SITE_URL}/blogs/${slug}`;
-    const imageUrl = article.thumbnail_image?.full || imglogo.src;
+    const imageUrl = article.thumb?.url || article.thumbnail_image?.full || imglogo.src;
 
     return {
         title: `${article.title} | Fatafat Sewa Blog`,
@@ -95,35 +103,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostPage({ params }: PageProps) {
     const { slug } = await params;
-    const article = await getArticleData(slug);
+    const response = await getArticleResponse(slug);
+    const article = response?.data;
 
     if (!article) {
         return notFound();
     }
 
-    // Fetch cached data
+    // Use related articles already present in the single response
+    const relatedArticles: Article[] = response?.related || [];
+
+    // Fetch cached author/latest data for the sidebar
     const { latestArticles } = await getBlogPageData();
-
-    let relatedArticles: Article[] = [];
-    let authorArticles: Article[] = [];
-
-    // Process related/author articles from cached latestArticles
-    if (latestArticles.length > 0) {
-        // Related articles (same category first)
-        relatedArticles = latestArticles
-            .filter((a: Article) => a.id !== article.id)
-            .sort((a: Article, b: Article) => {
-                const aMatch = a.category?.id === article.category?.id ? 1 : 0;
-                const bMatch = b.category?.id === article.category?.id ? 1 : 0;
-                return bMatch - aMatch;
-            })
-            .slice(0, 8);
-
-        // Author articles
-        authorArticles = latestArticles
-            .filter((a: Article) => a.id !== article.id && a.author === article.author)
-            .slice(0, 6);
-    }
+    const authorArticles = (latestArticles || [])
+        .filter((a: Article) => a.id !== article.id && a.author === article.author)
+        .slice(0, 6);
 
     // Generate JSON-LD structured data for article
     const jsonLd = {
@@ -131,7 +125,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         '@type': 'BlogPosting',
         headline: article.title,
         description: article.short_desc || article.title,
-        image: article.thumbnail_image?.full || imglogo.src,
+        image: article.thumb?.url || imglogo.src,
         datePublished: article.publish_date,
         dateModified: article.publish_date,
         author: {
@@ -191,7 +185,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
             />
-            <h1 className="sr-only">{article.title}</h1>
+            {/* Removed redundant sr-only H1 to avoid confusion with BlogDetailsClient's H1 */}
             <BlogDetailsClient
                 article={article}
                 relatedArticles={relatedArticles}

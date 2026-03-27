@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCachedCategoryProducts } from '@/app/api/utils/categoryCache';
+import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 import { getBannerBySlug } from '@/app/api/services/misc.service';
 import dynamic from 'next/dynamic';
 const BasketCard = dynamic(() => import('@/app/homepage/BasketCard'), { ssr: true });
@@ -15,7 +15,7 @@ interface BasketSectionServerProps {
 
 export default async function BasketSectionServer({ slug, title, imgSlug }: BasketSectionServerProps) {
     const [prodRes, bannerRes] = await Promise.allSettled([
-        getCachedCategoryProducts(slug, { per_page: 10 }),
+        getRandomBasketProducts(slug),
         imgSlug ? getBannerBySlug(imgSlug).then(res => res.data) : Promise.resolve(null)
     ]);
 

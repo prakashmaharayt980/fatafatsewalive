@@ -17,7 +17,7 @@ const demoCategories = [
   { slug: 'laptop-price-in-nepal', title: 'Laptop' },
   { slug: 'accessories-price-in-nepal', title: 'Accessories', imgSlug: 'right-slider-thumbnail-test' },
   { slug: 'drone-price-in-nepal', title: 'Drone' },
-  { slug: 'home-appliance-price-in-nepal', title: 'Home' },
+  { slug: 'speaker-price-in-nepal', title: 'Speaker' },
   { slug: 'dslr-camera-price-in-nepal', title: 'Camera' },
 ];
 
@@ -115,12 +115,20 @@ async function Page() {
             title={firstCategory.title}
           />
         }
+        sectionOne={
+          <LazySection
+            fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}
+            aspectRatio="1000/250"
+            rootMargin="800px"
+          >
+            <BannerSectionServer slug={bannerSections[0].slug} type={bannerSections[0].type} />
+          </LazySection>}
         offerSection={<OfferSectionClient />}
         sectionTwo={
           <LazySection
             fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}
             aspectRatio="1000/250"
-            rootMargin="0px"
+            rootMargin="800px"
           >
             <BannerSectionServer slug={bannerSections[1].slug} type={bannerSections[1].type} />
           </LazySection>

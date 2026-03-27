@@ -48,7 +48,7 @@ const ProductWidget = ({ products }: ProductWidgetProps) => {
                     </Link>
                 ))}
                 <Link
-                    href="/category/smartphones?id=1"
+                    href="/category/mobile-price-in-nepal?id=1"
                     className="block w-full mt-5 py-3 bg-gradient-to-r from-[var(--colour-fsP2)] to-blue-700 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-[var(--colour-fsP2)]/30 transition-all text-sm text-center hover:-translate-y-0.5"
                 >
                     View All Products →

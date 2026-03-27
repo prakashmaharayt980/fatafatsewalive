@@ -50,12 +50,18 @@ export interface Article {
     title: string;
     slug: string;
   };
-  thumbnail_image: {
+  thumbnail_image?: {
     full: string;
     thumb: string;
     preview: string;
   };
+  thumb?: {
+    url: string;
+    alt_text: string;
+  } | null;
   reading_time: string;
+  average_rating?: number;
+  rating_count?: number;
 }
 
 export interface ApiResponse {

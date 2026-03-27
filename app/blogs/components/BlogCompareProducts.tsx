@@ -3,82 +3,92 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Star } from 'lucide-react';
 import type { ProductDetails } from '../../types/ProductDetailsTypes';
+import imglogo from '../../assets/logoimg.png';
+import SectionHeader from './SectionHeader';
 
 interface BlogCompareProductsProps {
     products?: ProductDetails[];
 }
 
-
-
 function ProductSide({ product, side }: { product: ProductDetails; side: 'left' | 'right' }) {
-    const imgUrl = product.image?.preview || product.image?.thumb || product.image?.full;
-    const basePrice = typeof product.price === 'object' ? product.price.current : product.price;
-    const price = product.discounted_price && product.discounted_price < basePrice ? product.discounted_price : basePrice;
-    const category = product.categories?.[0]?.title || 'Product';
-    const rating = product.average_rating || (3.5 + Math.random() * 1.5);
+    const extractPrice = (p: any): number => {
+        if (typeof p === 'number') return p;
+        if (typeof p === 'string') return parseInt(p) || 0;
+        if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
+        return 0;
+    };
+
+    const price = extractPrice(product.discounted_price || product.price);
+    const imgUrl = product.thumb?.url || product.image?.preview || product.image?.full || imglogo.src;
+    const rating = product.average_rating || 0;
 
     return (
-        <div className={`flex flex-col items-center gap-2 flex-1 ${side === 'left' ? 'pr-3' : 'pl-3'}`}>
-
-
-            {/* Image */}
-            <Link href={`/products/${product.slug}`} className="relative w-28 h-32 flex items-center justify-center group/img">
-                <Image
-                    src={imgUrl}
-                    alt={product.name}
-                    width={112}
-                    height={128}
-                    className="object-contain drop-shadow-lg transition-transform duration-500 group-hover/img:scale-110"
-                />
+        <div className={`flex flex-col items-center gap-2 flex-1 ${side === 'left' ? 'pr-2 sm:pr-3' : 'pl-2 sm:pl-3'}`}>
+            <Link href={`/products/${product.slug}`} className="relative w-full aspect-square flex items-center justify-center  bg-transparent rounded-xl p-2  transition-colors">
+                <div className="relative w-full h-full">
+                    <Image
+                        src={imgUrl}
+                        alt={product.name}
+                        fill
+                        className="object-contain transition-transform duration-300 "
+                        sizes="(max-width: 640px) 40vw, 150px"
+                    />
+                </div>
             </Link>
 
-            {/* Name */}
-            <Link href={`/products/${product.slug}`}>
-                <p className="text-[var(--colour-text2)] font-semibold text-[12px] text-center leading-snug line-clamp-2 max-w-[120px] hover:text-[var(--colour-fsP2)] transition-colors">
-                    {product.name}
+            <div className="text-center space-y-0.5 w-full">
+                <Link href={`/products/${product.slug}`}>
+                    <p className="text-[var(--colour-text2)] font-semibold text-[11px] sm:text-[12px] leading-tight line-clamp-2 hover:text-[var(--colour-fsP2)] transition-colors">
+                        {product.name}
+                    </p>
+                </Link>
+                <p className="text-[var(--colour-fsP2)] font-bold text-[11px] sm:text-[13px]">
+                    Rs. {price?.toLocaleString()}
                 </p>
-            </Link>
-
-            {/* Price */}
-            <span className="text-[13px] font-bold text-[var(--colour-text2)]">
-                Rs. {price?.toLocaleString()}
-            </span>
-
+                {rating > 0 && (
+                    <div className="flex items-center justify-center gap-0.5">
+                        <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                        <span className="text-[10px] text-[var(--colour-text3)]">{rating.toFixed(1)}</span>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
 
 function CompareCard({ left, right }: { left: ProductDetails; right: ProductDetails }) {
     const [hovered, setHovered] = useState(false);
-    const category = left.categories?.[0]?.title || right.categories?.[0]?.title || 'Products';
+    const category = left.categories?.[0]?.title || right.categories?.[0]?.title || 'Featured';
 
     return (
         <div
-            className="group bg-white rounded-lg border border-[var(--colour-border3)] overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+            className="group bg-white rounded-xl border border-[var(--colour-border3)] overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            {/* Category */}
-            <div className="text-center pt-3 pb-1.5">
-                <span className="text-[12px] font-bold uppercase  text-[var(--colour-fsP2)]">{category}</span>
+            {/* Category Badge */}
+            <div className="flex justify-center pt-3 pb-1">
+                <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 bg-[var(--colour-bg4)] text-[var(--colour-text3)] rounded-full">
+                    {category}
+                </span>
             </div>
 
-            {/* Products */}
-            <div className="flex items-stretch px-3 pb-3">
+            {/* Products Row */}
+            <div className="relative flex items-center px-3 py-3">
                 <ProductSide product={left} side="left" />
 
-                {/* VS */}
-                <div className="flex flex-col items-center justify-center gap-1 shrink-0">
-                    <div className="w-px h-10 bg-[var(--colour-border3)]" />
-                    <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${hovered
-                        ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/10 scale-110'
-                        : 'border-[var(--colour-border3)] bg-[var(--colour-bg4)]'
+                {/* VS Badge */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${hovered
+                        ? 'bg-[var(--colour-fsP2)] shadow-sm'
+                        : 'bg-[var(--colour-bg4)] border border-[var(--colour-border3)]'
                         }`}>
-                        <span className={`text-[9px] font-black uppercase transition-colors ${hovered ? 'text-[var(--colour-fsP2)]' : 'text-[var(--colour-text3)]'
-                            }`}>VS</span>
+                        <span className={`text-[10px] font-black italic transition-colors ${hovered ? 'text-white' : 'text-[var(--colour-text3)]'}`}>
+                            VS
+                        </span>
                     </div>
-                    <div className="w-px h-10 bg-[var(--colour-border3)]" />
                 </div>
 
                 <ProductSide product={right} side="right" />
@@ -88,12 +98,12 @@ function CompareCard({ left, right }: { left: ProductDetails; right: ProductDeta
             <div className="px-3 pb-3">
                 <Link
                     href={`/compare?ids=${left.id},${right.id}`}
-                    className={`block w-full py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider text-center transition-all duration-300 ${hovered
-                        ? 'bg-[var(--colour-fsP2)] text-white shadow-sm'
-                        : 'bg-[var(--colour-bg4)] text-[var(--colour-text3)] border border-[var(--colour-border3)]'
+                    className={`flex items-center justify-center w-full py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 ${hovered
+                        ? 'bg-[var(--colour-fsP2)] text-white'
+                        : 'bg-[var(--colour-bg4)] text-[var(--colour-text3)]'
                         }`}
                 >
-                    Compare Now
+                    Compare Specs
                 </Link>
             </div>
         </div>
@@ -101,33 +111,28 @@ function CompareCard({ left, right }: { left: ProductDetails; right: ProductDeta
 }
 
 export default function BlogCompareProducts({ products }: BlogCompareProductsProps) {
-    if (!products || products.length < 2) return null;
+    if (!products || products.length < 6) return null;
 
-    // Pair products: [0,1], [2,3], [4,5], [6,7]
     const pairs: [ProductDetails, ProductDetails][] = [];
-    for (let i = 0; i + 1 < products.length && pairs.length < 4; i += 2) {
+    // Only show 2 pairs (4 products total)
+    for (let i = 0; i + 1 < products.length && pairs.length < 6; i += 2) {
         pairs.push([products[i], products[i + 1]]);
     }
 
     return (
-        <div>
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                    <div className="w-1 h-6 bg-[var(--colour-fsP1)] rounded-full" />
-                    <h2 className="text-base sm:text-lg font-bold text-[var(--colour-text2)]">Compare Products</h2>
-                </div>
-                <Link href="/compare" className="text-xs font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] transition-colors flex items-center gap-1">
-                    View All <span className="text-sm">→</span>
-                </Link>
-            </div>
+        <section className="py-2">
+            <SectionHeader
+                title="Compare Products"
+                accentColor="var(--colour-fsP1)"
+                linkHref="/compare"
+                linkText="View All"
+            />
 
-            {/* Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-                {pairs.map(([left, right], idx) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 mt-4 text-center items-center">
+                {pairs.map(([left, right]) => (
                     <CompareCard key={`${left.id}-${right.id}`} left={left} right={right} />
                 ))}
             </div>
-        </div>
+        </section>
     );
 }
