@@ -26,10 +26,14 @@ const getCachedCategoryBySlug = cache(async (slug: string) => {
         .catch(() => null);
 });
 
-async function getCategories(slug: string) {
+async function getCategoryNavigation(slug: string) {
     const data = await getCachedCategoryBySlug(slug);
-    return data?.children || [];
+    return {
+        children: data?.children || [],
+        brands: data?.brands || [],
+    };
 }
+
 
 /**
  * Builds the initial product fetch params from URL searchParams.
@@ -209,11 +213,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
     if (!slug) notFound();
 
-    const [initialProducts, categories, bannerData] = await Promise.all([
+    const [initialProducts, navigationData, bannerData] = await Promise.all([
         getInitialProducts(slug, sp, sub_category),
-        getCategories(slug),
+        getCategoryNavigation(slug),
         getBannerData('blog-banner-test'),
     ]);
+
 
     const category = initialProducts?.data?.category || null;
     const displayTitle = category?.title || category?.name || slug;
@@ -246,9 +251,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     category={category}
                     bannerData={bannerData}
                     initialProducts={initialProducts}
-                    initialCategories={categories}
+                    initialCategories={navigationData.children}
+                    initialBrands={navigationData.brands}
                     sub_category={sub_category}
                 />
+
             </Suspense>
         </>
     );

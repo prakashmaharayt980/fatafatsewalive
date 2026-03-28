@@ -8,6 +8,7 @@ type SearchParams = {
     brands?: string | number;
     categories?: string | number;
     sort?: string;
+    exchange_available?: boolean;
 };
 
 // ─── Named exports (preferred for Server Actions / RSC) ──────────────────────
@@ -40,9 +41,10 @@ export const searchProducts = async (params: SearchParams) => {
     const queryParams = new URLSearchParams();
     if (params.search) queryParams.append('search', params.search);
     if (params.page) queryParams.append('page', params.page.toString());
-    if (params.brands) queryParams.append('brands', params.brands.toString());
-    if (params.categories) queryParams.append('categories', params.categories.toString());
+    if (params.brands) queryParams.append('brand', params.brands.toString());
+    if (params.categories) queryParams.append('category', params.categories.toString());
     if (params.sort) queryParams.append('sort', params.sort.toString());
+    if (params.exchange_available !== undefined) queryParams.append('exchange_available', params.exchange_available.toString());
     queryParams.append('per_page', (params.per_page || 10).toString());
     return apiPublic.get(`/v1/products?${queryParams.toString()}`).then(res => res.data);
 };

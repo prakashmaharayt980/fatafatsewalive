@@ -40,16 +40,18 @@ const FilterSection = memo(({
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold text-[var(--colour-fsP2)] uppercase tracking-widest">
+                    <span className="text-[12.5px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest">
                         {title}
                     </span>
+
                     {showClear && onClear && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onClear(); }}
-                            className="text-[10px] text-gray-400 hover:text-gray-700 transition-colors uppercase tracking-wide cursor-pointer"
+                            className="text-[11px] text-[var(--colour-fsP2)] hover:text-blue-700 transition-colors uppercase tracking-wide cursor-pointer font-medium"
                         >
                             Clear
                         </button>
+
                     )}
                 </div>
                 <ChevronDown
@@ -92,16 +94,18 @@ const CheckboxItem = memo(({ option, checked, onChange }: CheckboxItemProps) => 
             <Label
                 htmlFor={`checkbox-${option.id}`}
                 className={cn(
-                    'text-[13px] truncate cursor-pointer transition-colors leading-none',
+                    'text-[14.5px] truncate cursor-pointer transition-colors leading-none',
                     checked ? 'text-gray-900 font-medium' : 'text-gray-500 group-hover:text-gray-800'
                 )}
             >
                 {option.label}
             </Label>
+
         </div>
         {option.count !== undefined && (
-            <span className="text-[11px] text-gray-400 ml-2 shrink-0">{option.count}</span>
+            <span className="text-[12px] text-gray-400 ml-2 shrink-0">{option.count}</span>
         )}
+
     </div>
 ));
 CheckboxItem.displayName = 'CheckboxItem';
@@ -131,8 +135,9 @@ const SearchableList = memo(({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={placeholder}
-                    className="h-8 text-[12px] mb-2"
+                    className="h-8 text-[13.5px] mb-2"
                 />
+
             )}
             <div className="overflow-y-auto max-h-[200px] space-y-0.5">
                 {filteredItems.map((item) => (
@@ -193,8 +198,9 @@ const PriceRangeSlider = memo(({ min, max, value, onChange }: PriceRangeSliderPr
                             onChange={(e) => setLocalMin(e.target.value)}
                             onBlur={commitMin}
                             onKeyDown={(e) => e.key === 'Enter' && commitMin()}
-                            className="pl-8 h-8 text-[12px] cursor-text"
+                            className="pl-8 h-8 text-[13.5px] cursor-text"
                         />
+
                     </div>
                 </div>
                 <div className="pt-5 text-gray-300 text-xs select-none">—</div>
@@ -211,8 +217,9 @@ const PriceRangeSlider = memo(({ min, max, value, onChange }: PriceRangeSliderPr
                             onChange={(e) => setLocalMax(e.target.value)}
                             onBlur={commitMax}
                             onKeyDown={(e) => e.key === 'Enter' && commitMax()}
-                            className="pl-8 h-8 text-[12px] cursor-text"
+                            className="pl-8 h-8 text-[13.5px] cursor-text"
                         />
+
                     </div>
                 </div>
             </div>

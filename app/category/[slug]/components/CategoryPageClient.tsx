@@ -11,12 +11,12 @@ import { ProductCardSkeleton, FilterSidebarSkeleton } from './Skeletons';
 
 const MobileFilterDrawer = dynamic(() => import('./MobileFilterDrawer'), { ssr: false });
 const CategoryBanner = dynamic(() => import('./CategoryBanner'), { ssr: true });
-const FilterSidebar = dynamic(() => import('./FilterSidebar'), { 
+const FilterSidebar = dynamic(() => import('./FilterSidebar'), {
     ssr: true,
     loading: () => <FilterSidebarSkeleton />
 });
 const CategoryHeader = dynamic(() => import('./CategoryHeader'), { ssr: true });
-const ProductGrid = dynamic(() => import('./ProductGrid'), { 
+const ProductGrid = dynamic(() => import('./ProductGrid'), {
     ssr: true,
     loading: () => <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
         {[...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)}
@@ -32,14 +32,18 @@ import type { CategoryPageClientProps } from './interfaces';
 function buildQueryString(filters: FilterState): string {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-        const isDefault = value === INITIAL_FILTERS[key as keyof FilterState];
-        const isEmptyArray = Array.isArray(value) && value.length === 0;
-        if (value !== undefined && value !== null && !isDefault && !isEmptyArray && value !== false) {
+        const defaultValue = INITIAL_FILTERS[key as keyof FilterState];
+        const isDefault = Array.isArray(value) && Array.isArray(defaultValue)
+            ? value.length === defaultValue.length && value.every((v, i) => v === defaultValue[i])
+            : value === defaultValue;
+
+        if (value !== undefined && value !== null && !isDefault && value !== false) {
             params.set(key, Array.isArray(value) ? value.join(',') : String(value));
         }
     });
     return params.toString();
 }
+
 
 function parseFilters(sp: Record<string, string>): FilterState {
     return {
@@ -103,8 +107,10 @@ export default function CategoryPageClient({
     bannerData,
     initialProducts,
     initialCategories,
+    initialBrands,
     sub_category,
 }: CategoryPageClientProps) {
+
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
@@ -253,9 +259,10 @@ export default function CategoryPageClient({
 
     const hasMore = meta.current_page < meta.last_page;
     const categories = initialCategories ?? [];
-    const brands: { id: number; name: string; slug: string }[] = [];
+    const brands = initialBrands ?? [];
 
-    const filterSidebarProps = {
+
+    const filterSidebarProps = useMemo(() => ({
         filters,
         onFiltersChange: handleFiltersChange,
         onToggleFilter: toggleArrayFilter,
@@ -264,7 +271,8 @@ export default function CategoryPageClient({
         brands,
         loadingCategories: false,
         loadingBrands: false,
-    };
+    }), [filters, handleFiltersChange, toggleArrayFilter, clearAllFilters, categories, brands]);
+
 
     return (
         <div className="min-h-screen bg-[#f8fafc] scrollbar-hide">
@@ -279,7 +287,7 @@ export default function CategoryPageClient({
                 </div>
             </MobileFilterDrawer>
 
-            <div className="max-w-[1440px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
+            <div className="max-w-8xl mx-auto px-4 lg:px-8 py-6 lg:py-8">
                 <CategoryBanner category={category} bannerData={bannerData} />
 
                 <CategoryHeader

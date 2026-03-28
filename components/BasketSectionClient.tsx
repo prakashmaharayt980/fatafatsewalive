@@ -23,50 +23,55 @@ interface BasketSectionClientProps {
 export default function BasketSectionClient({ slug, title, imgSlug, isFirstSection = false, sectionIndex = 0 }: BasketSectionClientProps) {
     // Only pre-fetch the first (above-fold) section; all others wait for actual scroll
     const rootMargin = sectionIndex === 0 ? '100px' : '0px';
+
+    const fetcher = React.useCallback(async () => {
+        const [prodRes, bannerRes] = await Promise.allSettled([
+            getRandomBasketProducts(slug),
+            imgSlug ? getBannerBySlug(imgSlug).then(res => res.data) : Promise.resolve(null)
+        ]);
+
+        const productsData = prodRes.status === 'fulfilled' ? prodRes.value : null;
+        const bData = bannerRes.status === 'fulfilled' ? bannerRes.value : null;
+        const bannerUrl = bData?.images?.[0]?.url;
+
+        const rawProducts = productsData?.data?.products || productsData?.products || [];
+        const decoratedProducts = rawProducts.map((p: any, idx: number) => decorateProduct(p, idx));
+        const innerData = productsData?.data || productsData;
+        
+        return { 
+            products: innerData ? { ...innerData, products: decoratedProducts } : null, 
+            bannerUrl 
+        };
+    }, [slug, imgSlug]);
+
+    const render = React.useCallback((data: any) => {
+        if (!data.products) return null;
+
+        return data.bannerUrl ? (
+            <BasketCardwithImage
+                title={title}
+                slug={slug}
+                imageUrl={data.bannerUrl}
+                initialData={data.products}
+                isFirstSection={isFirstSection}
+            />
+        ) : (
+            <BasketCard
+                title={title}
+                slug={slug}
+                initialData={data.products}
+                isFirstSection={isFirstSection}
+            />
+        );
+    }, [title, slug, isFirstSection]);
+
     return (
         <LazySection
             fallback={<SkeletonCard />}
             minHeight="400px"
             rootMargin={rootMargin}
-            fetcher={async () => {
-                const [prodRes, bannerRes] = await Promise.allSettled([
-                    getRandomBasketProducts(slug),
-                    imgSlug ? getBannerBySlug(imgSlug).then(res => res.data) : Promise.resolve(null)
-                ]);
-
-                const productsData = prodRes.status === 'fulfilled' ? prodRes.value : null;
-                const bData = bannerRes.status === 'fulfilled' ? bannerRes.value : null;
-                const bannerUrl = bData?.images?.[0]?.url;
-                
-                // API body is { data: { products: [...] } }
-                const rawProducts = productsData?.data?.products || productsData?.products || [];
-                const decoratedProducts = rawProducts.map((p: any, idx: number) => decorateProduct(p, idx));
-                const innerData = productsData?.data || productsData;
-                return { 
-                    products: innerData ? { ...innerData, products: decoratedProducts } : null, 
-                    bannerUrl 
-                };
-            }}
-            render={(data) => {
-                if (!data.products) return null;
-                
-                return data.bannerUrl ? (
-                    <BasketCardwithImage
-                        title={title}
-                        slug={slug}
-                        imageUrl={data.bannerUrl}
-                        initialData={data.products}
-                        isFirstSection={isFirstSection}
-                    />
-                ) : (
-                    <BasketCard
-                        title={title}
-                        slug={slug}
-                        initialData={data.products}
-                        isFirstSection={isFirstSection}
-                    />
-                );
-            }}
+            fetcher={fetcher}
+            render={render}
         />
     );
 }

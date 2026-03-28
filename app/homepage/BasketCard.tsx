@@ -93,14 +93,21 @@ const BasketCard = ({ title, slug, initialData, isFirstSection = false }: Basket
   useEffect(() => {
     if (isReady || !products.length) return;
     
-    // If not ready yet (e.g. initial render without data), wait for images or fallback
-    const fallbackMs = isFirstSection ? 0 : 100;
+    // If we have products but aren't "ready" (e.g. waiting for images), 
+    // we set it to ready immediately if it's the first section or if we have data.
+    if (isFirstSection || !!initialData) {
+      setIsReady(true);
+      loadedSections.add(slug);
+      return;
+    }
+
+    // Fallback: wait for images or a very short period to avoid infinite skeleton
     const timer = setTimeout(() => {
       setIsReady(true);
       loadedSections.add(slug);
-    }, fallbackMs);
+    }, 50);
     return () => clearTimeout(timer);
-  }, [isReady, slug, products.length, isFirstSection]);
+  }, [isReady, slug, products.length, isFirstSection, initialData]);
 
   useEffect(() => {
     if (!isReady && products.length > 0 && imagesLoaded >= Math.min(products.length, itemsPerPage)) {

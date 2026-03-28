@@ -26,6 +26,7 @@ export interface ProductListItem {
         price: number
         discounted_price: number
     }>
+    brand?: { id: number; name: string; slug: string }
 }
 
 export interface FullProduct {

@@ -54,7 +54,8 @@ export interface FilterSidebarProps {
     onToggleFilter: (key: 'category' | 'brand' | 'colors' | 'sizes', value: string | number) => void;
     onClearAll: () => void;
     categories: { id: number; title: string; slug: string }[];
-    brands: { id: number; name: string; slug: string }[];
+    brands: BrandData[];
+
     loadingCategories?: boolean;
     loadingBrands?: boolean;
     className?: string;
@@ -100,10 +101,11 @@ export interface ProductCardRowProps {
 // ─── ProductGrid ──────────────────────────────────────────────────────────────
 
 export interface BrandData {
-    id: number;
+    id?: number;
     name: string;
     slug: string;
 }
+
 
 export interface ProductMeta {
     current_page: number;
@@ -192,5 +194,6 @@ export interface CategoryPageClientProps {
     bannerData?: any;
     initialProducts: CategoryProductsResponse;
     initialCategories: CategoryData[];
+    initialBrands?: BrandData[];
     sub_category?: string;
 }

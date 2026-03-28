@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 
 import ExchangeClient from './ExchangeClient'
-import { getAllBrands } from '../api/services/category.service';
+import { getAllCategories, getCategoryProducts } from '../api/services/category.service';
+import type { NavbarItem } from '../context/navbar.interface';
+import type { ProductListItem } from './exchange-helpers';
 
 export const metadata: Metadata = {
     title: 'Mobile Exchange — Trade In Your Old Phone | Fatafat Sewa',
@@ -34,15 +36,51 @@ export const metadata: Metadata = {
     },
 }
 
+import LazySection from '@/components/LazySection'
+import BannerSectionServer from '@/components/BannerSectionServer'
+import OurArticlesSectionClient from '@/components/OurArticlesSectionClient'
+
 export default async function ExchangePage() {
-    let brands: Array<{ id: number; name: string; slug: string; image?: string }> = []
+    let categories: NavbarItem[] = []
+    let initialProducts: ProductListItem[] = []
 
     try {
-        const res = await getAllBrands()
-        brands = res?.data || []
+        const res = await getAllCategories()
+        const allCats: NavbarItem[] = res?.data || []
+        
+        // Do not filter categories per user request: "show all category ,brands"
+        categories = allCats;
+
+        // Pre-fetch products for the first category and its first brand to serve SSR content for SEO
+        if (categories.length > 0) {
+            const firstCat = categories[0]
+            const firstBrand = firstCat.brands && firstCat.brands.length > 0 ? firstCat.brands[0].slug : undefined
+            const productsRes = await getCategoryProducts(firstCat.slug, { brand: firstBrand, exchange_available: true, per_page: 40 })
+            initialProducts = productsRes?.data?.products || []
+        }
+
     } catch (err) {
-        console.error('Failed to fetch brands for exchange page:', err)
+        console.error('Failed to fetch data for exchange page:', err)
     }
 
-    return <ExchangeClient brands={brands} />
+    const bannerSection = (
+        <LazySection
+            fallback={<div className="w-full aspect-[1000/250] bg-gray-100 animate-pulse rounded" />}
+            aspectRatio="1000/250"
+            rootMargin="800px"
+        >
+            <BannerSectionServer slug="home-banner-fourth-test" type="Bannerfooter" />
+        </LazySection>
+    )
+
+    const blogSection = <OurArticlesSectionClient />
+
+    return (
+        <ExchangeClient 
+            categories={categories} 
+            initialProducts={initialProducts} 
+            bannerSection={bannerSection} 
+            blogSection={blogSection} 
+        />
+    )
 }

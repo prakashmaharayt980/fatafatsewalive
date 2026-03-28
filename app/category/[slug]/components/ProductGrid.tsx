@@ -148,7 +148,8 @@ const LoadMoreButton = memo(({ onClick, isLoading }: { onClick: () => void; isLo
         <button
             onClick={onClick}
             disabled={isLoading}
-            className="px-8 py-2.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="px-8 py-2.5 rounded-full border border-gray-200 text-[14.5px] font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+
         >
             {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -250,7 +251,8 @@ const ProductGrid = memo(({
 
                     {/* Pagination info + load more */}
                     <div className="mt-6 flex flex-col items-center gap-2">
-                        <p className="text-[12px] text-gray-400">
+                        <p className="text-[13.5px] text-gray-400">
+
                             Showing {products.length} of {meta.total} products
                         </p>
                         {hasMore && (

@@ -808,7 +808,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
     const formSections = {
         creditCard: [
-            { title: 'Bank Info', sectionKey: 'bankinfo', step: 1, fields: bankdetailsInfo },
+            { title: 'Credit Card Details', sectionKey: 'bankinfo', step: 1, fields: creditCardDetailsInfo },
             {
                 title: 'Personal Details', sectionKey: 'userInfo', step: 2, fields: personalDetailsInfolist, additionalContent: (
                     <div className="mt-6">

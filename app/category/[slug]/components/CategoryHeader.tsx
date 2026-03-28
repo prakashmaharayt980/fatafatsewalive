@@ -133,12 +133,14 @@ const CategoryHeader = memo(({
 }: CategoryHeaderProps) => (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
-            <h1 className="text-xl lg:text-3xl font-extrabold text-gray-900 tracking-tight">{title}</h1>
+            <h1 className="text-2xl lg:text-4xl font-black text-gray-900 tracking-tight">{title}</h1>
+
             <div className='flex flex-row gap-1 items-center'>
-                <span className="text-(--colour-fsP2) flex flex-row items-center gap-2 border border-(--colour-fsP2) p-1 rounded-sm text-sm font-semibold">
+                <span className="text-(--colour-fsP2) flex flex-row items-center gap-2 border border-(--colour-fsP2) px-2 py-1 rounded-md text-[15.5px] font-bold">
                  Products &nbsp;
                     {totalProducts.toLocaleString()}
                 </span>
+
                 <button
                     onClick={onMobileFilterClick}
                     className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors"

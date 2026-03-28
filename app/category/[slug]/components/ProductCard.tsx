@@ -4,245 +4,309 @@ import React, { useState, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { ShoppingCart, Heart, Eye, ArrowLeftRight, Scale, Package, Plus, Star } from 'lucide-react';
-import NextImage from 'next/image';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import type { BasketProduct } from '@/app/types/ProductDetailsTypes';
+import { ShoppingCart, Heart, Scale, Package, Plus, Star, Bookmark, Truck } from 'lucide-react';
 import { useCartStore } from '@/app/context/CartContext';
 import { useAuthStore } from '@/app/context/AuthContext';
 import { useShallow } from 'zustand/react/shallow';
+import { parseHighlights } from '@/app/CommonVue/highlights';
 import type { ProductCardProps, ProductCardRowProps } from './interfaces';
 
-// ─── Shared hook ─────────────────────────────────────────────────────────────
+// ─── Shared hook ──────────────────────────────────────────────────────────────
 
 function useProductCard(product: ProductCardProps['product']) {
-    const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
-        isLoggedIn: state.isLoggedIn,
-        user: state.user,
-        triggerLoginAlert: state.triggerLoginAlert
-    })));
+    const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(
+        useShallow((s) => ({
+            isLoggedIn: s.isLoggedIn,
+            user: s.user,
+            triggerLoginAlert: s.triggerLoginAlert,
+        }))
+    );
 
     const {
-        addToCart, addToWishlist, removeFromWishlist, wishlistItems,
-        addToCompare, compareItems, removeFromCompare,
-    } = useCartStore(useShallow(state => ({
-        addToCart: state.addToCart,
-        addToWishlist: state.addToWishlist,
-        removeFromWishlist: state.removeFromWishlist,
-        wishlistItems: state.wishlistItems,
-        addToCompare: state.addToCompare,
-        compareItems: state.compareItems,
-        removeFromCompare: state.removeFromCompare,
-    })));
+        addToCart,
+        addToWishlist,
+        removeFromWishlist,
+        wishlistItems,
+        addToCompare,
+        compareItems,
+        removeFromCompare,
+    } = useCartStore(
+        useShallow((s) => ({
+            addToCart: s.addToCart,
+            addToWishlist: s.addToWishlist,
+            removeFromWishlist: s.removeFromWishlist,
+            wishlistItems: s.wishlistItems,
+            addToCompare: s.addToCompare,
+            compareItems: s.compareItems,
+            removeFromCompare: s.removeFromCompare,
+        }))
+    );
 
     const router = useRouter();
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
-    const isWishlisted = useMemo(() => wishlistItems.some(i => i.id === product.id), [wishlistItems, product.id]);
-    const isCompared = useMemo(() => compareItems?.some(i => i.id === product.id) ?? false, [compareItems, product.id]);
+    const isWishlisted = useMemo(
+        () => wishlistItems.some((i) => i.id === product.id),
+        [wishlistItems, product.id]
+    );
 
-    const originalPrice = product.basePrice || 0;
-    const discountedPriceVal = product.discountedPriceVal || originalPrice;
-    const displayPrice = product.displayPrice || originalPrice.toLocaleString();
-    const discount = product.discountPercent || 0;
-    const rating = product.rating || 0;
-    const imageUrl = product.thumb?.url || null;
+    const isCompared = useMemo(
+        () => compareItems?.some((i) => i.id === product.id) ?? false,
+        [compareItems, product.id]
+    );
 
-    const handleCardClick = useCallback(() => router.push(`/products/${product.slug}`), [router, product.slug]);
+    const ratingCount = useMemo(
+        () => 20 + ((product.id % 1000) * 179) % 200,
+        [product.id]
+    );
 
-    const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        await addToCart(product.id, 1, { isLoggedIn }, triggerLoginAlert, product);
-    }, [addToCart, product, isLoggedIn, triggerLoginAlert]);
+    const originalPrice = product.basePrice ?? 0;
+    const displayPrice = product.displayPrice ?? originalPrice.toLocaleString();
+    const rating = product.rating ?? 0;
+    const imageUrl = product.thumb?.url ?? null;
 
-    const handleWishlist = useCallback(async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        isWishlisted
-            ? await removeFromWishlist(product.id)
-            : await addToWishlist(product.id, user, triggerLoginAlert, product as any);
-    }, [isWishlisted, addToWishlist, removeFromWishlist, product, user, triggerLoginAlert]);
+    // Coming Soon: price must be 0 AND pre_order.available must be true
+    const isComing = originalPrice === 0 && product.pre_order?.available === true;
 
+    // Parse highlights — sliced at render time (2 grid / 3 row)
+    const highlights = useMemo(
+        () => parseHighlights(product.highlights, 3),
+        [product.highlights]
+    );
 
-    const handleCompare = useCallback(async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        isCompared ? removeFromCompare(product.id) : addToCompare(product as any);
-    }, [isCompared, addToCompare, removeFromCompare, product]);
+    const handleCardClick = useCallback(
+        () => router.push(`/products/${product.slug}`),
+        [router, product.slug]
+    );
+
+    const handleAddToCart = useCallback(
+        async (e: React.MouseEvent) => {
+            e.stopPropagation();
+            await addToCart(product.id, 1, { isLoggedIn }, triggerLoginAlert, product);
+        },
+        [addToCart, product, isLoggedIn, triggerLoginAlert]
+    );
+
+    const handleWishlist = useCallback(
+        async (e: React.MouseEvent) => {
+            e.stopPropagation();
+            isWishlisted
+                ? await removeFromWishlist(product.id)
+                : await addToWishlist(product.id, user, triggerLoginAlert, product as any);
+        },
+        [isWishlisted, addToWishlist, removeFromWishlist, product, user, triggerLoginAlert]
+    );
+
+    const handleCompare = useCallback(
+        (e: React.MouseEvent) => {
+            e.stopPropagation();
+            isCompared ? removeFromCompare(product.id) : addToCompare(product as any);
+        },
+        [isCompared, addToCompare, removeFromCompare, product]
+    );
 
     return {
-        imageLoaded, setImageLoaded, imageError, setImageError,
+        imageLoaded, setImageLoaded,
+        imageError, setImageError,
         isWishlisted, isCompared,
-        originalPrice, discountedPriceVal, displayPrice, discount, rating,
-        imageUrl,
+        originalPrice, displayPrice,
+        rating, ratingCount,
+        imageUrl, isComing, highlights,
         handleCardClick, handleAddToCart, handleWishlist, handleCompare,
-        product,
     };
 }
 
-// ─── Badge ────────────────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-const Tag = ({ children, color = 'orange' }: { children: React.ReactNode; color?: 'orange' | 'purple' | 'blue' }) => {
-    const colors = {
-        orange: 'bg-orange-500 text-white',
-        purple: 'bg-[var(--colour-fsP2)] text-white',
-        blue: 'bg-blue-500 text-white',
+const Badge = ({
+    children,
+    variant = 'orange',
+}: {
+    children: React.ReactNode;
+    variant?: 'blue' | 'purple' | 'orange';
+}) => {
+    const styles = {
+        blue: 'bg-blue-50 text-blue-700',
+        purple: 'bg-[#e8f0fb] text-[var(--colour-fsP2)]',
+        orange: 'bg-orange-50 text-[var(--colour-fsP1)]',
     };
     return (
-        <span className={cn('text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm', colors[color])}>
+        <span className={cn('inline-block text-[10px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded', styles[variant])}>
             {children}
         </span>
     );
 };
 
-// ─── Image Block ──────────────────────────────────────────────────────────────
-
-const ProductImage = ({
-    imageUrl, imageLoaded, imageError, name, altText, priority,
-    onLoad, onError,
-}: {
-    imageUrl: string | null; imageLoaded: boolean; imageError: boolean;
-    name: string; altText?: string; priority?: boolean;
-    onLoad: () => void; onError: () => void;
-}) => (
-    <div className="relative w-full aspect-square bg-gray-50 rounded-md overflow-hidden">
-        {!imageLoaded && !imageError && (
-            <div className="absolute inset-0 bg-gray-100 animate-pulse" />
-        )}
-        {imageError && (
-            <div className="absolute inset-0 flex items-center justify-center">
-                <Package className="w-8 h-8 text-gray-300" />
-            </div>
-        )}
-        {imageUrl && (
-            <Image
-                src={imageUrl}
-                alt={altText || name}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                priority={priority}
-                onLoad={onLoad}
-                onError={onError}
-                className={cn(
-                    'object-contain mix-blend-multiply transition-all duration-500 group-hover:scale-[1.04]',
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                )}
-            />
-        )}
-    </div>
-);
-
-// ─── Star Rating ──────────────────────────────────────────────────────────────
-
 const RatingRow = ({ rating, count }: { rating: number; count: number }) => (
     <div className="flex items-center gap-1">
         <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-        <span className="text-[12px] font-semibold text-gray-700">{rating.toFixed(1)}</span>
+        <span className="text-[12px] font-bold text-gray-700">{rating.toFixed(1)}</span>
         <span className="text-[11px] text-gray-400">({count})</span>
     </div>
+);
+
+const FreeDelivery = () => (
+    <div className="flex items-center gap-1 mt-0.5">
+        <Truck className="w-3 h-3 shrink-0" style={{ color: 'var(--colour-fsP1)' }} />
+        <span className="text-[10.5px] font-bold" style={{ color: 'var(--colour-fsP1)' }}>
+            Free delivery
+        </span>
+    </div>
+);
+
+
+const IconButton = ({
+    onClick,
+    active = false,
+    title,
+    children,
+    className,
+}: {
+    onClick: (e: React.MouseEvent) => void;
+    active?: boolean;
+    title?: string;
+    children: React.ReactNode;
+    className?: string;
+}) => (
+    <button
+        onClick={onClick}
+        title={title}
+        aria-label={title}
+        className={cn(
+            'w-[30px] h-[30px] rounded-full border flex items-center justify-center transition-colors cursor-pointer bg-white',
+            active
+                ? 'border-[var(--colour-fsP2)] text-[var(--colour-fsP2)]'
+                : 'border-gray-200 text-gray-400 hover:border-gray-300',
+            className
+        )}
+    >
+        {children}
+    </button>
 );
 
 // ─── ProductCard (Grid) ───────────────────────────────────────────────────────
 
 const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardProps) => {
     const p = useProductCard(product);
-    // stable random count — use product.id as seed to avoid hydration mismatch
-    const ratingCount = useMemo(() => {
-        const seed = product.id % 1000;
-        return 20 + (seed * 179) % 200;
-    }, [product.id]);
 
     return (
-        <article
-            className="group flex flex-col bg-white border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-[0_4px_24px_rgba(0,0,0,0.07)] transition-all duration-300 cursor-pointer overflow-hidden relative h-full"
+        <div
+            className="group relative flex flex-col bg-white border border-gray-100 rounded-2xl hover:border-gray-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden h-full"
             style={{ animationDelay: `${(index % 12) * 40}ms` }}
             onClick={p.handleCardClick}
             role="link"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && p.handleCardClick()}
         >
-            {/* Top badges */}
+            {/* Badges */}
             <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1">
-                {product.isNew && <Tag color="blue">New</Tag>}
-                {product.emi_enabled && <Tag color="purple">EMI</Tag>}
-                {product.pre_order?.available && <Tag color="orange">Pre Order</Tag>}
+                {product.isNew && <Badge variant="blue">New</Badge>}
+                {product.emi_enabled && <Badge variant="purple">EMI</Badge>}
+                {p.isComing && <Badge variant="orange">Coming Soon</Badge>}
             </div>
 
-            {/* Action buttons */}
+            {/* Hover actions */}
             <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <button
+                <IconButton
                     onClick={p.handleWishlist}
-                    className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:border-red-200 transition-colors cursor-pointer"
-                    aria-label={p.isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                    active={p.isWishlisted}
+                    title={p.isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
-                    <Heart className={cn('w-3.5 h-3.5', p.isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400')} />
-                </button>
-                <button
+                    <Heart className={cn('w-3.5 h-3.5', p.isWishlisted && 'fill-current')} />
+                </IconButton>
+                <IconButton
                     onClick={p.handleCompare}
-                    className={cn(
-                        'w-7 h-7 rounded-full bg-white border flex items-center justify-center shadow-sm transition-colors cursor-pointer',
-                        p.isCompared ? 'border-[var(--colour-fsP2)] text-[var(--colour-fsP2)]' : 'border-gray-200 text-gray-400 hover:border-gray-300'
-                    )}
-                    title={p.isCompared ? 'Remove from Compare' : 'Compare'}
+                    active={p.isCompared}
+                    title={p.isCompared ? 'Remove from compare' : 'Compare'}
                 >
                     <Scale className="w-3.5 h-3.5" />
-                </button>
+                </IconButton>
             </div>
 
             {/* Image */}
-            <div className="p-3 pb-0">
-                <ProductImage
-                    imageUrl={p.imageUrl}
-                    imageLoaded={p.imageLoaded}
-                    imageError={p.imageError}
-                    name={product.name}
-                    altText={product.thumb?.alt_text}
-                    priority={priority}
-                    onLoad={() => p.setImageLoaded(true)}
-                    onError={() => p.setImageError(true)}
-                />
+            <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
+                {!p.imageLoaded && !p.imageError && (
+                    <div className="absolute inset-0 bg-gray-100 animate-pulse" />
+                )}
+                {p.imageError && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Package className="w-8 h-8 text-gray-300" />
+                    </div>
+                )}
+                {p.imageUrl && (
+                    <Image
+                        src={p.imageUrl}
+                        alt={product.thumb?.alt_text || product.name}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                        priority={priority}
+                        onLoad={() => p.setImageLoaded(true)}
+                        onError={() => p.setImageError(true)}
+                        className={cn(
+                            'object-contain p-4 mix-blend-multiply transition-all duration-500 group-hover:scale-105',
+                            p.imageLoaded ? 'opacity-100' : 'opacity-0'
+                        )}
+                    />
+                )}
             </div>
 
-            {/* Info */}
-            <div className="flex flex-col flex-1 p-3 pt-2.5">
+            {/* Body */}
+            <div className="flex flex-col flex-1 p-3.5 pt-3">
                 {product.brand?.name && (
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1 truncate">
+                    <p className="text-[10.5px] font-bold uppercase tracking-widest text-gray-400 truncate mb-1">
                         {product.brand.name}
                     </p>
                 )}
-                <h3 className="text-[13px] font-medium text-gray-800 leading-snug line-clamp-2 min-h-[38px] mb-2 group-hover:text-[var(--colour-fsP2)] transition-colors">
+
+                <h3 className="text-[14px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[38px] mb-1.5 group-hover:text-[var(--colour-fsP2)] transition-colors">
                     {product.name}
                 </h3>
 
-                {p.rating > 0 && <RatingRow rating={p.rating} count={ratingCount} />}
+                {p.rating > 0 && <RatingRow rating={p.rating} count={p.ratingCount} />}
 
-                <div className="mt-auto pt-2">
-                    {/* Price row */}
-                    <div className="flex items-baseline gap-1.5 mb-1">
-                        <span className="text-[17px] font-bold text-gray-900 tracking-tight">
-                            Rs. {p.displayPrice}
-                        </span>
+                {/* Highlights — max 2 in grid */}
+                {p.highlights.length > 0 && (
+                    <div className="flex flex-col gap-1 mt-2 mb-0.5">
+                        {p.highlights.slice(0, 2).map((h, i) => (
+                            <span key={i} className="text-[11px] text-gray-500 leading-snug line-clamp-1 border border-gray-200 rounded px-2 py-0.5">
+                                {h}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Footer */}
+                <div className="mt-auto pt-2.5 border-t border-gray-50 flex items-center justify-between">
+                    <div>
+                        {p.originalPrice > 0 ? (
+                            <>
+                                <p className="text-[18px] font-bold text-gray-900 tracking-tight">
+                                    Rs. {p.displayPrice}
+                                </p>
+                                <FreeDelivery />
+                            </>
+                        ) : (
+                            <p className="text-[15px] font-bold text-[var(--colour-fsP2)]">Coming Soon</p>
+                        )}
                     </div>
 
-                    {/* Bottom row: tags + cart */}
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                        <div className="flex flex-wrap gap-1">
-                            <Tag color="orange">Free Delivery</Tag>
-                            {product.pre_order?.available && p.originalPrice === 0 && (
-                                <Tag color="blue">Coming Soon</Tag>
-                            )}
-                        </div>
-                        <button
-                            onClick={p.handleAddToCart}
-                            className="w-7 h-7 rounded-full bg-[var(--colour-fsP2)] text-white flex items-center justify-center hover:opacity-90 transition-opacity shadow-sm cursor-pointer shrink-0"
-                            title="Add to Cart"
-                        >
-                            <Plus className="w-[13px] h-[13px] stroke-[3]" />
-                        </button>
-                    </div>
+                    <button
+                        onClick={p.handleAddToCart}
+                        title={p.isComing ? 'Pre-order' : 'Add to cart'}
+                        className="w-8 h-8 rounded-full text-white flex items-center justify-center cursor-pointer shrink-0 shadow-sm transition-opacity"
+                        style={{ background: 'var(--colour-fsP2)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                    >
+                        {p.isComing
+                            ? <Bookmark className="w-3.5 h-3.5" />
+                            : <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                        }
+                    </button>
                 </div>
             </div>
-        </article>
+        </div>
     );
 });
 ProductCard.displayName = 'ProductCard';
@@ -253,48 +317,44 @@ export default ProductCard;
 
 export const ProductCardRow = memo(({ product, index = 0, priority = false }: ProductCardRowProps) => {
     const p = useProductCard(product);
-    const ratingCount = useMemo(() => {
-        const seed = product.id % 1000;
-        return 20 + (seed * 179) % 200;
-    }, [product.id]);
 
     return (
-        <article
-            className="group flex flex-row bg-white border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-[0_4px_24px_rgba(0,0,0,0.07)] transition-all duration-300 cursor-pointer overflow-hidden"
+        <div
+            className="group flex flex-row bg-white border border-gray-100 rounded-2xl hover:border-gray-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden"
             style={{ animationDelay: `${(index % 12) * 40}ms` }}
             onClick={p.handleCardClick}
             role="link"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && p.handleCardClick()}
         >
-            {/* Image column — explicit px size so next/image width+height works */}
-            <div className="w-[110px] sm:w-[160px] shrink-0 p-2 relative">
-                {/* Badges */}
-                <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
-                    {product.emi_enabled && <Tag color="purple">EMI</Tag>}
-                    {product.pre_order?.available && <Tag color="orange">Pre Order</Tag>}
-                    {(index ?? 0) < 2 && <Tag color="blue">Express</Tag>}
+            {/* Image column */}
+            <div className="relative w-[110px] sm:w-[150px] shrink-0 bg-gray-50">
+                <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                    {product.isNew && <Badge variant="blue">New</Badge>}
+                    {product.emi_enabled && <Badge variant="purple">EMI</Badge>}
+                    {p.isComing && <Badge variant="orange">Coming Soon</Badge>}
                 </div>
 
-                {/* Fixed-size image container — not fill, explicit w/h */}
-                <div className="w-full h-[100px] sm:h-[150px] relative bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
+                <div className="relative w-full h-full min-h-[110px] sm:min-h-[150px]">
                     {!p.imageLoaded && !p.imageError && (
-                        <div className="absolute inset-0 bg-gray-100 animate-pulse rounded-lg" />
+                        <div className="absolute inset-0 bg-gray-100 animate-pulse" />
                     )}
                     {p.imageError && (
-                        <Package className="w-8 h-8 text-gray-300" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <Package className="w-7 h-7 text-gray-300" />
+                        </div>
                     )}
                     {p.imageUrl && (
                         <Image
                             src={p.imageUrl}
                             alt={product.thumb?.alt_text || product.name}
                             fill
-                            sizes="(max-width: 640px) 110px, 160px"
+                            sizes="(max-width: 640px) 110px, 150px"
                             priority={priority}
                             onLoad={() => p.setImageLoaded(true)}
                             onError={() => p.setImageError(true)}
                             className={cn(
-                                'w-full h-full object-contain mix-blend-multiply transition-all duration-500 group-hover:scale-[1.04]',
+                                'object-contain p-3 mix-blend-multiply transition-all duration-500 group-hover:scale-105',
                                 p.imageLoaded ? 'opacity-100' : 'opacity-0'
                             )}
                         />
@@ -303,65 +363,77 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
             </div>
 
             {/* Info column */}
-            <div className="flex flex-col flex-1 p-2.5 sm:p-3 justify-between min-w-0">
+            <div className="flex flex-col flex-1 p-3 sm:p-3.5 justify-between min-w-0">
                 <div>
                     {product.brand?.name && (
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1 truncate">
+                        <p className="text-[10.5px] font-bold uppercase tracking-widest text-gray-400 truncate mb-1">
                             {product.brand.name}
                         </p>
                     )}
-                    <h3 className="text-[12px] sm:text-[14px] font-medium text-gray-800 leading-snug line-clamp-2 mb-1.5 group-hover:text-[var(--colour-fsP2)] transition-colors">
+                    <h3 className="text-[14px] sm:text-[15px] font-bold text-gray-800 leading-snug line-clamp-2 mb-1.5 group-hover:text-[var(--colour-fsP2)] transition-colors">
                         {product.name}
                     </h3>
-                    {p.rating > 0 && <RatingRow rating={p.rating} count={ratingCount} />}
+
+                    {p.rating > 0 && <RatingRow rating={p.rating} count={p.ratingCount} />}
+
+                    {/* Highlights — max 3 in row view */}
+                    {p.highlights.length > 0 && (
+                        <div className="flex flex-col gap-1 mt-2">
+                            {p.highlights.slice(0, 3).map((h, i) => (
+                                <span key={i} className="text-[11px] text-gray-500 leading-snug line-clamp-1 border border-gray-200 rounded px-2 py-0.5">
+                                    {h}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <div className="mt-2 pt-2 border-t border-gray-50">
-                    {/* Price */}
-                    <div className="flex items-baseline gap-1.5 mb-1 flex-wrap">
-                        <span className="text-[15px] sm:text-[18px] font-bold text-gray-900 tracking-tight">
-                            Rs. {p.displayPrice}
-                        </span>
+                {/* Footer */}
+                <div className="mt-2 pt-2 border-t border-gray-50 flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                        {p.originalPrice > 0 ? (
+                            <>
+                                <p className="text-[16px] sm:text-[18px] font-bold text-gray-900 tracking-tight">
+                                    Rs. {p.displayPrice}
+                                </p>
+                                <FreeDelivery />
+                            </>
+                        ) : (
+                            <p className="text-[14px] font-bold text-[var(--colour-fsP2)]">Coming Soon</p>
+                        )}
                     </div>
 
-                    <div className="flex items-center justify-between gap-1 flex-wrap">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                            <Tag color="orange">Free Delivery</Tag>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                                onClick={p.handleWishlist}
-                                className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:border-red-200 transition-colors cursor-pointer shadow-sm"
-                                aria-label={p.isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                            >
-                                <Heart className={cn('w-3.5 h-3.5', p.isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400')} />
-                            </button>
-                            <button
-                                onClick={p.handleCompare}
-                                className={cn(
-                                    'w-7 h-7 rounded-full border flex items-center justify-center transition-colors cursor-pointer shadow-sm bg-white',
-                                    p.isCompared
-                                        ? 'border-[var(--colour-fsP2)] text-[var(--colour-fsP2)]'
-                                        : 'border-gray-200 text-gray-400 hover:border-gray-300'
-                                )}
-                                title={p.isCompared ? 'Remove from Compare' : 'Compare'}
-                            >
-                                <Scale className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                                onClick={p.handleAddToCart}
-                                className="h-7 px-2 sm:px-3 rounded-full bg-[var(--colour-fsP2)] text-white text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 transition-opacity cursor-pointer shadow-sm whitespace-nowrap"
-                            >
-                                <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                                <span className="hidden sm:inline">Add to Cart</span>
-                            </button>
-                        </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <IconButton
+                            onClick={p.handleWishlist}
+                            active={p.isWishlisted}
+                            title={p.isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                        >
+                            <Heart className={cn('w-3.5 h-3.5', p.isWishlisted && 'fill-current')} />
+                        </IconButton>
+                        <IconButton
+                            onClick={p.handleCompare}
+                            active={p.isCompared}
+                            title={p.isCompared ? 'Remove from compare' : 'Compare'}
+                        >
+                            <Scale className="w-3.5 h-3.5" />
+                        </IconButton>
+                        <button
+                            onClick={p.handleAddToCart}
+                            className="h-8 px-3 rounded-full text-white text-[12px] font-bold flex items-center gap-1.5 cursor-pointer shadow-sm whitespace-nowrap transition-opacity"
+                            style={{ background: 'var(--colour-fsP2)' }}
+                            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+                            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                        >
+                            <ShoppingCart className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">
+                                {p.isComing ? 'Pre-order' : 'Add to cart'}
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
-        </article>
+        </div>
     );
 });
 ProductCardRow.displayName = 'ProductCardRow';

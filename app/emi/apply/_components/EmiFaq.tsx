@@ -44,9 +44,13 @@ function deduplicateFaqs(items: FaqApiItem[]): FaqItem[] {
 export default function EmiFaq({
     className = '',
     params,
+    title = 'Frequently Asked Questions',
+    subtitle = 'Everything you need to know about EMI at Fatafat Sewa.',
 }: {
     className?: string;
     params?: { type?: string; per_page?: number; page?: number };
+    title?: string;
+    subtitle?: string;
 }) {
     const [faqs, setFaqs] = useState<FaqItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -81,10 +85,10 @@ export default function EmiFaq({
             {/* Header */}
             <div className="mb-6 border-l-4 border-[var(--colour-fsP2)] pl-4">
                 <h2 className="text-xl font-bold text-gray-900">
-                    Frequently Asked Questions
+                    {title}
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">
-                    Everything you need to know about EMI at Fatafat Sewa.
+                    {subtitle}
                 </p>
             </div>
 

@@ -2,16 +2,15 @@
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import {
-    ChevronDown, ShieldCheck, Smartphone, Zap, Handshake, Store, BadgePercent,
-    CreditCard, Phone, Search, Loader2, ArrowRight, Users, Check, ChevronRight,
-    Truck, MapPin, ImagePlus, Upload, X, FileText, CheckCircle2, Fingerprint,
-    Navigation, LocateFixed, MapPinned, User, Send, AlertCircle, ShoppingCart
+    ShieldCheck, Smartphone, Zap, Handshake, Store, BadgePercent,
+    CreditCard, Search, Loader2, ArrowRight, Users, Check, ChevronRight,
+    Truck, ImagePlus, Upload, X, Fingerprint, Star, TrendingUp,
+    LocateFixed, Navigation, MapPinned, User, Send, AlertCircle, RefreshCw,
+    ShoppingBag,
+    CheckCircle2,
+    XCircle
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -19,112 +18,151 @@ import { useRouter } from 'next/navigation'
 import logoImg from '@/public/imgfile/logoimg.png'
 
 import {
-    type BrandItem, type ProductListItem, type FullProduct, type ColorOption, type ConditionAnswer,
+    type ProductListItem, type FullProduct, type ColorOption, type ConditionAnswer,
     CONDITION_QUESTIONS, calculateExchangeValue, getMaxExchangeValue,
     extractColorsFromVariants, guessColorHex
 } from './exchange-helpers'
 import { ProductService } from '../api/services/product.service'
-import { getBrandProducts } from '../api/services/category.service'
+import { getBrandProducts, getCategoryProducts } from '../api/services/category.service'
+import type { NavbarItem } from '../context/navbar.interface'
+import EmiFaq from '../emi/apply/_components/EmiFaq'
 
-interface ExchangeClientProps {
-    brands: BrandItem[]
+interface MainProps {
+    categories: NavbarItem[]
+    initialProducts?: ProductListItem[]
+    bannerSection?: React.ReactNode
+    blogSection?: React.ReactNode
 }
 
-export default function ExchangeClient({ brands }: ExchangeClientProps) {
-    const router = useRouter()
-    useEffect(() => { window.scrollTo(0, 0) }, [])
+// ── Mock data for SEO content (rendered even before interaction) ─────────────
+const POPULAR_BRANDS = ['Samsung', 'Apple', 'Xiaomi', 'OnePlus', 'Oppo', 'Vivo', 'Realme', 'Nokia']
+const TRUST_STATS = [
+    { value: '10,000+', label: 'Devices exchanged' },
+    { value: '4.8★', label: 'Customer rating' },
+    { value: '2 hrs', label: 'Avg pickup time' },
+    { value: '100%', label: 'Free pickup' },
+]
 
-    // ── State ────────────────────────────────────────────────
+export default function ExchangeClient({ categories, initialProducts = [], bannerSection, blogSection }: MainProps) {
+    const router = useRouter()
+
+    const [viewMode, setViewMode] = useState<'catalog' | 'wizard'>('catalog')
+    const [selectedCategory, setSelectedCategory] = useState<NavbarItem | null>(null)
     const [selectedBrand, setSelectedBrand] = useState('')
     const [searchTerm, setSearchTerm] = useState('')
-    const [products, setProducts] = useState<ProductListItem[]>([])
+    const [products, setProducts] = useState<ProductListItem[]>(initialProducts)
     const [isLoadingProducts, setIsLoadingProducts] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState<FullProduct | null>(null)
     const [isLoadingDetail, setIsLoadingDetail] = useState(false)
     const [colorOptions, setColorOptions] = useState<ColorOption[]>([])
     const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null)
-
-    // Condition assessment
     const [conditionAnswers, setConditionAnswers] = useState<ConditionAnswer>({ screen: 0, body: 0, battery: 0, functional: 0 })
     const [conditionComplete, setConditionComplete] = useState(false)
     const [showResult, setShowResult] = useState(false)
-
-    // Pickup flow
     const [pickupSelected, setPickupSelected] = useState(false)
-    const [productPhotos, setProductPhotos] = useState<File[]>([])
-    const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([])
-    const [serialNumber, setSerialNumber] = useState('')
-    const [agreedToTerms, setAgreedToTerms] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [fullName, setFullName] = useState('')
-    const [phoneNumber, setPhoneNumber] = useState('')
-    const [pickupAddress, setPickupAddress] = useState('')
-    const [isLocating, setIsLocating] = useState(false)
-    const [locationMethod, setLocationMethod] = useState<'geo' | 'manual' | ''>('')
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-    const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // Section Refs for Smart Scrolling
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const colorRef = useRef<HTMLDivElement>(null)
     const conditionRef = useRef<HTMLDivElement>(null)
     const pickupOptionRef = useRef<HTMLDivElement>(null)
     const pickupDetailsRef = useRef<HTMLDivElement>(null)
-
-    // IntersectionObserver for form section
     const formSectionRef = useRef<HTMLDivElement>(null)
-    const [formVisible, setFormVisible] = useState(false)
-    useEffect(() => {
-        if (!formSectionRef.current) return
-        const obs = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setFormVisible(true) }, { threshold: 0.1 })
-        obs.observe(formSectionRef.current)
-        return () => obs.disconnect()
-    }, [])
-
-    // Search debounce ref
+    const brandSectionRef = useRef<HTMLDivElement>(null)
+    const modelSectionRef = useRef<HTMLDivElement>(null)
     const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-    // ── Exchange value ───────────────────────────────────────
+    // ── Pre-select first category if none selected, but avoid re-triggering if already in sync
+    useEffect(() => {
+        if (categories.length > 0 && !selectedCategory) {
+            setSelectedCategory(categories[0])
+            // If we don't have products yet, use initialProducts
+            if (products.length === 0 && initialProducts.length > 0) {
+                setProducts(initialProducts)
+            }
+        }
+    }, [categories, initialProducts, selectedCategory, products.length])
+
+    // ── Derived ──────────────────────────────────────────────
+    const activePrice = useCallback((product: FullProduct, color: ColorOption | null) =>
+        color ? color.discountedPrice || color.price : product.discounted_price || product.price
+        , [])
+
     const exchangeValue = useMemo(() => {
         if (!selectedProduct) return 0
-        const price = selectedColor ? selectedColor.discountedPrice || selectedColor.price : selectedProduct.discounted_price || selectedProduct.price
-        return calculateExchangeValue(price, selectedProduct.created_at, conditionComplete ? conditionAnswers : undefined)
-    }, [selectedProduct, selectedColor, conditionAnswers, conditionComplete])
+        return calculateExchangeValue(
+            activePrice(selectedProduct, selectedColor),
+            selectedProduct.created_at,
+            conditionComplete ? conditionAnswers : undefined
+        )
+    }, [selectedProduct, selectedColor, conditionAnswers, conditionComplete, activePrice])
 
     const maxExchangeValue = useMemo(() => {
         if (!selectedProduct) return 0
-        const price = selectedColor ? selectedColor.discountedPrice || selectedColor.price : selectedProduct.discounted_price || selectedProduct.price
-        return getMaxExchangeValue(price, selectedProduct.created_at)
-    }, [selectedProduct, selectedColor])
+        return getMaxExchangeValue(activePrice(selectedProduct, selectedColor), selectedProduct.created_at)
+    }, [selectedProduct, selectedColor, activePrice])
 
-    // ── Handlers ─────────────────────────────────────────────
-    const fetchProducts = useCallback(async (brandSlug: string, search?: string) => {
+    const stepNumber = (base: number) => colorOptions.length > 0 ? base + 1 : base
+
+    // ── Data fetchers ────────────────────────────────────────
+    const fetchProducts = useCallback(async (brandSlug: string, search?: string, forceCategorySlug?: string) => {
         setIsLoadingProducts(true)
         try {
-            let res
+            let fetched: ProductListItem[] = []
+            const targetCat = forceCategorySlug !== undefined ? forceCategorySlug : selectedCategory?.slug;
+
             if (search?.trim()) {
-                res = await ProductService.searchProducts({ search: search.trim(), per_page: 20 })
-                setProducts(res?.data || [])
+                const res = await ProductService.searchProducts({ search: search.trim(), categories: targetCat, brands: brandSlug, per_page: 20 })
+                fetched = res?.data || []
+            } else if (targetCat) {
+                const res = await getCategoryProducts(targetCat, { brand: brandSlug, exchange_available: true, per_page: 40 })
+                fetched = res?.data?.products || []
             } else {
-                res = await getBrandProducts(brandSlug, { per_page: 20 })
-                setProducts(res?.data || [])
+                const res = await getBrandProducts(brandSlug, { per_page: 20 })
+                fetched = res?.data || []
             }
-        } catch (err) {
-            console.error('Failed to fetch products:', err)
+            setProducts(fetched)
+        } catch {
             setProducts([])
         }
         setIsLoadingProducts(false)
+    }, [selectedCategory])
+
+    // ── Reset helpers ────────────────────────────────────────
+    const resetCondition = useCallback(() => {
+        setShowResult(false)
+        setConditionComplete(false)
+        setConditionAnswers({ screen: 0, body: 0, battery: 0, functional: 0 })
     }, [])
+
+    // ── Handlers ─────────────────────────────────────────────
+    const handleSelectCategory = (cat: NavbarItem) => {
+        setSelectedCategory(cat)
+        setSelectedBrand('')
+        setSelectedProduct(null)
+        setColorOptions([])
+        setSelectedColor(null)
+        setSearchTerm('')
+        // No longer clearing products here to prevent layout "bounce"
+        resetCondition()
+
+        // 1. Fetch products for this category right away (brand is empty)
+        fetchProducts('', '', cat.slug)
+
+        // 2. Decide where to scroll: skip Brand selection if empty
+        const hasBrands = (cat.brands?.length || 0) > 0
+        const targetRef = hasBrands ? brandSectionRef : modelSectionRef
+        setTimeout(() => targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+    }
 
     const handleSelectBrand = (slug: string) => {
         setSelectedBrand(slug)
         setSelectedProduct(null)
         setColorOptions([])
         setSelectedColor(null)
-        setShowResult(false)
-        setConditionComplete(false)
-        setConditionAnswers({ screen: 0, body: 0, battery: 0, functional: 0 })
         setSearchTerm('')
+        resetCondition()
         fetchProducts(slug)
+        setTimeout(() => modelSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
     }
 
     const handleSearch = (value: string) => {
@@ -138,37 +176,25 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
     const handleSelectProduct = async (product: ProductListItem) => {
         setIsLoadingDetail(true)
         setSelectedColor(null)
-        setShowResult(false)
-        setConditionComplete(false)
-        setConditionAnswers({ screen: 0, body: 0, battery: 0, functional: 0 })
+        resetCondition()
         try {
             const full = await ProductService.getProductBySlug(product.slug)
             setSelectedProduct(full)
             const colors = extractColorsFromVariants(full)
             setColorOptions(colors)
             if (colors.length === 1) setSelectedColor(colors[0])
-        } catch (err) {
-            console.error('Failed to fetch product detail:', err)
-            // fallback — use list item data
-            const fallback: FullProduct = {
+        } catch {
+            setSelectedProduct({
                 id: Number(product.id), name: product.name, slug: product.slug,
                 price: Number(product.price), discounted_price: Number(product.discounted_price),
                 created_at: product.created_at,
                 image: typeof product.image === 'string' ? { full: product.image, thumb: product.image, preview: product.image } : product.image,
                 images: [], variants: [],
                 brand: { id: 0, name: '', slug: selectedBrand },
-            }
-            setSelectedProduct(fallback)
+            })
             setColorOptions([])
         }
         setIsLoadingDetail(false)
-    }
-
-    const handleSelectColor = (color: ColorOption) => {
-        setSelectedColor(color)
-        setShowResult(false)
-        setConditionComplete(false)
-        setConditionAnswers({ screen: 0, body: 0, battery: 0, functional: 0 })
     }
 
     const handleConditionAnswer = (key: keyof ConditionAnswer, value: number) => {
@@ -179,533 +205,912 @@ export default function ExchangeClient({ brands }: ExchangeClientProps) {
         if (allAnswered) setShowResult(true)
     }
 
-    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files
-        if (!files) return
-        const newFiles = Array.from(files).slice(0, 4 - productPhotos.length)
-        setProductPhotos(prev => [...prev, ...newFiles])
-        newFiles.forEach(file => {
-            const reader = new FileReader()
-            reader.onload = () => setPhotoPreviewUrls(prev => [...prev, reader.result as string])
-            reader.readAsDataURL(file)
-        })
+    const getProductImage = (p: any) => {
+        if (!p) return logoImg.src;
+        if (typeof p.image === 'string') return p.image;
+        return p.thumb?.url
     }
 
-    const removePhoto = (index: number) => {
-        setProductPhotos(prev => prev.filter((_, i) => i !== index))
-        setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index))
-    }
-
-    const handleUseGeoLocation = useCallback(() => {
-        if (!navigator.geolocation) { setPickupAddress('Geolocation not supported'); setLocationMethod('manual'); return }
-        setIsLocating(true); setLocationMethod('geo')
-        navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-                const { latitude, longitude } = pos.coords
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, { headers: { 'Accept-Language': 'en' } })
-                    const data = await res.json()
-                    setPickupAddress(data.display_name || `${latitude}, ${longitude}`)
-                } catch { setPickupAddress(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`) }
-                setIsLocating(false)
-            },
-            () => { setPickupAddress(''); setLocationMethod('manual'); setIsLocating(false) },
-            { enableHighAccuracy: true, timeout: 10000 }
-        )
-    }, [])
-
-    const validateForm = (): boolean => {
-        const errors: Record<string, string> = {}
-        if (productPhotos.length === 0) errors.photos = 'Upload at least 1 photo'
-        if (!serialNumber.trim()) errors.serial = 'IMEI is required'
-        else if (serialNumber.trim().length < 15) errors.serial = 'IMEI must be at least 15 characters'
-        if (!pickupAddress.trim()) errors.address = 'Pickup address is required'
-        if (!fullName.trim()) errors.name = 'Full name is required'
-        else if (fullName.trim().length < 3) errors.name = 'Name must be at least 3 characters'
-        if (!phoneNumber.trim()) errors.phone = 'Phone number is required'
-        else if (!/^\d{10}$/.test(phoneNumber.trim())) errors.phone = 'Phone must be exactly 10 digits'
-        if (!agreedToTerms) errors.terms = 'You must agree to the terms'
-        setFormErrors(errors)
-        return Object.keys(errors).length === 0
-    }
-
-    const handleSubmitExchange = () => {
-        if (!validateForm() || !selectedProduct) return
-        setIsSubmitting(true)
-
-        // Simulate API call then redirect to new Success Page
-        setTimeout(() => {
-            setIsSubmitting(false)
-
-            const params = new URLSearchParams()
-            params.append('name', fullName)
-            params.append('phone', phoneNumber)
-            params.append('device', selectedProduct.name)
-            params.append('value', exchangeValue.toString())
-            if (selectedColor) params.append('color', selectedColor.name)
-            params.append('image', getProductImage(selectedProduct))
-            params.append('address', pickupAddress)
-            if (serialNumber) params.append('serial', serialNumber)
-
-            router.push(`/exchangeProducts/success?${params.toString()}`)
-        }, 1500)
-    }
-
-    const getProductImage = (p: ProductListItem) => {
-        if (typeof p.image === 'string') return p.image
-        return p.image?.thumb || p.image?.full || logoImg.src
-    }
-
-    const getNextStepInfo = (): { label: string; action: () => void } => {
-        if (colorOptions.length > 0 && !selectedColor) {
-            return { label: 'Choose Color', action: () => colorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
-        }
-        if (!conditionComplete) {
-            return { label: 'Answer Questions', action: () => conditionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
-        }
-        if (!pickupSelected) {
-            return { label: 'Schedule Pickup', action: () => pickupOptionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
-        }
-        if (!fullName || !phoneNumber || !pickupAddress || !agreedToTerms) {
-            return { label: 'Fill Details', action: () => pickupDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
-        }
-        return { label: 'Submit Request', action: () => handleSubmitExchange() }
-    }
-
-    const nextStep = selectedProduct ? getNextStepInfo() : null
-
-    // ── Render ───────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
     return (
-        <main className="min-h-screen bg-[var(--colour-bg4)] font-sans text-[var(--colour-text2)] pb-24">
+        <main className="min-h-screen bg-[#F5F7FA] text-gray-800 pb-28">
 
-            {/* ═══ HERO ═══ */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#E8F0FE] via-[#F0F6FF] to-[#E0ECFA] pt-10 pb-20 md:pt-14 md:pb-28">
-                <div className="container mx-auto px-4 lg:px-8">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
-                        <div className="md:w-1/2 space-y-5 text-center md:text-left z-10">
-                            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold text-[var(--colour-fsP2)] leading-tight tracking-tight">Mobile Exchange</h1>
-                            <p className="text-lg md:text-xl font-semibold text-[var(--colour-text2)]">Trade in Your Old Mobile for the Best Value!</p>
-                            <p className="text-[var(--colour-text3)] text-base max-w-md mx-auto md:mx-0">Upgrade your device easily and affordably by exchanging your old mobile phone for a new one.</p>
-                            <div className="bg-white/90 backdrop-blur-sm shadow-[var(--shadow-premium-sm)] rounded-full py-2.5 px-5 inline-flex items-center gap-5 text-sm font-medium border border-[var(--colour-border3)] mx-auto md:mx-0">
-                                <span className="flex items-center gap-2"><span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs">1</span>Get Immediate Price Quote</span>
-                                <ArrowRight className="h-4 w-4 text-[var(--colour-text3)]" />
-                                <span className="flex items-center gap-2"><span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs">2</span>Visit Our Showroom</span>
+            {/* ══════════════════════════════════════
+                HERO — SEO-rich, always visible
+            ══════════════════════════════════════ */}
+            <section className="bg-white border-b border-gray-100">
+                <div className=" mx-auto px-4 lg:px-8 max-w-7xl py-10 md:py-14">
+                    <div className="flex flex-col md:flex-row items-center gap-10 md:gap-14">
+
+                        {/* Left */}
+                        <div className="flex-1 space-y-5 text-center md:text-left">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest border" style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: '#EEF3FB' }}>
+                                <RefreshCw style={{ width: 10, height: 10 }} /> Mobile Exchange Program
+                            </div>
+
+                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-[1.15] tracking-tight">
+                                Exchange your old phone.<br />
+                                <span style={{ color: 'var(--colour-fsP2)' }}>Get instant value.</span>
+                            </h1>
+
+                            <p className="text-gray-500 text-base max-w-lg mx-auto md:mx-0 leading-relaxed">
+                                Trade in your old smartphone and get the best market value applied directly towards your new device. Free doorstep pickup across Nepal — no hassle, no hidden charges.
+                            </p>
+
+                            {/* Trust stats */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto md:mx-0">
+                                {TRUST_STATS.map((s, i) => (
+                                    <div key={i} className="bg-[#F5F7FA] rounded-xl p-3 text-center border border-gray-100">
+                                        <p className="text-lg font-extrabold text-gray-900">{s.value}</p>
+                                        <p className="text-[11px] text-gray-400 font-bold mt-0.5 leading-tight">{s.label}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                                <button
+                                    onClick={() => {
+                                        setViewMode('wizard');
+                                        setTimeout(() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                                    }}
+                                    className="h-11 px-6 rounded-xl text-white text-sm font-bold cursor-pointer transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+                                    style={{ background: 'var(--colour-fsP2)' }}
+                                >
+                                    Look for exchange product <ArrowRight style={{ width: 14, height: 14 }} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setViewMode('catalog');
+                                        setTimeout(() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                                    }}
+                                    className="h-11 px-6 rounded-xl text-sm font-bold border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors"
+                                >
+                                    View all categories
+                                </button>
                             </div>
                         </div>
-                        <div className="md:w-1/2 relative flex justify-center">
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] md:w-[360px] md:h-[360px] bg-[var(--colour-fsP2)]/10 rounded-full blur-3xl" />
-                            <div className="relative z-10 w-full max-w-[350px] md:max-w-[400px] aspect-square">
-                                <Image src={logoImg} alt="Mobile Exchange - Fatafat Sewa" fill className="object-contain drop-shadow-2xl" sizes="(max-width: 768px) 100vw, 50vw" priority />
+
+                        {/* Right — image + popular brands */}
+                        <div className="shrink-0 flex flex-col items-center gap-5">
+                            <div className="relative w-[200px] h-[200px] md:w-[240px] md:h-[240px]">
+                                <div className="absolute inset-0 rounded-full" style={{ background: '#EEF3FB' }} />
+                                <Image src={logoImg} alt="Mobile Exchange Nepal — Fatafat Sewa" fill className="object-contain relative z-10 drop-shadow-xl p-6" sizes="240px" priority />
+                            </div>
+                            {/* Popular brands strip — SEO content */}
+                            <div className="text-center">
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2">Popular brands we accept</p>
+                                <div className="flex flex-wrap justify-center gap-1.5">
+                                    {POPULAR_BRANDS.map(b => (
+                                        <span key={b} className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-[11px] font-bold text-gray-600">{b}</span>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ═══ EXCHANGE FLOW ═══ */}
-            <section ref={formSectionRef} className="relative z-20 -mt-12 mb-12 container mx-auto px-4 lg:px-8">
-                <Card className="bg-white border-none shadow-[var(--shadow-premium-lg)] rounded-2xl overflow-visible">
-                    <div className="bg-[var(--colour-fsP2)] px-6 py-3.5 flex items-center gap-3 rounded-t-2xl">
-                        <Smartphone className="h-5 w-5 text-white/80" />
-                        <h3 className="text-white text-lg font-bold">Get an Instant Quote for Your Old Phone</h3>
+            {/* ══════════════════════════════════════
+                EXCHANGE FLOW CARD
+            ══════════════════════════════════════ */}
+            <section ref={formSectionRef} className="mx-auto px-4 lg:px-8 max-w-8xl py-8">
+
+                {/* Breadcrumb / progress indicator */}
+                <div className="flex items-center gap-2 mb-5 text-xs font-bold text-gray-400">
+                    <span>Exchange</span>
+                    {selectedCategory && <><ChevronRight style={{ width: 12, height: 12 }} /><span style={{ color: 'var(--colour-fsP2)' }}>{selectedCategory.title}</span></>}
+                    {selectedBrand && <><ChevronRight style={{ width: 12, height: 12 }} /><span style={{ color: 'var(--colour-fsP2)' }}>{selectedCategory?.brands?.find(b => b.slug === selectedBrand)?.name}</span></>}
+                    {selectedProduct && <><ChevronRight style={{ width: 12, height: 12 }} /><span className="text-gray-600 line-clamp-1 max-w-[120px]">{selectedProduct.name}</span></>}
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden min-h-[500px]">
+
+                    {/* Tabs Header */}
+                    <div className="flex items-center px-4 pt-4 border-b border-gray-100 bg-gray-50 gap-2">
+                        <button
+                            onClick={() => setViewMode('catalog')}
+                            className={cn("px-5 py-3 text-sm font-bold transition-colors border-b-2", viewMode === 'catalog' ? "border-[var(--colour-fsP2)] text-[var(--colour-fsP2)]" : "border-transparent text-gray-500 hover:text-gray-700")}
+                        >
+                            <TrendingUp className="inline w-4 h-4 mr-1.5 align-text-bottom" /> Products Catalog
+                        </button>
+                        <button
+                            onClick={() => setViewMode('wizard')}
+                            className={cn("px-5 py-3 text-sm font-bold transition-colors border-b-2", viewMode === 'wizard' ? "border-[var(--colour-fsP2)] text-[var(--colour-fsP2)]" : "border-transparent text-gray-500 hover:text-gray-700")}
+                        >
+                            <RefreshCw className="inline w-4 h-4 mr-1.5 align-text-bottom" /> Exchange Quote
+                        </button>
                     </div>
 
-                    <CardContent className="p-6 md:p-8">
 
-                        {/* ─── STEP 1: Select Brand ─── */}
-                        <div className="mb-8">
-                            <h4 className="text-base font-bold text-[var(--colour-text2)] mb-4 flex items-center gap-2">
-                                <span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                                Select Brand
-                            </h4>
-                            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-3">
-                                {brands.map(brand => (
-                                    <button key={brand.id} onClick={() => handleSelectBrand(brand.slug)} style={{ cursor: 'pointer' }}
-                                        className={cn('relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md',
-                                            selectedBrand === brand.slug ? 'border-[var(--colour-fsP2)] bg-blue-50 shadow-md' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/40')}>
-                                        {selectedBrand === brand.slug && <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[var(--colour-fsP2)] rounded-full flex items-center justify-center"><Check className="h-3 w-3 text-white" /></div>}
-                                        {brand.image && <Image src={brand.image} alt={brand.name} width={32} height={32} className="object-contain" />}
-                                        <span className="text-xs font-semibold text-[var(--colour-text2)] text-center leading-tight">{brand.name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* ─── STEP 2: Select Model ─── */}
-                        {selectedBrand && (
-                            <div className="mb-8 animate-fade-in">
-                                <h4 className="text-base font-bold text-[var(--colour-text2)] mb-4 flex items-center gap-2">
-                                    <span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                                    Select Model
-                                </h4>
-                                <div className="relative mb-4 max-w-md">
-                                    <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--colour-fsP2)]" />
-                                    <Input placeholder="Search model..." className="pl-10 h-12 bg-white border-2 border-[var(--colour-fsP2)]/30 rounded-xl text-sm font-medium focus:border-[var(--colour-fsP2)] focus:ring-2 focus:ring-[var(--colour-fsP2)]/20 transition-all placeholder:text-[var(--colour-text3)]/60" value={searchTerm} onChange={(e) => handleSearch(e.target.value)} />
+                    {viewMode === 'catalog' && (
+                        <div className="p-5 md:p-7 space-y-6">
+                            {/* Categories Filter */}
+                            <div className="space-y-2">
+                                <p className="text-xs font-extrabold uppercase tracking-widest text-gray-400">Categories</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.filter(c => {
+                                        const title = c.title?.toLowerCase() || ''
+                                        const slug = c.slug?.toLowerCase() || ''
+                                        return title.includes('mobile') || title.includes('laptop') || title.includes('smartphone') || title.includes('macbook') || slug.includes('mobile') || slug.includes('laptop') || slug.includes('smartphone') || slug.includes('macbook')
+                                    }).map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => {
+                                                setSelectedCategory(cat);
+                                                setSelectedBrand('');
+                                                const bSlug = cat.brands && cat.brands.length > 0 ? cat.brands[0].slug : '';
+                                                fetchProducts(bSlug, undefined, cat.slug);
+                                            }}
+                                            className={cn("px-4 py-2 rounded-full text-sm font-bold border transition-colors", selectedCategory?.id === cat.id ? "bg-[var(--colour-fsP2)] border-[var(--colour-fsP2)] text-white shadow-md" : "bg-white border-gray-200 text-gray-700 hover:border-gray-300")}
+                                        >
+                                            {cat.title}
+                                        </button>
+                                    ))}
                                 </div>
-
-                                {isLoadingProducts ? (
-                                    <div className="flex items-center justify-center py-12 gap-2 text-[var(--colour-text3)]"><Loader2 className="h-5 w-5 animate-spin" /> Loading products...</div>
-                                ) : (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                        {products.map(product => {
-                                            const maxVal = getMaxExchangeValue(product.discounted_price || product.price, product.created_at)
-                                            const isSelected = selectedProduct?.slug === product.slug
-                                            return (
-                                                <button key={product.id} onClick={() => handleSelectProduct(product)} style={{ cursor: 'pointer' }}
-                                                    className={cn('group relative text-left p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-lg',
-                                                        isSelected ? 'border-[var(--colour-fsP2)] bg-blue-50/60 shadow-lg' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/40')}>
-                                                    {isSelected && <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[var(--colour-fsP2)] rounded-full flex items-center justify-center z-10"><Check className="h-3 w-3 text-white" /></div>}
-                                                    <div className="w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden relative">
-                                                        <Image src={getProductImage(product)} alt={product.name} fill className="object-contain p-2 group-hover:scale-110 transition-transform" sizes="200px" />
-                                                    </div>
-                                                    <h5 className="text-sm font-bold text-[var(--colour-text2)] mb-1 leading-tight line-clamp-2">{product.name}</h5>
-                                                    {product.colors && product.colors.length > 0 && (
-                                                        <div className="flex gap-1 mb-2">
-                                                            {product.colors.slice(0, 4).map((c, i) => <div key={i} className="w-3.5 h-3.5 rounded-full border border-gray-200" style={{ backgroundColor: guessColorHex(c) }} />)}
-                                                            {product.colors.length > 4 && <span className="text-[10px] text-[var(--colour-text3)]">+{product.colors.length - 4}</span>}
-                                                        </div>
-                                                    )}
-                                                    <div className="text-xs text-[var(--colour-text3)]">Exchange up to</div>
-                                                    <div className="text-sm font-bold text-[var(--colour-bg3)]">Rs. {maxVal.toLocaleString()}</div>
-                                                </button>
-                                            )
-                                        })}
-                                        {products.length === 0 && !isLoadingProducts && (
-                                            <div className="col-span-full text-center py-8 text-[var(--colour-text3)]">{searchTerm ? `No products found for "${searchTerm}"` : 'No products available'}</div>
-                                        )}
-                                    </div>
-                                )}
                             </div>
-                        )}
 
-                        {/* ─── Loading product detail ─── */}
-                        {isLoadingDetail && <div className="flex items-center justify-center py-8 gap-2 text-[var(--colour-text3)]"><Loader2 className="h-5 w-5 animate-spin" /> Loading product details...</div>}
-
-                        {/* ─── STEP 3: Choose Color Variant ─── */}
-                        {selectedProduct && !isLoadingDetail && colorOptions.length > 0 && (
-                            <div ref={colorRef} className="mb-8 animate-fade-in">
-                                <h4 className="text-base font-bold text-[var(--colour-text2)] mb-4 flex items-center gap-2">
-                                    <span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                                    Choose Color — {selectedProduct.name}
-                                </h4>
-                                <div className="bg-[var(--colour-bg4)] rounded-xl p-5 border border-[var(--colour-border3)]">
-                                    <div className="flex flex-wrap gap-3">
-                                        {colorOptions.map(c => (
-                                            <button key={c.name} onClick={() => handleSelectColor(c)} style={{ cursor: 'pointer' }}
-                                                className={cn('flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all',
-                                                    selectedColor?.name === c.name ? 'border-[var(--colour-fsP2)] bg-white shadow-md' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/40')}>
-                                                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 relative shrink-0">
-                                                    <Image src={c.image} alt={c.name} fill className="object-contain p-1" sizes="48px" />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-4 h-4 rounded-full border border-gray-300 shrink-0" style={{ backgroundColor: c.hex }} />
-                                                        <span className="font-semibold">{c.name}</span>
-                                                    </div>
-                                                    <div className="text-xs text-[var(--colour-text3)] mt-0.5">Rs. {c.discountedPrice.toLocaleString()}</div>
-                                                </div>
-                                                {selectedColor?.name === c.name && <Check className="h-4 w-4 text-[var(--colour-fsP2)] ml-auto" />}
+                            {/* Brands Filter */}
+                            {selectedCategory && (selectedCategory.brands?.length || 0) > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-xs font-extrabold uppercase tracking-widest text-gray-400">Brands</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            onClick={() => { setSelectedBrand(''); fetchProducts(''); }}
+                                            className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors", !selectedBrand ? "bg-gray-800 border-gray-800 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-gray-300")}
+                                        >
+                                            All Brands
+                                        </button>
+                                        {selectedCategory.brands?.map(brand => (
+                                            <button
+                                                key={brand.slug}
+                                                onClick={() => { setSelectedBrand(brand.slug); fetchProducts(brand.slug); }}
+                                                className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors", selectedBrand === brand.slug ? "bg-gray-800 border-gray-800 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-gray-300")}
+                                            >
+                                                {brand.name}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* ─── STEP 4: Condition Assessment ─── */}
-                        {selectedProduct && !isLoadingDetail && (colorOptions.length === 0 || selectedColor) && (
-                            <div ref={conditionRef} className="mb-8 animate-fade-in">
-                                <h4 className="text-base font-bold text-[var(--colour-text2)] mb-4 flex items-center gap-2">
-                                    <span className="bg-[var(--colour-fsP2)] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">{colorOptions.length > 0 ? '4' : '3'}</span>
-                                    Phone Condition Assessment
-                                </h4>
-                                <div className="grid sm:grid-cols-2 gap-4">
-                                    {CONDITION_QUESTIONS.map(q => (
-                                        <div key={q.key} className="bg-[var(--colour-bg4)] rounded-xl p-4 border border-[var(--colour-border3)]">
-                                            <p className="text-sm font-bold text-[var(--colour-text2)] mb-3 flex items-center gap-2">
-                                                <span className="text-lg">{q.icon}</span> {q.label}
-                                            </p>
-                                            <div className="space-y-2">
-                                                {q.options.map(opt => (
-                                                    <button key={opt.label} onClick={() => handleConditionAnswer(q.key, opt.value)} style={{ cursor: 'pointer' }}
-                                                        className={cn('w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all',
-                                                            conditionAnswers[q.key] === opt.value
-                                                                ? 'border-[var(--colour-fsP2)] bg-blue-50 text-[var(--colour-fsP2)]'
-                                                                : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/40')}>
-                                                        <div className="flex items-center justify-between">
-                                                            <span>{opt.label}</span>
-                                                            {conditionAnswers[q.key] === opt.value && <Check className="h-4 w-4 text-[var(--colour-fsP2)]" />}
+                            {/* Search */}
+                            <div className="relative max-w-sm">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" style={{ width: 13, height: 13 }} />
+                                <Input
+                                    placeholder="Search specific model…"
+                                    className="pl-8 pr-8 h-10 text-sm border-gray-200 rounded-lg font-bold bg-gray-50/50"
+                                    value={searchTerm}
+                                    onChange={e => handleSearch(e.target.value)}
+                                />
+                                {searchTerm && (
+                                    <button onClick={() => handleSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
+                                        <X style={{ width: 12, height: 12 }} />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Products Grid — Non-blocking loading approach to prevent "bounce" */}
+                            <div className="relative min-h-[400px]">
+                                {isLoadingProducts && (
+                                    <div className="absolute inset-0 z-20 flex items-start justify-center pt-24 bg-white/40 backdrop-blur-[1px] transition-opacity duration-300">
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-white/90 shadow-xl border border-gray-100 rounded-full text-[var(--colour-fsP2)] text-xs font-bold animate-in fade-in zoom-in duration-300">
+                                            <Loader2 className="animate-spin" size={14} />
+                                            Refreshing catalog…
+                                        </div>
+                                    </div>
+                                )}
+
+                                {products.length > 0 && (
+                                    <div className={cn(
+                                        "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 transition-all duration-500",
+                                        isLoadingProducts ? "opacity-40 grayscale-[0.3]" : "opacity-100"
+                                    )}>
+                                        {products.map(product => {
+                                            const maxVal = getMaxExchangeValue(product.discounted_price || product.price, product.created_at)
+                                            return (
+                                                <div
+                                                    key={product.id}
+                                                    className="group text-left rounded-2xl border border-gray-100 bg-white transition-all duration-300 overflow-hidden flex flex-col hover:border-[var(--colour-fsP2)]/30 hover:shadow-lg hover:-translate-y-1"
+                                                >
+                                                    {/* Card Content */}
+                                                    <button
+                                                        onClick={() => {
+                                                            const targetBrand = product.brand?.slug || selectedBrand
+                                                            if (!selectedCategory || !selectedCategory.brands?.some(b => b.slug === targetBrand)) {
+                                                                const cat = categories.find(c => c.brands?.some(b => b.slug === targetBrand))
+                                                                if (cat) setSelectedCategory(cat)
+                                                            }
+                                                            setSelectedBrand(targetBrand)
+                                                            handleSelectProduct(product)
+                                                            setViewMode('wizard')
+                                                            setTimeout(() => conditionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300)
+                                                        }}
+                                                        className="w-full text-left cursor-pointer flex-1 flex flex-col"
+                                                    >
+                                                        {/* Image */}
+                                                        <div className="w-full aspect-[5/4] relative overflow-hidden bg-gray-50 border-b border-gray-100 shrink-0">
+                                                            <Image
+                                                                src={getProductImage(product)}
+                                                                alt={product.name}
+                                                                fill
+                                                                className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                                                                sizes="(max-width: 640px) 50vw, 20vw"
+                                                            />
+                                                            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-white/90 border border-gray-100 text-gray-500">
+                                                                {product.brand?.name || selectedBrand}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Info */}
+                                                        <div className="px-3 pt-3 pb-2 flex flex-col flex-1 gap-2">
+                                                            <p className="text-[11px] font-bold leading-snug line-clamp-2 text-gray-800 group-hover:text-[var(--colour-fsP2)] transition-colors">
+                                                                {product.name}
+                                                            </p>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-wide">Exchange value up to</span>
+                                                                <span className="text-sm font-black tracking-tight" style={{ color: 'var(--colour-fsP2)' }}>
+                                                                    Rs. {maxVal.toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-full py-1.5 rounded-lg bg-[#EEF3FB] text-[10px] font-bold text-center text-[var(--colour-fsP2)]">
+                                                                Select to Exchange
+                                                            </div>
                                                         </div>
                                                     </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
-                        {/* ─── Result ─── */}
-                        {showResult && conditionComplete && selectedProduct && (
-                            <div className="mt-5 p-5 bg-green-50 border border-green-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-slide-up">
-                                <div>
-                                    <h4 className="text-base font-bold text-[var(--colour-text2)]">Estimated Exchange Value</h4>
-                                    <p className="text-sm text-[var(--colour-text3)]">{selectedProduct.name}{selectedColor ? ` · ${selectedColor.name}` : ''}</p>
-                                    <p className="text-xs text-[var(--colour-text3)] mt-1">Based on device age & condition assessment</p>
-                                </div>
-                                <div className="text-right">
-                                    <span className="block text-3xl md:text-4xl font-extrabold text-[var(--colour-bg3)]">Rs. {exchangeValue.toLocaleString()}</span>
-                                    <span className="text-xs text-[var(--colour-text3)]">* Subject to inspection</span>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ─── STEP 5: Pickup Option ─── */}
-                        {showResult && conditionComplete && selectedProduct && (
-                            <div ref={pickupOptionRef} className="mt-8 animate-fade-in">
-                                <div className="flex items-center gap-3 mb-5">
-                                    <span className="bg-[var(--colour-fsP2)] text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold">{colorOptions.length > 0 ? '5' : '4'}</span>
-                                    <h4 className="text-base font-bold text-[var(--colour-text2)]">How would you like to proceed?</h4>
-                                </div>
-                                <button onClick={() => setPickupSelected(true)} style={{ cursor: 'pointer' }}
-                                    className={cn('relative w-full max-w-lg p-6 rounded-2xl border-2 text-left transition-all duration-300 hover:shadow-lg group',
-                                        pickupSelected ? 'border-[var(--colour-fsP2)] bg-gradient-to-br from-blue-50 to-[#E8F0FE] shadow-lg' : 'border-[var(--colour-border3)] bg-white hover:border-[var(--colour-fsP2)]/50')}>
-                                    {pickupSelected && <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--colour-fsP2)] rounded-full flex items-center justify-center shadow-md"><Check className="h-3.5 w-3.5 text-white" /></div>}
-                                    <div className="flex items-center gap-4">
-                                        <div className={cn('w-14 h-14 rounded-xl flex items-center justify-center transition-all', pickupSelected ? 'bg-[var(--colour-fsP2)] shadow-md' : 'bg-[#E8F0FE] group-hover:bg-[var(--colour-fsP2)]/20')}>
-                                            <Truck className={cn('h-7 w-7 transition-colors', pickupSelected ? 'text-white' : 'text-[var(--colour-fsP2)]')} />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h5 className="text-base font-bold text-[var(--colour-text2)] mb-0.5">Schedule Product Pickup</h5>
-                                            <p className="text-sm text-[var(--colour-text3)]">Our driver will collect your device from your doorstep — free of charge!</p>
-                                        </div>
-                                        <ChevronRight className={cn('h-5 w-5 text-[var(--colour-text3)] transition-all shrink-0', pickupSelected ? 'text-[var(--colour-fsP2)] rotate-90' : 'group-hover:translate-x-1')} />
-                                    </div>
-                                </button>
-                            </div>
-                        )}
-
-                        {/* ─── STEP 6: Pickup Details ─── */}
-                        {showResult && conditionComplete && selectedProduct && pickupSelected && (
-                            <div ref={pickupDetailsRef} className="mt-8 animate-fade-in">
-                                <div className="flex items-center gap-2.5 mb-6">
-                                    <span className="bg-[var(--colour-fsP2)] text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold">{colorOptions.length > 0 ? '6' : '5'}</span>
-                                    <h4 className="text-lg font-bold text-[var(--colour-text2)]">Fill Pickup Details</h4>
-                                </div>
-                                <div className="bg-white rounded-xl p-5 md:p-7 border border-gray-200">
-                                    <div className="grid lg:grid-cols-2 gap-8">
-                                        {/* LEFT: Device Info */}
-                                        <div className="space-y-5">
-                                            <p className="text-sm font-semibold text-[var(--colour-bg3)]">Device Info</p>
-                                            {/* Photos */}
-                                            <div>
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <label className="text-sm font-semibold text-[var(--colour-text2)] flex items-center gap-1.5"><ImagePlus className="h-4 w-4 text-[var(--colour-bg3)]" />Product Photos</label>
-                                                    <span className="text-xs text-[var(--colour-text3)]">{productPhotos.length}/4</span>
+                                                    {/* Action Buttons */}
+                                                    {/* Action Buttons */}
+                                                    <div className="px-3 pb-3">
+                                                        <Link
+                                                            href={`/product/${product.slug}`}
+                                                            className="w-full py-2 text-[10px] font-bold text-center rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
+                                                        >
+                                                            <ShoppingBag size={11} />
+                                                            Buy New One
+                                                        </Link>
+                                                    </div>
                                                 </div>
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {photoPreviewUrls.map((url, i) => (
-                                                        <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
-                                                            <Image src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                                                            <button onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"><X className="h-3 w-3" /></button>
-                                                        </div>
-                                                    ))}
-                                                    {productPhotos.length < 4 && (
-                                                        <button onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-lg border-2 border-dashed border-[var(--colour-fsP2)] bg-white hover:bg-[var(--colour-fsP2)]/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer">
-                                                            <Upload className="h-5 w-5 text-[var(--colour-fsP2)]" /><span className="text-[10px] text-[var(--colour-fsP2)] font-medium">Add</span>
-                                                        </button>
+                                            )
+                                        })}
+
+                                        {products.length === 0 && !isLoadingProducts && (
+                                            <div className="col-span-full flex flex-col items-center py-20 gap-3 text-gray-300 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                <Search style={{ width: 40, height: 40 }} />
+                                                <div className="text-center">
+                                                    <p className="text-sm font-bold text-gray-500">
+                                                        {searchTerm ? `No results for "${searchTerm}"` : 'No models available'}
+                                                    </p>
+                                                    <p className="text-[11px] text-gray-400 mt-1">Try another brand or search term</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {viewMode === 'wizard' && (
+                        <>
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-white sticky top-0 z-10">
+                                <div className="flex items-center gap-3">
+                                    <RefreshCw size={14} style={{ color: 'var(--colour-fsP2)' }} />
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-900">Exchange Your Device</p>
+                                        <p className="text-[11px] text-gray-400">Select your old phone to get an instant quote</p>
+                                    </div>
+                                </div>
+                                {selectedCategory && (
+                                    <button
+                                        onClick={() => {
+                                            setSelectedCategory(null); setSelectedBrand(''); setSelectedProduct(null);
+                                            setColorOptions([]); setSelectedColor(null); setProducts([]); resetCondition()
+                                        }}
+                                        className="text-[11px] font-semibold text-gray-400 hover:text-gray-700 flex items-center gap-1 transition-colors"
+                                    >
+                                        <X size={11} /> Reset
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="divide-y divide-gray-100">
+
+                                {/* ══ STEP 1: CATEGORY ══ */}
+                                <div className="p-5 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 1</span>
+                                        {selectedCategory && <Check size={12} className="text-[var(--colour-fsP2)]" />}
+                                    </div>
+                                    <p className="text-sm font-bold text-gray-900">What type of device are you exchanging?</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {categories.map(cat => {
+                                            const active = selectedCategory?.id === cat.id
+                                            return (
+                                                <button
+                                                    key={cat.id}
+                                                    onClick={() => handleSelectCategory(cat)}
+                                                    className={cn(
+                                                        'flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-semibold transition-all',
+                                                        active
+                                                            ? 'border-[var(--colour-fsP2)] bg-[#EEF3FB] text-[var(--colour-fsP2)]'
+                                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                                                     )}
-                                                </div>
-                                                <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
-                                                {formErrors.photos && <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.photos}</p>}
-                                                <p className="text-[11px] text-[var(--colour-text3)] mt-1.5">Front, back & sides for accurate valuation (min 1, max 4)</p>
-                                            </div>
-                                            {/* IMEI */}
-                                            <div>
-                                                <label className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><Fingerprint className="h-4 w-4 text-[var(--colour-bg3)]" />IMEI / Serial Number</label>
-                                                <Input value={serialNumber} onChange={(e) => { setSerialNumber(e.target.value); setFormErrors(prev => ({ ...prev, serial: '' })) }} placeholder="e.g. 356938035643809" maxLength={20}
-                                                    className={cn('h-11 bg-white border-2 rounded-lg text-sm focus:ring-1 transition-all', formErrors.serial ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-[var(--colour-fsP2)]/30 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20')} />
-                                                {formErrors.serial ? <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.serial}</p>
-                                                    : <p className="text-[11px] text-[var(--colour-text3)] mt-1.5">Dial <span className="font-mono font-semibold">*#06#</span> to find IMEI (15–20 chars)</p>}
-                                            </div>
-                                        </div>
-                                        {/* RIGHT: Pickup & Contact */}
-                                        <div className="space-y-5">
-                                            <p className="text-sm font-semibold text-[var(--colour-bg3)]">Pickup & Contact</p>
-                                            {/* Address */}
-                                            <div>
-                                                <label htmlFor="pickupAddress" className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><MapPinned className="h-4 w-4 text-[var(--colour-bg3)]" />Pickup Address</label>
-                                                <div className="flex gap-2 mb-3">
-                                                    <button onClick={handleUseGeoLocation} className={cn('flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-full border-2 transition-all cursor-pointer', locationMethod === 'geo' ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white' : 'border-[var(--colour-fsP2)]/30 bg-white text-[var(--colour-fsP2)] hover:bg-green-50')}>
-                                                        {isLocating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LocateFixed className="h-3.5 w-3.5" />}Use GPS
-                                                    </button>
-                                                    <button onClick={() => { setLocationMethod('manual'); setPickupAddress('') }} className={cn('flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-full border-2 transition-all cursor-pointer', locationMethod === 'manual' ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white' : 'border-[var(--colour-fsP2)]/30 bg-white text-[var(--colour-fsP2)] hover:bg-green-50')}>
-                                                        <Navigation className="h-3.5 w-3.5" />Type Address
-                                                    </button>
-                                                </div>
-                                                {locationMethod === 'geo' && pickupAddress && <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 flex items-center gap-2 mb-2 text-xs text-green-700"><Check className="h-3.5 w-3.5 shrink-0" /><span className="line-clamp-1">{pickupAddress}</span></div>}
-                                                {locationMethod === 'geo' && isLocating && <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 flex items-center gap-2 mb-2 text-xs text-green-600"><Loader2 className="h-3.5 w-3.5 animate-spin" />Detecting location...</div>}
-                                                {(locationMethod === 'manual' || (locationMethod === 'geo' && pickupAddress)) && (
-                                                    <Input id="pickupAddress" value={pickupAddress} onChange={(e) => { setPickupAddress(e.target.value); setFormErrors(prev => ({ ...prev, address: '' })) }} placeholder="Full address, landmark, area..."
-                                                        className={cn('h-11 bg-white border-2 rounded-lg text-sm focus:ring-1 transition-all', formErrors.address ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-[var(--colour-fsP2)]/30 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20')} />
-                                                )}
-                                                {formErrors.address && <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.address}</p>}
-                                            </div>
-                                            {/* Full Name */}
-                                            <div>
-                                                <label htmlFor="fullName" className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><User className="h-4 w-4 text-[var(--colour-bg3)]" />Full Name</label>
-                                                <Input id="fullName" value={fullName} onChange={(e) => { setFullName(e.target.value); setFormErrors(prev => ({ ...prev, name: '' })) }} placeholder="e.g. Ram Sharma" maxLength={50}
-                                                    className={cn('h-11 bg-white border-2 rounded-lg text-sm focus:ring-1 transition-all', formErrors.name ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-[var(--colour-fsP2)]/30 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20')} />
-                                                {formErrors.name && <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.name}</p>}
-                                            </div>
-                                            {/* Phone */}
-                                            <div>
-                                                <label htmlFor="phoneNumber" className="text-sm font-semibold text-[var(--colour-text2)] mb-2 flex items-center gap-1.5"><Smartphone className="h-4 w-4 text-[var(--colour-bg3)]" />Phone Number</label>
-                                                <Input id="phoneNumber" value={phoneNumber} onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 10); setPhoneNumber(v); setFormErrors(prev => ({ ...prev, phone: '' })) }} placeholder="98XXXXXXXX" maxLength={10}
-                                                    className={cn('h-11 bg-white border-2 rounded-lg text-sm focus:ring-1 transition-all', formErrors.phone ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-[var(--colour-fsP2)]/30 focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)]/20')} />
-                                                {formErrors.phone ? <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.phone}</p> : <p className="text-[11px] text-[var(--colour-text3)] mt-1">10 digits only</p>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Terms & Submit */}
-                                    <div className="mt-6 pt-5 border-t border-gray-100">
-                                        <label className="flex items-start gap-3 cursor-pointer group mb-4">
-                                            <div className="relative mt-0.5">
-                                                <input type="checkbox" checked={agreedToTerms} onChange={(e) => { setAgreedToTerms(e.target.checked); setFormErrors(prev => ({ ...prev, terms: '' })) }} className="sr-only" />
-                                                <div className={cn('w-5 h-5 rounded border-2 flex items-center justify-center transition-all', agreedToTerms ? 'bg-[var(--colour-fsP2)] border-[var(--colour-fsP2)]' : formErrors.terms ? 'bg-white border-red-400' : 'bg-white border-gray-300 group-hover:border-[var(--colour-bg3)]')}>
-                                                    {agreedToTerms && <Check className="h-3 w-3 text-white" />}
-                                                </div>
-                                            </div>
-                                            <span className="text-sm text-[var(--colour-text3)] leading-snug">I agree to the <Link href="#" className="text-[var(--colour-bg3)] font-semibold hover:underline">Terms & Conditions</Link> and <Link href="#" className="text-[var(--colour-bg3)] font-semibold hover:underline">Exchange Policy</Link>. Final value may vary based on inspection.</span>
-                                        </label>
-                                        {formErrors.terms && <p className="text-[11px] text-red-500 mb-3 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{formErrors.terms}</p>}
-                                        <Button onClick={handleSubmitExchange} disabled={isSubmitting} className="h-10 w-full bg-[var(--colour-bg3)] hover:bg-[#0D5500] text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50">
-                                            {isSubmitting ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</span> : <span className="flex items-center gap-2"><Send className="h-4 w-4" /> Submit Pickup Request</span>}
-                                        </Button>
+                                                >
+                                                    {cat.thumb?.url
+                                                        ? <Image src={cat.thumb.url} alt={cat.title} width={14} height={14} className="object-contain" />
+                                                        : <Smartphone size={12} className={active ? 'text-[var(--colour-fsP2)]' : 'text-gray-400'} />
+                                                    }
+                                                    {cat.title}
+                                                </button>
+                                            )
+                                        })}
                                     </div>
                                 </div>
+
+                                {/* ══ STEP 2: BRAND ══ */}
+                                {selectedCategory && (selectedCategory.brands?.length || 0) > 0 && (
+                                    <div ref={brandSectionRef} className={cn('p-5 space-y-3 transition-opacity duration-300', selectedCategory ? 'opacity-100' : 'opacity-40 pointer-events-none')}>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 2</span>
+                                            {selectedBrand && <Check size={12} className="text-[var(--colour-fsP2)]" />}
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-900">Which brand is your phone?</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(selectedCategory?.brands ?? []).map((brand, i) => {
+                                                const active = selectedBrand === brand.slug
+                                                return (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => handleSelectBrand(brand.slug)}
+                                                        className={cn(
+                                                            'flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-semibold transition-all',
+                                                            active
+                                                                ? 'border-[var(--colour-fsP2)] bg-[#EEF3FB] text-[var(--colour-fsP2)]'
+                                                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                        )}
+                                                    >
+                                                        {brand.thumb?.url
+                                                            ? <Image src={brand.thumb.url} alt={brand.name} width={14} height={14} className="object-contain" />
+                                                            : <span className="text-[10px] font-black uppercase">{brand.name.slice(0, 2)}</span>
+                                                        }
+                                                        {brand.name}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ══ STEP 2/3: MODEL — PRODUCT CARDS ══ */}
+                                <div ref={modelSectionRef} className={cn('p-5 space-y-3 transition-opacity duration-300', selectedCategory ? 'opacity-100' : 'opacity-40 pointer-events-none')}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                            {(selectedCategory?.brands?.length || 0) > 0 ? 'Step 3' : 'Step 2'}
+                                        </span>
+                                        {selectedProduct && <Check size={12} className="text-[var(--colour-fsP2)]" />}
+                                    </div>
+                                    <p className="text-sm font-bold text-gray-900">Which model are you exchanging?</p>
+
+                                    {/* Search */}
+                                    <div className="relative max-w-xs">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+                                        <Input
+                                            placeholder="Search model…"
+                                            className="pl-8 pr-8 h-8 text-xs border-gray-200 rounded-lg font-semibold"
+                                            value={searchTerm}
+                                            onChange={e => handleSearch(e.target.value)}
+                                        />
+                                        {searchTerm && (
+                                            <button onClick={() => handleSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                                <X size={11} />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {isLoadingProducts ? (
+                                        <div className="flex items-center gap-2 py-6 text-gray-400 text-xs">
+                                            <Loader2 className="animate-spin" size={13} /> Loading models…
+                                        </div>
+                                    ) : products.length === 0 ? (
+                                        <p className="text-xs text-gray-400 py-4">
+                                            {searchTerm ? `No results for "${searchTerm}"` : 'No products found'}
+                                        </p>
+                                    ) : (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                            {products.map(product => {
+                                                const maxVal = getMaxExchangeValue(product.discounted_price || product.price, product.created_at)
+                                                const isSelected = selectedProduct?.slug === product.slug
+                                                return (
+                                                    <button
+                                                        key={product.id}
+                                                        onClick={() => handleSelectProduct(product)}
+                                                        className={cn(
+                                                            'group flex flex-col text-left rounded-xl border overflow-hidden bg-white transition-all duration-200',
+                                                            isSelected
+                                                                ? 'border-[var(--colour-fsP2)] ring-1 ring-[var(--colour-fsP2)]/20'
+                                                                : 'border-gray-100 hover:border-gray-300'
+                                                        )}
+                                                    >
+                                                        {/* Image — 4:3 ratio */}
+                                                        <div className="w-full aspect-[4/3] relative bg-gray-50 overflow-hidden">
+                                                            <Image
+                                                                src={getProductImage(product)}
+                                                                alt={product.name}
+                                                                fill
+                                                                className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+                                                                sizes="(max-width: 640px) 50vw, 20vw"
+                                                            />
+                                                            {isSelected && (
+                                                                <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'var(--colour-fsP2)' }}>
+                                                                    <Check size={10} color="#fff" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Info */}
+                                                        <div className="p-2.5 flex flex-col gap-1 flex-1">
+                                                            <p className={cn(
+                                                                'text-[11px] font-bold leading-snug line-clamp-2',
+                                                                isSelected ? 'text-[var(--colour-fsP2)]' : 'text-gray-800'
+                                                            )}>
+                                                                {product.name}
+                                                            </p>
+                                                            <div className="mt-auto pt-1">
+                                                                <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">Up to</p>
+                                                                <p className="text-xs font-black tracking-tight" style={{ color: 'var(--colour-fsP2)' }}>
+                                                                    Rs. {maxVal.toLocaleString()}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* ══ STEP 4: COLOR VARIANT ══ */}
+                                {isLoadingDetail && (
+                                    <div className="p-5 flex items-center gap-2 text-gray-400 text-xs">
+                                        <Loader2 className="animate-spin" size={13} /> Loading variants…
+                                    </div>
+                                )}
+
+                                {selectedProduct && !isLoadingDetail && colorOptions.length > 0 && (
+                                    <div className="p-5 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                {(selectedCategory?.brands?.length || 0) > 0 ? 'Step 4' : 'Step 3'}
+                                            </span>
+                                            {selectedColor && <Check size={12} className="text-[var(--colour-fsP2)]" />}
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-900">Which color variant do you have?</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {colorOptions.map(c => {
+                                                const active = selectedColor?.name === c.name
+                                                return (
+                                                    <button
+                                                        key={c.name}
+                                                        onClick={() => { setSelectedColor(c); resetCondition() }}
+                                                        className={cn(
+                                                            'flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-semibold transition-all',
+                                                            active
+                                                                ? 'border-[var(--colour-fsP2)] bg-[#EEF3FB] text-[var(--colour-fsP2)]'
+                                                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                        )}
+                                                    >
+                                                        <span className="w-3 h-3 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: c.hex }} />
+                                                        {c.name}
+                                                        <span className={cn('font-bold', active ? 'text-[var(--colour-fsP2)]/70' : 'text-gray-400')}>
+                                                            · Rs. {c.discountedPrice.toLocaleString()}
+                                                        </span>
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ══ STEP 5: CONDITION ══ */}
+                                {selectedProduct && !isLoadingDetail && (colorOptions.length === 0 || selectedColor) && (
+                                    <div className="p-5 space-y-6" ref={conditionRef}>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                {(selectedCategory?.brands?.length || 0) > 0 ? (colorOptions.length > 0 ? 'Step 5' : 'Step 4') : (colorOptions.length > 0 ? 'Step 4' : 'Step 3')}
+                                            </span>
+                                            {conditionComplete && <Check size={12} className="text-[var(--colour-fsP2)]" />}
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-900">Tell us about your phone's condition</p>
+
+                                        <div className="space-y-5">
+                                            {CONDITION_QUESTIONS.map(q => (
+                                                <div key={q.key} className="space-y-2.5">
+                                                    <p className="text-xs font-bold text-gray-700">{q.label}</p>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {q.options.map((opt, i) => {
+                                                            const sel = conditionAnswers[q.key] === opt.value
+                                                            const icons = [
+                                                                <CheckCircle2 size={18} />,
+                                                                <AlertCircle size={18} />,
+                                                                <XCircle size={18} />,
+                                                            ]
+                                                            const colors = [
+                                                                {
+                                                                    active: 'border-emerald-400 bg-emerald-50 text-emerald-700',
+                                                                    icon: 'text-emerald-500',
+                                                                    idle: 'border-gray-100 bg-white text-gray-500 hover:border-emerald-200 hover:bg-emerald-50/40 hover:text-emerald-600',
+                                                                },
+                                                                {
+                                                                    active: 'border-amber-400 bg-amber-50 text-amber-700',
+                                                                    icon: 'text-amber-500',
+                                                                    idle: 'border-gray-100 bg-white text-gray-500 hover:border-amber-200 hover:bg-amber-50/40 hover:text-amber-600',
+                                                                },
+                                                                {
+                                                                    active: 'border-red-400 bg-red-50 text-red-700',
+                                                                    icon: 'text-red-500',
+                                                                    idle: 'border-gray-100 bg-white text-gray-500 hover:border-red-200 hover:bg-red-50/40 hover:text-red-600',
+                                                                },
+                                                            ]
+                                                            const c = colors[i]
+                                                            return (
+                                                                <button
+                                                                    key={opt.label}
+                                                                    onClick={() => handleConditionAnswer(q.key, opt.value)}
+                                                                    className={cn(
+                                                                        'flex flex-col items-center justify-center gap-2 rounded-xl border py-4 px-2 text-center transition-all duration-150',
+                                                                        sel ? c.active : c.idle
+                                                                    )}
+                                                                >
+                                                                    <span className={cn('transition-colors', sel ? c.icon : 'text-gray-300')}>
+                                                                        {icons[i]}
+                                                                    </span>
+                                                                    <span className="text-[10px] font-bold leading-tight">{opt.label}</span>
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ══ RESULT ══ */}
+                                {showResult && conditionComplete && (
+                                    <>
+                                        <div className="p-5">
+                                            <div className="rounded-xl border border-gray-100 overflow-hidden bg-white">
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 relative overflow-hidden shrink-0">
+                                                            {/* <Image src={getProductImage(selectedProduct)} alt={selectedProduct.name} fill className="object-contain p-1.5" sizes="48px" />/ */}
+                                                        </div>
+                                                        <div>
+                                                            {/* <p className="text-xs font-bold text-gray-900 leading-snug">{selectedProduct.name}</p> */}
+                                                            {selectedColor && (
+                                                                <div className="flex items-center gap-1.5 mt-1">
+                                                                    <span className="w-2 h-2 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: selectedColor.hex }} />
+                                                                    <span className="text-[11px] text-gray-500">{selectedColor.name}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="sm:text-right">
+                                                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Exchange value</p>
+                                                        <p className="text-xl font-black tracking-tight" style={{ color: 'var(--colour-fsP2)' }}>
+                                                            Rs. {exchangeValue.toLocaleString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="px-4 py-2.5 bg-green-50 border-t border-green-100 flex items-center gap-2">
+                                                    <Check size={11} className="text-green-600 shrink-0" />
+                                                    <span className="text-[11px] font-semibold text-green-700">Eligible for instant credit</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Pickup */}
+                                        <div ref={pickupOptionRef} className="p-5 space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Pickup</span>
+                                                {pickupSelected && <Check size={12} className="text-[var(--colour-fsP2)]" />}
+                                            </div>
+                                            <p className="text-sm font-bold text-gray-900">How do you want to hand over your phone?</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    onClick={() => setPickupSelected(true)}
+                                                    className={cn(
+                                                        'flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-semibold transition-all',
+                                                        pickupSelected
+                                                            ? 'border-[var(--colour-fsP2)] bg-[#EEF3FB] text-[var(--colour-fsP2)]'
+                                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                    )}
+                                                >
+                                                    <Truck size={12} />
+                                                    Free Doorstep Pickup
+                                                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700">Fastest</span>
+                                                </button>
+                                                <div className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-100 text-xs font-semibold text-gray-300 cursor-not-allowed">
+                                                    <Store size={12} />
+                                                    Walk-in Showroom
+                                                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-gray-100 text-gray-400">Soon</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Checkout */}
+                                        {pickupSelected && (
+                                            <div ref={pickupDetailsRef} className="p-5">
+                                                <div className="rounded-xl border border-gray-100 bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900">Ready to proceed?</p>
+                                                        <p className="text-xs text-gray-400 mt-0.5">Log in to confirm your exchange and schedule pickup.</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => router.push('/login?redirect=/checkout/exchange')}
+                                                        className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                                                        style={{ background: 'var(--colour-fsP2)' }}
+                                                    >
+                                                        Login to Checkout <ArrowRight size={13} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
+                        </>
+                    )}
+                </div>
             </section>
 
-            {/* ═══ WHY EXCHANGE ═══ */}
-            <section className="py-14 bg-white">
-                <div className="container mx-auto px-4 lg:px-8">
-                    <div className="flex items-center gap-3 mb-10 justify-center">
-                        <span className="bg-[var(--colour-fsP2)] text-white w-7 h-7 rounded-md flex items-center justify-center font-bold text-sm">1</span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-[var(--colour-fsP2)]">Why Exchange with Fatafat Sewa?</h2>
+            {/* ══════════════════════════════════════
+                DYNAMIC SEO BANNER
+            ══════════════════════════════════════ */}
+            {bannerSection && (
+                <section className="bg-white border-t border-gray-100 max-w-8xl mx-auto  px-2">
+                    {bannerSection}
+                </section>
+            )}
+
+            {/* ══════════════════════════════════════
+                SEO CONTENT — Why Exchange
+            ══════════════════════════════════════ */}
+            <section className="bg-white border-t border-gray-100 py-10">
+                <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
+                    <div className="text-center mb-8">
+                        <h2 className="text-lg font-bold text-gray-900 mb-1">
+                            Why exchange your phone with Fatafat Sewa?
+                        </h2>
+                        <p className="text-sm text-gray-400 max-w-md mx-auto">
+                            Nepal's most trusted mobile exchange — transparent pricing, free pickup, instant upgrade.
+                        </p>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                         {[
-                            { icon: BadgePercent, title: 'Best Value Guaranteed', desc: 'Get the best market value for your old phone in seconds!' },
-                            { icon: CreditCard, title: '0% EMI Optional', desc: 'Use the exchange value towards your new device and pay the rest in easy 0% EMI.' },
-                            { icon: ShieldCheck, title: 'Free Mobile Insurance', desc: 'Enjoy a safe, worry-free upgrade with insurance on selected new purchases.' },
-                            { icon: Zap, title: 'Instant Upgrade', desc: 'Walk out with a new phone on the same day!' },
-                            { icon: Users, title: 'Trusted Partnerships', desc: 'We partner with top brands for a secure, trustworthy exchange.' },
+                            { icon: BadgePercent, title: 'Best Price Guaranteed', desc: 'Instant market-rate quote for any model.' },
+                            { icon: Truck, title: 'Free Doorstep Pickup', desc: 'We come to you — zero collection charges.' },
+                            { icon: CreditCard, title: '0% EMI Upgrade', desc: 'Use exchange value and pay balance in EMI.' },
+                            { icon: ShieldCheck, title: 'Transparent Process', desc: 'Condition-based valuation, no hidden cuts.' },
+                            { icon: Zap, title: 'Same-Day Upgrade', desc: 'Walk out with your new phone today.' },
                         ].map((item, i) => (
-                            <div key={i} className="bg-[var(--colour-bg4)] rounded-xl p-5 text-center hover:bg-white hover:shadow-[var(--shadow-premium-md)] transition-all border border-transparent hover:border-[var(--colour-border3)] group">
-                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:scale-110 transition-transform"><item.icon className="h-7 w-7 text-[var(--colour-fsP2)]" /></div>
-                                <h3 className="font-bold text-[var(--colour-fsP2)] text-sm mb-1.5">{item.title}</h3>
-                                <p className="text-xs text-[var(--colour-text3)] leading-relaxed">{item.desc}</p>
+                            <div
+                                key={i}
+                                className="flex flex-col items-center text-center rounded-xl border border-gray-200 p-4 gap-2.5 hover:border-gray-300 hover:shadow-sm transition-all group"
+                            >
+                                <div className="w-9 h-9 rounded-lg bg-[#EEF3FB] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <item.icon size={16} style={{ color: 'var(--colour-fsP2)' }} />
+                                </div>
+                                <p className="text-xs font-semibold text-gray-800 leading-snug">{item.title}</p>
+                                <p className="text-[11px] text-gray-400 leading-relaxed">{item.desc}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ═══ HOW IT WORKS ═══ */}
-            <section className="py-14 bg-[var(--colour-bg4)]">
-                <div className="container mx-auto px-4 lg:px-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-[var(--colour-fsP2)] text-center mb-10">How Does the Mobile Exchange Work?</h2>
-                    <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            {/* ══════════════════════════════════════
+                SEO CONTENT — Supported brands grid
+            ══════════════════════════════════════ */}
+
+
+
+            <section className="bg-[#F5F7FA] border-t border-gray-100 py-12">
+                <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
+                    <div className="text-center mb-8">
+                        <h2 className="text-lg font-bold text-gray-900 mb-1">Brands We Accept for Exchange</h2>
+                        <p className="text-sm text-gray-400">All major smartphone brands accepted — get the best trade-in value.</p>
+                    </div>
+
+                    <div className="flex flex-wrap justify-center gap-2">
+                        {[...POPULAR_BRANDS, 'Huawei', 'Motorola', 'Sony', 'Google', 'Asus', 'Lenovo', 'Tecno', 'Infinix', 'Itel', 'HMD'].map(b => (
+                            <div
+                                key={b}
+                                className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-800 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] hover:shadow-sm transition-all cursor-default"
+                            >
+                                {b}
+                            </div>
+                        ))}
+                    </div>
+
+                    <p className="text-center text-[11px] text-gray-400 mt-5">
+                        Don't see your brand?{' '}
+                        <span className="font-bold text-gray-600 cursor-pointer hover:text-[var(--colour-fsP2)] transition-colors">
+                            Contact us
+                        </span>{' '}
+                        — we accept most smartphones.
+                    </p>
+                </div>
+            </section>
+
+            {/* ══════════════════════════════════════
+                SEO CONTENT — How it works
+            ══════════════════════════════════════ */}
+            <section className="bg-white border-t border-gray-100 py-12">
+                <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
+                    <div className="text-center mb-8">
+                        <h2 className="text-xl font-extrabold text-gray-900 mb-2">How the mobile exchange works</h2>
+                        <p className="text-sm text-gray-500">Simple 4-step process from quote to new device</p>
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
-                            { icon: Smartphone, step: '1', title: 'Get Exchange Quote', color: 'var(--colour-fsP2)', bgColor: '#E8F0FE', desc: 'Use the form above to receive an immediate price quote for your old phone. It\'s quick & easy!' },
-                            { icon: Store, step: '2', title: 'Visit Our Showroom', color: 'var(--colour-fsP2)', bgColor: '#E8F0FE', desc: 'Drop by our showroom to have our experts evaluate and confirm the final exchange value.' },
-                            { icon: Handshake, step: '3', title: 'Upgrade to a New Phone', color: 'var(--colour-bg3)', bgColor: '#E8F5E9', desc: 'Trade in your old phone, pay the difference (or choose easy EMI!), and walk out with a brand new phone!' },
+                            { icon: Smartphone, n: '1', title: 'Get instant quote', desc: 'Select your device, assess condition, and get an instant price estimate — no waiting.' },
+                            { icon: Truck, n: '2', title: 'Schedule free pickup', desc: 'Book a doorstep pickup at your convenient time. Our team comes to you, free of charge.' },
+                            { icon: ShieldCheck, n: '3', title: 'Device inspection', desc: 'Our technician does a quick physical inspection to confirm the final exchange value.' },
+                            { icon: Handshake, n: '4', title: 'Upgrade your phone', desc: 'Apply the value to your new purchase. Pay the difference via cash, card, or 0% EMI.' },
                         ].map((item, i) => (
-                            <div key={i} className="bg-white rounded-2xl p-7 shadow-[var(--shadow-premium-sm)] border border-[var(--colour-border3)] text-center relative overflow-hidden hover-lift hover:shadow-[var(--shadow-premium-md)]">
-                                <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: item.color }} />
-                                <div className="mb-5 inline-flex justify-center items-center w-[72px] h-[72px] rounded-full" style={{ backgroundColor: item.bgColor }}><item.icon className="h-9 w-9" style={{ color: item.color }} /></div>
-                                <h4 className="text-lg font-bold text-[var(--colour-text2)] mb-2">{item.step}. {item.title}</h4>
-                                <p className="text-sm text-[var(--colour-text3)] leading-relaxed">{item.desc}</p>
+                            <div key={i} className="relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition-all">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EEF3FB' }}>
+                                        <item.icon style={{ width: 16, height: 16, color: 'var(--colour-fsP2)' }} />
+                                    </div>
+                                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">Step {item.n}</span>
+                                </div>
+                                <p className="text-sm font-bold text-gray-900 mb-1.5">{item.title}</p>
+                                <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+                                {i < 3 && (
+                                    <div className="hidden lg:flex absolute top-8 -right-2 z-10">
+                                        <ArrowRight style={{ width: 14, height: 14, color: '#d1d5db' }} />
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ═══ FAQ ═══ */}
-            <section className="py-16 bg-gradient-to-b from-white to-[#F8FAFF]">
-                <div className="container mx-auto px-4 lg:px-8 max-w-3xl">
-                    <div className="text-center mb-10">
-                        <span className="inline-block bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] text-xs font-bold px-4 py-1.5 rounded-full mb-3 tracking-wide uppercase">FAQ</span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-[var(--colour-text2)]">Frequently Asked Questions</h2>
-                        <p className="text-sm text-[var(--colour-text3)] mt-2">Everything you need to know about our exchange process</p>
-                    </div>
-                    <Accordion type="single" collapsible className="w-full space-y-3">
-                        {[
-                            { q: 'Which brands & models are accepted for exchange?', a: 'We accept a wide range of major brands including Apple, Samsung, OnePlus, Xiaomi, and more. Check the brand selector above for the full list.' },
-                            { q: 'What factors determine my phone\'s exchange value?', a: 'The value depends on the model, age, storage capacity, and physical condition of the device (screen, body, camera, battery health).' },
-                            { q: 'Can I exchange more than one phone?', a: 'Yes! You can exchange multiple devices to accumulate more value towards your new purchase. Please visit the showroom for multi-device evaluation.' },
-                        ].map((item, i) => (
-                            <AccordionItem key={i} value={`item-${i}`} className="border-2 border-[var(--colour-fsP2)]/15 rounded-xl px-5 bg-white shadow-sm hover:shadow-md hover:border-[var(--colour-fsP2)]/30 transition-all data-[state=open]:border-[var(--colour-fsP2)]/40 data-[state=open]:shadow-md data-[state=open]:bg-blue-50/30">
-                                <AccordionTrigger className="text-[var(--colour-text2)] font-bold text-[15px] hover:no-underline py-5 hover:text-[var(--colour-fsP2)] transition-colors">{item.q}</AccordionTrigger>
-                                <AccordionContent className="text-[var(--colour-text3)] text-sm pb-5 leading-relaxed">{item.a}</AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+
+            {/* ══════════════════════════════════════
+                MIDDLE BANNER (HOMEPAGE STYLE)
+            ══════════════════════════════════════ */}
+            {bannerSection && (
+                <div className="container mx-auto px-4 lg:px-8 max-w-7xl py-6">
+                    {bannerSection}
                 </div>
+            )}
+
+            {/* ══════════════════════════════════════
+                FAQ
+            ══════════════════════════════════════ */}
+            <section className="bg-[#F5F7FA] border-t border-gray-100 max-w-7xl mx-auto py-4">
+                <EmiFaq
+                    params={{ type: 'brand', per_page: 15, page: 1 }}
+                    title="Frequently asked questions about mobile exchange"
+                    subtitle="Everything you need to know before exchanging your phone"
+                />
             </section>
 
-            {/* ═══ BOTTOM CTA ═══ */}
-            <section className="py-12 bg-[var(--colour-bg4)] border-t border-[var(--colour-border3)]">
-                <div className="container mx-auto px-4 lg:px-8 text-center max-w-3xl">
-                    <h2 className="text-2xl md:text-3xl font-bold text-[var(--colour-fsP2)] mb-1">Visit Us & Upgrade <span className="text-[var(--colour-text2)] font-normal">Your Mobile Today!</span></h2>
-                    <p className="text-[var(--colour-text3)] text-sm mb-7">Explore products or check EMI eligibility today.</p>
+            {/* ══════════════════════════════════════
+                CTA BANNER
+            ══════════════════════════════════════ */}
+            <section className="bg-white border-t border-gray-100 py-12">
+                <div className="container mx-auto px-4 lg:px-8 max-w-2xl text-center">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest border mb-4" style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: '#EEF3FB' }}>
+                        <TrendingUp style={{ width: 10, height: 10 }} /> Best exchange rates in Nepal
+                    </div>
+                    <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Ready to upgrade your smartphone?</h2>
+                    <p className="text-gray-500 text-sm mb-7 leading-relaxed">Join 10,000+ customers who've already exchanged their phones with Fatafat Sewa. Get the best trade-in value, free pickup, and instant upgrade.</p>
                     <div className="flex flex-col sm:flex-row justify-center gap-3">
-                        <Button className="h-12 px-8 bg-[var(--colour-bg3)] hover:bg-[#0D5500] text-white text-base font-bold rounded-lg shadow-md hover:shadow-lg" onClick={() => { if (formSectionRef.current) formSectionRef.current.scrollIntoView({ behavior: 'smooth' }) }}>Get Exchange Quote</Button>
-                        <Button className="h-12 px-8 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-bg2)] text-white text-base font-bold rounded-lg shadow-md hover:shadow-lg">Find Showroom</Button>
+                        <button className="h-11 px-7 rounded-xl text-white text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity flex items-center justify-center gap-2" style={{ background: 'var(--colour-fsP2)' }} onClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+                            Get exchange quote <ArrowRight style={{ width: 14, height: 14 }} />
+                        </button>
+                        <button className="h-11 px-7 rounded-xl text-sm font-bold border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                            <Store style={{ width: 14, height: 14 }} /> Find showroom
+                        </button>
                     </div>
                 </div>
             </section>
 
-            {/* ═══ FLOATING ACTION BAR ═══ */}
+            {/* ══════════════════════════════════════
+                BLOG SECTION
+            ══════════════════════════════════════ */}
+            {blogSection && (
+                <section className="bg-[#F5F7FA] border-t border-gray-100 py-4">
+                    {blogSection}
+                </section>
+            )}
+
+            {/* ══════════════════════════════════════
+                FLOATING PROGRESS BAR
+            ══════════════════════════════════════ */}
+            {/* ══════════════════════════════════════
+                FLOATING PROGRESS BAR (REFINED)
+            ══════════════════════════════════════ */}
             {selectedProduct && (
-                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-300 w-[95%] sm:w-auto">
-                    <div className="mx-auto bg-white/95 backdrop-blur-md border border-[var(--colour-border3)] shadow-[var(--shadow-premium-md)] rounded-lg py-2 px-3 sm:px-4 flex items-center justify-between gap-3 sm:gap-6 min-w-[280px] sm:min-w-[400px] max-w-full">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gray-50  p-1 sm:p-1 border-none border-gray-100 flex-shrink-0  overflow-hidden flex items-center justify-center">
-                                <Image src={getProductImage(selectedProduct)} alt={selectedProduct.name} width={40} height={40} className="object-contain" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[11px] sm:text-[13px] text-[var(--colour-text2)] font-bold leading-tight line-clamp-1 max-w-[120px] sm:max-w-[180px]">
-                                    {selectedProduct.name}
-                                </span>
-                                <div className="flex items-baseline gap-1 mt-0.5">
-                                    <span className="text-[10px] text-[var(--colour-text3)] font-semibold">Value</span>
-                                    <span className="text-[13px] sm:text-[15px] font-extrabold text-[var(--colour-bg3)] leading-none">
+                <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[92%] sm:w-auto pointer-events-none animate-in slide-in-from-top-4 duration-500">
+                    <div className="pointer-events-auto mx-auto bg-[#F5F7FA] w-full py-1.5 px-2 sm:px-5 flex items-center gap-3 sm:gap-6 min-w-[300px] sm:min-w-[480px] max-w-full">
+                        {/* Compact thumbnail */}
+                        <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 overflow-hidden relative shrink-0">
+                            <Image src={getProductImage(selectedProduct)} alt={selectedProduct.name} fill className="object-contain p-1.5 transition-transform group-hover:scale-110" sizes="40px" />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-extrabold text-gray-900 line-clamp-1 flex items-center gap-2">
+                                {selectedProduct.name}
+                                {conditionComplete && <Check size={12} className="text-green-500" />}
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1">
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Exchange value</span>
+                                    <span className="text-[15px] font-black leading-none" style={{ color: 'var(--colour-fsP2)' }}>
                                         Rs. {(conditionComplete ? exchangeValue : maxExchangeValue).toLocaleString()}
                                     </span>
                                 </div>
+                                {!conditionComplete && (
+                                    <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded-full border border-gray-100">
+                                        <RefreshCw size={8} /> Est. Value
+                                    </span>
+                                )}
                             </div>
                         </div>
-                        {nextStep && (
-                            <Button
-                                onClick={nextStep.action}
-                                disabled={isSubmitting}
-                                className={`transition-colors text-white font-bold h-8 sm:h-9 px-3 sm:px-4 rounded-full shadow-sm whitespace-nowrap text-[11px] sm:text-xs ${isSubmitting ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${nextStep.label === 'Submit Request'
-                                    ? 'bg-[var(--colour-bg3)] hover:bg-[#0D5500]'
-                                    : 'bg-[var(--colour-fsP2)] hover:bg-[var(--colour-bg2)]'
-                                    }`}
+
+                        {/* Desktop Only: Next/Checkout Shortcut */}
+                        {conditionComplete && (
+                            <button
+                                onClick={() => router.push('/login?redirect=/checkout/exchange')}
+                                className="hidden md:flex items-center justify-center w-8 h-8 rounded-full text-white bg-[var(--colour-fsP2)] shadow-sm hover:scale-105 transition-all"
                             >
-                                {isSubmitting ? 'Submitting...' : nextStep.label} {!isSubmitting && <ArrowRight className="ml-1 h-3 w-3" />}
-                            </Button>
+                                <ArrowRight size={14} />
+                            </button>
                         )}
                     </div>
                 </div>
             )}
+
+            {/* ══════════════════════════════════════
+                BLOG / LATEST ARTICLES
+            ══════════════════════════════════════ */}
+            {blogSection && (
+                <div className="bg-white border-t border-gray-100">
+                    <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
+                        {blogSection}
+                    </div>
+                </div>
+            )}
         </main>
+    )
+}
+
+// ── Shared components ─────────────────────────────────────────────────────────
+
+
+
+function ActiveDot({ size = 'medium' }: { size?: 'small' | 'medium' }) {
+    const s = size === 'small' ? 'w-4 h-4' : 'w-5 h-5'
+    return (
+        <div className={cn("absolute -top-1.5 -right-1.5 rounded-full flex items-center justify-center z-10 shadow-lg ring-2 ring-white animate-in zoom-in duration-300", s)} style={{ background: 'var(--colour-fsP2)' }}>
+            <Check style={{ width: size === 'small' ? 8 : 10, height: size === 'small' ? 8 : 10, color: '#fff' }} />
+        </div>
+    )
+}
+
+function FieldError({ msg }: { msg?: string }) {
+    if (!msg) return null
+    return (
+        <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1 font-bold">
+            <AlertCircle style={{ width: 11, height: 11 }} />{msg}
+        </p>
     )
 }
