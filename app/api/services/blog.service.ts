@@ -21,10 +21,19 @@ export const getBlogList = async (params?: { page?: number; per_page?: number; c
 };
 
 export const getBlogBySlug = async (slug: string) =>
-    apiPublic.get(`/v1/blogs/${slug}`).then((res: any) => res.data);
+    unstable_cache(
+        async () => apiPublic.get(`/v1/blogs/${slug}`).then((res: any) => res.data),
+        [`blog-details-${slug}`],
+        { revalidate: 3600, tags: [`blog-${slug}`] }
+    )();
 
 export const getRelatedBlogs = async (slug: string, limit: number = 4) =>
-    apiPublic.get(`/v1/blogs/${slug}/related?limit=${limit}`).then((res: any) => res.data);
+    unstable_cache(
+        async () => apiPublic.get(`/v1/blogs/${slug}/related?limit=${limit}`).then((res: any) => res.data),
+        [`blog-related-${slug}-${limit}`],
+        { revalidate: 3600, tags: [`blog-${slug}-related`] }
+    )();
+
 
 export const getBlogCategories = async () =>
     unstable_cache(

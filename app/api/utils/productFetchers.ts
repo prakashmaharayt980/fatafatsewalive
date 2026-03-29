@@ -1,13 +1,12 @@
 import { getCachedCategoryProducts } from './categoryCache';
 import { getBlogList } from '../services/blog.service';
-import type { SearchParams } from '@/app/category/[slug]/types';
 
 /**
  * Fetches products from a category with randomized page selection.
  * Logic:
  * 1. Fetch Page 1 (10 items) to get meta.total
- * 2. Pick 2 other random pages from the total available
- * 3. Fetch those pages and combine into a 30-product set
+ * 2. Pick ONE random page from the total available
+ * 3. Fetch that specific page
  */
 export async function getRandomBasketProducts(slug: string, count: number = 10) {
     const perPage = 10;

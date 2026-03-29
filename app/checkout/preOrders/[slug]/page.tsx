@@ -15,7 +15,10 @@ async function getProduct(slug: string): Promise<ProductDetails | null> {
     }
 }
 
-export default async function PreOrderCheckoutPage({
+import { Suspense } from 'react';
+
+// --- CONTENT COMPONENT ---
+async function PreOrderCheckoutPageContent({
     params,
 }: {
     params: Promise<{ slug: string }>;
@@ -35,3 +38,20 @@ export default async function PreOrderCheckoutPage({
 
     return <PreOrderCheckoutClient product={productData} />;
 }
+
+// --- MAIN PAGE WRAPPER ---
+export default function PreOrderCheckoutPage(props: { params: Promise<{ slug: string }> }) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-gray-500 font-medium">Loading pre-order checkout...</p>
+                </div>
+            </div>
+        }>
+            <PreOrderCheckoutPageContent {...props} />
+        </Suspense>
+    );
+}
+

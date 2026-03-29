@@ -101,7 +101,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
 }
 
-export default async function BlogPostPage({ params }: PageProps) {
+import { Suspense } from 'react';
+
+// Optimized Data Fetcher Content
+async function BlogPostPageContent({ params }: PageProps) {
     const { slug } = await params;
     const response = await getArticleResponse(slug);
     const article = response?.data;
@@ -185,7 +188,6 @@ export default async function BlogPostPage({ params }: PageProps) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
             />
-            {/* Removed redundant sr-only H1 to avoid confusion with BlogDetailsClient's H1 */}
             <BlogDetailsClient
                 article={article}
                 relatedArticles={relatedArticles}
@@ -194,3 +196,19 @@ export default async function BlogPostPage({ params }: PageProps) {
         </>
     );
 }
+
+export default function BlogPostPage(props: PageProps) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-[var(--colour-fsP2)] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-gray-500 font-medium">Loading article...</p>
+                </div>
+            </div>
+        }>
+            <BlogPostPageContent {...props} />
+        </Suspense>
+    );
+}
+

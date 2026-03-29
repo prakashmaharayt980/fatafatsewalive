@@ -13,7 +13,8 @@ import { ProductService } from '@/app/api/services/product.service';
 import { useCartStore } from '@/app/context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 
-export default function ComparisonPage() {
+
+function ComparisonPageContent() {
     const params = useParams();
     const slug = params.slug as string[]; // e.g., ['iphone-14-vs-samsung-s23']
     const { addToCompare } = useCartStore(useShallow    (state => ({
@@ -27,9 +28,6 @@ export default function ComparisonPage() {
         const fetchProducts = async () => {
             if (!slug || slug.length === 0) return;
 
-            // 1. Parse slugs from URL (e.g. "iphone-13-vs-galaxy-s22")
-            // Assuming the URL segment is joined by 'vs' if passed as single string or array
-            // The Next.js catch-all might return array. We join and split by '-vs-'.
             const rawSlug = Array.isArray(slug) ? slug.join('/') : slug;
             const productSlugs = rawSlug.split('-vs-');
 
@@ -39,19 +37,13 @@ export default function ComparisonPage() {
             }
 
             try {
-
-
                 const fetchedProducts = await Promise.all(
                     productSlugs.map(async (s) => {
-                        // Try fetching by slug/search
-                        // If s looks like an ID (numeric), use ID fetch
                         if (!isNaN(Number(s))) {
                             const res = await ProductService.searchProducts({ search: s });
                             return res.data?.[0] || null;
                         }
 
-                        // Fallback: Search by name/slug and take first result
-                        // This is inexact but works for demo/SEO URLs if names are unique enough
                         const res = await ProductService.searchProducts({ search: s.replace(/-/g, ' ') });
                         return res.data?.[0] || null;
                     })
@@ -124,7 +116,7 @@ export default function ComparisonPage() {
                                 {products.map(p => <td key={p.id} className="p-4 text-gray-600">{p.brand?.name}</td>)}
                             </tr>
 
-                            {/* Mock Specs (Since ProductDetails might lack deep specs in this interface, showing basics) */}
+                            {/* Stock Status */}
                             <tr>
                                 <td className="p-4 font-semibold text-gray-700 sticky left-0 bg-white">Stock Status</td>
                                 {products.map(p => (
@@ -137,7 +129,7 @@ export default function ComparisonPage() {
                                 ))}
                             </tr>
 
-                            {/* Description as "Summary" */}
+                            {/* Summary */}
                             <tr>
                                 <td className="p-4 font-semibold text-gray-700 sticky left-0 bg-white align-top">Summary</td>
                                 {products.map(p => (
@@ -155,3 +147,12 @@ export default function ComparisonPage() {
         </div>
     );
 }
+
+export default function ComparisonPage() {
+    return (
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading comparison...</div>}>
+            <ComparisonPageContent />
+        </React.Suspense>
+    );
+}
+

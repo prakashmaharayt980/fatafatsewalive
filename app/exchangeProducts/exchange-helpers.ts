@@ -122,9 +122,12 @@ export const CONDITION_QUESTIONS = [
 // ── Age-based depreciation ───────────────────────────────────
 export function monthsSince(dateStr: string): number {
     const created = new Date(dateStr)
+    // Stabilize 'now' for build-time generation to avoid hydration mismatches
     const now = new Date()
+    now.setHours(0, 0, 0, 0)
     return (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
 }
+
 
 export function getDepreciationRate(ageMonths: number): number {
     if (ageMonths <= 6) return 0.90

@@ -3,8 +3,10 @@
 
 import { apiPublic, apiPrivate, n8nApi } from './client';
 
-export const getBannerBySlug = async (slug: string) =>
-    apiPublic.get(`/v1/banners/${slug}`).then(res => res.data);
+export const getBannerBySlug = async (slug: string) => {
+    'use cache';
+    return apiPublic.get(`/v1/banners/${slug}`).then(res => res.data);
+};
 
 export const chatBotQuery = async (data: { message: string; sessionId?: string | number }) =>
     n8nApi.post(`/chatbot`, data).then(res => res.data);

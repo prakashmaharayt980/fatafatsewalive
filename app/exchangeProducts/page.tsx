@@ -40,7 +40,9 @@ import LazySection from '@/components/LazySection'
 import BannerSectionServer from '@/components/BannerSectionServer'
 import OurArticlesSectionClient from '@/components/OurArticlesSectionClient'
 
-export default async function ExchangePage() {
+import { Suspense } from 'react'
+
+async function ExchangePageContent() {
     let categories: NavbarItem[] = []
     let initialProducts: ProductListItem[] = []
 
@@ -82,5 +84,23 @@ export default async function ExchangePage() {
             bannerSection={bannerSection} 
             blogSection={blogSection} 
         />
+    )
+}
+
+export default function ExchangePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+                <div className="w-full max-w-lg space-y-8 animate-in fade-in duration-700">
+                    <div className="space-y-4 text-center">
+                        <div className="w-16 h-16 border-4 border-[var(--colour-logoblue1)] border-t-transparent rounded-full animate-spin mx-auto shadow-sm"></div>
+                        <h2 className="text-2xl font-bold text-gray-800 font-heading">Preparing Mobile Exchange</h2>
+                        <p className="text-gray-500 max-w-xs mx-auto">Get ready for the best market value on your device. Just a few more seconds...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <ExchangePageContent />
+        </Suspense>
     )
 }

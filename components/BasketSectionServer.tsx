@@ -1,6 +1,6 @@
-import React from 'react';
 import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 import { getBannerBySlug } from '@/app/api/services/misc.service';
+import { connection } from 'next/server';
 import dynamic from 'next/dynamic';
 const BasketCard = dynamic(() => import('@/app/homepage/BasketCard'), { ssr: true });
 const BasketCardwithImage = dynamic(() => import('@/app/homepage/BasketCardwithImage'), { ssr: true });
@@ -14,6 +14,9 @@ interface BasketSectionServerProps {
 }
 
 export default async function BasketSectionServer({ slug, title, imgSlug }: BasketSectionServerProps) {
+    // Declares this component as dynamic for PPR
+    await connection();
+    
     const [prodRes, bannerRes] = await Promise.allSettled([
         getRandomBasketProducts(slug),
         imgSlug ? getBannerBySlug(imgSlug).then(res => res.data) : Promise.resolve(null)

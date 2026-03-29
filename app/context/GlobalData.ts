@@ -25,13 +25,18 @@ const getCachedNavbar = unstable_cache(
 
 
 
+
+export function getNavbarData() {
+    return getCachedNavbar();
+}
+
 export async function getGlobalData() {
+    const navItemsPromise = getNavbarData();
+
+    // Check auth status
     const cookieStore = await cookies();
     const token = cookieStore.get('access_token')?.value;
 
-
-    // Start fetching Navbar (Hit Cache or API)
-    const navItemsPromise = getCachedNavbar();
     if (!token) {
         return {
             isLoggedIn: false,
@@ -40,10 +45,6 @@ export async function getGlobalData() {
         };
     }
 
-    // TTFB OPTIMIZATION:
-    // We intentionally DO NOT wait for the user profile API (userPromise) to resolve here.
-    // Fetching the user on the server blocks the initial HTML response (TTFB), causing delays.
-    // We return the token, and let the Client-side AuthContext silently fetch the user data in the background.
     return {
         isLoggedIn: true,
         accessToken: token,
@@ -51,3 +52,4 @@ export async function getGlobalData() {
         navItems: await navItemsPromise,
     };
 }
+

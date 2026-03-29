@@ -33,19 +33,18 @@ export async function generateMetadata({ params }: SlugProps): Promise<Metadata>
     };
 }
 
-// 3. The Server Component (Async)
-// Notice: No "use client", no hooks, no loading state needed (HTML arrives ready).
-export default async function Page({ params }: SlugProps) {
+import { Suspense } from "react";
+
+// 3. The Server Component (Async) Content
+async function PageContent({ params }: SlugProps) {
     const { slug } = await params;
 
     // Fetch data directly on the server
-    // (If your service fetches from an external API, this is efficient)
     let response;
     try {
         response = await PagesService.GetPages(slug);
     } catch (error) {
         console.error("Error fetching page:", error);
-        // You can choose to throw error or show 404
         notFound();
     }
 
@@ -67,11 +66,6 @@ export default async function Page({ params }: SlugProps) {
 
                     <div className="mb-4 border-b-2 border-[var(--colour-fsP2)]" />
 
-
-                    {/* Content 
-             Note: ParsedContent might need 'use client' inside its own file 
-             if it uses DOMPurify or browser-specific parsing. 
-          */}
                     <ParsedContent
                         description={pageData.content || pageData.description || ""}
                         className="prose prose-lg max-w-none text-gray-600 prose-headings:text-gray-800 prose-a:text-blue-600 hover:prose-a:text-blue-500"
@@ -79,5 +73,13 @@ export default async function Page({ params }: SlugProps) {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function Page(props: SlugProps) {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 animate-pulse text-gray-400">Loading page...</div>}>
+            <PageContent {...props} />
+        </Suspense>
     );
 }

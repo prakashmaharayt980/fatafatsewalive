@@ -7,8 +7,6 @@ import type { Metadata } from "next";
 import { getProductBySlug } from "@/app/api/services/product.service";
 import ProductPageClient from "./ProductPageClient";
 
-// Enable ISR with 60-second revalidation
-export const revalidate = 60;
 
 // Fetch product data on server — wrapped in cache() to deduplicate
 // between generateMetadata() and the page component

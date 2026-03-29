@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   allowedDevOrigins: ['192.168.1.111'],
+  cacheComponents: true,
 
   async headers() {
     return [

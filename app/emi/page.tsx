@@ -53,7 +53,9 @@ export async function generateMetadata({ searchParams }: PageProps) {
     };
 }
 
-const Page = async ({ searchParams }: PageProps) => {
+import { Suspense } from 'react';
+
+const EmiPageContent = async ({ searchParams }: PageProps) => {
     const resolvedSearchParams = await searchParams;
     const productSlug = resolvedSearchParams?.slug;
 
@@ -67,5 +69,21 @@ const Page = async ({ searchParams }: PageProps) => {
         <ClientEmiPage initialProduct={initialProduct} emiBanner={emiBanner} />
     );
 };
+
+const Page = (props: PageProps) => {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-[var(--colour-logoblue1)] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-gray-500 font-medium font-heading">Loading EMI Calculator...</p>
+                </div>
+            </div>
+        }>
+            <EmiPageContent {...props} />
+        </Suspense>
+    );
+};
+
 
 export default Page;

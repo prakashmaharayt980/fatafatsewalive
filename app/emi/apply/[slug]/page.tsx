@@ -30,7 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
 }
 
-export default async function ApplyEmiPage({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams: Promise<{ selectedcolor: string }> }) {
+import { Suspense } from 'react';
+
+// --- CONTENT COMPONENT ---
+async function ApplyEmiPageContent({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams: Promise<{ selectedcolor: string }> }) {
     const resolvedParams = await params;
     const slug = resolvedParams.slug;
     const resolvedSearchParams = await searchParams;
@@ -44,4 +47,21 @@ export default async function ApplyEmiPage({ params, searchParams }: { params: P
         </EmiProvider>
     );
 }
+
+// --- MAIN PAGE WRAPPER ---
+export default function ApplyEmiPage(props: { params: Promise<{ slug: string }>, searchParams: Promise<{ selectedcolor: string }> }) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-[var(--colour-fsP2)] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-gray-500 font-medium">Preparing EMI application...</p>
+                </div>
+            </div>
+        }>
+            <ApplyEmiPageContent {...props} />
+        </Suspense>
+    );
+}
+
 

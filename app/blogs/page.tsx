@@ -32,7 +32,9 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     };
 }
 
-export default async function BlogPage({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }) {
+import { Suspense } from 'react';
+
+async function BlogPageContent({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }) {
     const resolvedParams = await searchParams;
     const activeCategory = resolvedParams.category;
     const searchQuery = resolvedParams.q;
@@ -62,16 +64,8 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
 
     const allArticles: Article[] = blogListResponse?.data || latestArticles || [];
 
-    // ─── Server-Side Article Filtering (Performance Optimization) ───
-    // This removes redundant high-cost calculations from the client's JS bundle
-    const reviewArticles = allArticles.filter(a => a.category?.slug === 'news' || a.title?.toLowerCase().includes('news')).slice(0, 9);
-    const guideArticles = allArticles.filter(a => a.category?.slug === 'buying-guides' || a.title?.toLowerCase().includes('guide')).slice(0, 5);
-    const newsArticles = allArticles.filter(a => a.category?.slug === 'tech-news' || a.category?.slug === 'news').slice(0, 8);
-    const initialStories = allArticles.filter(a => a.category?.slug === 'web-stories').slice(0, 10);
-    const brandArticles = latestArticles?.slice(0, 4) || allArticles.slice(0, 4);
-
-    // ─── Category Processing ───
-    const derivedCategories = Array.from(
+    // ─── Server-Side Article Filtering ───
+    const developedCategories = Array.from(
         new Map(
             (latestArticles || [])
                 .filter((a: Article) => a.category)
@@ -85,14 +79,11 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
         ).values()
     );
 
-    let categories: any[] = categoriesResponse?.success ? categoriesResponse.data : derivedCategories;
+    let categories: any[] = categoriesResponse?.success ? categoriesResponse.data : developedCategories;
     if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
         categories.unshift({ id: 'all', title: 'All', slug: 'all' });
     }
 
-    const trendingProducts = trendingProductsResponse?.data?.products?.slice(0, 6) || [];
-
-    // SEO Structured Data
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Blog',
@@ -132,4 +123,20 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
     );
 }
 
-export const revalidate = 60;
+export default function BlogPage(props: { searchParams: Promise<{ category?: string, q?: string }> }) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-gray-500 font-medium">Loading blog articles...</p>
+                </div>
+            </div>
+        }>
+            <BlogPageContent {...props} />
+        </Suspense>
+    );
+}
+
+
+

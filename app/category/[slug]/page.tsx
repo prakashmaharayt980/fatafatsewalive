@@ -205,11 +205,11 @@ function generateStructuredData(title: string, slug: string, products: any, cate
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function CategoryPage({ params, searchParams }: PageProps) {
+
+async function CategoryPageContent({ params, searchParams }: PageProps) {
     const { slug } = await params;
     const sp = await searchParams;
     const sub_category = sp?.sub_category as string | undefined;
-
 
     if (!slug) notFound();
 
@@ -218,7 +218,6 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         getCategoryNavigation(slug),
         getBannerData('blog-banner-test'),
     ]);
-
 
     const category = initialProducts?.data?.category || null;
     const displayTitle = category?.title || category?.name || slug;
@@ -243,20 +242,25 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             {preloadPortraitImage && (
                 <link rel="preload" as="image" href={preloadPortraitImage} />
             )}
-            <Suspense fallback={<CategoryPageSkeleton />}>
-                <CategoryPageClient
-                    categoryId={slug}
-                    slug={slug}
-                    title={displayTitle}
-                    category={category}
-                    bannerData={bannerData}
-                    initialProducts={initialProducts}
-                    initialCategories={navigationData.children}
-                    initialBrands={navigationData.brands}
-                    sub_category={sub_category}
-                />
-
-            </Suspense>
+            <CategoryPageClient
+                categoryId={slug}
+                slug={slug}
+                title={displayTitle}
+                category={category}
+                bannerData={bannerData}
+                initialProducts={initialProducts}
+                initialCategories={navigationData.children}
+                initialBrands={navigationData.brands}
+                sub_category={sub_category}
+            />
         </>
+    );
+}
+
+export default function CategoryPage(props: PageProps) {
+    return (
+        <Suspense fallback={<CategoryPageSkeleton />}>
+            <CategoryPageContent {...props} />
+        </Suspense>
     );
 }
