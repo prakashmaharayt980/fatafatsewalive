@@ -1,228 +1,286 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import React, { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { ChevronDown, ShoppingBag, Loader2, Search, X, Check, Apple, Building2 } from 'lucide-react'
+import { RefreshCw, Apple, Building2, Percent } from 'lucide-react'
 
-import type { ProductSummary } from '@/app/types/ProductDetailsTypes'
-import EmiProductCard, { EmiProductCardSkeleton } from '@/app/product-details/ProductCards/EmiProductCard'
-import { logoImg } from '@/app/CommonVue/Image'
 import EmiBasketSection from './EmiBasketSection'
 import EmiFaq from '../apply/_components/EmiFaq'
-
-// ─── Types ───────────────────────────────────────────────────
-interface Brand {
-    id: number
-    name: string
-    slug: string
-    brand_image?: { full: string; thumb: string }
-}
+import { logoImg } from '@/app/CommonVue/Image'
 
 const TENURE_OPTIONS = [6, 9, 12, 18]
-const SORT_OPTIONS = ['Popularity', 'Price: Low → High', 'Price: High → Low']
-const PER_PAGE = 12
-
 type EmiPlan = 'standard' | 'apple_zero' | 'citizens_0_40'
 
-interface ShopByEmiClientProps {
+interface Props {
     initialCategories?: any[]
     footerBanners?: any[]
 }
 
 const SECTIONS = [
-    { slug: 'mobile-price-in-nepal', title: 'Mobiles on your EMI' },
-    { slug: 'laptop-price-in-nepal', title: 'Laptops and MacBooks' },
+    { slug: 'mobile-price-in-nepal', title: 'Mobiles on EMI' },
+    { slug: 'laptop-price-in-nepal', title: 'Laptops & MacBooks' },
 ]
 
-export default function ShopByEmiClient({ initialCategories = [], footerBanners = [] }: ShopByEmiClientProps) {
+const EMI_PLANS: { id: EmiPlan; name: string; desc: string; icon: React.ReactNode }[] = [
+    { id: 'standard',      name: 'Standard EMI',    desc: 'All banks, regular rates', icon: <Building2 className="w-4 h-4" /> },
+    { id: 'apple_zero',    name: 'Apple 0% EMI',    desc: '0% interest on Apple only', icon: <Apple className="w-4 h-4" /> },
+    { id: 'citizens_0_40', name: 'Citizens Bank',   desc: '0% with 40% down payment', icon: <Percent className="w-4 h-4" /> },
+]
+
+const TRUST_STATS = [
+    { value: '500+', label: 'EMI products' },
+    { value: '0%',   label: 'Interest available' },
+    { value: '4',    label: 'Tenure options' },
+    { value: 'NPR 2K', label: 'Starting EMI' },
+]
+
+export default function ShopByEmiClient({ initialCategories = [], footerBanners = [] }: Props) {
     const searchParams = useSearchParams()
-    
-    // Normalize categories to an array (handles API wrapper objects)
+
     const categoryList = useMemo(() => {
-        if (Array.isArray(initialCategories)) return initialCategories;
+        if (Array.isArray(initialCategories)) return initialCategories
         if (typeof initialCategories === 'object' && initialCategories !== null) {
-            return (initialCategories as any).data || (initialCategories as any).categories || [];
+            return (initialCategories as any).data ?? (initialCategories as any).categories ?? []
         }
-        return [];
-    }, [initialCategories]);
+        return []
+    }, [initialCategories])
 
-    const initialBudget = Number(searchParams.get('budget')) || 5000
-
-    // ─── State ───
-    const [budget, setBudget] = useState(initialBudget)
+    const [budget, setBudget] = useState(Number(searchParams.get('budget')) || 5000)
     const [tenure, setTenure] = useState(12)
     const [downPaymentStr, setDownPaymentStr] = useState('0')
     const downPayment = Number(downPaymentStr) || 0
     const [zeroEmi, setZeroEmi] = useState(true)
-    const [sortBy, setSortBy] = useState('Popularity')
     const [emiPlan, setEmiPlan] = useState<EmiPlan>('standard')
-    const [selectedBrands, setSelectedBrands] = useState<number[]>([])
 
-    const toggleBrand = (id: number) => {
-        setSelectedBrands(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
-    }
+    const validBanner0 = footerBanners[0]?.image?.full ?? footerBanners[0]?.thumbnail_image?.full ?? null
+    const validBanner1 = footerBanners[1]?.image?.full ?? footerBanners[1]?.thumbnail_image?.full ?? null
 
     return (
         <div className="min-h-screen bg-[var(--colour-bg4)]">
-            <section className="relative bg-gradient-to-br from-[#E8F0FE] via-[#F0F6FF] to-[#E0ECFA] pt-8 pb-16 md:pt-10 md:pb-20 overflow-hidden">
-                <div className="absolute top-0 right-0 w-72 h-72 bg-[var(--colour-fsP2)]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-                <div className="absolute bottom-0 left-0 w-52 h-52 bg-[var(--colour-fsP1)]/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-                <div className="container mx-auto px-4 lg:px-8 relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
-                    <div className="flex-1 text-center md:text-left">
-                        <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-[var(--colour-fsP2)]/20 rounded-full px-4 py-1.5 mb-4 shadow-sm">
-                            <ShoppingBag className="w-4 h-4 text-[var(--colour-fsP2)]" />
-                            <span className="text-xs font-bold text-[var(--colour-fsP2)] uppercase tracking-wider">EMI Marketplace</span>
+
+            {/* ─── Hero — inspired by ExchangeHero ─── */}
+            <section className="bg-white border-b border-gray-100">
+                <div className="mx-auto px-4 lg:px-8 max-w-7xl py-10 md:py-14">
+                    <div className="flex flex-col md:flex-row items-center gap-10 md:gap-14">
+
+                        <div className="flex-1 space-y-5 text-center md:text-left">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest border"
+                                style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: '#EEF3FB' }}>
+                                <RefreshCw className="w-2.5 h-2.5" /> EMI Marketplace
+                            </div>
+
+                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-[1.15] tracking-tight">
+                                Find your next gadget<br />
+                                <span style={{ color: 'var(--colour-fsP2)' }}>on easy EMI.</span>
+                            </h1>
+
+                            <p className="text-gray-500 text-base max-w-lg mx-auto md:mx-0 leading-relaxed font-medium">
+                                Set your monthly budget and discover products that fit. Choose tenure, down payment, and bank plan — all in one place.
+                            </p>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto md:mx-0">
+                                {TRUST_STATS.map((s) => (
+                                    <div key={s.label} className="bg-[#F5F7FA] rounded-xl p-3 text-center border border-gray-100">
+                                        <p className="text-lg font-extrabold text-gray-900">{s.value}</p>
+                                        <p className="text-[11px] text-gray-400 font-bold mt-0.5 leading-tight">{s.label}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[var(--colour-fsP2)] mb-3 tracking-tight">
-                            Find your next gadget on <span className="text-[var(--colour-fsP1)]">EMI</span>
-                        </h1>
-                        <p className="text-[var(--colour-text3)] text-base md:text-lg max-w-xl leading-relaxed">
-                            Discover original products within your monthly budget. Choose a bank plan, set your tenure, and shop with confidence.
-                        </p>
-                    </div>
-                    <div className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 relative shrink-0">
-                        <div className="absolute inset-0 bg-[var(--colour-fsP2)]/8 rounded-full blur-2xl scale-110" />
-                        <Image src={logoImg} alt="Shop by EMI" fill className="object-contain drop-shadow-2xl relative z-10" sizes="(max-width: 768px) 192px, 288px" priority />
+
+                        <div className="shrink-0">
+                            <div className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px]">
+                                <div className="absolute inset-0 rounded-full" style={{ background: '#EEF3FB' }} />
+                                <Image
+                                    src={logoImg}
+                                    alt="Shop by EMI — Fatafat Sewa"
+                                    fill
+                                    className="object-contain relative z-10 p-6"
+                                    sizes="220px"
+                                    priority
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <div className="container mx-auto px-4 lg:px-8 -mt-8 md:-mt-12 relative z-20 pb-12">
-                
-                {/* ═══ GLOBAL FILTERS ═══ */}
-                <div className="bg-white rounded-2xl shadow-xl border border-[var(--colour-border3)] p-5 sm:p-7 mb-8 space-y-6">
-                    <div className="space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <label className="text-sm font-bold text-[var(--colour-text2)]" htmlFor="budget-slider">
-                                My Monthly Budget:
-                                <span className="text-xl md:text-2xl font-extrabold text-[var(--colour-fsP2)] ml-2">NPR {budget.toLocaleString()}</span>
-                                <span className="text-[var(--colour-text3)] font-normal text-sm"> / month</span>
-                            </label>
-                            <div className="flex items-center gap-2">
-                                <div className="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1 animate-pulse">
-                                    {budget > 15000 ? "PREMIUM ACCESS" : "BUDGET MATCHED"}
-                                </div>
-                                <div className="text-xs font-semibold text-[var(--colour-text2)] bg-[var(--colour-bg4)] border border-[var(--colour-border3)] rounded-lg px-3 py-2">
-                                    Sorting by popularity
-                                </div>
+            <div className="mx-auto px-4 lg:px-8 max-w-7xl py-8 space-y-6">
+
+                {/* ─── Filter Card ─── */}
+                <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+
+                    {/* Budget */}
+                    <div className="px-5 py-5 border-b border-gray-100">
+                        <div className="flex items-end justify-between mb-4">
+                            <div>
+                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Monthly Budget</p>
+                                <p className="text-2xl font-extrabold text-gray-900">
+                                    NPR {budget.toLocaleString()}
+                                    <span className="text-sm font-semibold text-gray-400 ml-1">/ month</span>
+                                </p>
                             </div>
+                            <span className="text-[11px] font-bold px-3 py-1 rounded-full border"
+                                style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: '#EEF3FB' }}>
+                                {budget > 15000 ? 'Premium' : 'Smart Value'}
+                            </span>
                         </div>
-                        <input id="budget-slider" type="range" min={2000} max={25000} step={500} value={budget} onChange={(e) => setBudget(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[var(--colour-fsP2)]" />
-                        <div className="flex justify-between text-[10px] text-[var(--colour-text3)] font-black uppercase"><span>NPR 2K</span><span>NPR 12K</span><span>NPR 25K</span></div>
+                        <input
+                            type="range" min={2000} max={25000} step={500} value={budget}
+                            onChange={(e) => setBudget(Number(e.target.value))}
+                            className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[var(--colour-fsP2)] bg-gray-200"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-400 font-bold uppercase mt-1.5">
+                            <span>NPR 2K</span><span>NPR 12K</span><span>NPR 25K</span>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_auto] gap-x-6 gap-y-4 items-end">
-                        <div className="space-y-3 col-span-2 md:col-span-1">
-                            <label className="text-[10px] font-black text-[var(--colour-text3)] uppercase tracking-[0.1em]">Tenure (Months)</label>
+                    {/* Tenure + Down Payment + Interest */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                        <div className="px-5 py-4">
+                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Tenure</p>
                             <div className="flex flex-wrap gap-2">
                                 {TENURE_OPTIONS.map((m) => (
-                                    <button key={m} onClick={() => setTenure(m)} className={cn("px-5 py-2.5 rounded-xl text-sm font-bold border-2 transition-all", tenure === m ? "bg-[var(--colour-fsP2)] text-white border-[var(--colour-fsP2)]" : "bg-white text-slate-800 border-gray-100 hover:border-[var(--colour-fsP2)]/20")}>
-                                        {m} Months
+                                    <button
+                                        key={m}
+                                        onClick={() => setTenure(m)}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-lg text-sm font-bold border transition-colors",
+                                            tenure === m
+                                                ? "text-white border-[var(--colour-fsP2)]"
+                                                : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                                        )}
+                                        style={tenure === m ? { background: 'var(--colour-fsP2)' } : undefined}
+                                    >
+                                        {m}M
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[var(--colour-text3)] uppercase tracking-[0.1em]">Down Payment</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[var(--colour-fsP2)]">NPR</span>
-                                <input type="text" value={downPaymentStr} onChange={(e) => /^\d*$/.test(e.target.value) && setDownPaymentStr(e.target.value)} className="w-36 pl-12 pr-4 py-2.5 bg-gray-50 border-none rounded-xl focus:ring-2 ring-[var(--colour-fsP2)]/20 outline-none font-bold text-sm" />
+
+                        <div className="px-5 py-4">
+                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Down Payment</p>
+                            <div className="relative max-w-[160px]">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold"
+                                    style={{ color: 'var(--colour-fsP2)' }}>NPR</span>
+                                <input
+                                    type="text" value={downPaymentStr}
+                                    onChange={(e) => /^\d*$/.test(e.target.value) && setDownPaymentStr(e.target.value)}
+                                    className="w-full pl-11 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none font-bold text-sm focus:border-gray-300 transition-colors"
+                                />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[var(--colour-text3)] uppercase tracking-[0.1em]">Interest Type</label>
-                            <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
-                                <button onClick={() => setZeroEmi(true)} className={cn("px-4 py-2 rounded-lg text-xs font-bold transition-all", zeroEmi ? "bg-white text-[var(--colour-fsP2)] shadow-sm" : "text-gray-400 font-medium")}>0% Interest</button>
-                                <button onClick={() => setZeroEmi(false)} className={cn("px-4 py-2 rounded-lg text-xs font-bold transition-all", !zeroEmi ? "bg-white text-[var(--colour-fsP2)] shadow-sm" : "text-gray-400 font-medium")}>Standard</button>
+
+                        <div className="px-5 py-4">
+                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Interest</p>
+                            <div className="inline-flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
+                                <button
+                                    onClick={() => setZeroEmi(true)}
+                                    className={cn("px-3 py-1.5 rounded-md text-xs font-bold transition-colors",
+                                        zeroEmi ? "bg-white shadow-sm" : "text-gray-400")}
+                                    style={zeroEmi ? { color: 'var(--colour-fsP2)' } : undefined}
+                                >
+                                    0% EMI
+                                </button>
+                                <button
+                                    onClick={() => setZeroEmi(false)}
+                                    className={cn("px-3 py-1.5 rounded-md text-xs font-bold transition-colors",
+                                        !zeroEmi ? "bg-white shadow-sm" : "text-gray-400")}
+                                    style={!zeroEmi ? { color: 'var(--colour-fsP2)' } : undefined}
+                                >
+                                    Standard
+                                </button>
                             </div>
                         </div>
                     </div>
-                    
-                    {/* Bank Offer Selector */}
-                    <div className="pt-2">
-                        <div className="flex items-center justify-between mb-3">
-                            <label className="text-[10px] font-black text-[var(--colour-text3)] uppercase tracking-[0.1em]">Choose Special EMI Plan</label>
-                            <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ring-1 ring-blue-100">EXCLUSIVE OFFER</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {[
-                                { id: 'standard', name: 'Standard EMI', icon: <Building2 className="w-4 h-4 text-orange-600" />, desc: 'Regular bank rates' },
-                                { id: 'apple_zero', name: 'Apple 0% Special', icon: <Apple className="w-4 h-4 text-black" />, desc: '0% on Apple devices' },
-                                { id: 'citizens_0_40', name: 'Citizens Offer', icon: <Building2 className="w-4 h-4 text-blue-700" />, desc: '0% with 40% Down' },
-                            ].map((plan) => (
-                                <button key={plan.id} onClick={() => setEmiPlan(plan.id as EmiPlan)} className={cn("px-4 py-3 rounded-xl border-2 transition-all flex items-center gap-3 text-left", emiPlan === plan.id ? "bg-blue-50/50 border-[var(--colour-fsP2)]" : "bg-white border-gray-100 hover:border-gray-200")}>
-                                    <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">{plan.icon}</div>
-                                    <div><p className="text-xs font-extrabold text-slate-800">{plan.name}</p><p className="text-[9px] text-gray-500 font-medium">{plan.desc}</p></div>
+
+                    {/* Bank Plan */}
+                    <div className="px-5 py-4 bg-gray-50 border-t border-gray-100">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Special EMI Plan</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {EMI_PLANS.map((plan) => (
+                                <button
+                                    key={plan.id}
+                                    onClick={() => setEmiPlan(plan.id)}
+                                    className={cn(
+                                        "flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors",
+                                        emiPlan === plan.id
+                                            ? "bg-white border-[var(--colour-fsP2)]"
+                                            : "bg-white border-gray-200 hover:border-gray-300"
+                                    )}
+                                >
+                                    <div className={cn("w-8 h-8 rounded-lg border flex items-center justify-center shrink-0",
+                                        emiPlan === plan.id ? "border-[var(--colour-fsP2)]" : "border-gray-200")}
+                                        style={emiPlan === plan.id ? { color: 'var(--colour-fsP2)' } : { color: '#9ca3af' }}>
+                                        {plan.icon}
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-800">{plan.name}</p>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">{plan.desc}</p>
+                                    </div>
+                                    {emiPlan === plan.id && (
+                                        <div className="ml-auto w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+                                            style={{ background: 'var(--colour-fsP2)' }}>
+                                            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                                                <path d="M2 5l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </div>
+                                    )}
                                 </button>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                {/* ═══ SECTIONS View (Home BasketCard style) ═══ */}
-                <div className="space-y-4">
-                    
-                    {/* Featured / Trending Section (Different Idea) */}
-                    <EmiBasketSection 
-                        slug="trending-picks" 
-                        title="🔥 Trending EMI Picks" 
-                        category={{ 
-                            name: "Trending Picks", 
-                            slug: "trending-picks", 
-                            image: { full: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?q=80&w=800&auto=format&fit=crop' } 
-                        }}
-                        budget={budget} 
-                        tenure={tenure} 
-                        downPayment={downPayment} 
-                        zeroEmi={zeroEmi} 
-                        emiPlan={emiPlan} 
-                    />
-                        
+                {/* ─── Product Sections — inspired by BasketCard ─── */}
+                <EmiBasketSection
+                    slug="trending-picks"
+                    title="Trending EMI Picks"
+                    category={{
+                        name: 'Trending Picks',
+                        slug: 'trending-picks',
+                        image: { full: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?q=80&w=800&auto=format&fit=crop' },
+                    }}
+                    budget={budget} tenure={tenure} downPayment={downPayment} zeroEmi={zeroEmi} emiPlan={emiPlan}
+                />
 
-                        {/* Middle Banner */}
-                        {footerBanners[0] && (
-                            <div className="my-8 rounded-3xl overflow-hidden border border-white shadow-xl bg-white p-2">
-                                <Image src={footerBanners[0].image?.full || footerBanners[0].thumbnail_image?.full} alt="EMI Deals" width={1600} height={350} className="w-full object-cover rounded-2xl aspect-[16/4] sm:aspect-[16/3]" />
-                            </div>
-                        )}
-
-                        {/* 2. Categorized Sections */}
-                        {SECTIONS.map((sec) => {
-                            const categoryInfo = categoryList.find((c: any) => c.slug === sec.slug);
-                            return (
-                                <EmiBasketSection 
-                                    key={sec.slug} 
-                                    slug={sec.slug} 
-                                    title={categoryInfo?.name || sec.title} 
-                                    category={categoryInfo}
-                                    budget={budget} 
-                                    tenure={tenure} 
-                                    downPayment={downPayment} 
-                                    zeroEmi={zeroEmi} 
-                                    emiPlan={emiPlan} 
-                                />
-                            );
-                        })}
-
-                        {/* Final Banner */}
-                        {footerBanners[1] && (
-                            <div className="mt-12 rounded-3xl overflow-hidden border border-white shadow-xl bg-white p-2">
-                                <Image src={footerBanners[1].image?.full || footerBanners[1].thumbnail_image?.full} alt="Verified Seller" width={1600} height={350} className="w-full object-cover rounded-2xl aspect-[16/4] sm:aspect-[16/3]" />
-                            </div>
-                        )}
-
-                        {/* FAQ Section for SEO */}
-                        <div className="mt-16 bg-white rounded-3xl shadow-xl border border-[var(--colour-border3)] p-6 md:p-10">
-                            <div className="flex items-center gap-3 mb-8">
-                                <div className="w-1.5 h-8 bg-[var(--colour-fsP1)] rounded-full shadow-sm" />
-                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">EMI Frequently Asked Questions</h2>
-                            </div>
-                            <EmiFaq params={useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])} />
-                        </div>
+                {/* ─── Mid Banner — inspired by TwoImageBanner ─── */}
+                {validBanner0 && (
+                    <div className="w-full overflow-hidden rounded-xl border border-gray-100 shadow-sm aspect-[1000/300] sm:aspect-[1000/250] relative">
+                        <Image src={validBanner0} alt="EMI Deals" fill className="object-cover" sizes="100vw" />
                     </div>
+                )}
+
+                {SECTIONS.map((sec) => {
+                    const categoryInfo = categoryList.find((c: any) => c.slug === sec.slug)
+                    return (
+                        <EmiBasketSection
+                            key={sec.slug}
+                            slug={sec.slug}
+                            title={categoryInfo?.name ?? sec.title}
+                            category={categoryInfo}
+                            budget={budget} tenure={tenure} downPayment={downPayment} zeroEmi={zeroEmi} emiPlan={emiPlan}
+                        />
+                    )
+                })}
+
+                {validBanner1 && (
+                    <div className="w-full overflow-hidden rounded-xl border border-gray-100 shadow-sm aspect-[1000/300] sm:aspect-[1000/250] relative">
+                        <Image src={validBanner1} alt="Verified Seller" fill className="object-cover" sizes="100vw" />
+                    </div>
+                )}
+
+                {/* ─── FAQ ─── */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-1 h-6 rounded-full" style={{ background: 'var(--colour-fsP1)' }} />
+                        <h2 className="text-xl font-bold text-gray-900">Frequently Asked — EMI</h2>
+                    </div>
+                    <EmiFaq params={useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])} />
                 </div>
+            </div>
         </div>
     )
 }
