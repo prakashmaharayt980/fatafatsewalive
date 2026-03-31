@@ -9,10 +9,9 @@ import {
     AdvancedMarker,
     Pin
 } from '@vis.gl/react-google-maps';
-import { Loader2, Crosshair, MapPin } from 'lucide-react';
+import { Loader2, Crosshair, MapPin, Navigation } from 'lucide-react';
 import { toast } from 'sonner';
 
-// --- Types ---
 export interface LocationData {
     lat: number;
     lng: number;
@@ -32,18 +31,17 @@ interface GoogleMapAddressProps {
     initialPosition?: Partial<LocationData>;
 }
 
-const defaultCenter = { lat: 27.7172, lng: 85.3240 }; // Kathmandu
+const defaultCenter = { lat: 27.7172, lng: 85.3240 };
 
 export default function GoogleMapAddress({ onLocationSelect, initialPosition }: GoogleMapAddressProps) {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-    const mapId = process.env.NEXT_PUBLIC_MAP_ID || 'YOUR_MAP_ID_HERE'; // MUST PROVIDE MAP ID
+    const mapId = process.env.NEXT_PUBLIC_MAP_ID || 'YOUR_MAP_ID_HERE';
 
     const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number }>({
         lat: initialPosition?.lat || defaultCenter.lat,
         lng: initialPosition?.lng || defaultCenter.lng,
     });
 
-    // Sync marker when editing an existing address (initialPosition changes)
     useEffect(() => {
         if (initialPosition?.lat && initialPosition?.lng) {
             setMarkerPosition({ lat: initialPosition.lat, lng: initialPosition.lng });
@@ -51,8 +49,7 @@ export default function GoogleMapAddress({ onLocationSelect, initialPosition }: 
     }, [initialPosition?.lat, initialPosition?.lng]);
 
     return (
-        /* Ensure the container has a fixed height for mobile rendering */
-        <div className="w-full h-52 sm:h-64 rounded-xl overflow-hidden border border-gray-200 relative shadow-sm">
+        <div className="w-full h-full min-h-50 relative">
             <APIProvider apiKey={apiKey}>
                 <MapInternal
                     mapId={mapId}
@@ -85,8 +82,9 @@ function MapInternal({
     const [isLocating, setIsLocating] = useState(false);
     const [isGeocoding, setIsGeocoding] = useState(false);
     const [confirmedAddress, setConfirmedAddress] = useState<string | null>(null);
+    const hasAutoLocated = useRef(false);
 
-    // Initial Sync
+    // Pan to initial position when map/edit mode loads
     useEffect(() => {
         if (hasInitialPosition && map) {
             map.panTo(markerPosition);
@@ -123,21 +121,17 @@ function MapInternal({
                 if (t.includes('administrative_area_level_2')) district = comp.long_name;
                 if (t.includes('locality')) city = comp.long_name;
                 if (t.includes('administrative_area_level_3')) municipality = comp.long_name;
-
-                // Ward logic for Nepal
                 if (t.includes('sublocality_level_1')) {
                     const wardMatch = comp.long_name.match(/\d+/);
                     if (wardMatch) ward = parseInt(wardMatch[0], 10);
                 }
-                // Tole / Landmark logic
-                if ((t.includes('neighborhood') || t.includes('sublocality_level_2') || t.includes('route') || t.includes('premise') || t.includes('subpremise') || t.includes('point_of_interest')) && !tole) {
+                if ((t.includes('neighborhood') || t.includes('sublocality_level_2') || t.includes('route') || t.includes('premise') || t.includes('point_of_interest')) && !tole) {
                     tole = comp.long_name;
                 }
             });
 
             const finalAddress = result.formatted_address;
             setConfirmedAddress(finalAddress);
-
             onLocationSelect({
                 lat, lng,
                 address: finalAddress,
@@ -146,88 +140,124 @@ function MapInternal({
         });
     }, [geocodingLib, onLocationSelect, setMarkerPosition]);
 
+    // Auto-locate when map is ready and permission already granted
+    useEffect(() => {
+        if (hasAutoLocated.current || hasInitialPosition || !map || !geocodingLib) return;
+        if (!navigator.geolocation) return;
+
+        const tryAutoLocate = () => {
+            hasAutoLocated.current = true;
+            setIsLocating(true);
+            navigator.geolocation.getCurrentPosition(
+                ({ coords }) => {
+                    const pos = { lat: coords.latitude, lng: coords.longitude };
+                    map.panTo(pos);
+                    map.setZoom(17);
+                    handleLocationUpdate(pos.lat, pos.lng);
+                    setIsLocating(false);
+                },
+                () => setIsLocating(false),
+                // Use cached position (up to 30s old) + lower accuracy = fast resolve when permission already granted
+                { enableHighAccuracy: false, timeout: 6000, maximumAge: 30000 }
+            );
+        };
+
+        if (navigator.permissions) {
+            navigator.permissions.query({ name: 'geolocation' as PermissionName })
+                .then(result => { if (result.state === 'granted') tryAutoLocate(); })
+                .catch(() => {});
+        }
+    }, [map, geocodingLib, hasInitialPosition, handleLocationUpdate]);
+
+    // Manual locate — always gets fresh high-accuracy position
     const handleLocateMe = () => {
         if (!navigator.geolocation) {
-            toast.error('Geolocation not supported');
+            toast.error('Geolocation not supported on this device');
             return;
         }
         setIsLocating(true);
-
-        // Critical for Mobile: HighAccuracy and Timeout
         navigator.geolocation.getCurrentPosition(
             ({ coords }) => {
-                const newPos = { lat: coords.latitude, lng: coords.longitude };
-                map?.panTo(newPos);
+                const pos = { lat: coords.latitude, lng: coords.longitude };
+                map?.panTo(pos);
                 map?.setZoom(17);
-                handleLocationUpdate(newPos.lat, newPos.lng);
+                handleLocationUpdate(pos.lat, pos.lng);
                 setIsLocating(false);
             },
             (err) => {
-                toast.error('Permission denied or GPS signal weak.');
                 setIsLocating(false);
-                console.error(err);
+                if (err.code === err.PERMISSION_DENIED) {
+                    toast.error('Location permission denied. Please enable it in browser settings.');
+                } else if (err.code === err.TIMEOUT) {
+                    toast.error('GPS timed out. Try tapping a spot on the map instead.');
+                } else {
+                    toast.error('Could not get location. Tap the map to set your pin.');
+                }
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
         );
     };
 
     return (
         <>
-            {/* Locate Button */}
-            <div className="absolute top-3 right-3 z-[1]">
+            {/* Locate Me button — large tap target for mobile */}
+            <div className="absolute top-3 right-3 z-1">
                 <button
                     type="button"
                     onClick={handleLocateMe}
                     disabled={isLocating || isGeocoding}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-white text-gray-700 text-xs font-bold rounded-xl shadow-md border border-gray-200 hover:bg-gray-50 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-2.5 bg-white text-gray-800 text-xs font-bold rounded-xl shadow-lg border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-60 touch-manipulation select-none"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                    {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crosshair className="w-3.5 h-3.5" />}
-                    {isLocating ? 'Locating...' : 'Use My Location'}
+                    {isLocating
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin text-(--colour-fsP2)" />
+                        : <Navigation className="w-3.5 h-3.5 text-(--colour-fsP2)" />
+                    }
+                    <span>{isLocating ? 'Locating...' : 'My Location'}</span>
                 </button>
             </div>
 
-            {/* Status Overlay */}
+            {/* Geocoding overlay */}
             {isGeocoding && (
                 <div className="absolute inset-0 z-[2] bg-black/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-                    <div className="bg-white px-4 py-2 rounded-lg shadow-lg text-xs font-bold flex items-center gap-2">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Fetching Address...
+                    <div className="bg-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-(--colour-fsP2)" />
+                        Fetching address...
                     </div>
                 </div>
             )}
 
-            {/* Address Bar */}
-            {confirmedAddress && (
-                <div className="absolute bottom-4 left-4 right-4 z-[1]">
-                    <div className="bg-white/95 p-3 rounded-lg shadow-xl border border-gray-100 flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                        <p className="text-[10px] md:text-xs text-gray-600 line-clamp-2">{confirmedAddress}</p>
+            {/* Address confirmation bar */}
+            {confirmedAddress && !isGeocoding && (
+                <div className="absolute bottom-3 left-3 right-3 z-1">
+                    <div className="bg-white/96 px-3 py-2 rounded-xl shadow-lg border border-gray-100 flex items-start gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-gray-700 font-medium line-clamp-2 leading-relaxed">{confirmedAddress}</p>
                     </div>
                 </div>
             )}
 
             <Map
-                mapId={mapId} // REQUIRED for Advanced Markers
+                mapId={mapId}
                 defaultCenter={defaultCenter}
                 defaultZoom={15}
                 gestureHandling="greedy"
                 disableDefaultUI
+                className="w-full h-full"
                 onClick={(e) => {
                     if (e.detail.latLng) {
                         handleLocationUpdate(e.detail.latLng.lat, e.detail.latLng.lng);
                     }
                 }}
             >
-                {/* Advanced Marker Component */}
                 <AdvancedMarker
                     position={markerPosition}
-                    draggable={true}
+                    draggable
                     onDragEnd={(e) => {
-                        if (e.latLng) {
-                            handleLocationUpdate(e.latLng.lat(), e.latLng.lng());
-                        }
+                        if (e.latLng) handleLocationUpdate(e.latLng.lat(), e.latLng.lng());
                     }}
                 >
-                    <Pin background={'#fb2c36'} glyphColor={'#fff'} borderColor={'#000'} />
+                    <Pin background="#eb5a2c" glyphColor="#fff" borderColor="#000" />
                 </AdvancedMarker>
             </Map>
         </>

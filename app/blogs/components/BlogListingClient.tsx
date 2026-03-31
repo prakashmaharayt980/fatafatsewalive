@@ -77,7 +77,7 @@ export default function BlogListingClient({
                     {/* ─── Hero Banner ─── */}
                     <LazySection
                         fetcher={() => getBannerData('blog-banner-test')}
-                        component={(data) => <HeroBanner data={data} />}
+                        render={(data) => <HeroBanner data={data} />}
                         fallback={<div className="h-[200px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
                     />
                     {/* ─── Category Navigation ─── */}
@@ -306,7 +306,7 @@ export default function BlogListingClient({
                         {/* ═══ 6. Compare Products (Repositioned) ═══ */}
                         <LazySection
                             fetcher={() => getCategoryProducts('drone-price-in-nepal', { per_page: 8, page: 1 }).then((res: any) => res.data)}
-                            component={(data) => (
+                            render={(data) => (
                                 <section id="blog-compare-products">
                                     <BlogCompareProducts products={ensureArray(data).slice(0, 8)} />
                                 </section>

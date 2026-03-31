@@ -56,6 +56,7 @@ interface ExchangeState {
     serialNumber: string
     governmentId: string
     devicePhoto: File | string | null
+    phoneNumber: string
     problems: string[]
     reason: string
 }
@@ -81,6 +82,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         serialNumber: '',
         governmentId: '',
         devicePhoto: null,
+        phoneNumber: '',
         problems: [],
         reason: '',
     })
@@ -177,6 +179,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             serialNumber: '',
             governmentId: '',
             devicePhoto: null,
+            phoneNumber: '',
             problems: [],
             reason: '',
             selectedAddress: null,
@@ -233,6 +236,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             serialNumber: '',
             governmentId: '',
             devicePhoto: null,
+            phoneNumber: '',
             selectedAddress: null,
         })
 
@@ -270,7 +274,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         })
     }
 
-    const handleVerificationChange = (key: 'serialNumber' | 'governmentId' | 'devicePhoto', value: any) => {
+    const handleVerificationChange = (key: 'serialNumber' | 'governmentId' | 'devicePhoto' | 'phoneNumber', value: any) => {
         updateState({ [key]: value } as any)
     }
 
@@ -311,11 +315,13 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             pickup: state.pickupSelected ? 'Yes' : 'No',
         }
 
-        console.log('Exchange Payload:', payload)
+        if (state.devicePhoto) {
+            try { sessionStorage.setItem('exchangeDevicePhoto', state.devicePhoto as string) } catch {}
+        }
 
         const params = new URLSearchParams()
         params.set('name', contact?.first_name || user?.name || 'Customer')
-        params.set('phone', contact?.contact_number || user?.phone || '')
+        params.set('phone', state.phoneNumber || contact?.contact_number || user?.phone || '')
         params.set('device', payload.product)
         params.set('value', payload.exchangeValue)
         params.set('color', payload.color)
@@ -326,6 +332,8 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         params.set('pickup', payload.pickup)
         params.set('problems', state.problems.join(', '))
         params.set('reason', state.reason)
+        params.set('contactName', contact?.first_name || user?.name || '')
+        params.set('contactPhone', state.phoneNumber || contact?.contact_number || '')
 
         router.push(`/exchangeProducts/success?${params.toString()}`)
     }
@@ -368,7 +376,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                         open={state.isFormOpen}
                         onOpenChange={(open) => updateState({ isFormOpen: open })}
                     >
-                        <SheetContent side="right" className="w-full sm:max-w-md p-0 overflow-y-auto">
+                        <SheetContent side="right" showOverlay={false} className="w-full sm:max-w-105 p-0 overflow-y-auto border-0 shadow-2xl ring-1 ring-black/5">
                             <SheetHeader className="sr-only">
                                 <SheetTitle>Exchange Details</SheetTitle>
                                 <SheetDescription>Complete the details below to get an instant quote</SheetDescription>
@@ -391,6 +399,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                                 serialNumber={state.serialNumber}
                                 governmentId={state.governmentId}
                                 devicePhoto={state.devicePhoto}
+                                phoneNumber={state.phoneNumber}
                                 onVerificationChange={handleVerificationChange}
                                 problems={state.problems}
                                 reason={state.reason}
@@ -418,7 +427,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             </section>
 
             {blogSection && (
-                <section className="bg-[#F5F7FA] border-t border-gray-100 py-4">
+                <section className="bg-[#F5F7FA] border-t w-screen border-gray-100 ">
                     {blogSection}
                 </section>
             )}

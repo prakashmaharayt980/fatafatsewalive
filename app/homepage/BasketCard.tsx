@@ -33,7 +33,7 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
     updateState({ visibleCount: Math.min(state.visibleCount + BATCH_SIZE, products.length) });
   }, [state.visibleCount, products.length, updateState]);
 
-  useScrollObserver(scrollRef, sentinelRef, state.ready, state.visibleCount, products.length, loadMore);
+  useScrollObserver(scrollRef as React.RefObject<HTMLDivElement>, sentinelRef as React.RefObject<HTMLDivElement>, state.ready, state.visibleCount, products.length, loadMore);
 
   if (!state.ready || !products.length) return <SkeletonCard />;
 

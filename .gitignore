@@ -36,7 +36,16 @@ yarn-error.log*
 # vercel
 .vercel
 
+
+.agents
+.agents/*
+*(.agents/*) # Ignore all files in .agents except .agents itself
 *.md
+
+skills
+skills/*
+*(skills/*) # Ignore all files in skills except skills itself
+skills-lock.json
 
 # typescript
 *.tsbuildinfo

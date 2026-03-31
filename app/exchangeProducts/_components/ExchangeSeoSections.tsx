@@ -95,7 +95,7 @@ export default function ExchangeSeoSections({ onGetQuoteClick }: ExchangeSeoSect
             </section>
 
             {/* How it Works — Clean Modern Steps */}
-            <section className="bg-white py-20 relative overflow-hidden">
+            <section className="bg-[#F5F7FA] py-16 sm:py-20 relative overflow-hidden">
                 <div className="mx-auto px-4 lg:px-8 max-w-7xl relative z-10">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tighter uppercase">How it works</h2>
@@ -115,7 +115,7 @@ export default function ExchangeSeoSections({ onGetQuoteClick }: ExchangeSeoSect
                                     <div className="w-16 h-16 rounded-2xl bg-white shadow-xl shadow-blue-500/5 flex items-center justify-center border border-gray-100 group-hover:border-[var(--colour-fsP2)]/50 transition-colors duration-300">
                                         <item.icon size={28} className="text-[var(--colour-fsP2)]" />
                                     </div>
-                                    <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-black tracking-tighter">
+                                    <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[var(--colour-fsP1)] text-gray-900 flex items-center justify-center text-[10px] font-black tracking-tighter">
                                         {item.n}
                                     </div>
                                 </div>
@@ -128,22 +128,21 @@ export default function ExchangeSeoSections({ onGetQuoteClick }: ExchangeSeoSect
             </section>
 
             {/* CTA Banner */}
-            <section className="bg-white border-t border-gray-100 py-12">
+            <section className="bg-[var(--colour-fsP2)] py-12 sm:py-16">
                 <div className="container mx-auto px-4 lg:px-8 max-w-2xl text-center">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest border mb-4" style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: '#EEF3FB' }}>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest bg-white/10 border border-white/20 text-white mb-4">
                         <TrendingUp style={{ width: 10, height: 10 }} /> Best exchange rates in Nepal
                     </div>
-                    <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Ready to upgrade your smartphone?</h2>
-                    <p className="text-gray-500 text-sm mb-7 leading-relaxed">Join 10,000+ customers who've already exchanged their phones with Fatafat Sewa. Get the best trade-in value, free pickup, and instant upgrade.</p>
+                    <h2 className="text-2xl font-extrabold text-white mb-2">Ready to upgrade your smartphone?</h2>
+                    <p className="text-white/70 text-sm mb-7 leading-relaxed">Join 10,000+ customers who've already exchanged their phones with Fatafat Sewa. Get the best trade-in value, free pickup, and instant upgrade.</p>
                     <div className="flex flex-col sm:flex-row justify-center gap-3">
-                        <button 
-                            className="h-11 px-7 rounded-xl text-white text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity flex items-center justify-center gap-2" 
-                            style={{ background: 'var(--colour-fsP2)' }}
+                        <button
+                            className="h-11 px-7 rounded-xl bg-[var(--colour-fsP1)] text-gray-900 text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                             onClick={onGetQuoteClick}
                         >
                             Get exchange quote <ArrowRight style={{ width: 14, height: 14 }} />
                         </button>
-                        <button className="h-11 px-7 rounded-xl text-sm font-bold border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                        <button className="h-11 px-7 rounded-xl text-sm font-bold border border-white/30 bg-white/10 text-white cursor-pointer hover:bg-white/20 transition-colors flex items-center justify-center gap-2">
                             <Store style={{ width: 14, height: 14 }} /> Find showroom
                         </button>
                     </div>

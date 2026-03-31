@@ -114,12 +114,39 @@ async function ExchangePageContent() {
 export default function ExchangePage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[#F5F7FA] flex flex-col items-center justify-center p-4">
-                <div className="w-full max-w-lg space-y-8 animate-in fade-in duration-700">
-                    <div className="space-y-6 text-center">
-                        <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-[24px] animate-spin mx-auto shadow-xl shadow-blue-500/10"></div>
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Fatafat Exchange</h2>
-                        <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">AI Evaluation System Synchronizing...</p>
+            <div className="min-h-screen bg-[#F5F7FA] flex flex-col">
+                {/* Hero Skeleton (White) */}
+                <div className="bg-white border-b border-gray-100 py-12 md:py-16">
+                    <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col md:flex-row items-center gap-12">
+                        <div className="flex-1 space-y-6">
+                            <div className="h-6 w-40 bg-gray-100 rounded-full animate-pulse" />
+                            <div className="space-y-3">
+                                <div className="h-10 w-[85%] bg-gray-100 rounded-xl animate-pulse" />
+                                <div className="h-10 w-[60%] bg-gray-100 rounded-xl animate-pulse" />
+                            </div>
+                            <div className="h-16 w-[75%] bg-gray-50 rounded-xl animate-pulse" />
+                            <div className="flex gap-4">
+                                <div className="h-12 w-48 bg-gray-100 rounded-xl animate-pulse" />
+                                <div className="h-12 w-40 bg-gray-100 rounded-xl animate-pulse" />
+                            </div>
+                        </div>
+                        <div className="w-64 h-64 bg-gray-50 rounded-full animate-pulse hidden md:block" />
+                    </div>
+                </div>
+
+                {/* Content Area Skeleton (Gray) */}
+                <div className="flex-1  py-8">
+                    <div className="max-w-7xl mx-auto space-y-6">
+                        <div className="h-4  bg-gray-200/60 rounded-full animate-pulse" />
+                        <div className="w-full h-[600px] bg-white  border-none border-gray-100 animate-pulse flex flex-col p-6 space-y-8">
+                            <div className="h-4 w-28 bg-gray-100 rounded-full" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="h-32 bg-gray-50 rounded-xl" />
+                                <div className="h-32 bg-gray-50 rounded-xl" />
+                                <div className="h-32 bg-gray-50 rounded-xl" />
+                                <div className="h-32 bg-gray-50 rounded-xl" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

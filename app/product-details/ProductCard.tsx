@@ -9,7 +9,7 @@ import { placeholderimg } from '../CommonVue/Image';
 import { ProductCardSkeleton } from '../category/[slug]/components/Skeletons';
 import type { DecoratedProduct } from '../types/DecoratedProduct';
 
-interface Props {
+export interface Props {
   product: DecoratedProduct;
   index?: number;
   priority?: boolean;

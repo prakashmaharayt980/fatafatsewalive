@@ -3,19 +3,23 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { parseHighlights } from "@/app/CommonVue/highlights";
-import type { ProductCardProps } from "../ProductCard";
 import type { BasketProduct } from "@/app/types/ProductDetailsTypes";
 import { cn } from "@/lib/utils";
 import { useShallow } from "zustand/react/shallow";
 import { useCartStore } from "@/app/context/CartContext";
 import { useAuthStore } from "@/app/context/AuthContext";
+import type { Props as ProductCardProps } from "../ProductCard";
+
+interface Props extends ProductCardProps {
+    isEmi?: boolean;
+}
 
 const BlogProductCard = ({
     product,
     priority = false,
     hidePrice = false,
     isEmi = false,
-}: ProductCardProps & { isEmi?: boolean }) => {
+}: Props) => {
     const router = useRouter();
 
     const { user, triggerLoginAlert } = useAuthStore(
