@@ -3,7 +3,7 @@
 import React from 'react'
 import { Check, Wrench, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { REPAIR_CATEGORIES, type RepairCategory, getRepairEstimate } from './repair-helpers'
+import { REPAIR_CATEGORIES, type RepairCategory, getRepairEstimate } from '../repair-helpers'
 
 interface RepairSelectorProps {
     selectedRepairs: string[]
