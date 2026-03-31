@@ -55,28 +55,43 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
     // Camera Deals Sidebar Fetcher (matching listing focus)
     const cameraDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
 
-    // ── Parse TOC headings ──
+    // ── Parse TOC headings (Targeting H2 and H3) ──
     const tocItems = useMemo<TocItem[]>(() => {
-        const regex = /<h([12])[^>]*>(.*?)<\/h[12]>/gi;
+        const regex = /<h([23])[^>]*>(.*?)<\/h[23]>/gi;
         const items: TocItem[] = [];
         let match;
         while ((match = regex.exec(article.content)) !== null) {
             const level = parseInt(match[1]);
             const text = match[2].replace(/<[^>]*>/g, '').trim();
             if (text) {
-                const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                items.push({ id, text, level });
+                // Generate a robust ID
+                const id = text
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+                
+                // Avoid duplicate IDs
+                let finalId = id;
+                let counter = 1;
+                while (items.find(i => i.id === finalId)) {
+                    finalId = `${id}-${counter++}`;
+                }
+                
+                items.push({ id: finalId, text, level });
             }
         }
         return items;
     }, [article.content]);
 
-    // ── Inject IDs into headings ──
+    // ── Inject IDs into headings with more robust matching ──
     const processedContent = useMemo(() => {
         let content = article.content;
         tocItems.forEach((item) => {
-            const regex = new RegExp(`(<h[12][^>]*>)(${item.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'i');
-            content = content.replace(regex, `$1<span id="${item.id}"></span>$2`);
+            // Match the heading tag and its immediate content, even if it has nested tags
+            // We use a more flexible regex that allows for some variation in whitespace/tags
+            const escapedText = item.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(<h${item.level}[^>]*>)(?=.*${escapedText})`, 'i');
+            content = content.replace(regex, `$1<span id="${item.id}" class="toc-anchor"></span>`);
         });
         return content;
     }, [article.content, tocItems]);
@@ -86,38 +101,51 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
     const observerRef = useRef<IntersectionObserver | null>(null);
     const navRef = useRef<HTMLElement>(null);
 
-    // Auto-scroll TOC
+    // Auto-scroll TOC sidebar to keep active item in view
     useEffect(() => {
         if (!activeId || !navRef.current) return;
         const activeItem = navRef.current.querySelector(`[data-id="${activeId}"]`);
         if (activeItem) {
-            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
         }
     }, [activeId]);
 
     useEffect(() => {
         if (tocItems.length === 0) return;
+        
+        const handleObserver = (entries: IntersectionObserverEntry[]) => {
+            // Find the first intersecting entry
+            const visibleEntry = entries.find(entry => entry.isIntersecting);
+            if (visibleEntry) {
+                setActiveId(visibleEntry.target.id);
+            }
+        };
+
         const timeout = setTimeout(() => {
-            observerRef.current = new IntersectionObserver(
-                (entries) => {
-                    const visible = entries.filter((e) => e.isIntersecting);
-                    if (visible.length > 0) setActiveId(visible[0].target.id);
-                },
-                { rootMargin: '-80px 0px -70% 0px', threshold: 0 }
-            );
+            observerRef.current = new IntersectionObserver(handleObserver, {
+                rootMargin: '-100px 0px -60% 0px',
+                threshold: 0
+            });
+
             tocItems.forEach((item) => {
                 const el = document.getElementById(item.id);
                 if (el) observerRef.current?.observe(el);
             });
-        }, 300);
-        return () => { clearTimeout(timeout); observerRef.current?.disconnect(); };
+        }, 500);
+
+        return () => {
+            clearTimeout(timeout);
+            observerRef.current?.disconnect();
+        };
     }, [tocItems]);
 
     const scrollToHeading = useCallback((id: string) => {
         const el = document.getElementById(id);
         if (el) {
-            const y = el.getBoundingClientRect().top + window.pageYOffset - 100;
+            const yOffset = -100; // Offset for sticky header
+            const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
             window.scrollTo({ top: y, behavior: 'smooth' });
+            setActiveId(id);
         }
     }, []);
 

@@ -52,8 +52,21 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
     }
 
     const cleanHTML = sanitizeHtml(description, {
-      ADD_TAGS: ['iframe'],
-      ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'style', 'width', 'height', 'loading'],
+      ADD_TAGS: ['iframe', 'span'],
+      ADD_ATTR: [
+        'allow',
+        'allowfullscreen',
+        'frameborder',
+        'src',
+        'style',
+        'width',
+        'height',
+        'loading',
+        'id',
+        'class',
+        'data-list',
+        'data-indent',
+      ],
     });
 
     const options: HTMLReactParserOptions = {
@@ -61,6 +74,13 @@ export default function ParsedContent({ description, className = '' }: ParsedCon
         if (!isElement(domNode)) return undefined;
         const { name, attribs, children } = domNode as Element;
         const nodeChildren = (children as DOMNode[]).filter(n => !isQuillUiSpan(n));
+
+        // ── TOC ANCHOR SPANS ─────────────────────────────────────────────────
+        if (name === 'span' && attribs?.id && attribs?.class?.includes('toc-anchor')) {
+          return (
+            <span id={attribs.id} className="toc-anchor" aria-hidden="true" />
+          );
+        }
 
         // ── QUILL FLAT LIST ITEMS (data-list) ────────────────────────────────
         if (attribs?.['data-list']) {
