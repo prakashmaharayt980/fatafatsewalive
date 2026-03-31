@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { cacheLife, cacheTag } from 'next/cache'
 import ShopByEmiClient from './ShopByEmiClient'
 import { getAllCategories } from '@/app/api/services/category.service'
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
@@ -23,12 +24,14 @@ export const metadata: Metadata = {
 }
 
 export default async function ShopByEmiPage() {
-    const banners = await Promise.all([
-        getBannerData('home-banner-fourth-test')
+    'use cache'
+    cacheLife('hours')
+    cacheTag('emi-shop-page')
 
+    const [banners, categories] = await Promise.all([
+        Promise.all([getBannerData('home-banner-fourth-test')]),
+        getAllCategories(),
     ])
-
-    const categories = await getAllCategories()
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -84,10 +87,11 @@ export default async function ShopByEmiPage() {
                     </div>
                 </div>
             }>
-                <ShopByEmiClient 
+                {/* <ShopByEmiClient 
                     initialCategories={categories || []} 
                     footerBanners={banners.filter(Boolean)} 
-                />
+                /> */}
+                <h1>Shop by EMI</h1>
             </Suspense>
         </main>
     )
