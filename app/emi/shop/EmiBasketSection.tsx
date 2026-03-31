@@ -130,7 +130,7 @@ export default function EmiBasketSection({
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80 group-hover/banner:opacity-40 transition-opacity duration-500" />
                     <div className="absolute bottom-8 left-6 right-6 text-white transform group-hover/banner:-translate-y-2 transition-transform duration-500">
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-2 block">Premium EMI Deals</span>
-                      <h3 className="text-2xl font-black mb-4 drop-shadow-lg leading-tight uppercase">{title}</h3>
+                      <p className="text-2xl font-black mb-4 drop-shadow-lg leading-tight uppercase">{title}</p>
                       <div className="inline-flex items-center gap-2 text-xs font-black bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 transform transition-all duration-300 hover:bg-white hover:text-slate-900">
                         Explore <ArrowRight className="w-3.5 h-3.5" />
                       </div>

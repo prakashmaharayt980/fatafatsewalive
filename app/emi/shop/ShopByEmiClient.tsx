@@ -10,6 +10,7 @@ import type { ProductSummary } from '@/app/types/ProductDetailsTypes'
 import EmiProductCard, { EmiProductCardSkeleton } from '@/app/product-details/ProductCards/EmiProductCard'
 import { logoImg } from '@/app/CommonVue/Image'
 import EmiBasketSection from './EmiBasketSection'
+import EmiFaq from '../apply/_components/EmiFaq'
 
 // ─── Types ───────────────────────────────────────────────────
 interface Brand {
@@ -211,6 +212,15 @@ export default function ShopByEmiClient({ initialCategories = [], footerBanners 
                                 <Image src={footerBanners[1].image?.full || footerBanners[1].thumbnail_image?.full} alt="Verified Seller" width={1600} height={350} className="w-full object-cover rounded-2xl aspect-[16/4] sm:aspect-[16/3]" />
                             </div>
                         )}
+
+                        {/* FAQ Section for SEO */}
+                        <div className="mt-16 bg-white rounded-3xl shadow-xl border border-[var(--colour-border3)] p-6 md:p-10">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-1.5 h-8 bg-[var(--colour-fsP1)] rounded-full shadow-sm" />
+                                <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">EMI Frequently Asked Questions</h2>
+                            </div>
+                            <EmiFaq params={useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])} />
+                        </div>
                     </div>
                 </div>
         </div>

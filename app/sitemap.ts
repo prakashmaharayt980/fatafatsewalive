@@ -12,11 +12,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         '/login',
         '/blog',
         '/compare',
+        '/emi/shop',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
         lastModified: new Date(),
         changeFrequency: 'daily' as const,
-        priority: 1,
+        priority: route === '/emi/shop' ? 0.9 : 1,
     }))
 
     // Dynamic Categories
