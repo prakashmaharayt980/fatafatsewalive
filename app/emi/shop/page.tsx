@@ -24,8 +24,8 @@ export const metadata: Metadata = {
 
 export default async function ShopByEmiPage() {
     const banners = await Promise.all([
-        getBannerData('home-banner-fourth-test'),
-        getBannerData('home-banner-fourth-test'),
+        getBannerData('home-banner-fourth-test')
+
     ])
 
     const categories = await getAllCategories()
