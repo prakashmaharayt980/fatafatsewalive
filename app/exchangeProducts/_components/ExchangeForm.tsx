@@ -17,7 +17,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 import type { NavbarItem } from '@/app/context/navbar.interface'
 import type { ShippingAddress } from '../../checkout/checkoutTypes'
-import { AddressService } from '@/app/api/services/address.service'
+import { ShippingAddressList, ShippingAddressUpdate, CreateShippingAddress, ShippingAddressDelete } from '@/app/api/services/address.service'
 import GoogleMapAddress, { type LocationData } from '../../checkout/GoogleMapAddress'
 import {
     type FullProduct, type ConditionAnswer,
@@ -91,7 +91,7 @@ export default function ExchangeForm({
         if (!isLoggedIn || addrView !== 'list') return
         if (savedAddresses.length > 0) return
         setIsLoadingAddr(true)
-        AddressService.ShippingAddressList()
+        ShippingAddressList()
             .then(res => {
                 const list: ShippingAddress[] = Array.isArray(res) ? res : (res.data ?? [])
                 setSavedAddresses(list)
@@ -158,8 +158,8 @@ export default function ExchangeForm({
                 address: fullAddress, state: addrForm.province,
             }
             const res = editingId
-                ? await AddressService.ShippingAddressUpdate(editingId, payload)
-                : await AddressService.CreateShippingAddress(payload)
+                ? await ShippingAddressUpdate(editingId, payload)
+                : await CreateShippingAddress(payload)
 
             const saved: ShippingAddress = {
                 id: res?.id ?? editingId ?? Date.now(),
@@ -188,7 +188,7 @@ export default function ExchangeForm({
 
     const handleDelete = async (id: number) => {
         try {
-            await AddressService.ShippingAddressDelete(id)
+            await ShippingAddressDelete(id)
             setSavedAddresses(p => p.filter(a => a.id !== id))
             if (selectedAddress?.id === id) onAddressSelect(null as any)
             toast.success('Address deleted')

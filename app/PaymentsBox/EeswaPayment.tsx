@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { PaymentService } from '@/app/api/services/payments.service';
+import { InitiateEeswaPayment } from '@/app/api/services/payments.service';
 
 interface EsewaPaymentProps {
     orderId: number;
@@ -26,7 +26,7 @@ export default function EeswaPayment({ orderId, amount }: EsewaPaymentProps) {
             }
             try {
                 // 2. Call backend to sign the parameters
-                const response = await PaymentService.InitiateEeswaPayment(payload);
+                const response = await InitiateEeswaPayment(payload);
 
                 if (response && response.params && response.gatewayUrl) {
                     const params = response.params;

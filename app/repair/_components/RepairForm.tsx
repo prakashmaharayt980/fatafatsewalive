@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
 import type { ShippingAddress } from '../../checkout/checkoutTypes'
-import { AddressService } from '@/app/api/services/address.service'
+import { ShippingAddressList, ShippingAddressUpdate, CreateShippingAddress, ShippingAddressDelete } from '@/app/api/services/address.service'
 import GoogleMapAddress, { type LocationData } from '../../checkout/GoogleMapAddress'
 import { REPAIR_CATEGORIES, type RepairCategory } from '../repair-helpers'
 
@@ -85,7 +85,7 @@ export default function RepairForm({
         if (!isLoggedIn || addrView !== 'list') return
         if (savedAddresses.length > 0) return
         setIsLoadingAddr(true)
-        AddressService.ShippingAddressList()
+        ShippingAddressList()
             .then(res => {
                 const list: ShippingAddress[] = Array.isArray(res) ? res : (res.data ?? [])
                 setSavedAddresses(list)
@@ -152,8 +152,8 @@ export default function RepairForm({
                 address: fullAddress, state: addrForm.province,
             }
             const res = editingId
-                ? await AddressService.ShippingAddressUpdate(editingId, payload)
-                : await AddressService.CreateShippingAddress(payload)
+                ? await ShippingAddressUpdate(editingId, payload)
+                : await CreateShippingAddress(payload)
 
             const saved: ShippingAddress = {
                 id: res?.id ?? editingId ?? Date.now(),
@@ -182,7 +182,7 @@ export default function RepairForm({
 
     const handleDelete = async (id: number) => {
         try {
-            await AddressService.ShippingAddressDelete(id)
+            await ShippingAddressDelete(id)
             setSavedAddresses(p => p.filter(a => a.id !== id))
             if (selectedAddress?.id === id) onAddressSelect(null as any)
             toast.success('Address deleted')

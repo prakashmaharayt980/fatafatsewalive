@@ -119,6 +119,7 @@ export interface ProductData {
     rating_count?: number;
     colors?: string[];
     short_desc?: string | null; // For some basket products
+    monthlyEmi?: number; // Pre-calculated EMI value for display
 }
 
 // Aliases for unified structure while keeping backwards compatibility for imports across 50+ files

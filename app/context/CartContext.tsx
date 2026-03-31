@@ -8,7 +8,7 @@ import type { BasketProduct } from '../types/ProductDetailsTypes';
 import { CartService } from '../api/services/cart.service';
 import { trackAddToCart } from '@/lib/Analytic';
 import type { ShippingAddress } from '../checkout/checkoutTypes';
-import { AddressService } from '../api/services/address.service';
+import { CreateShippingAddress } from '../api/services/address.service';
 
 interface CartItem {
     id: number;
@@ -418,7 +418,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     try {
                         for (const addr of state.guestAddresses) {
                             const { id, ...addressData } = addr; // Omit the local id
-                            await AddressService.CreateShippingAddress(addressData);
+                            await CreateShippingAddress(addressData as any);
                         }
                         // Clear guest addresses after sync
                         useCartStore.setState({ guestAddresses: [] });

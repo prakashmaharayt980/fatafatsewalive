@@ -8,7 +8,7 @@ import {
     calculateExchangeValue, getMaxExchangeValue,
     extractColorsFromVariants, GET_CONDITION_QUESTIONS
 } from './exchange-helpers'
-import { ProductService } from '../api/services/product.service'
+import { searchProducts, getProductBySlug, submitExchangeRequest } from '../api/services/product.service'
 import { getBrandProducts, getCategoryProducts } from '../api/services/category.service'
 import type { NavbarItem } from '../context/navbar.interface'
 import { useAuth, useAuthStore } from '../context/AuthContext'
@@ -152,7 +152,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             const targetCat = forceCategorySlug !== undefined ? forceCategorySlug : state.selectedCategory?.slug;
 
             if (search?.trim()) {
-                const res = await ProductService.searchProducts({ search: search.trim(), categories: targetCat, brands: brandSlug, per_page: 10 })
+                const res = await searchProducts({ search: search.trim(), categories: targetCat, brands: brandSlug, per_page: 10 })
                 fetched = res?.data || []
             } else if (targetCat) {
                 const res = await getCategoryProducts(targetCat, { brand: brandSlug, exchange_available: true, per_page: 10 })
@@ -248,7 +248,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         })
 
         try {
-            const full = await ProductService.getProductBySlug(product.slug)
+            const full = await getProductBySlug(product.slug)
             const colors = extractColorsFromVariants(full)
             updateState({
                 selectedProduct: full,
@@ -373,7 +373,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
 
         updateState({ isSubmitting: true })
         try {
-            await ProductService.submitExchangeRequest(payload)
+            await submitExchangeRequest(payload)
 
             if (state.devicePhoto) {
                 try { sessionStorage.setItem('exchangeDevicePhoto', state.devicePhoto as string) } catch { }

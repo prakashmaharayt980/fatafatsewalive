@@ -11,46 +11,59 @@ interface BlogCardProps {
     post: Article | BlogArticle;
 }
 
+function getReadTime(content: string) {
+    const words = stripHtml(content || '').split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / 200));
+}
+
 export default function BlogCard({ post }: BlogCardProps) {
+    const categoryName = post.category
+        ? ('title' in post.category ? post.category.title : post.category.name)
+        : null;
+    const imageUrl = post.thumb?.url ?? ('thumbnail_image' in post ? post.thumbnail_image?.full : undefined) ?? imglogo.src;
+    const readTime = getReadTime(post.content ?? '');
+
     return (
         <Link
             href={`/blogs/${post.slug}`}
-            className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-[var(--colour-fsP2)]/15 transition-all duration-500 flex flex-col h-full hover:border-[var(--colour-fsP2)]/30 hover:-translate-y-1"
+            className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-gray-200/60 transition-all duration-300 flex flex-col h-full hover:border-gray-200 hover:-translate-y-0.5"
         >
-            {/* Image Container */}
-            <div className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+            {/* Image */}
+            <div className="relative w-full overflow-hidden bg-gray-50">
                 <Image
-                    src={post.thumb?.url || ('thumbnail_image' in post ? post.thumbnail_image?.full : undefined) || imglogo.src}
-                    alt={('thumb' in post ? post.thumb?.alt_text : post.title) || post.title}
+                    src={imageUrl}
+                    alt={post.thumb?.alt_text ?? post.title}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     width={500}
                     height={500}
-                    className="object-fill aspect-[3/2] transition-transform duration-700 group-hover:scale-105"
+                    className="object-fill aspect-[3/2] transition-transform duration-500 group-hover:scale-[1.03]"
                 />
-
-                {/* Category Badge */}
-                {post.category && (
-                    <div className="absolute top-2.5 left-2.5 bg-[var(--colour-fsP2)] backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider shadow-md">
-                        {'title' in post.category ? post.category.title : post.category.name}
+                {categoryName && (
+                    <div className="absolute top-2.5 left-2.5 bg-[var(--colour-fsP2)] px-2 py-0.5 rounded-full text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
+                        {categoryName}
                     </div>
                 )}
             </div>
 
-            {/* Content Area */}
-            <div className="p-3 flex flex-col flex-1">
-                <h3 className="text-sm font-bold text-gray-800 line-clamp-2 mb-1.5 group-hover:text-[var(--colour-fsP2)] transition-colors leading-snug">
-                    {(post.title).length > 50 ? (post.title).slice(0, 50) + '...' : post.title}
+            {/* Content */}
+            <div className="p-3 flex flex-col flex-1 gap-1.5">
+                <h3 className="text-[13px] sm:text-sm font-bold text-gray-800 line-clamp-2 group-hover:text-(--colour-fsP2) transition-colors leading-snug">
+                    {post.title}
                 </h3>
 
-                {/* Excerpt */}
-                <p className="text-gray-500 text-xs line-clamp-3 mb-2 flex-1 leading-relaxed">
-                    {post.short_desc || stripHtml(post.content || '')}
+                <p className="text-gray-400 text-[11px] line-clamp-2 flex-1 leading-relaxed">
+                    {post.short_desc || stripHtml(post.content ?? '')}
                 </p>
 
-                {/* Read More indicator */}
-                <span className="text-[var(--colour-fsP2)] text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    Read More →
-                </span>
+                {/* Meta row */}
+                <div className="flex items-center justify-between pt-1 border-t border-gray-50 mt-auto">
+                    <span className="text-[10px] text-gray-400">
+                        {post.publish_date ? formatDate(post.publish_date) : ''}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-medium">
+                        {readTime} min read
+                    </span>
+                </div>
             </div>
         </Link>
     );

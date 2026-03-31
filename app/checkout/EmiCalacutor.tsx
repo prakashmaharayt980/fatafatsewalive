@@ -10,7 +10,7 @@ import { useContextEmi } from '@/app/emi/_components/emiContext';
 
 import Image from 'next/image';
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
-import { ProductService } from '../api/services/product.service';
+import { searchProducts } from '../api/services/product.service';
 
 export default function EMICalculator() {
   const { emiContextInfo, setEmiContextInfo, banks, fetchBanks } = useContextEmi();
@@ -49,8 +49,8 @@ export default function EMICalculator() {
   // Search and filter products
   useEffect(() => {
     if (searchQuery.trim()) {
-      ProductService.searchProducts({ search: searchQuery.trim() }).then(res => {
-        setFilteredProducts(res.data);
+      searchProducts({ search: searchQuery.trim() }).then((res: any) => {
+        setFilteredProducts(res.data || []);
       }).catch(e => console.log('error', e));
     } else {
       setFilteredProducts([]);

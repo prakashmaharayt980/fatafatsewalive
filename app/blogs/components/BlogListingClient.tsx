@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import type { Article } from '../../types/Blogtypes';
 import imglogo from '../../assets/logoimg.png';
@@ -39,6 +40,9 @@ export default function BlogListingClient({
     cameraDeals = [],
 }: BlogListingClientProps) {
 
+    const searchParams = useSearchParams();
+    const activeCategory = searchParams.get('category') ?? 'all';
+
     const [storyViewerOpen, setStoryViewerOpen] = useState(false);
     const [storyStartIndex, setStoryStartIndex] = useState(0);
     const webStories = articles?.slice(0, 5) || [];
@@ -74,7 +78,7 @@ export default function BlogListingClient({
                     onClose={() => setStoryViewerOpen(false)}
                 />
             )}
-            <main className="min-h-screen max-w-8xl mx-auto bg-[var(--colour-bg4)] w-full">
+            <main className="min-h-screen max-w-8xl mx-auto bg-(--colour-bg4) w-full">
                 <h1 className="sr-only">Latest Tech News, Reviews & Buying Guides | Fatafat Sewa Blog</h1>
                 <div className="w-full px-3 sm:px-5 lg:px-6 pt-4 pb-16">
 
@@ -89,26 +93,33 @@ export default function BlogListingClient({
                         >
 
 
-                            {categories.filter((c: any) => c.status !== false).map((cat: any) => (
-                                <Link
-                                    key={cat.id}
-                                    href={`/blogs?category=${cat.slug}`}
-                                    className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium text-[var(--colour-text2)] border border-[var(--colour-border3)] hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] transition-colors bg-white"
-                                >
-                                    {(cat.thumbnail_image || cat.thumb?.url) && (
-                                        <div className="relative w-3.5 h-3.5 rounded-full overflow-hidden flex-shrink-0">
-                                            <Image
-                                                src={cat.thumb?.url || cat.thumbnail_image?.thumb || imglogo.src}
-                                                alt={cat.title}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    )}
-                                    {cat.title}
-
-                                </Link>
-                            ))}
+                            {categories.filter((c: any) => c.status !== false).map((cat: any) => {
+                                const isActive = cat.slug === activeCategory || (cat.slug === 'all' && activeCategory === 'all');
+                                return (
+                                    <Link
+                                        key={cat.id}
+                                        href={`/blogs?category=${cat.slug}`}
+                                        className={[
+                                            'shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all',
+                                            isActive
+                                                ? 'bg-(--colour-fsP2) text-white border border-(--colour-fsP2) shadow-sm'
+                                                : 'bg-white text-(--colour-text2) border border-(--colour-border3) hover:border-(--colour-fsP2) hover:text-(--colour-fsP2)',
+                                        ].join(' ')}
+                                    >
+                                        {(cat.thumbnail_image || cat.thumb?.url) && (
+                                            <div className="relative w-3.5 h-3.5 rounded-full overflow-hidden shrink-0">
+                                                <Image
+                                                    src={cat.thumb?.url || cat.thumbnail_image?.thumb || imglogo.src}
+                                                    alt={cat.title}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        )}
+                                        {cat.title}
+                                    </Link>
+                                );
+                            })}
                         </nav>
                     )}
 
@@ -124,7 +135,7 @@ export default function BlogListingClient({
                                         title="Latest Articles"
                                         accentColor="var(--colour-fsP1)"
                                         rightElement={
-                                            <span className="text-[11px] font-medium text-[var(--colour-text3)]">
+                                            <span className="text-[11px] font-medium text-(--colour-text3)">
                                                 {articles?.length || 0} {articles?.length === 1 ? 'Article' : 'Articles'}
                                             </span>
                                         }
@@ -145,7 +156,7 @@ export default function BlogListingClient({
                                             title="Camera Deals" 
                                         />
                                     ) : (
-                                        <div className="h-[600px] w-full bg-gray-100 rounded-xl animate-pulse" />
+                                        <div className="h-150 w-full bg-gray-100 rounded-xl animate-pulse" />
                                     )}
                                 </div>
                             </div>
@@ -183,11 +194,11 @@ export default function BlogListingClient({
                                     </section>
                                 );
                             }}
-                            fallback={<div className="h-[380px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-95 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         />
                         {/* ═══ 3. Web Stories ═══ */}
                         <LazySection
-                            fallback={<div className="h-[400px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-100 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         >
                             <section id="web-stories">
                                 <SectionHeader title="Web Stories" accentColor="var(--colour-fsP2)" />
@@ -198,7 +209,7 @@ export default function BlogListingClient({
                                         <div
                                             key={post.id}
                                             onClick={() => openStory(idx)}
-                                            className="group relative rounded overflow-hidden aspect-[9/16] border border-[var(--colour-border3)] hover:shadow-lg transition-all duration-300 cursor-pointer"
+                                            className="group relative rounded overflow-hidden aspect-9/16 border border-(--colour-border3) hover:shadow-lg transition-all duration-300 cursor-pointer"
                                         >
                                             <Image
                                                 src={post.thumb?.url || imglogo.src}
@@ -209,15 +220,15 @@ export default function BlogListingClient({
                                                 quality={75}
                                             />
                                             {/* Dark gradient overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
+                                            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-black/10" />
 
                                             {/* Content */}
                                             <div className="absolute bottom-0 left-0 right-0 p-3 flex flex-col items-center text-center gap-1.5">
-                                                <h4 className="text-[13px] font-bold text-white leading-snug line-clamp-2 group-hover:text-[var(--colour-yellow1)] transition-colors">
+                                                <h4 className="text-[13px] font-bold text-white leading-snug line-clamp-2 group-hover:text-(--colour-yellow1) transition-colors">
                                                     {post.title}
                                                 </h4>
                                                 {/* Story Count Badge */}
-                                                <span className="inline-flex items-center gap-1 bg-[var(--colour-fsP2)] text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
+                                                <span className="inline-flex items-center gap-1 bg-(--colour-fsP2) text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
                                                     <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                         <rect x="2" y="2" width="20" height="20" rx="2" />
                                                         <path d="M7 2v20M17 2v20" />
@@ -257,7 +268,7 @@ export default function BlogListingClient({
                                     </section>
                                 );
                             }}
-                            fallback={<div className="h-[380px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-95 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         />
 
                         {/* ═══ 6. Featured Stories — 5-Item Grid (Responsive) ═══ */}
@@ -298,7 +309,7 @@ export default function BlogListingClient({
                                     </div>
                                 );
                             }}
-                            fallback={<div className="h-[400px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-100 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         />
 
                         {/* ═══ 6. Compare Products (Repositioned) ═══ */}
@@ -309,7 +320,7 @@ export default function BlogListingClient({
                                     <BlogCompareProducts products={ensureArray(data).slice(0, 8)} />
                                 </section>
                             )}
-                            fallback={<div className="h-[200px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-50 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         />
 
                         {/* ═══ 7. Tech News Highlights ═══ */}
@@ -329,17 +340,17 @@ export default function BlogListingClient({
                                     </section>
                                 );
                             }}
-                            fallback={<div className="h-[300px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-75 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         />
 
 
                         {/* ═══ 8. YouTube Content Section ═══ */}
                         <LazySection
-                            fallback={<div className="h-[400px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-100 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         >
                             <section id="youtube-content">
                                 {/* 80/20 Layout — responsive */}
-                                <div className="flex flex-col-reverse lg:flex-row-reverse gap-3 border-t-2 pt-3 mt-1 border-[var(--colour-border3)]">
+                                <div className="flex flex-col-reverse lg:flex-row-reverse gap-3 border-t-2 pt-3 mt-1 border-(--colour-border3)">
 
                                     {/* ─── Left: YouTube Grid ─── */}
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 w-full lg:w-3/4">
@@ -360,7 +371,7 @@ export default function BlogListingClient({
                                                 return <ProductDeals deals={deals} title="Speaker Highlights" />;
                                             }}
                                             minHeight="400px"
-                                            fallback={<div className="h-[400px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                                            fallback={<div className="h-100 w-full bg-(--colour-bg4) rounded-lg animate-pulse" />}
                                         />
                                     </div>
                                 </div>
@@ -369,7 +380,7 @@ export default function BlogListingClient({
 
                         {/* ═══ 9. Banner (lazy) ═══ */}
                         <LazySection
-                            fallback={<div className="h-[200px] bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
+                            fallback={<div className="h-50 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         >
                             <section id="blog-banner-2" className="relative">
                                 {SectionOne}
@@ -381,7 +392,7 @@ export default function BlogListingClient({
                             fallback={
                                 <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
                                     {[...Array(10)].map((_, i) => (
-                                        <div key={i} className="h-[260px] bg-[var(--colour-bg4)] rounded-xl animate-pulse" />
+                                        <div key={i} className="h-65 bg-(--colour-bg4) rounded-xl animate-pulse" />
                                     ))}
                                 </div>
                             }

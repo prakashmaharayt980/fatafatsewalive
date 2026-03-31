@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Pencil, Upload, Trash2, Check, RotateCcw } from 'lucide-react';
+import { Pencil, Upload, Trash2, Check, RotateCcw, Maximize2, X } from 'lucide-react';
 import Image from 'next/image';
 
 interface SignaturePadProps {
@@ -20,9 +20,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
     const [isDrawing, setIsDrawing] = useState(false);
     const [hasDrawn, setHasDrawn] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const [uploadedPreview, setUploadedPreview] = useState<string | null>(existingSignature ?? null);
 
-    // ── Canvas init — respects devicePixelRatio and actual wrapper width ──────
     const initCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
@@ -30,7 +30,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
 
         const ratio = window.devicePixelRatio || 1;
         const w = wrapper.clientWidth;
-        const h = 160;
+        const h = isFullscreen ? Math.max(240, Math.floor(window.innerHeight * 0.45)) : 160;
 
         canvas.width = w * ratio;
         canvas.height = h * ratio;
@@ -43,14 +43,14 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, w, h);
         ctx.strokeStyle = '#111827';
-        ctx.lineWidth = 1.8;
+        ctx.lineWidth = isFullscreen ? 2.4 : 1.8;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-    }, []);
+    }, [isFullscreen]);
 
     useEffect(() => {
         if (mode !== 'draw') return;
-        const t = setTimeout(initCanvas, 0); // after DOM paint
+        const t = setTimeout(initCanvas, 0);
         window.addEventListener('resize', initCanvas);
         return () => {
             clearTimeout(t);
@@ -58,7 +58,15 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
         };
     }, [mode, initCanvas]);
 
-    // ── Pointer helpers ───────────────────────────────────────────────────────
+    useEffect(() => {
+        if (isFullscreen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isFullscreen]);
+
     const getXY = (e: React.MouseEvent | React.TouchEvent) => {
         const canvas = canvasRef.current;
         if (!canvas) return null;
@@ -94,7 +102,6 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
 
     const stopDrawing = () => setIsDrawing(false);
 
-    // ── Draw actions ──────────────────────────────────────────────────────────
     const clearCanvas = () => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
@@ -112,10 +119,10 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
             if (!blob) return;
             onSignatureChange(new File([blob], 'signature.png', { type: 'image/png' }));
             setIsSaved(true);
+            if (isFullscreen) setIsFullscreen(false);
         }, 'image/png');
     };
 
-    // ── Upload actions ────────────────────────────────────────────────────────
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -133,19 +140,85 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
         setMode(m);
         setHasDrawn(false);
         setIsSaved(false);
+        setIsFullscreen(false);
     };
 
-    // ─────────────────────────────────────────────────────────────────────────
+    const canvasArea = (
+        <div className="space-y-3">
+            <div
+                ref={wrapperRef}
+                className="relative rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 overflow-hidden touch-none hover:border-gray-300 transition-colors"
+            >
+                <canvas
+                    ref={canvasRef}
+                    className="block w-full cursor-crosshair"
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                />
+                {!hasDrawn && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-1.5">
+                        <Pencil className="w-5 h-5 text-gray-200" />
+                        <span className="text-xs text-gray-300 select-none">Sign here</span>
+                    </div>
+                )}
+                {isSaved && (
+                    <div className="absolute top-2 left-2 flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                        <Check className="w-3 h-3" /> Saved
+                    </div>
+                )}
+            </div>
+
+            <div className="flex gap-2">
+                <button
+                    type="button"
+                    onClick={clearCanvas}
+                    disabled={!hasDrawn}
+                    className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Clear
+                </button>
+                <button
+                    type="button"
+                    onClick={saveSignature}
+                    disabled={!hasDrawn || isSaved}
+                    className={[
+                        'flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-all border',
+                        hasDrawn && !isSaved
+                            ? 'bg-gray-900 text-white border-gray-900 hover:bg-gray-700 shadow-sm'
+                            : 'opacity-30 cursor-not-allowed bg-gray-900 text-white border-gray-900',
+                    ].join(' ')}
+                >
+                    <Check className="w-3.5 h-3.5" />
+                    {isSaved ? 'Saved' : 'Save'}
+                </button>
+            </div>
+        </div>
+    );
+
     return (
         <div className="space-y-3">
+            <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    Signature <span className="normal-case font-normal text-gray-400">(optional)</span>
+                </p>
+                {mode === 'draw' && !isFullscreen && (
+                    <button
+                        type="button"
+                        onClick={() => setIsFullscreen(true)}
+                        className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-700 transition-colors"
+                    >
+                        <Maximize2 className="w-3 h-3" />
+                        Expand
+                    </button>
+                )}
+            </div>
 
-            {/* Label */}
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Signature{' '}
-                <span className="normal-case font-normal text-gray-400">(optional)</span>
-            </p>
-
-            {/* Mode toggle */}
             <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 gap-0.5">
                 {(['upload', 'draw'] as Mode[]).map(m => (
                     <button
@@ -159,15 +232,12 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
                                 : 'text-gray-500 hover:text-gray-700',
                         ].join(' ')}
                     >
-                        {m === 'upload'
-                            ? <Upload className="w-3.5 h-3.5" />
-                            : <Pencil className="w-3.5 h-3.5" />}
+                        {m === 'upload' ? <Upload className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                         {m === 'upload' ? 'Upload' : 'Draw'}
                     </button>
                 ))}
             </div>
 
-            {/* ── Upload mode ── */}
             {mode === 'upload' && (
                 <>
                     <input
@@ -183,11 +253,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
                             <div className="relative h-32">
                                 <Image src={uploadedPreview} alt="Signature" fill className="object-contain p-4" />
                             </div>
-                            {/* Saved badge */}
                             <div className="absolute top-2 left-2 flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                                 <Check className="w-3 h-3" /> Uploaded
                             </div>
-                            {/* Delete button — appears on hover */}
                             <button
                                 type="button"
                                 onClick={clearUpload}
@@ -199,9 +267,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
                     ) : (
                         <label
                             htmlFor="sig-upload"
-                            className="flex flex-col items-center justify-center h-32 rounded-xl border border-dashed border-gray-300 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                            className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed border-gray-200 cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-colors group"
                         >
-                            <Upload className="w-6 h-6 text-gray-300 mb-2" />
+                            <Upload className="w-6 h-6 text-gray-300 mb-2 group-hover:text-gray-400 transition-colors" />
                             <span className="text-xs font-medium text-gray-500">Click to upload</span>
                             <span className="text-[10px] text-gray-400 mt-0.5">PNG, JPG up to 5 MB</span>
                         </label>
@@ -209,71 +277,30 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange, existing
                 </>
             )}
 
-            {/* ── Draw mode ── */}
-            {mode === 'draw' && (
-                <div className="space-y-2">
+            {mode === 'draw' && !isFullscreen && canvasArea}
 
-                    {/* Canvas wrapper — ref used for width measurement */}
-                    <div
-                        ref={wrapperRef}
-                        className="relative rounded-xl border border-gray-200 bg-white overflow-hidden touch-none"
-                    >
-                        <canvas
-                            ref={canvasRef}
-                            className="block w-full cursor-crosshair"
-                            onMouseDown={startDrawing}
-                            onMouseMove={draw}
-                            onMouseUp={stopDrawing}
-                            onMouseLeave={stopDrawing}
-                            onTouchStart={startDrawing}
-                            onTouchMove={draw}
-                            onTouchEnd={stopDrawing}
-                        />
-
-                        {/* Empty state */}
-                        {!hasDrawn && (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <span className="text-xs text-gray-300 select-none">Sign here</span>
+            {isFullscreen && mode === 'draw' && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) setIsFullscreen(false); }}
+                >
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-800">Draw your signature</h3>
+                                <p className="text-[11px] text-gray-400 mt-0.5">Use mouse or finger — tap Save when done</p>
                             </div>
-                        )}
-
-                        {/* Saved badge */}
-                        {isSaved && (
-                            <div className="absolute top-2 left-2 flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                                <Check className="w-3 h-3" /> Saved
-                            </div>
-                        )}
-                    </div>
-
-                    <p className="text-[11px] text-gray-400 text-center">
-                        Use mouse or finger to draw your signature
-                    </p>
-
-                    {/* Controls */}
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={clearCanvas}
-                            disabled={!hasDrawn}
-                            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-gray-200 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            Clear
-                        </button>
-                        <button
-                            type="button"
-                            onClick={saveSignature}
-                            disabled={!hasDrawn || isSaved}
-                            className={[
-                                'flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-medium transition-all border',
-                                hasDrawn && !isSaved
-                                    ? 'bg-gray-900 text-white border-gray-900 hover:bg-gray-700'
-                                    : 'opacity-40 cursor-not-allowed bg-gray-900 text-white border-gray-900',
-                            ].join(' ')}
-                        >
-                            <Check className="w-3.5 h-3.5" />
-                            {isSaved ? 'Saved' : 'Save signature'}
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsFullscreen(false)}
+                                className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-100 text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-all"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="p-5">
+                            {canvasArea}
+                        </div>
                     </div>
                 </div>
             )}

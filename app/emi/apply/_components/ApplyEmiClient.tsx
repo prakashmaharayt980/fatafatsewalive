@@ -8,7 +8,7 @@ import * as Yup from 'yup';
 import { toast } from 'sonner';
 import NepaliDate from 'nepali-date-converter';
 
-import { EmiService } from '@/app/api/services/emi.service';
+import { EmiRequest } from '@/app/api/services/emi.service';
 import { useAuth } from '@/app/context/AuthContext';
 import {
     personalDetailsSchema,
@@ -497,7 +497,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             }));
 
             // Execute API Request
-            const response = await EmiService.EmiRequest(formData);
+            const response = await EmiRequest(formData);
 
             if (response && (response.success || response.id || response.status)) {
                 toast.success(response.message || 'Application Submitted Successfully!');

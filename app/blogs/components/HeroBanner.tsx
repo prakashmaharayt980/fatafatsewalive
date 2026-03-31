@@ -97,29 +97,40 @@ export default function HeroBanner({ data }: HeroBannerProps) {
                     {slides.length > 1 && (
                         <>
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    prevSlide();
-                                }}
-                                className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                                onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+                                className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
                                 aria-label="Previous slide"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                                 </svg>
                             </button>
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    nextSlide();
-                                }}
-                                className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                                onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+                                className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
                                 aria-label="Next slide"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                 </svg>
                             </button>
+
+                            {/* Dot indicators */}
+                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                                {slides.map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={(e) => { e.stopPropagation(); setCurrentIndex(i); }}
+                                        aria-label={`Go to slide ${i + 1}`}
+                                        className={[
+                                            'rounded-full transition-all duration-300',
+                                            i === currentIndex
+                                                ? 'w-5 h-1.5 bg-white'
+                                                : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80',
+                                        ].join(' ')}
+                                    />
+                                ))}
+                            </div>
                         </>
                     )}
 

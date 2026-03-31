@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ProductService } from '../api/services/product.service'
+import { searchProducts, submitRepairRequest } from '../api/services/product.service'
 import { getBrandProducts, getCategoryProducts } from '../api/services/category.service'
 import { useAuth } from '../context/AuthContext'
 import type { ShippingAddress } from '../checkout/checkoutTypes'
@@ -107,7 +107,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
             const targetCat = forceCategorySlug ?? state.selectedCategory?.slug
 
             if (search?.trim()) {
-                const res = await ProductService.searchProducts({ search: search.trim(), categories: targetCat, brands: brandSlug, per_page: 20 })
+                const res = await searchProducts({ search: search.trim(), categories: targetCat, brands: brandSlug, per_page: 20 })
                 fetched = res?.data || []
             } else if (targetCat) {
                 const res = await getCategoryProducts(targetCat, { brand: brandSlug, per_page: 20 })
@@ -116,7 +116,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
                 const res = await getBrandProducts(brandSlug, { per_page: 20 })
                 fetched = res?.data || []
             } else {
-                const res = await ProductService.searchProducts({ per_page: 20 })
+                const res = await searchProducts({ per_page: 20 })
                 fetched = res?.data || []
             }
             updateState({ products: fetched, isLoadingProducts: false })
@@ -254,7 +254,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
 
         updateState({ isSubmitting: true })
         try {
-            await ProductService.submitRepairRequest(payload)
+            await submitRepairRequest(payload)
 
             const params = new URLSearchParams({
                 name: payload.customer.name || 'Customer',

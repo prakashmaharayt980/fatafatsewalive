@@ -7,7 +7,7 @@ import Image from 'next/image';
 import type { ProductDetails } from '../types/ProductDetailsTypes';
 import { cn } from '@/lib/utils';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { ProductService } from '../api/services/product.service';
+import { searchProducts } from '../api/services/product.service';
 
 // Simple debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -42,7 +42,7 @@ export default function CompareSearchComponent({ onSelect, excludeSlugs, compact
 
             setLoading(true);
             try {
-                const res = await ProductService.searchProducts({ search: debouncedQuery });
+                const res = await searchProducts({ search: debouncedQuery });
                 const products = res.data || res || [];
                 setResults(products);
             } catch (error) {

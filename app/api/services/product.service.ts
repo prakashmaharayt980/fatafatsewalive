@@ -1,3 +1,5 @@
+'use server';
+ 
 import { unstable_cache } from 'next/cache';
 import { apiPublic } from './client';
 
@@ -69,15 +71,4 @@ export const submitRepairRequest = async (data: any) => {
     return apiPublic.post('/v1/repair-requests', data).then(res => res.data);
 }
 
-// ─── Backward-compat object (keeps all existing call sites working) ──────────
 
-export const ProductService = {
-    getProductBySlug,
-    searchProducts,
-    getRelatedProducts,
-    getFeaturedProducts,
-    getNewArrivals,
-    getSaleProducts,
-    submitExchangeRequest,
-    submitRepairRequest,
-};

@@ -4,7 +4,7 @@ import React from 'react';
 import ClientEmiPage from './_components/ClientEmiPage';
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import type { BannerItem } from '@/app/types/BannerTypes';
-import { ProductService } from '../api/services/product.service';
+import { getProductBySlug as fetchProductBySlug } from '../api/services/product.service';
 import { getBannerData } from '../api/CachedHelper/getBannerData';
 
 interface PageProps {
@@ -13,7 +13,7 @@ interface PageProps {
 
 const getProductBySlug = async (slug: string): Promise<ProductDetails | null> => {
     try {
-        const product = await ProductService.getProductBySlug(slug);
+        const product = await fetchProductBySlug(slug);
         return product || null;
     } catch (error) {
         console.error("Failed to fetch product for EMI Metadata:", error);

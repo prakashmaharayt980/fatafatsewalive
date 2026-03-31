@@ -14,7 +14,7 @@ import MobileSidebar from './sidebarMobile';
 import { useAuthStore } from '../context/AuthContext';
 import { trackSearch } from '@/lib/Analytic';
 import type { NavbarItem } from '../context/navbar.interface';
-import { ProductService } from '../api/services/product.service';
+import { searchProducts } from '../api/services/product.service';
 import { useCartStore } from '../context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 import NavBar, { navbarExtradata } from './NavBar';
@@ -141,7 +141,7 @@ const HeaderBody = ({ initialNavItems }: HeaderBodyProps) => {
             updateState({ isSearching: true, showSearchDropdown: true });
             const timeoutId = setTimeout(async () => {
                 try {
-                    const res = await ProductService.searchProducts({ search: value, per_page: 5, sort: "newest" });
+                    const res = await searchProducts({ search: value, per_page: 5, sort: "newest" });
                     updateState({ searchResults: res.data || [], isSearching: false });
                     trackSearch(value);
                     saveSearchTerm(value);

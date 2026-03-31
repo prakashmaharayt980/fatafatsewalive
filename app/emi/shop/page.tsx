@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import ShopByEmiClient from './ShopByEmiClient'
+import { getAllCategories } from '@/app/api/services/category.service'
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
 
 export const metadata: Metadata = {
     title: 'Shop by EMI — Find Products That Fit Your Budget | Fatafat Sewa',
@@ -13,7 +15,14 @@ export const metadata: Metadata = {
     },
 }
 
-export default function ShopByEmiPage() {
+export default async function ShopByEmiPage() {
+    const banners = await Promise.all([
+        getBannerData('home-banner-footer'),
+        getBannerData('emi-shop-footer'),
+    ])
+
+    const categories = await getAllCategories()
+
     return (
         <main>
             <Suspense fallback={
@@ -24,7 +33,10 @@ export default function ShopByEmiPage() {
                     </div>
                 </div>
             }>
-                <ShopByEmiClient />
+                <ShopByEmiClient 
+                    initialCategories={categories || []} 
+                    footerBanners={banners.filter(Boolean)} 
+                />
             </Suspense>
         </main>
     )

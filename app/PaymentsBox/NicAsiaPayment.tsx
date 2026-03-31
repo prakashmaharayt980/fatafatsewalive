@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { PaymentService } from '@/app/api/services/payments.service';
+import { InitiateNicasiaPayment } from '@/app/api/services/payments.service';
 
 interface NicAsiaPaymentProps {
     orderId: number;
@@ -17,7 +17,7 @@ export default function NicAsiaPayment({ orderId }: NicAsiaPaymentProps) {
         const initiatePayment = async () => {
             try {
                 setLoading(true);
-                const data = await PaymentService.InitiateNicasiaPayment({ order_id: orderId });
+                const data = await InitiateNicasiaPayment({ order_id: orderId });
 
                 // Check if backend gave us the required data
                 if (!data.gatewayUrl || !data.params) {

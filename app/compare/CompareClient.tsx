@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import CustomIconImg from "@/app/CommonVue/CustomIconImg";
 
 
-import { ProductService } from '../api/services/product.service';
+import { getProductBySlug } from '../api/services/product.service';
 import { useCartStore } from '../context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 // ... existing imports
@@ -78,7 +78,7 @@ function CompareContent() {
                         if (existing) return existing;
 
                         try {
-                            const product = await ProductService.getProductBySlug(slug);
+                            const product = await getProductBySlug(slug);
                             return product || null;
                         } catch (e) {
                             console.error(`Failed to load product with slug: ${slug}`, e);

@@ -18,7 +18,7 @@ import {
 import type { CheckoutState, ShippingAddress } from '../checkoutTypes';
 import GoogleMapAddress from '../GoogleMapAddress';
 import type { LocationData } from '../GoogleMapAddress';
-import { AddressService } from '@/app/api/services/address.service';
+import { ShippingAddressList, ShippingAddressUpdate, CreateShippingAddress, ShippingAddressDelete } from '@/app/api/services/address.service';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/app/context/AuthContext';
 
@@ -88,7 +88,7 @@ export default function AddressStep({
             }
             setIsLoading(true);
             try {
-                const response = await AddressService.ShippingAddressList();
+                const response = await ShippingAddressList();
                 // Handle new response structure { data: [...], pagination: ..., meta: ... }
                 // or fallback to array if API hasn't updated yet (defensive)
                 const addresses = Array.isArray(response) ? response : (response.data || []);
@@ -269,14 +269,14 @@ export default function AddressStep({
 
             if (selectedAddressId) {
                 // API call for persistence — use local nested object for state
-                await AddressService.ShippingAddressUpdate(selectedAddressId, addressPayload);
+                await ShippingAddressUpdate(selectedAddressId, addressPayload);
                 const updatedAddress = { ...localAddress, id: selectedAddressId };
                 setSavedAddresses(prev => prev.map(a => a.id === selectedAddressId ? updatedAddress : a));
                 onAddressSelect(updatedAddress);
                 setSelectedAddressId(selectedAddressId);
                 toast.success('Address updated');
             } else {
-                const apiResult = await AddressService.CreateShippingAddress(addressPayload);
+                const apiResult = await CreateShippingAddress(addressPayload);
                 const newAddress = { ...localAddress, id: apiResult?.id || Date.now() };
                 setSavedAddresses(prev => [...prev, newAddress]);
                 onAddressSelect(newAddress);
@@ -309,7 +309,7 @@ export default function AddressStep({
                 }
                 toast.success("Guest Address deleted");
             } else {
-                await AddressService.ShippingAddressDelete(addressToDelete);
+                await ShippingAddressDelete(addressToDelete);
                 setSavedAddresses(prev => prev.filter(a => a.id !== addressToDelete));
                 if (selectedAddressId === addressToDelete) {
                     setSelectedAddressId(null);

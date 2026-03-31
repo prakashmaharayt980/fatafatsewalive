@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import type { EmiContextState } from '../types';
-import { PaymentService } from '@/app/api/services/payments.service';
+import { GetEMiBanks } from '@/app/api/services/payments.service';
 import { BANK_PROVIDERS } from './_func_emiCalacutor';
 
 export interface FetchedBank {
@@ -79,7 +79,7 @@ export const useEmiStore = create<EmiStore>((set, get) => ({
         if (get().banks.length > 0 || get().isBanksLoading) return;
         set({ isBanksLoading: true });
         try {
-            const res = await PaymentService.GetEMiBanks();
+            const res = await GetEMiBanks();
             if (res && res.data) {
                 const mapped: FetchedBank[] = res.data.map((b: any) => {
                     const rateByTenure: Record<number, number> = {
