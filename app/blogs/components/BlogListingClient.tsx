@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import type { Article } from '../../types/Blogtypes';
 import imglogo from '../../assets/logoimg.png';
 
@@ -14,14 +13,13 @@ import HeroBanner from './HeroBanner';
 import BlogCard from './BlogCard';
 import ProductDeals from './ProductDeals';
 import BlogProductBasket from './BlogProductBasket';
-import { getCategoryProducts } from '../../api/services/category.service';
 import StoryViewer from './StoryViewer';
 import YouTubeVideoCard from './YouTubeVideoCard';
 import BlogCompareProducts from './BlogCompareProducts';
 import SectionHeader from './SectionHeader';
 import FeaturedArticleCard from './FeaturedArticleCard';
 import { YOUTUBE_VIDEOS } from './youtubeData';
-import { getRandomBasketProducts, getRandomBlogList } from '../../api/utils/productFetchers';
+import { fetchRandomBasketProducts, fetchRandomBlogList, fetchCategoryProducts } from '@/app/blogs/actions';
 
 
 interface BlogListingClientProps {
@@ -60,12 +58,12 @@ export default function BlogListingClient({
     };
 
     // Randomized Fetchers (The "Func" Improvements)
-    const latestDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
-    const emiFetcher = React.useMemo(() => () => getRandomBasketProducts('mobile-price-in-nepal', 5), []);
-    const laptopsFetcher = React.useMemo(() => () => getRandomBasketProducts('laptop-price-in-nepal', 5).then(res => res.data || res), []);
-    const newsArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'news', per_page: 9 }), []);
-    const featuredArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'buying-guides', per_page: 7 }), []);
-    const youtubeSidebarFetcher = React.useMemo(() => () => getRandomBasketProducts('speaker-price-in-nepal', 8).then(res => res.data || res), []);
+    const latestDealsFetcher = React.useMemo(() => () => fetchRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
+    const emiFetcher = React.useMemo(() => () => fetchRandomBasketProducts('mobile-price-in-nepal', 5), []);
+    const laptopsFetcher = React.useMemo(() => () => fetchRandomBasketProducts('laptop-price-in-nepal', 5).then(res => res.data || res), []);
+    const newsArticlesFetcher = React.useMemo(() => () => fetchRandomBlogList({ category: 'news', per_page: 9 }), []);
+    const featuredArticlesFetcher = React.useMemo(() => () => fetchRandomBlogList({ category: 'buying-guides', per_page: 7 }), []);
+    const youtubeSidebarFetcher = React.useMemo(() => () => fetchRandomBasketProducts('speaker-price-in-nepal', 8).then(res => res.data || res), []);
 
     return (
         <>
@@ -314,7 +312,7 @@ export default function BlogListingClient({
 
                         {/* ═══ 6. Compare Products (Repositioned) ═══ */}
                         <LazySection
-                            fetcher={() => getCategoryProducts('drone-price-in-nepal', { per_page: 8, page: 1 }).then((res: any) => res.data)}
+                            fetcher={() => fetchCategoryProducts('drone-price-in-nepal', { per_page: 8, page: 1 }).then((res: any) => res.data)}
                             render={(data) => (
                                 <section id="blog-compare-products">
                                     <BlogCompareProducts products={ensureArray(data).slice(0, 8)} />

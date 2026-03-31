@@ -9,7 +9,7 @@ import { Check, X, ArrowLeft } from 'lucide-react';
 
 import type { ProductDetails } from '../../types/ProductDetailsTypes';
 
-import { searchProducts } from '@/app/api/services/product.service';
+import { fetchSearchProducts } from '@/app/compare/actions';
 import { useCartStore } from '@/app/context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -40,11 +40,11 @@ function ComparisonPageContent() {
                 const fetchedProducts = await Promise.all(
                     productSlugs.map(async (s) => {
                         if (!isNaN(Number(s))) {
-                            const res = await searchProducts({ search: s });
+                            const res = await fetchSearchProducts({ search: s });
                             return res.data?.[0] || null;
                         }
 
-                        const res = await searchProducts({ search: s.replace(/-/g, ' ') });
+                        const res = await fetchSearchProducts({ search: s.replace(/-/g, ' ') });
                         return res.data?.[0] || null;
                     })
                 );

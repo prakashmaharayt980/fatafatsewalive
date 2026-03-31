@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { getFaqs } from '@/app/api/services/misc.service';
+import { fetchFaqs } from '../actions';
 
 export interface FaqApiItem {
     id: number;
@@ -64,7 +64,7 @@ export default function EmiFaq({
                 setLoading(true);
                 setError(null);
                 const effectiveParams = params || { type: 'emi', per_page: 10, page: 1 };
-                const json = await getFaqs(effectiveParams);
+                const json = await fetchFaqs(effectiveParams);
                 if (!json.success || !Array.isArray(json.data))
                     throw new Error('Unexpected response format');
                 setFaqs(deduplicateFaqs(json.data as FaqApiItem[]));

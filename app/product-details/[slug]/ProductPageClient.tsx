@@ -23,7 +23,7 @@ const MoreDetailsProduct = dynamic(() => import("./MoreDetailsProduct"), {
 import ProductSidebar from "./ProductSidebar";
 import { trackViewContent } from "@/lib/Analytic";
 import LazySection from "@/components/LazySection";
-import { getCategoryProducts } from "@/app/api/services/category.service";
+import { fetchCategoryProducts } from "@/app/product-details/actions";
 import { decorateProduct } from "@/app/api/utils/productDecorator";
 import SkeletonCard from "@/app/skeleton/SkeletonCard";
 
@@ -66,13 +66,13 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
     }, [productDetails]);
 
     const moreFromBrandFetcher = useCallback(
-        () => getCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data),
+        () => fetchCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data),
         [relatedCategory.slug, productDetails.brand?.slug]
     );
 
     const similarPriceFetcher = useCallback(
         () => priceRange
-            ? getCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, per_page: 10 }).then(r => r.data)
+            ? fetchCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, per_page: 10 }).then(r => r.data)
             : Promise.resolve([]),
         [relatedCategory.slug, priceRange]
     );

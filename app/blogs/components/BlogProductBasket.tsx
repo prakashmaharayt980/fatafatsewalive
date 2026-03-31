@@ -7,8 +7,7 @@ import useSWR from 'swr';
 
 import { cn } from '@/lib/utils';
 import BlogProductCard from '@/app/product-details/ProductCards/blogProducts';
-import { getCategoryProducts } from '@/app/api/services/category.service';
-import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
+import { fetchCategoryProducts, fetchRandomBasketProducts } from '@/app/blogs/actions';
 import type { BasketProduct } from '@/app/types/ProductDetailsTypes';
 
 interface BlogProductBasketProps {
@@ -36,8 +35,8 @@ const fetcher = async ({
   maxPrice?: number;
   random?: boolean;
 }) => {
-  if (random) return getRandomBasketProducts(slug, 6);
-  return getCategoryProducts(slug, {
+  if (random) return fetchRandomBasketProducts(slug, 6);
+  return fetchCategoryProducts(slug, {
     brand: brandSlug,
     min_price: minPrice,
     max_price: maxPrice,

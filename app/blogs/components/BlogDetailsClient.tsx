@@ -11,7 +11,7 @@ import type { ProductDetails } from '../../types/ProductDetailsTypes';
 import type { BannerItem } from '@/app/types/BannerTypes';
 import { formatDate } from '../../CommonVue/datetime';
 import imglogo from '../../assets/logoimg.png';
-import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
+import { fetchRandomBasketProducts } from '@/app/blogs/actions';
 
 import BlogCard from './BlogCard';
 import BlogCompareProducts from './BlogCompareProducts';
@@ -53,7 +53,7 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
     };
 
     // Camera Deals Sidebar Fetcher (matching listing focus)
-    const cameraDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
+    const cameraDealsFetcher = React.useMemo(() => () => fetchRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
 
     // ── Parse TOC headings (Targeting H2 and H3) ──
     const tocItems = useMemo<TocItem[]>(() => {

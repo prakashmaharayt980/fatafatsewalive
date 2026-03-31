@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getCategoryProducts } from '@/app/api/services/category.service';
+import { fetchCategoryProducts } from '@/app/product-details/actions';
 import { ChevronRight, Scale } from 'lucide-react';
 import { decorateProduct } from '@/app/api/utils/productDecorator';
 import type { DecoratedProduct } from '@/app/types/DecoratedProduct';
@@ -109,7 +109,7 @@ export default function LazyCompareProducts({ categorySlug, currentProductId }: 
         }
 
         setIsLoading(true);
-        getCategoryProducts(categorySlug, { per_page: 10, min_price: 100 })
+        fetchCategoryProducts(categorySlug, { per_page: 10, min_price: 100 })
             .then((res) => {
                 if (res?.data) setData(res.data);
             })

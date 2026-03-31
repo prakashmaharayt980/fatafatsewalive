@@ -17,7 +17,7 @@ import {
 
 import { useContextEmi } from "./emiContext";
 import type { ProductDetails } from "@/app/types/ProductDetailsTypes";
-import { searchProducts, getProductBySlug } from "@/app/api/services/product.service";
+import { fetchSearchProducts, fetchProductBySlug } from "@/app/emi/actions";
 import { useCartStore } from "@/app/context/CartContext";
 import { useShallow } from "zustand/react/shallow";
 
@@ -65,7 +65,7 @@ export default function ProductEMIUI({
     const id = setTimeout(() => {
       if (searchQuery.trim()) {
         setLoading(true);
-        searchProducts({ search: searchQuery.trim() })
+        fetchSearchProducts({ search: searchQuery.trim() })
           .then((res: any) => setSelectItems(res.data || []))
           .catch(console.error)
           .finally(() => setLoading(false));
@@ -79,7 +79,7 @@ export default function ProductEMIUI({
   const handleProductSelect = async (slug: string) => {
     setLoading(true);
     try {
-      const full = await getProductBySlug(slug);
+      const full = await fetchProductBySlug(slug);
       if (full) {
         setEmiContextInfo((prev) => ({ ...prev, product: full as ProductDetails }));
         setProductPrice(getPrice(full.discounted_price) || getPrice(full.price));

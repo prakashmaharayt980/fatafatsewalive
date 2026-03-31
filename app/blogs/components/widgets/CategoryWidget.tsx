@@ -5,11 +5,11 @@ import Link from 'next/link';
 import useSWR from 'swr';
 
 import { Layers } from 'lucide-react';
-import { getAllCategories } from '@/app/api/services/category.service';
+import { fetchAllCategories } from '@/app/blogs/actions';
 
 const CategoryWidget = () => {
     const { data: categories, isLoading } = useSWR('blog-sidebar-categories', () =>
-        getAllCategories().then(res => res.data?.slice(0, 8) || [])
+        fetchAllCategories().then((res: any) => res.data?.slice(0, 8) || [])
     );
 
     if (isLoading) return <div className="h-48 bg-gray-100 rounded-2xl animate-pulse"></div>;
