@@ -25,6 +25,7 @@ import {
 } from '../exchange-helpers'
 
 interface Props {
+    questions: any[]
     selectedCategory: NavbarItem | null
     selectedProduct: FullProduct | null
     isLoadingDetail: boolean
@@ -32,7 +33,7 @@ interface Props {
     conditionComplete: boolean
     exchangeValue: number
     pickupSelected: boolean
-    onConditionAnswer: (key: 'screen' | 'body' | 'battery' | 'functional', value: number) => void
+    onConditionAnswer: (key: string, value: number) => void
     onPickupSelect: (selected: boolean) => void
     onCheckout: () => void
     onLoginRequest: () => void
@@ -43,17 +44,20 @@ interface Props {
     governmentId: string
     devicePhoto: File | string | null
     phoneNumber: string
-    onVerificationChange: (key: 'serialNumber' | 'governmentId' | 'devicePhoto' | 'phoneNumber', value: any) => void
+    onVerificationChange: (key: any, value: any) => void
     problems: string[]
     reason: string
-    onConditionExtra: (key: 'problems' | 'reason', value: any) => void
+    onConditionExtra: (key: 'reason' | 'problems', value: any) => void
 }
 
 export default function ExchangeForm({
+    questions,
     selectedCategory,
+    selectedProduct,
     isLoadingDetail,
     conditionAnswers,
     conditionComplete,
+    exchangeValue,
     pickupSelected,
     onConditionAnswer,
     onCheckout,
@@ -195,7 +199,6 @@ export default function ExchangeForm({
 
     const isVerified = serialNumber.trim().length > 3 && governmentId.trim().length > 3 && phoneNumber.trim().length > 3 && !!devicePhoto
     const canSubmit = conditionComplete && isVerified && (!pickupSelected || !!selectedAddress)
-    const questions = GET_CONDITION_QUESTIONS(selectedCategory?.slug ?? 'mobile')
 
     const NavBtn = ({ label, onClick, disabled = false }: { label: string; onClick: () => void; disabled?: boolean }) => (
         <button
@@ -262,14 +265,14 @@ export default function ExchangeForm({
 
                 {/* ── Step 1: Condition ── */}
                 {step === 1 && (
-                    <section className="space-y-6  ">
+                    <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center justify-between">
                             <h3 className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)]">Device Condition</h3>
                             {conditionComplete && <CheckCircle2 size={14} className="text-emerald-500" />}
                         </div>
 
-                        {questions.map((q) => {
-                            const val = conditionAnswers[q.key as keyof ConditionAnswer]
+                        {questions.map((q: any) => {
+                            const val = conditionAnswers[q.key]
                             return (
                                 <div key={q.key} className="space-y-3">
                                     <p className="text-[13px] font-bold text-gray-800 leading-snug">{q.label}</p>
@@ -278,7 +281,7 @@ export default function ExchangeForm({
                                         onValueChange={v => onConditionAnswer(q.key as any, Number(v))}
                                         className="grid grid-cols-2 gap-3"
                                     >
-                                        {q.options.map(opt => {
+                                        {q.options.map((opt: any) => {
                                             const isSel = val === opt.value
                                             const isGood = opt.label === 'Yes'
                                             return (
@@ -361,10 +364,11 @@ export default function ExchangeForm({
                             </div>
 
                             <div className="pt-2">
-                                {!isLoggedIn
-                                    ? <button onClick={onLoginRequest} className="w-full h-10 flex items-center justify-center rounded-xl text-[11px] font-bold uppercase tracking-widest text-white bg-[#eb5a2c] hover:opacity-90 transition-all active:scale-[0.98]">Login to Continue</button>
-                                    : <NavBtn label="Next" onClick={() => setStep(2)} disabled={!conditionComplete} />
-                                }
+                                <NavBtn
+                                    label={isLoggedIn ? 'Next' : 'Login to Continue'}
+                                    onClick={() => isLoggedIn ? setStep(2) : onLoginRequest()}
+                                    disabled={!conditionComplete}
+                                />
                             </div>
                         </div>
                     </section>
@@ -488,10 +492,11 @@ export default function ExchangeForm({
                         </div>
 
                         <div className="pt-2">
-                            {!isLoggedIn
-                                ? <button onClick={onLoginRequest} className="w-full h-10 flex items-center justify-center rounded-xl text-[11px] font-bold uppercase tracking-widest text-white bg-[#eb5a2c] hover:opacity-90 transition-all active:scale-[0.98]">Login to Continue</button>
-                                : <NavBtn label="Next" onClick={() => setStep(3)} disabled={!isVerified} />
-                            }
+                            <NavBtn
+                                label={isLoggedIn ? 'Next' : 'Login to Continue'}
+                                onClick={() => isLoggedIn ? setStep(3) : onLoginRequest()}
+                                disabled={!isVerified}
+                            />
                         </div>
                     </section>
                 )}
@@ -606,20 +611,15 @@ export default function ExchangeForm({
                                     </button>
                                 )}
 
-                                {/* Submit — only when ready */}
-                                {!isLoggedIn ? (
-                                    <button onClick={onLoginRequest} className="w-full h-10 mt-2 flex items-center justify-center rounded-xl text-[11px] font-bold uppercase tracking-widest text-white bg-[#eb5a2c] hover:opacity-90 transition-all active:scale-[0.98]">
-                                        Login to Continue
-                                    </button>
-                                ) : canSubmit ? (
+                                {(!isLoggedIn || canSubmit) && (
                                     <button
-                                        onClick={onCheckout}
+                                        onClick={isLoggedIn ? onCheckout : onLoginRequest}
                                         className="w-full h-10 mt-2 flex items-center justify-center gap-2 rounded-xl text-[11px] font-bold uppercase tracking-widest text-white bg-[var(--colour-fsP2)] hover:opacity-90 transition-all active:scale-[0.98]"
                                     >
                                         <CheckCircle2 size={14} />
-                                        Submit Exchange
+                                        {isLoggedIn ? 'Submit Exchange' : 'Login to Continue'}
                                     </button>
-                                ) : null}
+                                )}
                             </div>
                         )}
 

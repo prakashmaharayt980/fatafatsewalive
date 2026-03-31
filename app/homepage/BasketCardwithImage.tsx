@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useRef } from 'react';
+import { memo, useRef, useMemo } from 'react';
 import { ChevronRight, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -8,8 +8,29 @@ import { cn } from '@/lib/utils';
 import { trackCategoryClick } from '@/lib/analytics';
 import ProductCard from '../product-details/ProductCard';
 import SkeletonCard from '../skeleton/SkeletonCard';
-import type { BasketProduct } from '../types/ProductDetailsTypes';
 import { useBasketState, useStoreSelectors, usePagination } from './hooks/useBasketState';
+import type { BasketProduct } from '../types/ProductDetailsTypes';
+
+const CardItem = memo(function CardItem({ product, index, isWishlisted, isCompared, cart, auth }: {
+  product: any;
+  index: number;
+  isWishlisted: boolean;
+  isCompared: boolean;
+  cart: ReturnType<typeof useStoreSelectors>['cart'];
+  auth: ReturnType<typeof useStoreSelectors>['auth'];
+}) {
+  return (
+    <ProductCard
+      product={product}
+      simple
+      index={index}
+      isWishlisted={isWishlisted}
+      isCompared={isCompared}
+      onWishlist={() => cart.addToWishlist(product.id, auth.user, auth.triggerLoginAlert, product as BasketProduct)}
+      onCompare={() => cart.isInCompare(product.id) ? cart.removeFromCompare(product.id) : cart.addToCompare(product)}
+    />
+  );
+});
 
 interface Props {
   title?: string;
@@ -27,6 +48,8 @@ function BasketCardwithImage({ title, slug, imageUrl, initialData, isFirstSectio
   const { state, updateState } = useBasketState(slug, products.length > 0);
   const { auth, cart } = useStoreSelectors();
   const { totalPages } = usePagination(products.length, state.width, true);
+
+  const wishlistSet = useMemo(() => new Set(cart.wishlistItems.map((i: any) => i.id)), [cart.wishlistItems]);
 
   if (!state.ready || !products.length) return <SkeletonCard />;
 
@@ -99,14 +122,13 @@ function BasketCardwithImage({ title, slug, imageUrl, initialData, isFirstSectio
                   key={product.id}
                   className="shrink-0 snap-start w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] md:w-[calc(25%-12px)]"
                 >
-                  <ProductCard
+                  <CardItem
                     product={product}
-                    simple
                     index={index}
-                    isWishlisted={cart.wishlistItems.some(i => i.id === product.id)}
+                    isWishlisted={wishlistSet.has(product.id)}
                     isCompared={cart.isInCompare(product.id)}
-                    onWishlist={() => cart.addToWishlist(product.id, auth.user, auth.triggerLoginAlert, product as BasketProduct)}
-                    onCompare={() => cart.isInCompare(product.id) ? cart.removeFromCompare(product.id) : cart.addToCompare(product)}
+                    cart={cart}
+                    auth={auth}
                   />
                 </div>
               ))}

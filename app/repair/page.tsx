@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-
 import RepairClient from './RepairClient'
-import { getAllBrands } from '../api/services/category.service';
+import { getAllBrands, getAllCategories } from '../api/services/category.service'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = {
     title: 'Mobile & Laptop Repair — Expert Device Repair Service | Fatafat Sewa',
@@ -37,16 +37,25 @@ export const metadata: Metadata = {
     },
 }
 
-export default async function RepairPage() {
-    let brands: Array<{ id: number; name: string; slug: string; image?: string }> = []
+async function RepairPageContent() {
+    let brands: any[] = []
+    let categories: any[] = []
 
     try {
-        const res = await getAllBrands()
-        brands = res?.data || []
+        const [brandRes, catRes] = await Promise.all([
+            getAllBrands(),
+            getAllCategories()
+        ])
+        brands = brandRes?.data || brandRes || []
+        categories = catRes?.data || catRes || []
     } catch (err) {
-        console.error('Failed to fetch brands for repair page:', err)
+        console.error('Failed to fetch data for repair page:', err)
     }
 
+    return <RepairClient brands={brands} categories={categories} />
+}
+
+export default function RepairPage() {
     // JSON-LD structured data
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -84,7 +93,38 @@ export default async function RepairPage() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <RepairClient brands={brands} />
+            <Suspense fallback={
+                <div className="min-h-screen bg-[#F5F7FA] flex flex-col">
+                    <div className="bg-white border-b border-gray-100 py-12 md:py-16">
+                        <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col md:flex-row items-center gap-12">
+                            <div className="flex-1 space-y-6">
+                                <div className="h-6 w-40 bg-gray-100 rounded-full animate-pulse" />
+                                <div className="space-y-3">
+                                    <div className="h-10 w-[85%] bg-gray-100 rounded-xl animate-pulse" />
+                                    <div className="h-10 w-[60%] bg-gray-100 rounded-xl animate-pulse" />
+                                </div>
+                                <div className="h-16 w-[75%] bg-gray-50 rounded-xl animate-pulse" />
+                            </div>
+                            <div className="w-64 h-64 bg-gray-50 rounded-full animate-pulse hidden md:block" />
+                        </div>
+                    </div>
+                    <div className="flex-1 py-8">
+                        <div className="max-w-7xl mx-auto space-y-6">
+                            <div className="h-4 bg-gray-200/60 rounded-full animate-pulse" />
+                            <div className="w-full h-[600px] bg-white border-none border-gray-100 animate-pulse flex flex-col p-6 space-y-8">
+                                <div className="h-4 w-28 bg-gray-100 rounded-full" />
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                                    {Array.from({ length: 10 }).map((_, i) => (
+                                        <div key={i} className="aspect-[4/5] bg-gray-50 rounded-2xl" />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }>
+                <RepairPageContent />
+            </Suspense>
         </>
     )
 }

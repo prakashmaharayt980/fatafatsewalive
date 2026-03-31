@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import BlogListingClient from './components/BlogListingClient';
 import type { Article } from '../types/Blogtypes';
@@ -7,6 +7,7 @@ import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import BannerSectionServer from '@/components/BannerSectionServer';
 import { getCategoryProducts } from '../api/services/category.service';
 import { getBlogCategories, getBlogList } from '../api/services/blog.service';
+import BlogSkeleton from './components/BlogSkeleton';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
@@ -32,7 +33,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     };
 }
 
-import { Suspense } from 'react';
+import { Suspense as SuspenseReact } from 'react';
 
 async function BlogPageContent({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }) {
     const resolvedParams = await searchParams;
@@ -44,20 +45,26 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
     const heroBannerData = await getBannerData('blog-banner-test');
 
     // Fetch dynamic data in parallel
-    let categoriesResponse = null;
-    let trendingProductsResponse = null;
-    let blogListResponse = null;
+    let categoriesResponse: any = null;
+    let trendingProductsResponse: any = null;
+    let blogListResponse: any = null;
+    let cameraDealsResponse: any = null;
 
     try {
-        [categoriesResponse, trendingProductsResponse, blogListResponse] = await Promise.all([
+        const [categoriesRes, trendingRes, blogListRes, cameraDealsRes] = await Promise.all([
             getBlogCategories(),
             getCategoryProducts('mobile-price-in-nepal', { per_page: 10, page: 1 }),
             getBlogList({
                 category: activeCategory !== 'all' ? activeCategory : undefined,
                 search: searchQuery || undefined,
                 per_page: 30
-            })
+            }),
+            getCategoryProducts('dslr-camera-price-in-nepal', { per_page: 8, page: 1 })
         ]);
+        categoriesResponse = categoriesRes;
+        trendingProductsResponse = trendingRes;
+        blogListResponse = blogListRes;
+        cameraDealsResponse = cameraDealsRes;
     } catch (e) {
         console.error("Critical fetch failure in BlogPage", e);
     }
@@ -119,6 +126,7 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
                 categories={categories}
                 SectionOne={SectionOne}
                 heroBannerData={heroBannerData}
+                cameraDeals={cameraDealsResponse?.data?.products || []}
             />
         </>
     );
@@ -126,14 +134,7 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
 
 export default function BlogPage(props: { searchParams: Promise<{ category?: string, q?: string }> }) {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-gray-500 font-medium">Loading blog articles...</p>
-                </div>
-            </div>
-        }>
+        <Suspense fallback={<BlogSkeleton />}>
             <BlogPageContent {...props} />
         </Suspense>
     );

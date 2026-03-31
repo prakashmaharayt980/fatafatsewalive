@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import {
     type ProductListItem, type FullProduct, type ColorOption, type ConditionAnswer,
     calculateExchangeValue, getMaxExchangeValue,
-    extractColorsFromVariants
+    extractColorsFromVariants, GET_CONDITION_QUESTIONS
 } from './exchange-helpers'
 import { ProductService } from '../api/services/product.service'
 import { getBrandProducts, getCategoryProducts } from '../api/services/category.service'
@@ -76,7 +76,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         isLoadingDetail: false,
         colorOptions: [],
         selectedColor: null,
-        conditionAnswers: { screen: 0, body: 0, battery: 0, functional: 0 },
+        conditionAnswers: {},
         conditionComplete: false,
         pickupSelected: true,
         selectedAddress: null,
@@ -177,7 +177,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             selectedColor: null,
             products: [],
             conditionComplete: false,
-            conditionAnswers: { screen: 0, body: 0, battery: 0, functional: 0 },
+            conditionAnswers: {},
             isFormOpen: false,
             serialNumber: '',
             governmentId: '',
@@ -189,6 +189,13 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         })
     }, [updateState])
 
+    // ── Resets state on unmount to avoid conflicts ──
+    useEffect(() => {
+        return () => {
+            handleResetAll()
+        }
+    }, [handleResetAll])
+
     // ── Handlers
     const handleSelectCategory = (cat: NavbarItem) => {
         updateState({
@@ -199,7 +206,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             selectedColor: null,
             searchTerm: '',
             conditionComplete: false,
-            conditionAnswers: { screen: 0, body: 0, battery: 0, functional: 0 }
+            conditionAnswers: {}
         })
         fetchProducts('', '', cat.slug)
         const hasBrands = (cat.brands?.length || 0) > 0
@@ -234,11 +241,8 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             isLoadingDetail: true,
             selectedColor: null,
             conditionComplete: false,
-            conditionAnswers: { screen: 0, body: 0, battery: 0, functional: 0 },
+            conditionAnswers: {},
             isFormOpen: true,
-            serialNumber: '',
-            governmentId: '',
-            devicePhoto: null,
             phoneNumber: '',
             selectedAddress: null,
         })
@@ -268,14 +272,25 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         }
     }
 
-    const handleConditionAnswer = (key: 'screen' | 'body' | 'battery' | 'functional', value: number) => {
+    const handleConditionAnswer = (key: string, value: number) => {
         const updatedAnswers = { ...state.conditionAnswers, [key]: value }
-        const allAnswered = Object.values(updatedAnswers).every(v => v > 0)
+        
+        const currentQuestions = GET_CONDITION_QUESTIONS(
+            state.selectedCategory?.slug ?? '',
+            state.selectedProduct?.brand.name ?? ''
+        )
+        const allAnswered = currentQuestions.every((q: any) => updatedAnswers[q.key] > 0)
+
         updateState({
             conditionAnswers: updatedAnswers,
             conditionComplete: allAnswered,
         })
     }
+    
+    const currentQuestions = useMemo(() => GET_CONDITION_QUESTIONS(
+        state.selectedCategory?.slug ?? '',
+        state.selectedProduct?.brand.name ?? ''
+    ), [state.selectedCategory, state.selectedProduct])
 
     const handleVerificationChange = (key: 'serialNumber' | 'governmentId' | 'devicePhoto' | 'phoneNumber', value: any) => {
         updateState({ [key]: value } as any)
@@ -307,28 +322,53 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             : (user?.name ?? '')
         const contactPhone = state.phoneNumber || contact?.contact_number || user?.phone || ''
 
+        // ── Map condition answers from numbers to Yes/No ──
+        const currentQuestions = GET_CONDITION_QUESTIONS(
+            state.selectedCategory?.slug ?? '',
+            state.selectedProduct?.brand.name ?? ''
+        )
+        const condition_answers = currentQuestions.map(q => ({
+            question: q.label,
+            answer: state.conditionAnswers[q.key] === 1.0 ? 'Yes' : 'No'
+        }))
+
         const payload = {
-            product_id: state.selectedProduct?.id,
-            color: state.selectedColor?.name ?? '',
-            exchange_value: exchangeValue,
-            serial_number: state.serialNumber,
-            government_id: state.governmentId,
-            phone_number: state.phoneNumber,
-            device_photo: state.devicePhoto ?? null,
-            problems: state.problems,
-            reason: state.reason,
-            pickup: state.pickupSelected,
-            address: {
-                full_address: [addr?.landmark, addr?.city, addr?.district, addr?.province].filter(Boolean).join(', '),
-                landmark: addr?.landmark ?? '',
-                city: addr?.city ?? '',
-                district: addr?.district ?? '',
-                province: addr?.province ?? '',
-                lat: geo?.lat ?? null,
-                lng: geo?.lng ?? null,
+            service_type: 'exchange_request',
+            customer: {
+                name: contactName,
+                phone: contactPhone,
+                user_id: user?.id || null
             },
-            contact_name: contactName,
-            contact_phone: contactPhone,
+            device_info: {
+                product_id: state.selectedProduct?.id,
+                name: state.selectedProduct?.name,
+                color: state.selectedColor?.name ?? '',
+                serial_number: state.serialNumber,
+                government_id: state.governmentId,
+                device_photo: state.devicePhoto ?? null,
+                condition_answers, // "all question ans" with Yes/No
+                problems: state.problems,
+                reason: state.reason,
+            },
+            valuation: {
+                estimated_value: exchangeValue,
+            },
+            pickup_info: {
+                selected: state.pickupSelected,
+                address: {
+                    full_address: [addr?.landmark, addr?.city, addr?.district, addr?.province].filter(Boolean).join(', '),
+                    landmark: addr?.landmark ?? '',
+                    city: addr?.city ?? '',
+                    district: addr?.district ?? '',
+                    province: addr?.province ?? '',
+                    lat: geo?.lat ?? null,
+                    lng: geo?.lng ?? null,
+                }
+            },
+            metadata: {
+                source: 'exchange_wizard_v2',
+                timestamp: new Date().toISOString(),
+            }
         }
 
         updateState({ isSubmitting: true })
@@ -340,20 +380,18 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             }
 
             const params = new URLSearchParams({
-                name: contactName || 'Customer',
-                phone: contactPhone,
-                device: state.selectedProduct?.name ?? '',
+                name: payload.customer.name || 'Customer',
+                phone: payload.customer.phone,
+                device: payload.device_info.name ?? '',
                 value: String(exchangeValue),
-                color: payload.color,
+                color: payload.device_info.color,
                 image: getProductImage(state.selectedProduct),
-                address: payload.address.full_address,
-                serial: payload.serial_number,
-                govtId: payload.government_id,
-                pickup: state.pickupSelected ? 'Yes' : 'No',
-                problems: state.problems.join(', '),
-                reason: state.reason,
-                contactName,
-                contactPhone,
+                address: payload.pickup_info.address.full_address,
+                serial: payload.device_info.serial_number,
+                govtId: payload.device_info.government_id,
+                pickup: payload.pickup_info.selected ? 'Yes' : 'No',
+                problems: payload.device_info.problems.join(', '),
+                reason: payload.device_info.reason,
             })
 
             handleResetAll()
@@ -409,6 +447,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                                 <SheetDescription>Complete the details below to get an instant quote</SheetDescription>
                             </SheetHeader>
                             <ExchangeForm
+                                questions={currentQuestions}
                                 selectedCategory={state.selectedCategory}
                                 selectedProduct={state.selectedProduct}
                                 isLoadingDetail={state.isLoadingDetail}

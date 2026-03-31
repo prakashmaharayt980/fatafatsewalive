@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from '@/app/context/AuthContext';
 import { useCartStore } from '@/app/context/CartContext';
@@ -101,5 +101,5 @@ export function useScrollObserver(
 
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [ready, visibleCount, productCount, onLoadMore, containerRef, sentinelRef]);
+  }, [ready, visibleCount, productCount, onLoadMore]);
 }

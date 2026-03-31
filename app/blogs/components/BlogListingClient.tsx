@@ -28,6 +28,7 @@ interface BlogListingClientProps {
     categories: any[];
     SectionOne?: React.ReactNode;
     heroBannerData?: any;
+    cameraDeals?: any[];
 }
 
 export default function BlogListingClient({
@@ -35,6 +36,7 @@ export default function BlogListingClient({
     categories,
     SectionOne,
     heroBannerData,
+    cameraDeals = [],
 }: BlogListingClientProps) {
 
     const [storyViewerOpen, setStoryViewerOpen] = useState(false);
@@ -127,27 +129,24 @@ export default function BlogListingClient({
                                             </span>
                                         }
                                     />
-                                    {/* Blog Cards Grid */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                                        {articles?.length > 0 && articles.slice(0, 12).map((post) => (
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                                        {articles?.slice(0, 12).map((post) => (
                                             <BlogCard key={post.id} post={post} />
                                         ))}
                                     </div>
                                 </div>
                                 <div className="hidden lg:block w-full lg:w-1/4">
-                                    <LazySection
-                                        fetcher={latestDealsFetcher}
-                                        render={(data) => {
-                                            const products = ensureArray(data).slice(0, 8);
-                                            const deals = products.map((p: any) => ({
+                                    {cameraDeals.length > 0 ? (
+                                        <ProductDeals 
+                                            deals={cameraDeals.map((p: any) => ({
                                                 product: p,
-                                                sellPrice: p.discountedPriceVal ?? p.discounted_price ?? (typeof p.price === 'object' ? p.price?.current : p.price) ?? 0
-                                            }));
-                                            return <ProductDeals deals={deals} title="Camera Deals" />;
-                                        }}
-                                        minHeight="600px"
-                                        fallback={<div className="h-[600px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
-                                    />
+                                                sellPrice: p.discountedPriceVal ?? p.discounted_price ?? p.price ?? 0
+                                            }))} 
+                                            title="Camera Deals" 
+                                        />
+                                    ) : (
+                                        <div className="h-[600px] w-full bg-gray-100 rounded-xl animate-pulse" />
+                                    )}
                                 </div>
                             </div>
                         </section>

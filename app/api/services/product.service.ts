@@ -65,6 +65,10 @@ export const submitExchangeRequest = async (data: any) => {
     return apiPublic.post('/v1/exchange-requests', data).then(res => res.data);
 }
 
+export const submitRepairRequest = async (data: any) => {
+    return apiPublic.post('/v1/repair-requests', data).then(res => res.data);
+}
+
 // ─── Backward-compat object (keeps all existing call sites working) ──────────
 
 export const ProductService = {
@@ -75,4 +79,5 @@ export const ProductService = {
     getNewArrivals,
     getSaleProducts,
     submitExchangeRequest,
+    submitRepairRequest,
 };

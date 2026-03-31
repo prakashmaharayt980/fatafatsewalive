@@ -68,53 +68,67 @@ export interface ColorOption {
     discountedPrice: number
 }
 
-export interface ConditionAnswer {
-    screen: number
-    body: number
-    battery: number
-    functional: number
-}
+export type ConditionAnswer = Record<string, number>
 
-// ── Condition Questions (Category-Specific & Binary) ────────────────
-export const GET_CONDITION_QUESTIONS = (categorySlug: string) => {
+// ── Condition Questions (Category & Brand Specific) ────────────────
+export const GET_CONDITION_QUESTIONS = (categorySlug: string, brandName: string = '') => {
     const isLaptop = categorySlug?.toLowerCase().includes('laptop')
+    const isApple = brandName?.toLowerCase().includes('apple')
     
+    if (isLaptop) {
+        return [
+            {
+                key: 'screen',
+                label: `Is the ${isApple ? 'Retina ' : ''}display flawless and scratch-free?`,
+                icon: '💻',
+                options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.5 } ],
+            },
+            {
+                key: 'body',
+                label: 'Are the hinges, chassis, and keys in good condition?',
+                icon: '🛡️',
+                options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.6 } ],
+            },
+            {
+                key: 'battery',
+                label: 'Does the battery hold a charge for normal usage duration?',
+                icon: '🔋',
+                options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.5 } ],
+            },
+            {
+                key: 'ports',
+                label: 'Do all ports, trackpad, and performance feel optimal?',
+                icon: '🔌',
+                options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.2 } ],
+            },
+        ]
+    }
+
+    // Default Mobile
     return [
         {
-            key: 'screen' as const,
-            label: isLaptop ? 'Is the laptop screen flawless and scratch-free?' : 'Is the mobile screen flawless and scratch-free?',
+            key: 'screen',
+            label: `Is the ${isApple ? 'iPhone' : 'mobile'} screen flawless and scratch-free?`,
             icon: '📱',
-            options: [
-                { label: 'Yes', value: 1.0 },
-                { label: 'No', value: 0.5 },
-            ],
+            options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.5 } ],
         },
         {
-            key: 'body' as const,
-            label: isLaptop ? 'Are the body, hinges, and keys in good condition?' : 'Is the device body free from major dents or scratches?',
+            key: 'body',
+            label: 'Is the device body free from major dents or scratches?',
             icon: '🛡️',
-            options: [
-                { label: 'Yes', value: 1.0 },
-                { label: 'No', value: 0.6 },
-            ],
+            options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.6 } ],
         },
         {
-            key: 'battery' as const,
-            label: isLaptop ? 'Does the battery hold a charge for normal usage duration?' : 'Is the battery health above 80% and holding charge normally?',
+            key: 'battery',
+            label: `Is the ${isApple ? 'Peak Performance Capability' : 'battery health'} normal?`,
             icon: '🔋',
-            options: [
-                { label: 'Yes', value: 1.0 },
-                { label: 'No', value: 0.5 },
-            ],
+            options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.5 } ],
         },
         {
-            key: 'functional' as const,
-            label: isLaptop ? 'Do all ports, trackpad, and performance feel optimal?' : 'Are all features (Camera, FaceID/Fingerprint, Speakers) working?',
+            key: 'features',
+            label: `Are all features (${isApple ? 'FaceID/iCloud' : 'Camera/Fingerprint/Speaker'}) working?`,
             icon: '⚙️',
-            options: [
-                { label: 'Yes', value: 1.0 },
-                { label: 'No', value: 0.2 },
-            ],
+            options: [ { label: 'Yes', value: 1.0 }, { label: 'No', value: 0.2 } ],
         },
     ]
 }
@@ -162,7 +176,9 @@ export function getDepreciationRate(ageMonths: number): number {
 }
 
 export function getConditionMultiplier(answers: ConditionAnswer): number {
-    const avg = (answers.screen + answers.body + answers.battery + answers.functional) / 4
+    const values = Object.values(answers);
+    if (values.length === 0) return 1;
+    const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
     return Math.round(avg * 100) / 100
 }
 

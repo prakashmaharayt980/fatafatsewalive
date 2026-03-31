@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useRef, useCallback } from 'react';
+import { memo, useRef, useCallback, useMemo, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -19,28 +19,63 @@ interface Props {
 
 const BATCH_SIZE = 4;
 
+const CardItem = memo(function CardItem({ product, index, isFirstSection, isWishlisted, isCompared, cart, auth }: {
+  product: any;
+  index: number;
+  isFirstSection: boolean;
+  isWishlisted: boolean;
+  isCompared: boolean;
+  cart: ReturnType<typeof useStoreSelectors>['cart'];
+  auth: ReturnType<typeof useStoreSelectors>['auth'];
+}) {
+  return (
+    <ProductCard
+      product={product}
+      isFirstSection={isFirstSection}
+      simple
+      index={index}
+      isWishlisted={isWishlisted}
+      isCompared={isCompared}
+      onWishlist={() => cart.addToWishlist(product.id, auth.user, auth.triggerLoginAlert, product as BasketProduct)}
+      onCompare={() => cart.isInCompare(product.id) ? cart.removeFromCompare(product.id) : cart.addToCompare(product)}
+    />
+  );
+});
+
 function BasketCard({ title, slug, initialData, isFirstSection = false }: Props) {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const itemWidthRef = useRef(0);
 
   const products = initialData?.products ?? [];
   const { state, updateState } = useBasketState(slug, products.length > 0);
   const { auth, cart } = useStoreSelectors();
   const { isMobile, itemsPerPage, totalPages } = usePagination(products.length, state.width);
 
+  const visibleCountRef = useRef(state.visibleCount);
+  visibleCountRef.current = state.visibleCount;
+  const productsLengthRef = useRef(products.length);
+  productsLengthRef.current = products.length;
+
   const loadMore = useCallback(() => {
-    updateState({ visibleCount: Math.min(state.visibleCount + BATCH_SIZE, products.length) });
-  }, [state.visibleCount, products.length, updateState]);
+    updateState({ visibleCount: Math.min(visibleCountRef.current + BATCH_SIZE, productsLengthRef.current) });
+  }, [updateState]);
 
   useScrollObserver(scrollRef as React.RefObject<HTMLDivElement>, sentinelRef as React.RefObject<HTMLDivElement>, state.ready, state.visibleCount, products.length, loadMore);
+
+  useEffect(() => { itemWidthRef.current = 0; }, [state.width]);
+
+  const wishlistSet = useMemo(() => new Set(cart.wishlistItems.map((i: any) => i.id)), [cart.wishlistItems]);
 
   if (!state.ready || !products.length) return <SkeletonCard />;
 
   const scrollToPage = (pageIndex: number) => {
     if (!scrollRef.current) return;
-    const itemWidth = scrollRef.current.children[0]?.getBoundingClientRect().width ?? 0;
-    scrollRef.current.scrollTo({ left: pageIndex * itemsPerPage * (itemWidth + 16), behavior: 'smooth' });
+    if (!itemWidthRef.current) {
+      itemWidthRef.current = scrollRef.current.children[0]?.getBoundingClientRect().width ?? 0;
+    }
+    scrollRef.current.scrollTo({ left: pageIndex * itemsPerPage * (itemWidthRef.current + 16), behavior: 'smooth' });
     updateState({ activeDot: pageIndex });
     const needed = (pageIndex + 1) * itemsPerPage;
     if (needed > state.visibleCount) {
@@ -48,7 +83,7 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
     }
   };
 
-  const visibleProducts = products.slice(0, state.visibleCount);
+  const visibleProducts = useMemo(() => products.slice(0, state.visibleCount), [products, state.visibleCount]);
 
   return (
     <div className="w-full py-2 sm:py-3 bg-transparent">
@@ -80,15 +115,14 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
               key={product.id}
               className="flex-shrink-0 snap-start px-1 sm:px-1.5 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
             >
-              <ProductCard
+              <CardItem
                 product={product}
                 isFirstSection={isFirstSection}
-                simple
                 index={index}
-                isWishlisted={cart.wishlistItems.some(i => i.id === product.id)}
+                isWishlisted={wishlistSet.has(product.id)}
                 isCompared={cart.isInCompare(product.id)}
-                onWishlist={() => cart.addToWishlist(product.id, auth.user, auth.triggerLoginAlert, product as BasketProduct)}
-                onCompare={() => cart.isInCompare(product.id) ? cart.removeFromCompare(product.id) : cart.addToCompare(product)}
+                cart={cart}
+                auth={auth}
               />
             </div>
           ))}
