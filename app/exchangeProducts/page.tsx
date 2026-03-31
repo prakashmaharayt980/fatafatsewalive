@@ -1,9 +1,17 @@
 import type { Metadata } from 'next'
 
 import ExchangeClient from './ExchangeClient'
-import { getAllCategories, getCategoryProducts } from '../api/services/category.service';
-import type { NavbarItem } from '../context/navbar.interface';
-import type { ProductListItem } from './exchange-helpers';
+import { getAllCategories, getCategoryProducts } from '../api/services/category.service'
+import type { NavbarItem } from '../context/navbar.interface'
+import type { ProductListItem } from './exchange-helpers'
+import { cacheLife, cacheTag } from 'next/cache'
+import { Suspense } from 'react'
+
+import LazySection from '@/components/LazySection'
+import BannerSectionServer from '@/components/BannerSectionServer'
+import OurArticlesSectionClient from '@/components/OurArticlesSectionClient'
+
+// ── Cached Data Fetchers ────────────────────────────────────
 
 export const metadata: Metadata = {
     title: 'Mobile Exchange — Trade In Your Old Phone | Fatafat Sewa',
@@ -36,33 +44,49 @@ export const metadata: Metadata = {
     },
 }
 
-import LazySection from '@/components/LazySection'
-import BannerSectionServer from '@/components/BannerSectionServer'
-import OurArticlesSectionClient from '@/components/OurArticlesSectionClient'
 
-import { Suspense } from 'react'
-
-async function ExchangePageContent() {
-    let categories: NavbarItem[] = []
-    let initialProducts: ProductListItem[] = []
-
+async function getCachedCategories() {
     try {
         const res = await getAllCategories()
-        const allCats: NavbarItem[] = res?.data || []
-        
-        // Do not filter categories per user request: "show all category ,brands"
-        categories = allCats;
-
-        // Pre-fetch products for the first category and its first brand to serve SSR content for SEO
-        if (categories.length > 0) {
-            const firstCat = categories[0]
-            const firstBrand = firstCat.brands && firstCat.brands.length > 0 ? firstCat.brands[0].slug : undefined
-            const productsRes = await getCategoryProducts(firstCat.slug, { brand: firstBrand, exchange_available: true, per_page: 40 })
-            initialProducts = productsRes?.data?.products || []
-        }
-
+        return (res?.data || []) as NavbarItem[]
     } catch (err) {
-        console.error('Failed to fetch data for exchange page:', err)
+        console.error('Failed to fetch categories:', err)
+        return []
+    }
+}
+
+async function getCachedInitialProducts(categorySlug: string, brandSlug?: string) {
+    try {
+        const productsRes = await getCategoryProducts(categorySlug, { brand: brandSlug, exchange_available: true, per_page: 10 })
+        const products = (productsRes?.data?.products || []) as ProductListItem[]
+        return products
+    } catch (err) {
+        console.error('Failed to fetch initial products:', err)
+        return []
+    }
+}
+
+// ── Page Content ───────────────────────────────────────────
+
+async function ExchangePageContent() {
+    const categories = await getCachedCategories()
+    let initialProducts: ProductListItem[] = []
+
+    if (categories.length > 0) {
+        // Find the first "Mobile" or "Laptop" category to use for initial products
+        const firstValidCat = categories.find(cat => 
+            cat.title?.toLowerCase().includes('mobile') || 
+            cat.title?.toLowerCase().includes('laptop') ||
+            cat.title?.toLowerCase().includes('smartphone') ||
+            cat.title?.toLowerCase().includes('macbook') ||
+            cat.slug?.toLowerCase().includes('mobile') ||
+            cat.slug?.toLowerCase().includes('laptop') ||
+            cat.slug?.toLowerCase().includes('smartphone') ||
+            cat.slug?.toLowerCase().includes('macbook')
+        ) || categories[0]
+
+        const firstBrand = firstValidCat.brands && firstValidCat.brands.length > 0 ? firstValidCat.brands[0].slug : undefined
+        initialProducts = await getCachedInitialProducts(firstValidCat.slug, firstBrand)
     }
 
     const bannerSection = (
@@ -78,11 +102,11 @@ async function ExchangePageContent() {
     const blogSection = <OurArticlesSectionClient />
 
     return (
-        <ExchangeClient 
-            categories={categories} 
-            initialProducts={initialProducts} 
-            bannerSection={bannerSection} 
-            blogSection={blogSection} 
+        <ExchangeClient
+            categories={categories}
+            initialProducts={initialProducts}
+            bannerSection={bannerSection}
+            blogSection={blogSection}
         />
     )
 }
@@ -90,12 +114,12 @@ async function ExchangePageContent() {
 export default function ExchangePage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-[#F5F7FA] flex flex-col items-center justify-center p-4">
                 <div className="w-full max-w-lg space-y-8 animate-in fade-in duration-700">
-                    <div className="space-y-4 text-center">
-                        <div className="w-16 h-16 border-4 border-[var(--colour-logoblue1)] border-t-transparent rounded-full animate-spin mx-auto shadow-sm"></div>
-                        <h2 className="text-2xl font-bold text-gray-800 font-heading">Preparing Mobile Exchange</h2>
-                        <p className="text-gray-500 max-w-xs mx-auto">Get ready for the best market value on your device. Just a few more seconds...</p>
+                    <div className="space-y-6 text-center">
+                        <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-[24px] animate-spin mx-auto shadow-xl shadow-blue-500/10"></div>
+                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Fatafat Exchange</h2>
+                        <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">AI Evaluation System Synchronizing...</p>
                     </div>
                 </div>
             </div>

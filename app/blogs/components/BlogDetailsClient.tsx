@@ -18,7 +18,7 @@ import BlogCompareProducts from './BlogCompareProducts';
 import BlogProductBasket from './BlogProductBasket';
 import YouTubeVideoCard from './YouTubeVideoCard';
 import HeroBanner from './HeroBanner';
-import ParsedContent from '@/app/products/ParsedContent';
+import ParsedContent from '@/app/product-details/ParsedContent';
 import ProductDeals from './ProductDeals';
 import LazySection from '@/components/LazySection';
 import SectionHeader from './SectionHeader';

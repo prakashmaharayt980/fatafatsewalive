@@ -25,7 +25,7 @@ const ProductWidget = ({ products }: ProductWidgetProps) => {
                 {products.map((product: any) => (
                     <Link
                         key={product.id}
-                        href={`/products/${product.slug}`}
+                        href={`/product-details/${product.slug}`}
                         className="flex gap-3 group items-center p-2 rounded-lg hover:bg-gradient-to-r hover:from-[var(--colour-fsP2)]/5 hover:to-transparent transition-all"
                     >
                         <div className="relative w-16 h-16 bg-gradient-to-br from-gray-50 to-white rounded-xl overflow-hidden flex-shrink-0 border-2 border-gray-100 group-hover:border-[var(--colour-fsP2)] transition-all group-hover:shadow-md">

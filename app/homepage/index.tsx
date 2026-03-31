@@ -1,72 +1,52 @@
+import type { ReactNode } from 'react';
 
 interface HomePageProps {
-  mainBannerSection?: React.ReactNode;
-
-  offerSection?: React.ReactNode;
-  sectionTwo?: React.ReactNode;
-  sectionThree?: React.ReactNode;
-  sectionFour?: React.ReactNode;
-  basketSection0?: React.ReactNode;
-  basketSection1?: React.ReactNode;
-  basketSection2?: React.ReactNode;
-  basketSection3?: React.ReactNode;
-  basketSection4?: React.ReactNode;
-  basketSection5?: React.ReactNode;
-  ourArticlesSection?: React.ReactNode;
-  sectionOne?: React.ReactNode;
+  mainBannerSection?: ReactNode;
+  sectionOne?: ReactNode;
+  sectionTwo?: ReactNode;
+  offerSection?: ReactNode;
+  ourArticlesSection?: ReactNode;
+  basketSection1?: ReactNode;
+  basketSection2?: ReactNode;
+  basketSection3?: ReactNode;
+  basketSection4?: ReactNode;
 }
 
-const HomePage = ({
+export default function HomePage({
   mainBannerSection,
-
-  offerSection,
+  sectionOne,
   sectionTwo,
-  sectionThree,
-  sectionFour,
-  basketSection0,
+  offerSection,
+  ourArticlesSection,
   basketSection1,
   basketSection2,
   basketSection3,
   basketSection4,
-  basketSection5,
-  ourArticlesSection,
-  sectionOne,
-}: HomePageProps) => {
-
-
+}: HomePageProps) {
   return (
-    <main className="mx-auto h-full m-0 p-0 space-y-0 bg-[#f8f9fa] relative overflow-hidden">
-      <h1 className="sr-only">Fatafat Sewa - Online Shopping in Nepal</h1>
-
-      {/* Woodmart-Inspired Texture: Subtle Background Orbs */}
-      <div className="absolute top-0 left-[-10%] w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none mix-blend-multiply z-0" />
-      <div className="absolute top-[300px] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none mix-blend-multiply z-0" />
-      <div className="absolute top-[800px] left-[20%] w-[700px] h-[700px] bg-indigo-50/50 rounded-full blur-[130px] pointer-events-none z-0" />
+    <main className="mx-auto h-full bg-[#f8f9fa] relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
+        <div className="absolute top-0 left-[-10%] w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-[120px] mix-blend-multiply" />
+        <div className="absolute top-[300px] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] mix-blend-multiply" />
+      </div>
 
       <div className="relative z-10 sm:px-2">
         {mainBannerSection}
-        {basketSection0}
         {sectionOne}
         {basketSection1}
         {basketSection2}
 
-        {/* Full width section */}
-        <div className="mx-[-8px] sm:mx-0">
-          {offerSection}
-        </div>
+        {offerSection && (
+          <div className="mx-[-8px] sm:mx-0">{offerSection}</div>
+        )}
 
         <div className="md:px-2">
           {basketSection3}
           {sectionTwo}
           {basketSection4}
-          {sectionThree}
-          {basketSection5}
-          {sectionFour}
           {ourArticlesSection}
         </div>
       </div>
     </main>
   );
-};
-
-export default HomePage;
+}

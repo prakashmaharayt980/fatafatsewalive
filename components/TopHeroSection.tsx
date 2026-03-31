@@ -1,16 +1,16 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import BannerCarouselServer from './BannerCarouselServer';
 import BasketSectionServer from './BasketSectionServer';
 
-interface TopHeroSectionProps {
+interface Props {
   slug: string;
   title: string;
   imgSlug?: string;
 }
 
-export default async function TopHeroSection({ slug, title, imgSlug }: TopHeroSectionProps) {
+export default async function TopHeroSection({ slug, title, imgSlug }: Props) {
   return (
-    <div className="flex flex-col space-y-0">
+    <div className="flex flex-col">
       <BannerCarouselServer />
       <div className="mt-[-10px] relative z-20">
         <Suspense fallback={<div className="min-h-[400px] w-full bg-gray-50/50 animate-pulse rounded-xl" />}>

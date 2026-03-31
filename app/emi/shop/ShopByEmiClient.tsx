@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ChevronDown, SlidersHorizontal, ShoppingBag, Loader2, Search, X } from 'lucide-react'
 
 import type { ProductSummary } from '@/app/types/ProductDetailsTypes'
-import EmiProductCard, { EmiProductCardSkeleton } from '@/app/products/ProductCards/EmiProductCard'
+import EmiProductCard, { EmiProductCardSkeleton } from '@/app/product-details/ProductCards/EmiProductCard'
 import { getAllBrands } from '@/app/api/services/category.service'
 import { ProductService } from '@/app/api/services/product.service'
 import { logoImg } from '@/app/CommonVue/Image'

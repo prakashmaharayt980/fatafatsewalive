@@ -75,48 +75,72 @@ export interface ConditionAnswer {
     functional: number
 }
 
-// ── Condition Questions ──────────────────────────────────────
-export const CONDITION_QUESTIONS = [
-    {
-        key: 'screen' as const,
-        label: 'Does the screen have any scratches or cracks?',
-        icon: '📱',
-        options: [
-            { label: 'Perfect — Not a single scratch!', value: 1.0 },
-            { label: 'Just a few minor, barely visible scratches.', value: 0.8 },
-            { label: 'Yes, it is cracked or broken.', value: 0.3 },
-        ],
-    },
-    {
-        key: 'body' as const,
-        label: 'How would you describe the phone\'s body?',
-        icon: '🛡️',
-        options: [
-            { label: 'Looks brand new!', value: 1.0 },
-            { label: 'Some minor dents or scratches from normal use.', value: 0.8 },
-            { label: 'It has major damage or dents.', value: 0.4 },
-        ],
-    },
-    {
-        key: 'battery' as const,
-        label: 'How well does the battery hold a charge?',
-        icon: '🔋',
-        options: [
-            { label: 'Excellent, lasts all day (>80% health).', value: 1.0 },
-            { label: 'Average, needs a charge sometimes (50-80%).', value: 0.7 },
-            { label: 'Poor, drains very quickly (<50% health).', value: 0.4 },
-        ],
-    },
-    {
-        key: 'functional' as const,
-        label: 'Does everything on the phone work correctly?',
-        icon: '⚙️',
-        options: [
-            { label: 'Yes, everything works flawlessly.', value: 1.0 },
-            { label: 'Mostly, but there are a few minor issues.', value: 0.7 },
-            { label: 'No, there are major functional issues.', value: 0.3 },
-        ],
-    },
+// ── Condition Questions (Category-Specific & Binary) ────────────────
+export const GET_CONDITION_QUESTIONS = (categorySlug: string) => {
+    const isLaptop = categorySlug?.toLowerCase().includes('laptop')
+    
+    return [
+        {
+            key: 'screen' as const,
+            label: isLaptop ? 'Is the laptop screen flawless and scratch-free?' : 'Is the mobile screen flawless and scratch-free?',
+            icon: '📱',
+            options: [
+                { label: 'Yes', value: 1.0 },
+                { label: 'No', value: 0.5 },
+            ],
+        },
+        {
+            key: 'body' as const,
+            label: isLaptop ? 'Are the body, hinges, and keys in good condition?' : 'Is the device body free from major dents or scratches?',
+            icon: '🛡️',
+            options: [
+                { label: 'Yes', value: 1.0 },
+                { label: 'No', value: 0.6 },
+            ],
+        },
+        {
+            key: 'battery' as const,
+            label: isLaptop ? 'Does the battery hold a charge for normal usage duration?' : 'Is the battery health above 80% and holding charge normally?',
+            icon: '🔋',
+            options: [
+                { label: 'Yes', value: 1.0 },
+                { label: 'No', value: 0.5 },
+            ],
+        },
+        {
+            key: 'functional' as const,
+            label: isLaptop ? 'Do all ports, trackpad, and performance feel optimal?' : 'Are all features (Camera, FaceID/Fingerprint, Speakers) working?',
+            icon: '⚙️',
+            options: [
+                { label: 'Yes', value: 1.0 },
+                { label: 'No', value: 0.2 },
+            ],
+        },
+    ]
+}
+
+// Fallback constant to maintain backward compatibility during transition
+export const CONDITION_QUESTIONS = GET_CONDITION_QUESTIONS('mobile')
+
+// ── Problem Options (Category-Specific) ─────────────────────
+export const GET_PROBLEM_OPTIONS = (categorySlug: string): string[] => {
+    const isLaptop = categorySlug?.toLowerCase().includes('laptop')
+    if (isLaptop) return [
+        'Cracked screen', 'Keyboard issues', 'Battery degraded',
+        'Hinge broken', 'Overheating', 'Port damage', 'Slow performance', 'No issues',
+    ]
+    return [
+        'Cracked screen', 'Dead battery', 'Camera problem',
+        'Speaker / mic', 'Water damage', 'Charging issue', 'Button stuck', 'No issues',
+    ]
+}
+
+export const REASON_OPTIONS = [
+    'Upgrading device',
+    'Switching brand',
+    'Need cash',
+    'Device too old',
+    'Other',
 ]
 
 // ── Age-based depreciation ───────────────────────────────────

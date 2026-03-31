@@ -143,7 +143,7 @@ const OfferBannerClient = ({ offer }: OfferBannerClientProps) => {
                     {(offer.products?.data || []).slice(0, 5).map((product) => (
                         <Link
                             key={product.id}
-                            href={`/products/${product.slug}`}
+                            href={`/product-details/${product.slug}`}
                             className="group bg-white cursor-pointer flex items-center gap-2 sm:gap-3 p-2 rounded-xl border border-white/50 hover:border-[var(--colour-fsP2)]/30 hover:shadow-lg transition-all duration-300 sm:flex-shrink-0 sm:min-w-[180px]"
                         >
                             <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-slate-50 rounded-lg overflow-hidden flex-shrink-0">

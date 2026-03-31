@@ -48,7 +48,7 @@ export default function BlogFastSaleProductCards({
             <div className="group flex flex-col h-full bg-white rounded-xl border border-[var(--colour-border3)] overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
                 {/* Top: Large Image Section */}
                 <Link
-                    href={`/products/${product.slug}`}
+                    href={`/product-details/${product.slug}`}
                     className="relative w-full aspect-square bg-[var(--colour-bg4)] border-b border-[var(--colour-border3)] p-4 flex items-center justify-center overflow-hidden transition-colors group-hover:bg-white"
                 >
                     {hasDiscount && discountPercent > 0 && (
@@ -70,7 +70,7 @@ export default function BlogFastSaleProductCards({
                 {/* Bottom: Information Section */}
                 <div className="flex-1 flex flex-col p-4">
                     {/* Identity */}
-                    <Link href={`/products/${product.slug}`} className="mb-2">
+                    <Link href={`/product-details/${product.slug}`} className="mb-2">
                         <h4 className="text-[13px] font-bold text-[var(--colour-text2)] leading-tight line-clamp-2 min-h-[2.5rem] group-hover:text-[var(--colour-fsP2)] transition-colors">
                             {product.name}
                         </h4>
@@ -118,7 +118,7 @@ export default function BlogFastSaleProductCards({
                             )}
                         </div>
                         <Link
-                            href={`/products/${product.slug}`}
+                            href={`/product-details/${product.slug}`}
                             className="w-full h-9 flex items-center justify-center gap-2 bg-[var(--colour-fsP2)] text-white text-[11px] font-bold rounded-lg hover:brightness-110 hover:shadow-lg transition-all active:scale-[0.98]"
                         >
                             <ShoppingCart className="w-3.5 h-3.5" />
@@ -137,7 +137,7 @@ export default function BlogFastSaleProductCards({
             <div className="flex gap-4 p-4">
                 {/* Product Image Container */}
                 <Link
-                    href={`/products/${product.slug}`}
+                    href={`/product-details/${product.slug}`}
                     className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 rounded-lg bg-[var(--colour-bg4)] border border-[var(--colour-border3)] p-2 transition-colors duration-300 group-hover:border-[var(--colour-fsP2)]/20"
                 >
                     {hasDiscount && discountPercent > 0 && (
@@ -158,7 +158,7 @@ export default function BlogFastSaleProductCards({
 
                 {/* Right Side: Identity + Rating + Features */}
                 <div className="flex-1 min-w-0 flex flex-col pt-0.5">
-                    <Link href={`/products/${product.slug}`}>
+                    <Link href={`/product-details/${product.slug}`}>
                         <h4 className="text-[14px] font-bold text-[var(--colour-text2)] leading-tight line-clamp-2 group-hover:text-[var(--colour-fsP2)] transition-colors mb-2">
                             {product.name}
                         </h4>
@@ -213,7 +213,7 @@ export default function BlogFastSaleProductCards({
                     </div>
                     
                     <Link
-                        href={`/products/${product.slug}`}
+                        href={`/product-details/${product.slug}`}
                         className="flex items-center gap-2 bg-[var(--colour-fsP2)]/10 text-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)] hover:text-white text-[11px] font-bold px-4 py-2 rounded-full transition-all duration-300"
                     >
                         Buy Now

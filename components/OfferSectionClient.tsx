@@ -7,23 +7,21 @@ import { GetallOfferlist, GetOfferDetailsBySlug } from '@/app/api/services/offer
 
 const OfferBannerClient = dynamic(() => import('@/app/homepage/OfferBannerClient'), { ssr: true });
 
+async function fetchOfferData() {
+  const campaigns = await GetallOfferlist();
+  if (!campaigns?.success || !campaigns.data?.length) return null;
+
+  const details = await GetOfferDetailsBySlug(campaigns.data[0].slug);
+  return details?.success ? details.data : null;
+}
+
 export default function OfferSectionClient() {
-    return (
-        <LazySection
-            className="min-h-[400px] sm:min-h-[500px]"
-            minHeight="0"
-            fetcher={async () => {
-                // Fetch first campaign details (Server Action called from Client)
-                const campaigns = await GetallOfferlist();
-                if (campaigns?.success && campaigns.data?.length > 0) {
-                    const details = await GetOfferDetailsBySlug(campaigns.data[0].slug);
-                    return details?.success ? details.data : null;
-                }
-                return null;
-            }}
-            render={(data) => {
-                return data ? <OfferBannerClient offer={data} /> : null;
-            }}
-        />
-    );
+  return (
+    <LazySection
+      className="min-h-[400px] sm:min-h-[500px]"
+      minHeight="0"
+      fetcher={fetchOfferData}
+      render={(data) => data ? <OfferBannerClient offer={data} /> : null}
+    />
+  );
 }

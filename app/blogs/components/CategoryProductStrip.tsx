@@ -43,7 +43,7 @@ const CategoryProductStrip = ({ categorySlug, categoryTitle }: CategoryProductSt
                 {products.slice(0, 10).map((product) => (
                     <Link
                         key={product.id}
-                        href={`/products/${product.slug}`}
+                        href={`/product-details/${product.slug}`}
                         className="min-w-[200px] md:min-w-[240px] snap-center group"
                     >
                         <div className="bg-white rounded-2xl border border-gray-100 p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">

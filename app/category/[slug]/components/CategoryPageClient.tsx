@@ -22,7 +22,7 @@ const ProductGrid = dynamic(() => import('./ProductGrid'), {
         {[...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)}
     </div>
 });
-const ParsedContent = dynamic(() => import('@/app/products/ParsedContent'), { ssr: true });
+const ParsedContent = dynamic(() => import('@/app/product-details/ParsedContent'), { ssr: true });
 
 import { SmartStickyWrapper } from './SmartStickyWrapper';
 import type { CategoryPageClientProps } from './interfaces';

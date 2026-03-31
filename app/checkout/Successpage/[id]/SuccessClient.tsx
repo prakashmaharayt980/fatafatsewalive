@@ -107,56 +107,8 @@ export default function SuccessClient({ order }: SuccessClientProps) {
                             Your order has been placed successfully.<br /> We will notify you by email once your order has been shipped.
                         </p>
 
-                        {/* Shipping Address */}
-                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 border border-gray-200">
-                            <h2 className="text-base sm:text-lg font-bold text-[var(--colour-fsP2)] mb-3 flex items-center">
-                                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-[var(--colour-fsP2)]" />
-                                Shipping Details
-                            </h2>
-
-                            <div className="space-y-2 text-xs sm:text-sm">
-                                {order.shipping_address.full_name && (
-                                    <div className="flex items-start">
-                                        <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 text-gray-500" />
-                                        <span className="font-semibold text-gray-700 w-14 sm:w-16 shrink-0">Name</span>
-                                        <span className="text-gray-900">{order.shipping_address.full_name}</span>
-                                    </div>
-                                )}
-
-                                <div className="flex items-start">
-                                    <MapPinHouse className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 text-gray-500" />
-                                    <span className="font-semibold text-gray-700 w-14 sm:w-16 shrink-0">Address</span>
-                                    <span className="text-gray-900">
-                                        {[
-                                            order.shipping_address.address,
-                                            order.shipping_address.city,
-                                            order.shipping_address.state,
-                                            order.shipping_address.country,
-                                            order.shipping_address.postal_code
-                                        ].filter(Boolean).join(', ')}
-                                    </span>
-                                </div>
-
-                                {order.shipping_address.phone && (
-                                    <div className="flex items-center">
-                                        <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 text-gray-500" />
-                                        <span className="font-semibold text-gray-700 w-12 sm:w-14 shrink-0">Phone</span>
-                                        <span className="text-gray-900">{order.shipping_address.phone}</span>
-                                    </div>
-                                )}
-
-                                {order.shipping_address.email && (
-                                    <div className="flex items-center">
-                                        <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 text-gray-500" />
-                                        <span className="font-semibold text-gray-700 w-12 sm:w-14 shrink-0">Email</span>
-                                        <span className="text-gray-900">{order.shipping_address.email}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row justify-between gap-2 w-full">
+                        <div className="flex flex-col sm:flex-row justify-between gap-3 w-full mt-6">
                             <Link
                                 href="/profile/orders"
                                 className="w-full sm:w-fit px-3 sm:px-4 bg-[var(--colour-fsP2)] text-white font-semibold py-2 sm:py-3 rounded-lg flex items-center justify-center text-xs sm:text-sm"

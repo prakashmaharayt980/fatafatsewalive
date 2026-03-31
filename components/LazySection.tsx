@@ -1,39 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 
-interface LazySectionProps<T = any> {
-  children?: React.ReactNode;
-  /** Optional fetcher for data-driven lazy loading */
+interface LazySectionProps<T = unknown> {
+  children?: ReactNode;
   fetcher?: () => Promise<T>;
-  /** Optional render function for fetched data */
-  render?: (data: T) => React.ReactNode;
-  /** @deprecated Use render instead */
-  component?: (data: T) => React.ReactNode;
-  fallback?: React.ReactNode;
+  render?: (data: T) => ReactNode;
+  fallback?: ReactNode;
   className?: string;
   minHeight?: string;
-  /** Buffer in pixels before the section enters the viewport to start loading */
   rootMargin?: string;
-  /** Optional delay in ms before showing the content after it enters view */
   delay?: number;
-  /** Visual Aspect Ratio to reserve space (e.g. '16/9' or '5/1') */
   aspectRatio?: string;
-  /** Whether to load this section immediately without waiting for intersection */
   priority?: boolean;
 }
 
-/**
- * Unified Lazy Loading Section.
- * Efficiently renders children or fetches data only when it enters the viewport.
- * Resolves hydration issues by using a consistent intersection observer.
- */
-function LazySection<T = any>({
+export default function LazySection<T = unknown>({
   children,
   fetcher,
   render,
-  component, // backward compatibility
   fallback = null,
   className,
   minHeight = '100px',
@@ -48,100 +33,55 @@ function LazySection<T = any>({
   const didFetch = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const renderFn = render || component;
+  const activate = async () => {
+    if (didFetch.current) return;
+    didFetch.current = true;
 
-  // Manual trigger if priority is set
-  useEffect(() => {
-    if (priority && !didFetch.current) {
-      const activate = async () => {
-        if (delay > 0) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-        setInView(true);
-        didFetch.current = true;
-        if (fetcher) {
-          setIsLoading(true);
-          try {
-            const result = await fetcher();
-            setData(result);
-          } catch (err) {
-            console.error('LazySection fetch error:', err);
-          } finally {
-            setIsLoading(false);
-          }
-        }
-      };
-      activate();
+    if (delay > 0) await new Promise(r => setTimeout(r, delay));
+    setInView(true);
+
+    if (fetcher) {
+      setIsLoading(true);
+      try {
+        setData(await fetcher());
+      } catch (e) {
+        console.error('LazySection:', e);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [priority, fetcher, delay]);
+  };
 
   useEffect(() => {
-    if (priority || didFetch.current) return;
+    if (priority) activate();
+  }, [priority]);
+
+  useEffect(() => {
+    if (priority || didFetch.current || !containerRef.current) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !didFetch.current) {
-          const activate = async () => {
-            if (delay > 0) {
-              await new Promise(resolve => setTimeout(resolve, delay));
-            }
-            
-            setInView(true);
-            didFetch.current = true; // Mark as activated early to avoid race conditions
-
-            if (fetcher) {
-              setIsLoading(true);
-              try {
-                const result = await fetcher();
-                setData(result);
-              } catch (err) {
-                console.error('LazySection fetch error:', err);
-                // Optional: reset didFetch on critical failure to allow retry
-                // didFetch.current = false; 
-              } finally {
-                setIsLoading(false);
-              }
-            }
-          };
-
+        if (entry.isIntersecting) {
           activate();
           observer.disconnect();
         }
       },
-      {
-        rootMargin,
-        threshold: 0.01,
-      }
+      { rootMargin, threshold: 0.01 }
     );
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
+    observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [fetcher, rootMargin, delay, priority]);
+  }, [rootMargin]);
+
+  const content = inView
+    ? fetcher
+      ? isLoading || !data ? fallback : render?.(data) ?? null
+      : children
+    : fallback;
 
   return (
-    <div
-      ref={containerRef}
-      className={className}
-      style={{ minHeight, aspectRatio }}
-    >
-      {inView ? (
-        <>
-          {/* Fetcher-based: show fallback while loading, then render data */}
-          {fetcher ? (
-            isLoading || !data ? fallback : renderFn ? renderFn(data!) : null
-          ) : (
-            /* Children-only mode: render exactly once */
-            children
-          )}
-        </>
-      ) : (
-        fallback
-      )}
+    <div ref={containerRef} className={className} style={{ minHeight, aspectRatio }}>
+      {content}
     </div>
   );
 }
-
-export default LazySection;

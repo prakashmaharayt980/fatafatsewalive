@@ -90,7 +90,7 @@ const BlogProductCard = ({
 
     const handleProductClick = () => {
         if (!product.slug) return;
-        router.push(`/products/${product.slug}`);
+        router.push(`/product-details/${product.slug}`);
     };
 
     const handleWishlistClick = async (e: React.MouseEvent) => {

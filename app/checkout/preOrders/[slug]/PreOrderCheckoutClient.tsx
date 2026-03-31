@@ -212,7 +212,7 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
                 <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
                     <Link href="/" className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">Home</Link>
                     <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
-                    <Link href={`/products/${product.slug}`} className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium truncate max-w-[160px]">{product.name}</Link>
+                    <Link href={`/product-details/${product.slug}`} className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium truncate max-w-[160px]">{product.name}</Link>
                     <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
                     <span className="text-gray-700 font-semibold whitespace-nowrap">Pre-Order</span>
                     {currentStep > 0 && (

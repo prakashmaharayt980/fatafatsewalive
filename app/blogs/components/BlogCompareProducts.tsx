@@ -26,7 +26,7 @@ function ProductSide({ product, side }: { product: ProductDetails; side: 'left' 
 
     return (
         <div className={`flex flex-col items-center gap-2 flex-1 ${side === 'left' ? 'pr-2 sm:pr-3' : 'pl-2 sm:pl-3'}`}>
-            <Link href={`/products/${product.slug}`} className="relative w-full aspect-square flex items-center justify-center  bg-transparent rounded-xl p-2  transition-colors">
+            <Link href={`/product-details/${product.slug}`} className="relative w-full aspect-square flex items-center justify-center  bg-transparent rounded-xl p-2  transition-colors">
                 <div className="relative w-full h-full">
                     <Image
                         src={imgUrl}
@@ -39,7 +39,7 @@ function ProductSide({ product, side }: { product: ProductDetails; side: 'left' 
             </Link>
 
             <div className="text-center space-y-0.5 w-full">
-                <Link href={`/products/${product.slug}`}>
+                <Link href={`/product-details/${product.slug}`}>
                     <p className="text-[var(--colour-text2)] font-semibold text-[11px] sm:text-[12px] leading-tight line-clamp-2 hover:text-[var(--colour-fsP2)] transition-colors">
                         {product.name}
                     </p>

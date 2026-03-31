@@ -163,7 +163,7 @@ const HeaderBody = ({ initialNavItems }: HeaderBodyProps) => {
     const handleProductClick = (product: any, e?: React.MouseEvent) => {
         e?.preventDefault();
         e?.stopPropagation();
-        router.push(`/products/${product.slug}`);
+        router.push(`/product-details/${product.slug}`);
         updateState({ showSearchDropdown: false, mobileSearchVisible: false });
     };
 

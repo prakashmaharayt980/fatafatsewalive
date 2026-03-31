@@ -76,7 +76,7 @@ function useProductCard(product: ProductCardProps['product']) {
     );
 
     const handleCardClick = useCallback(
-        () => router.push(`/products/${product.slug}`),
+        () => router.push(`/product-details/${product.slug}`),
         [router, product.slug]
     );
 

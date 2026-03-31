@@ -22,7 +22,7 @@ import linkedinIcon from '@/public/svgfile/linkedin.svg';
 
 import { bankingEmiPartners, paymentPartners, insurancePartners } from '@/app/CommonVue/Partners';
 
-const FooterBody = () => {
+const FooterBody = async() => {
 
   const QuickLinks = [
     { title: "About Us", url: "/pages/about-us" },

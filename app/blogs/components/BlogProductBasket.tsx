@@ -6,7 +6,7 @@ import { useInView } from 'react-intersection-observer';
 import useSWR from 'swr';
 
 import { cn } from '@/lib/utils';
-import BlogProductCard from '@/app/products/ProductCards/blogProducts';
+import BlogProductCard from '@/app/product-details/ProductCards/blogProducts';
 import { getCategoryProducts } from '@/app/api/services/category.service';
 import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 import type { BasketProduct } from '@/app/types/ProductDetailsTypes';

@@ -60,7 +60,7 @@ const ProductDeals = React.memo(({ deals, products, title }: ProductDealsProps) 
                     return (
                         <Link
                             key={product.id}
-                            href={`/products/${product.slug}`}
+                            href={`/product-details/${product.slug}`}
                             className="group relative flex gap-3 p-2.5 rounded-lg bg-white border border-[var(--colour-border3)] hover:border-[var(--colour-fsP2)]/40 hover:shadow-sm transition-all duration-200"
                         >
                             {/* Product Image Container */}

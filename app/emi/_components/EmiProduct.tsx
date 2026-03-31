@@ -399,7 +399,7 @@ export default function ProductEMIUI({
 
               {/* Bottom links */}
               <div className="flex items-center gap-3 pt-0.5">
-                <Link href={`/products/${product.slug}`}
+                <Link href={`/product-details/${product.slug}`}
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--colour-fsP2)] hover:opacity-80 transition-opacity group/link">
                   <Eye className="w-3 h-3" />
                   View Details
@@ -508,7 +508,7 @@ export default function ProductEMIUI({
               {/* CTA buttons */}
               <div className="flex gap-2 mt-auto">
                 <Link
-                  href={`/products/${product.slug}`}
+                  href={`/product-details/${product.slug}`}
                   className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold text-[12px] py-2.5 rounded-lg shadow-sm transition-all"
                 >
                   <ShoppingCart className="w-3.5 h-3.5" />
@@ -532,7 +532,7 @@ export default function ProductEMIUI({
                   {isInCompare(Number(product.id)) ? "Added" : "Compare"}
                 </button>
                 <Link
-                  href={`/products/${product.slug}`}
+                  href={`/product-details/${product.slug}`}
                   className="flex items-center justify-center gap-1 text-[12px] font-semibold py-2.5 px-3 rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-[var(--colour-fsP2)]/40 hover:text-[var(--colour-fsP2)] transition-all"
                 >
                   <Eye className="w-3.5 h-3.5" />

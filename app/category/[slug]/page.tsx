@@ -181,7 +181,7 @@ function generateStructuredData(title: string, slug: string, products: any, cate
                 item: {
                     '@type': 'Product',
                     name: product.name,
-                    url: `${baseUrl}/products/${product.slug}`,
+                    url: `${baseUrl}/product-details/${product.slug}`,
                     image: product.image?.full || product.image?.preview,
                     offers: {
                         '@type': 'Offer',

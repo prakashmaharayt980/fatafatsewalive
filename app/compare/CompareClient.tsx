@@ -225,7 +225,7 @@ function CompareContent() {
 
                                             <div className="space-y-2 w-full flex-grow flex flex-col justify-start">
                                                 <h3 className="text-[15px] font-bold text-gray-800 line-clamp-2 leading-snug">
-                                                    <Link href={`/products/${product.slug}`} className="hover:text-blue-600 transition-colors">
+                                                    <Link href={`/product-details/${product.slug}`} className="hover:text-blue-600 transition-colors">
                                                         {product.name}
                                                     </Link>
                                                 </h3>
@@ -241,7 +241,7 @@ function CompareContent() {
 
                                             <div className="w-full pt-4 mt-auto">
                                                 <Link
-                                                    href={`/products/${product.slug}`}
+                                                    href={`/product-details/${product.slug}`}
                                                     className="w-full py-2 rounded-full border border-gray-200 text-blue-600 hover:bg-blue-50 font-semibold text-sm transition-colors text-center flex items-center justify-center"
                                                 >
                                                     View Full

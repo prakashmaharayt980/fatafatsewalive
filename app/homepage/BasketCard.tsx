@@ -1,185 +1,65 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { memo, useRef, useCallback } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import ProductCard from '../products/ProductCard';
 import { cn } from '@/lib/utils';
 import { trackCategoryClick } from '@/lib/analytics';
-import { useAuthStore } from '../context/AuthContext';
-import { useCartStore } from '../context/CartContext';
-import { useShallow } from 'zustand/react/shallow';
-import type { BasketProduct } from '../types/ProductDetailsTypes';
+import ProductCard from '../product-details/ProductCard';
 import SkeletonCard from '../skeleton/SkeletonCard';
+import type { BasketProduct } from '../types/ProductDetailsTypes';
+import { useBasketState, useStoreSelectors, usePagination, useScrollObserver } from './hooks/useBasketState';
 
-interface BasketCardProps {
+interface Props {
   title?: string;
   slug: string;
-  initialData?: any;
+  initialData?: { products?: any[] };
   isFirstSection?: boolean;
 }
 
-// How many products to render up front
-const INITIAL_VISIBLE = 5;
-// How many to add each time the sentinel is crossed
 const BATCH_SIZE = 4;
 
-// Module-level set to remember which sections have already been fully loaded
-const loadedSections = new Set<string>();
-
-const BasketCard = ({ title, slug, initialData, isFirstSection = false }: BasketCardProps) => {
+function BasketCard({ title, slug, initialData, isFirstSection = false }: Props) {
   const router = useRouter();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const [windowWidth, setWindowWidth] = useState(0);
-  const [activeDot, setActiveDot] = useState(0);
-  const [imagesLoaded, setImagesLoaded] = useState(0);
-  // isFirstSection=true → start ready immediately (SSR data already present, no delay)
-  // Otherwise, check if this section was previously loaded or if initialData is provided
-  const [isReady, setIsReady] = useState(() => isFirstSection || !!initialData || loadedSections.has(slug));
-  // How many products are currently injected into the DOM
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
 
-  const { user, triggerLoginAlert } = useAuthStore(useShallow(state => ({
-    user: state.user,
-    triggerLoginAlert: state.triggerLoginAlert
-  })));
+  const products = initialData?.products ?? [];
+  const { state, updateState } = useBasketState(slug, products.length > 0);
+  const { auth, cart } = useStoreSelectors();
+  const { isMobile, itemsPerPage, totalPages } = usePagination(products.length, state.width);
 
-  const {
-    addToWishlist,
-    wishlistItems,
-    addToCompare,
-    removeFromCompare,
-    isInCompare
-  } = useCartStore(useShallow(
-    state => ({
-      addToWishlist: state.addToWishlist,
-      wishlistItems: state.wishlistItems,
-      addToCompare: state.addToCompare,
-      removeFromCompare: state.removeFromCompare,
-      isInCompare: state.isInCompare
-    })
-  ));
+  const loadMore = useCallback(() => {
+    updateState({ visibleCount: Math.min(state.visibleCount + BATCH_SIZE, products.length) });
+  }, [state.visibleCount, products.length, updateState]);
 
-  // Handle window resize with a throttled approach
-  useEffect(() => {
-    setWindowWidth(window.innerWidth);
-    let timeoutId: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setWindowWidth(window.innerWidth);
-      }, 150);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
-    };
-  }, []);
+  useScrollObserver(scrollRef, sentinelRef, state.ready, state.visibleCount, products.length, loadMore);
 
-  const products = initialData?.products || [];
+  if (!state.ready || !products.length) return <SkeletonCard />;
 
-  const { itemsPerPage, totalPages, isMobile } = useMemo(() => {
-    const isMob = windowWidth > 0 && windowWidth < 640;
-    const ipp = isMob ? 2 : 5;
-    const tp = Math.ceil((products.length || 0) / ipp) || 1;
-    return { isMobile: isMob, itemsPerPage: ipp, totalPages: tp };
-  }, [windowWidth, products.length]);
-
-  const handleImageLoad = useCallback(() => setImagesLoaded(prev => prev + 1), []);
-
-  // Readiness gate — show content once first batch of images load or if data is already present.
-  useEffect(() => {
-    if (isReady || !products.length) return;
-    
-    // If we have products but aren't "ready" (e.g. waiting for images), 
-    // we set it to ready immediately if it's the first section or if we have data.
-    if (isFirstSection || !!initialData) {
-      setIsReady(true);
-      loadedSections.add(slug);
-      return;
-    }
-
-    // Fallback: wait for images or a very short period to avoid infinite skeleton
-    const timer = setTimeout(() => {
-      setIsReady(true);
-      loadedSections.add(slug);
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [isReady, slug, products.length, isFirstSection, initialData]);
-
-  useEffect(() => {
-    if (!isReady && products.length > 0 && imagesLoaded >= Math.min(products.length, itemsPerPage)) {
-      setIsReady(true);
-      loadedSections.add(slug);
-    }
-  }, [imagesLoaded, products.length, itemsPerPage, isReady, slug]);
-
-  // ── IntersectionObserver: expand DOM as user scrolls right ─────────────────
-  useEffect(() => {
-    if (!isReady || visibleCount >= products.length) return;
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleCount(prev => Math.min(prev + BATCH_SIZE, products.length));
-        }
-      },
-      {
-        root: scrollContainerRef.current, // scroll container is the viewport
-        threshold: 0.1,
-      }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [isReady, visibleCount, products.length]);
-
-  if (!isReady || !products.length) return <SkeletonCard />;
-
-  // Scroll to specific dot page
   const scrollToPage = (pageIndex: number) => {
-    if (scrollContainerRef.current) {
-      const itemWidth = scrollContainerRef.current.children[0]?.getBoundingClientRect().width || 0;
-      const gap = 16;
-      const scrollDistance = pageIndex * itemsPerPage * (itemWidth + gap);
-      scrollContainerRef.current.scrollTo({
-        left: scrollDistance,
-        behavior: 'smooth',
-      });
-      setActiveDot(pageIndex);
+    if (!scrollRef.current) return;
+    const itemWidth = scrollRef.current.children[0]?.getBoundingClientRect().width ?? 0;
+    scrollRef.current.scrollTo({ left: pageIndex * itemsPerPage * (itemWidth + 16), behavior: 'smooth' });
+    updateState({ activeDot: pageIndex });
+    const needed = (pageIndex + 1) * itemsPerPage;
+    if (needed > state.visibleCount) {
+      updateState({ visibleCount: Math.min(needed + BATCH_SIZE, products.length) });
     }
   };
 
-  const handleDotClick = (index: number) => {
-    scrollToPage(index);
-    // When the user navigates forward, pre-reveal enough products
-    const neededForPage = (index + 1) * itemsPerPage;
-    if (neededForPage > visibleCount) {
-      setVisibleCount(Math.min(neededForPage + BATCH_SIZE, products.length));
-    }
-  };
-
-  // Only slice the products that are currently in the DOM
-  const visibleProducts = products.slice(0, visibleCount);
+  const visibleProducts = products.slice(0, state.visibleCount);
 
   return (
     <div className="w-full py-2 sm:py-3 bg-transparent">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 sm:px-6 mb-3">
         <div className="flex items-center gap-3">
           <div className="w-1 h-7 bg-slate-800 rounded-full" />
-          <h2 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight">
-            {title}
-          </h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight">{title}</h2>
         </div>
-
         <button
           onClick={() => {
-            trackCategoryClick(title || slug, 'view_all');
+            trackCategoryClick(title ?? slug, 'view_all');
             router.push(`/category/${slug}`);
           }}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[var(--colour-fsP2)] cursor-pointer hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all duration-200 group"
@@ -189,79 +69,47 @@ const BasketCard = ({ title, slug, initialData, isFirstSection = false }: Basket
         </button>
       </div>
 
-      {/* Product list */}
       <div className="relative group/list px-1 sm:px-6">
         <div
-          ref={scrollContainerRef}
-          className={cn(
-            'flex overflow-x-auto overflow-y-visible scrollbar-hide snap-x',
-            'pb-2 mt-2 pt-2',
-          )}
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            scrollBehavior: 'smooth',
-          }}
+          ref={scrollRef}
+          className="flex overflow-x-auto overflow-y-visible scrollbar-hide snap-x pb-2 mt-2 pt-2"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
         >
-          {visibleProducts.map((product: any, index: number) => {
-            const isWishlisted = wishlistItems.some(i => i.id === product.id);
-            const isCompared = isInCompare(product.id);
-
-            return (
-              <div
-                key={`${product.slug}-${index}`}
-                className={cn(
-                  'flex-shrink-0 snap-start px-1 sm:px-1.5',
-                  'w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5'
-                )}
-              >
-                <ProductCard
-                  product={product}
-                  isFirstSection={isFirstSection}
-                  simple={true}
-                  index={index}
-                  isWishlisted={isWishlisted}
-                  isCompared={isCompared}
-                  onLoad={handleImageLoad}
-                  onWishlist={() => addToWishlist(product.id, user, triggerLoginAlert, product as BasketProduct)}
-                  onCompare={() => {
-                    if (isCompared) {
-                      removeFromCompare(product.id);
-                    } else {
-                      addToCompare(product);
-                    }
-                  }}
-                />
-              </div>
-            );
-          })}
-
-          {/* Sentinel — observed to trigger the next batch of products */}
-          {visibleCount < products.length && (
+          {visibleProducts.map((product: any, index: number) => (
             <div
-              ref={sentinelRef}
-              className="flex-shrink-0 w-8 self-stretch"
-              aria-hidden="true"
-            />
+              key={product.id}
+              className="flex-shrink-0 snap-start px-1 sm:px-1.5 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
+            >
+              <ProductCard
+                product={product}
+                isFirstSection={isFirstSection}
+                simple
+                index={index}
+                isWishlisted={cart.wishlistItems.some(i => i.id === product.id)}
+                isCompared={cart.isInCompare(product.id)}
+                onWishlist={() => cart.addToWishlist(product.id, auth.user, auth.triggerLoginAlert, product as BasketProduct)}
+                onCompare={() => cart.isInCompare(product.id) ? cart.removeFromCompare(product.id) : cart.addToCompare(product)}
+              />
+            </div>
+          ))}
+          {state.visibleCount < products.length && (
+            <div ref={sentinelRef} className="flex-shrink-0 w-8 self-stretch" aria-hidden="true" />
           )}
         </div>
 
-        {/* Navigation Dots */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-3">
-            {[...Array(isMobile ? Math.min(totalPages, 2) : totalPages)].map((_, index) => (
+            {Array.from({ length: isMobile ? Math.min(totalPages, 2) : totalPages }, (_, i) => (
               <button
-                key={index}
-                onClick={() => handleDotClick(index)}
+                key={i}
+                onClick={() => scrollToPage(i)}
                 className="group cursor-pointer focus:outline-none"
-                aria-label={`Go to page ${index + 1}`}
+                aria-label={`Go to page ${i + 1}`}
               >
                 <div
                   className={cn(
                     'h-2 rounded-full transition-all duration-300',
-                    index === activeDot
-                      ? 'bg-slate-300 w-6'
-                      : 'bg-[var(--colour-fsP2)] group-hover:bg-slate-300 w-4'
+                    i === state.activeDot ? 'bg-slate-300 w-6' : 'bg-[var(--colour-fsP2)] group-hover:bg-slate-300 w-4'
                   )}
                 />
               </button>
@@ -271,6 +119,6 @@ const BasketCard = ({ title, slug, initialData, isFirstSection = false }: Basket
       </div>
     </div>
   );
-};
+}
 
-export default React.memo(BasketCard);
+export default memo(BasketCard);

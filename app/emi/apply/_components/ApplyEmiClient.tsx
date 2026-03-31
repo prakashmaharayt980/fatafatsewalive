@@ -907,7 +907,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 Home
             </Button>
             <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-            <Button variant="link" className="p-0 h-auto text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] text-sm font-medium" onClick={() => router.push(`/products/${product?.slug}`)}>
+            <Button variant="link" className="p-0 h-auto text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] text-sm font-medium" onClick={() => router.push(`/product-details/${product?.slug}`)}>
                 {product?.name?.substring(0, 30)}...
             </Button>
             <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
@@ -926,7 +926,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                         Home
                     </Button>
                     <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
-                    <Button variant="link" className="p-0 h-auto text-(--colour-fsP2) hover:underline text-xs font-medium max-w-[180px] truncate" onClick={() => router.push(`/products/${product?.slug}`)}>
+                    <Button variant="link" className="p-0 h-auto text-(--colour-fsP2) hover:underline text-xs font-medium max-w-[180px] truncate" onClick={() => router.push(`/product-details/${product?.slug}`)}>
                         {product?.name?.substring(0, 30)}{product?.name && product.name.length > 30 ? '...' : ''}
                     </Button>
                     <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />

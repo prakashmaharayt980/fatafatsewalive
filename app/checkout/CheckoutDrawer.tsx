@@ -99,7 +99,7 @@ const CheckoutDrawer = () => {
                   onClick={() => {
                     const slug = item?.product?.slug || item?.product?.id;
                     if (slug) {
-                      router.push(`/products/${slug}`);
+                      router.push(`/product-details/${slug}`);
                       setIsCartOpen(false);
                     }
                   }}

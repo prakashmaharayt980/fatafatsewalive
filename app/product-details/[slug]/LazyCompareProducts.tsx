@@ -21,7 +21,7 @@ function ProductSide({ product }: { product: DecoratedProduct }) {
         <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
             {/* Image tile — theme blue highlight bg with hover lift */}
             <Link
-                href={`/products/${product.slug}`}
+                href={`/product-details/${product.slug}`}
                 className="relative w-full aspect-[4/3] rounded-xl overflow-hidden flex items-center justify-center transition-transform duration-300 hover:-translate-y-0.5"
             >
                 <Image
@@ -45,7 +45,7 @@ function ProductSide({ product }: { product: DecoratedProduct }) {
             </span>
 
             {/* Name */}
-            <Link href={`/products/${product.slug}`} className="w-full px-0.5">
+            <Link href={`/product-details/${product.slug}`} className="w-full px-0.5">
                 <p className="text-slate-700 text-[11px] font-semibold text-center leading-snug line-clamp-2 hover:text-[var(--colour-fsP2)] transition-colors">
                     {product.name}
                 </p>
