@@ -56,6 +56,7 @@ export default function ShopByEmiClient({ initialCategories = [], footerBanners 
 
     const validBanner0 = footerBanners[0]?.image?.full ?? footerBanners[0]?.thumbnail_image?.full ?? null
     const validBanner1 = footerBanners[1]?.image?.full ?? footerBanners[1]?.thumbnail_image?.full ?? null
+    const faqParams = useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])
 
     return (
         <div className="min-h-screen bg-[var(--colour-bg4)]">
@@ -278,7 +279,7 @@ export default function ShopByEmiClient({ initialCategories = [], footerBanners 
                         <div className="w-1 h-6 rounded-full" style={{ background: 'var(--colour-fsP1)' }} />
                         <h2 className="text-xl font-bold text-gray-900">Frequently Asked — EMI</h2>
                     </div>
-                    <EmiFaq params={useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])} />
+                    <EmiFaq params={faqParams} />
                 </div>
             </div>
         </div>
