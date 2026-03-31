@@ -15,7 +15,7 @@ function buildParams(filters: FilterState, page: number, per_page: number) {
     return {
         page,
         per_page,
-        sort: filters.sort || 'newest',
+        sort: filters.sort ?? 'newest',
         min_price: filters.min_price > 0 ? filters.min_price : undefined,
         max_price: filters.max_price < 100000 ? filters.max_price : undefined,
         brand: filters.brand?.length ? filters.brand.join(',') : undefined,

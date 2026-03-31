@@ -191,13 +191,11 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
     const p = useProductCard(product);
 
     return (
-        <div
+        <a
+            href={`/product-details/${product.slug}`}
+            onClick={(e) => { e.preventDefault(); p.handleCardClick(); }}
             className="group relative flex flex-col bg-white border border-gray-100 rounded-2xl hover:border-gray-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden h-full"
             style={{ animationDelay: `${(index % 12) * 40}ms` }}
-            onClick={p.handleCardClick}
-            role="link"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && p.handleCardClick()}
         >
             {/* Badges */}
             <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1">
@@ -237,7 +235,7 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
                 {p.imageUrl && (
                     <Image
                         src={p.imageUrl}
-                        alt={product.thumb?.alt_text || product.name}
+                        alt={product.thumb?.alt_text ?? product.name}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
                         priority={priority}
@@ -306,7 +304,7 @@ const ProductCard = memo(({ product, index = 0, priority = false }: ProductCardP
                     </button>
                 </div>
             </div>
-        </div>
+        </a>
     );
 });
 ProductCard.displayName = 'ProductCard';
@@ -319,13 +317,11 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
     const p = useProductCard(product);
 
     return (
-        <div
+        <a
+            href={`/product-details/${product.slug}`}
+            onClick={(e) => { e.preventDefault(); p.handleCardClick(); }}
             className="group flex flex-row bg-white border border-gray-100 rounded-2xl hover:border-gray-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden"
             style={{ animationDelay: `${(index % 12) * 40}ms` }}
-            onClick={p.handleCardClick}
-            role="link"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && p.handleCardClick()}
         >
             {/* Image column */}
             <div className="relative w-[110px] sm:w-[150px] shrink-0 bg-gray-50">
@@ -347,7 +343,7 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
                     {p.imageUrl && (
                         <Image
                             src={p.imageUrl}
-                            alt={product.thumb?.alt_text || product.name}
+                            alt={product.thumb?.alt_text ?? product.name}
                             fill
                             sizes="(max-width: 640px) 110px, 150px"
                             priority={priority}
@@ -433,7 +429,7 @@ export const ProductCardRow = memo(({ product, index = 0, priority = false }: Pr
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
     );
 });
 ProductCardRow.displayName = 'ProductCardRow';

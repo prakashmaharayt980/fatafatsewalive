@@ -19,7 +19,7 @@ const CategoryHeader = dynamic(() => import('./CategoryHeader'), { ssr: true });
 const ProductGrid = dynamic(() => import('./ProductGrid'), {
     ssr: true,
     loading: () => <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)}
+        {Array.from({ length: 8 }, (_, i) => <ProductCardSkeleton key={i} />)}
     </div>
 });
 const ParsedContent = dynamic(() => import('@/app/product-details/ParsedContent'), { ssr: true });

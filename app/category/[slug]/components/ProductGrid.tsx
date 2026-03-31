@@ -26,7 +26,7 @@ const GRID_COLS: Record<ViewMode, string> = {
 
 const LoadingGrid = memo(({ count = 10, viewMode = 'grid5' }: LoadingGridProps) => (
     <div className={cn('grid gap-4', GRID_COLS[viewMode])}>
-        {[...Array(count)].map((_, i) => (
+        {Array.from({ length: count }, (_, i) => (
             <div
                 key={i}
                 className="bg-white rounded-xl border border-gray-100 overflow-hidden"
@@ -236,7 +236,7 @@ const ProductGrid = memo(({
                             'mt-4',
                             isListView ? 'flex flex-col gap-3' : cn('grid gap-4', GRID_COLS[viewMode])
                         )}>
-                            {[...Array(5)].map((_, i) => (
+                            {Array.from({ length: 5 }, (_, i) => (
                                 <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                                     <div className="aspect-square bg-gray-100 animate-pulse" />
                                     <div className="p-3 space-y-2">
