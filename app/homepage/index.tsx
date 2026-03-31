@@ -24,10 +24,10 @@ export default function HomePage({
   basketSection4,
 }: HomePageProps) {
   return (
-    <main className="mx-auto h-full bg-[#f8f9fa] relative overflow-hidden">
+    <main className="mx-auto min-h-screen bg-[#f8f9fa] relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
-        <div className="absolute top-0 left-[-10%] w-[800px] h-[800px] bg-blue-100/40 rounded-full blur-[120px] mix-blend-multiply" />
-        <div className="absolute top-[300px] right-[-10%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[100px] mix-blend-multiply" />
+        <div className="absolute top-0 left-[-10%] w-[600px] h-[600px] bg-blue-100/30 rounded-full blur-[80px] mix-blend-multiply opacity-70" />
+        <div className="absolute top-[300px] right-[-10%] w-[500px] h-[500px] bg-purple-100/30 rounded-full blur-[60px] mix-blend-multiply opacity-70" />
       </div>
 
       <div className="relative z-10 sm:px-2">

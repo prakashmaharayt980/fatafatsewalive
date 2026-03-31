@@ -72,7 +72,7 @@ const Imgbanner = ({ mainBanner, sideBanner }: BannerProps) => {
                   transform: `translate3d(-${currentIndex * 100}%, 0, 0)`,
                 }}
               >
-                {mainImages.map((image, index) => (
+                {mainImages.filter(img => img.src).map((image, index) => (
                   <div key={image.id} className="relative w-full h-full flex-shrink-0">
                     <Link
                       href={image.link || '#'}

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import {
     type ProductListItem, type FullProduct, type ColorOption, type ConditionAnswer,
     calculateExchangeValue, getMaxExchangeValue,
@@ -59,6 +60,7 @@ interface ExchangeState {
     phoneNumber: string
     problems: string[]
     reason: string
+    isSubmitting: boolean
 }
 
 export default function ExchangeClient({ categories, initialProducts = [], bannerSection, blogSection }: MainProps) {
@@ -85,6 +87,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         phoneNumber: '',
         problems: [],
         reason: '',
+        isSubmitting: false,
     })
 
     // ── Filter Categories to Mobile & Laptop Only ──
@@ -283,14 +286,13 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
     }
 
     const getProductImage = (p: any) => {
-        if (!p) return '';
-        if (typeof p.image === 'string') return p.image;
+
         if (p.thumb?.url) return p.thumb.url;
-        if (p.image?.thumb) return p.image.thumb;
-        return '';
+
+        return '/imgfile/logoimg.png';
     }
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (!isLoggedIn) {
             setloginDailogOpen(true)
             return
@@ -298,44 +300,69 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
 
         const addr = state.selectedAddress?.address
         const contact = state.selectedAddress?.contact_info
+        const geo = state.selectedAddress?.geo
 
-        // Build full payload
+        const contactName = contact?.first_name
+            ? `${contact.first_name} ${contact.last_name ?? ''}`.trim()
+            : (user?.name ?? '')
+        const contactPhone = state.phoneNumber || contact?.contact_number || user?.phone || ''
+
         const payload = {
-            product: state.selectedProduct?.name || '',
-            productSlug: state.selectedProduct?.slug || '',
-            exchangeValue: exchangeValue.toString(),
-            serialNumber: state.serialNumber,
-            governmentId: state.governmentId,
-            address: addr ? [addr.landmark, addr.city, addr.district, addr.province].filter(Boolean).join(', ') : '',
-            addressLandmark: addr?.landmark || '',
-            addressCity: addr?.city || '',
-            addressDistrict: addr?.district || '',
-            addressProvince: addr?.province || '',
-            color: state.selectedColor?.name || '',
-            pickup: state.pickupSelected ? 'Yes' : 'No',
+            product_id: state.selectedProduct?.id,
+            color: state.selectedColor?.name ?? '',
+            exchange_value: exchangeValue,
+            serial_number: state.serialNumber,
+            government_id: state.governmentId,
+            phone_number: state.phoneNumber,
+            device_photo: state.devicePhoto ?? null,
+            problems: state.problems,
+            reason: state.reason,
+            pickup: state.pickupSelected,
+            address: {
+                full_address: [addr?.landmark, addr?.city, addr?.district, addr?.province].filter(Boolean).join(', '),
+                landmark: addr?.landmark ?? '',
+                city: addr?.city ?? '',
+                district: addr?.district ?? '',
+                province: addr?.province ?? '',
+                lat: geo?.lat ?? null,
+                lng: geo?.lng ?? null,
+            },
+            contact_name: contactName,
+            contact_phone: contactPhone,
         }
 
-        if (state.devicePhoto) {
-            try { sessionStorage.setItem('exchangeDevicePhoto', state.devicePhoto as string) } catch {}
+        updateState({ isSubmitting: true })
+        try {
+            await ProductService.submitExchangeRequest(payload)
+
+            if (state.devicePhoto) {
+                try { sessionStorage.setItem('exchangeDevicePhoto', state.devicePhoto as string) } catch { }
+            }
+
+            const params = new URLSearchParams({
+                name: contactName || 'Customer',
+                phone: contactPhone,
+                device: state.selectedProduct?.name ?? '',
+                value: String(exchangeValue),
+                color: payload.color,
+                image: getProductImage(state.selectedProduct),
+                address: payload.address.full_address,
+                serial: payload.serial_number,
+                govtId: payload.government_id,
+                pickup: state.pickupSelected ? 'Yes' : 'No',
+                problems: state.problems.join(', '),
+                reason: state.reason,
+                contactName,
+                contactPhone,
+            })
+
+            handleResetAll()
+            router.push(`/exchangeProducts/success?${params.toString()}`)
+        } catch {
+            toast.error('Failed to submit exchange request. Please try again.')
+        } finally {
+            updateState({ isSubmitting: false })
         }
-
-        const params = new URLSearchParams()
-        params.set('name', contact?.first_name || user?.name || 'Customer')
-        params.set('phone', state.phoneNumber || contact?.contact_number || user?.phone || '')
-        params.set('device', payload.product)
-        params.set('value', payload.exchangeValue)
-        params.set('color', payload.color)
-        params.set('image', getProductImage(state.selectedProduct))
-        params.set('address', payload.address)
-        params.set('serial', payload.serialNumber)
-        params.set('govtId', payload.governmentId)
-        params.set('pickup', payload.pickup)
-        params.set('problems', state.problems.join(', '))
-        params.set('reason', state.reason)
-        params.set('contactName', contact?.first_name || user?.name || '')
-        params.set('contactPhone', state.phoneNumber || contact?.contact_number || '')
-
-        router.push(`/exchangeProducts/success?${params.toString()}`)
     }
 
     return (

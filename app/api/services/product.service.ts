@@ -61,6 +61,10 @@ export const getNewArrivals = async (limit = 12) =>
 export const getSaleProducts = async (limit = 12) =>
     apiPublic.get(`/v1/products/on-sale?limit=${limit}`).then(res => res.data);
 
+export const submitExchangeRequest = async (data: any) => {
+    return apiPublic.post('/v1/exchange-requests', data).then(res => res.data);
+}
+
 // ─── Backward-compat object (keeps all existing call sites working) ──────────
 
 export const ProductService = {
@@ -70,4 +74,5 @@ export const ProductService = {
     getFeaturedProducts,
     getNewArrivals,
     getSaleProducts,
+    submitExchangeRequest,
 };

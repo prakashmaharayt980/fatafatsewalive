@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import HomePage from './homepage';
 import LazySection from '@/components/LazySection';
@@ -128,21 +129,21 @@ export default function Page() {
       <HomePage
         mainBannerSection={<TopHeroSection slug={categories[0].slug} title={categories[0].title} />}
         sectionOne={
-          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="600px">
+          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="200px">
             <BannerSectionServer slug={banners[0].slug} type={banners[0].type} />
           </LazySection>
         }
         basketSection1={<BasketSectionClient slug={categories[1].slug} title={categories[1].title} sectionIndex={1} />}
         basketSection2={<BasketSectionClient slug={categories[2].slug} title={categories[2].title} imgSlug={categories[2].imgSlug} sectionIndex={2} />}
-        offerSection={<OfferSectionClient />}
+        offerSection={<Suspense fallback={<div className="h-40 w-full animate-pulse bg-gray-50 border border-gray-100 rounded-2xl" />}><OfferSectionClient /></Suspense>}
         basketSection3={<BasketSectionClient slug={categories[3].slug} title={categories[3].title} sectionIndex={3} />}
         sectionTwo={
-          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="600px">
+          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="200px">
             <BannerSectionServer slug={banners[1].slug} type={banners[1].type} />
           </LazySection>
         }
         basketSection4={<BasketSectionClient slug={categories[4].slug} title={categories[4].title} sectionIndex={4} />}
-        ourArticlesSection={<OurArticlesSectionClient />}
+        ourArticlesSection={<Suspense fallback={<div className="h-40 w-full animate-pulse bg-gray-50 border border-gray-100 rounded-2xl" />}><OurArticlesSectionClient /></Suspense>}
       />
     </>
   );

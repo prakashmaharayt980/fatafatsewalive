@@ -69,6 +69,10 @@ async function getCachedInitialProducts(categorySlug: string, brandSlug?: string
 // ── Page Content ───────────────────────────────────────────
 
 async function ExchangePageContent() {
+    'use cache'
+    cacheLife('hours')
+    cacheTag('exchange-discovery')
+
     const categories = await getCachedCategories()
     let initialProducts: ProductListItem[] = []
 

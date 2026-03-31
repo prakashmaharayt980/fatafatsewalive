@@ -68,12 +68,12 @@ const FooterBody = async() => {
   ];
 
   const socialIcons = [
-    { name: "Facebook", Icon: <Image src={facebookIcon} alt="Facebook" width={24} height={24} style={{ width: 24, height: 24 }} />, url: "https://www.facebook.com/fatafatsewanpl" },
-    { name: "Twitter", Icon: <Image src={twitterIcon} alt="Twitter" width={24} height={24} style={{ width: 24, height: 24 }} />, url: "https://www.twitter.com/fatafatsewanp" },
-    { name: "TikTok", Icon: <Image src={tiktokIcon} alt="TikTok" width={24} height={24} style={{ width: 24, height: 24 }} />, url: "https://www.tiktok.com/@fatafatsewa" },
-    { name: "YouTube", Icon: <Image src={youtubeIcon} alt="Youtube" width={24} height={24} style={{ width: 24, height: 24 }} />, url: "https://www.youtube.com/@fatafatsewa" },
-    { name: "LinkedIn", Icon: <Image src={linkedinIcon} alt="LinkedIn" width={24} height={24} style={{ width: 24, height: 24 }} />, url: "https://www.linkedin.com/company/fatafatsewanp" },
-  ];
+    { name: "Facebook", Icon: <Image src={facebookIcon} alt="Facebook" width={24} height={24} className="w-6 h-6" />, url: "https://www.facebook.com/fatafatsewanpl" },
+    { name: "Twitter", Icon: <Image src={twitterIcon} alt="Twitter" width={24} height={24} className="w-6 h-6" />, url: "https://www.twitter.com/fatafatsewanp" },
+    { name: "TikTok", Icon: <Image src={tiktokIcon} alt="TikTok" width={24} height={24} className="w-6 h-6" />, url: "https://www.tiktok.com/@fatafatsewa" },
+    { name: "YouTube", Icon: <Image src={youtubeIcon} alt="Youtube" width={24} height={24} className="w-6 h-6" />, url: "https://www.youtube.com/@fatafatsewa" },
+    { name: "LinkedIn", Icon: <Image src={linkedinIcon} alt="LinkedIn" width={24} height={24} className="w-6 h-6" />, url: "https://www.linkedin.com/company/fatafatsewanp" },
+];
 
   return (
     <footer className="font-[Inter,sans-serif]">
@@ -233,10 +233,10 @@ const FooterBody = async() => {
                 <span className="text-white font-bold text-xs uppercase tracking-wider">Shop on the Go</span>
                 <div className="flex gap-2">
                   <a href="#" className="block hover:opacity-80 transition-opacity">
-                    <Image src={playStore} alt="Google Play Store" width={120} height={36} style={{ height: 'auto', width: 'auto' }} className="h-9" />
+                    <Image src={playStore} alt="Google Play Store" width={120} height={36} className="h-9 w-auto object-contain" />
                   </a>
                   <a href="#" className="block hover:opacity-80 transition-opacity">
-                    <Image src={appStore} alt="App Store" width={120} height={36} style={{ height: 'auto', width: 'auto' }} className="h-9" />
+                    <Image src={appStore} alt="App Store" width={120} height={36} className="h-9 w-auto object-contain" />
                   </a>
                 </div>
               </div>
@@ -295,8 +295,7 @@ const FooterBody = async() => {
                       alt={`Payment Method ${i + 1}`}
                       width={33}
                       height={20}
-                      style={{ width: 'auto' }}
-                      className="object-contain"
+                      className="object-contain w-auto h-5"
                       quality={75}
                     />
                   </div>
@@ -323,8 +322,7 @@ const FooterBody = async() => {
                         alt={`Partner ${(i % (bankingEmiPartners.length + insurancePartners.length)) + 1}`}
                         width={41}
                         height={24}
-                        style={{ width: 'auto' }}
-                        className="object-contain"
+                        className="object-contain w-auto h-6"
                         quality={75}
                       />
                     </div>
@@ -341,7 +339,7 @@ const FooterBody = async() => {
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
             <div className="flex items-center gap-3">
-              <Image src={imglogo} alt="FatafatSewa Logo" width={86} height={24} style={{ height: 'auto' }} className="object-contain brightness-0 invert h-6 w-auto" />
+              <Image src={imglogo} alt="FatafatSewa Logo" width={86} height={24} className="object-contain brightness-0 invert h-6 w-auto" />
               <p className="text-blue-100 text-xs">
                 © {new Date().getFullYear()} FatafatSewa. All rights reserved.
               </p>
