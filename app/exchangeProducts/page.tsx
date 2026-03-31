@@ -9,7 +9,7 @@ import { Suspense, type ReactNode } from 'react'
 
 import LazySection from '@/components/LazySection'
 import BannerSectionServer from '@/components/BannerSectionServer'
-import OurArticlesSectionClient from '@/components/OurArticlesSectionClient'
+import OurArticlesSection from '@/components/OurArticlesSection';
 
 // ── Cached Data Fetchers ────────────────────────────────────
 
@@ -115,7 +115,7 @@ async function ExchangePageContent({ blogSection }: { blogSection: ReactNode }) 
 async function ExchangePageWrapper() {
     const blogSection = (
         <Suspense fallback={<div className="h-40 w-full animate-pulse bg-gray-50 border border-gray-100 rounded-2xl" />}>
-            <OurArticlesSectionClient />
+            <OurArticlesSection />
         </Suspense>
     )
     return <ExchangePageContent blogSection={blogSection} />

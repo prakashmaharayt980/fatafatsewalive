@@ -1,8 +1,4 @@
-// Server-side cache helper for category products.
-// This file intentionally has NO 'use server' directive so that
-// unstable_cache can be used freely at module level.
-// Import getCachedCategoryProducts instead of getCategoryProducts
-// wherever caching is needed (BasketSectionServer, BasketSectionClient).
+'use server'
 
 import { unstable_cache } from 'next/cache';
 import { getCategoryProducts } from '@/app/api/services/category.service';
@@ -21,5 +17,5 @@ const _cachedFetch = unstable_cache(
     { revalidate: 300, tags: ['category-products'] }
 );
 
-export const getCachedCategoryProducts = (slug: string, params?: SearchParams) =>
+export const getCachedCategoryProducts = async (slug: string, params?: SearchParams) =>
     _cachedFetch(slug, JSON.stringify(params ?? {}));

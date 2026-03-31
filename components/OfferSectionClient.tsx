@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import LazySection from './LazySection';
 import { GetallOfferlist, GetOfferDetailsBySlug } from '@/app/api/services/offers.service';
 
-const OfferBannerClient = dynamic(() => import('@/app/homepage/OfferBannerClient'), { ssr: true });
+const OfferBannerClient = dynamic(() => import('../app/homepage/OfferBannerClient'), { ssr: true });
 
 async function fetchOfferData() {
   const campaigns = await GetallOfferlist();

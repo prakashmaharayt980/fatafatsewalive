@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -59,18 +59,45 @@ const OurArticles = ({ blogpage, initialData, videoDeal, productDeals }: Props) 
         </div>
       )}
 
-      {/* Articles Grid */}
+      {/* Main Content Grid */}
       <div className={cn(
-        "grid",
-        isSidebar ? "grid-cols-1 gap-3" : "",
-        isProductPage ? "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" : "",
-        !isSidebar && !isProductPage ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8" : ""
+        "grid gap-6 md:gap-8",
+        isHome ? "lg:grid-cols-4" : "grid-cols-1"
       )}>
-        {articles.slice(isHome ? 1 : 0, isSidebar ? 4 : (isProductPage ? 4 : 10)).map((article) => (
-          <div key={article.id} onClick={() => trackArticleClick(article.title, article.id.toString())}>
-            <BlogCard post={article} />
+        {/* Left/Main Column: Articles */}
+        <div className={cn(
+          "grid gap-6 md:gap-8",
+          isHome ? "lg:col-span-3 grid-cols-2 sm:grid-cols-3" : 
+          isProductPage ? "grid-cols-2 sm:grid-cols-4" : 
+          isSidebar ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+        )}>
+          {articles.slice(0, isHome ? 6 : (isSidebar ? 4 : (isProductPage ? 4 : 10))).map((article) => (
+            <div key={article.id} onClick={() => trackArticleClick(article.title, article.id.toString())}>
+              <BlogCard post={article} />
+            </div>
+          ))}
+        </div>
+
+        {/* Right Column: Video & Deals (Only on Home) */}
+        {isHome && (
+          <div className="space-y-8">
+            {videoDeal && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Video Deal</h3>
+                </div>
+                <YouTubeVideoCard video={videoDeal} />
+              </div>
+            )}
+            
+            {productDeals && productDeals.length > 0 && (
+              <ProductDeals 
+                title="Trending Deals" 
+                products={productDeals as any} 
+              />
+            )}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

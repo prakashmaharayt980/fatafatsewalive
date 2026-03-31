@@ -68,7 +68,7 @@ export default function YouTubeVideoCard({ video }: YouTubeVideoCardProps) {
                         </div>
                         {/* Duration mock */}
                         <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded">
-                            {Math.floor(8 + Math.random() * 15)}:{String(Math.floor(Math.random() * 60)).padStart(2, '0')}
+                            {8 + (video.id.length % 10)}:{String(video.id.charCodeAt(0) % 60).padStart(2, '0')}
                         </div>
                     </>
                 )}

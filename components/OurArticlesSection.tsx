@@ -3,7 +3,7 @@ import OurArticles from '@/app/homepage/OurArticles';
 import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 import { YOUTUBE_VIDEOS } from '@/app/blogs/components/youtubeData';
 
-export default async function OurArticlesSectionClient() {
+export default async function OurArticlesSection() {
   const [blogRes, dealsRes] = await Promise.all([
     getBlogList({ per_page: 6 }),
     getRandomBasketProducts('mobile-price-in-nepal', 6)

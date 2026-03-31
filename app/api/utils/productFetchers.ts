@@ -1,3 +1,5 @@
+'use server'
+
 import { connection } from 'next/server';
 import { getCachedCategoryProducts } from './categoryCache';
 import { getBlogList } from '../services/blog.service';

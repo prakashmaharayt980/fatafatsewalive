@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import HomePage from './homepage';
 import LazySection from '@/components/LazySection';
@@ -6,7 +5,7 @@ import TopHeroSection from '@/components/TopHeroSection';
 import BannerSectionServer from '@/components/BannerSectionServer';
 import BasketSectionClient from '@/components/BasketSectionClient';
 import OfferSectionClient from '@/components/OfferSectionClient';
-import OurArticlesSectionClient from '@/components/OurArticlesSectionClient';
+import OurArticlesSection from '@/components/OurArticlesSection';
 
 // Config
 const categories = [
@@ -119,7 +118,7 @@ const BannerFallback = () => (
   <div className="w-full aspect-[4/1] bg-gray-100 animate-pulse rounded" />
 );
 
-export default function Page() {
+export default async function Page() {
   return (
     <>
       <script
@@ -135,7 +134,7 @@ export default function Page() {
         }
         basketSection1={<BasketSectionClient slug={categories[1].slug} title={categories[1].title} sectionIndex={1} />}
         basketSection2={<BasketSectionClient slug={categories[2].slug} title={categories[2].title} imgSlug={categories[2].imgSlug} sectionIndex={2} />}
-        offerSection={<Suspense fallback={<div className="h-40 w-full animate-pulse bg-gray-50 border border-gray-100 rounded-2xl" />}><OfferSectionClient /></Suspense>}
+        offerSection={<OfferSectionClient />}
         basketSection3={<BasketSectionClient slug={categories[3].slug} title={categories[3].title} sectionIndex={3} />}
         sectionTwo={
           <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="200px">
@@ -143,7 +142,7 @@ export default function Page() {
           </LazySection>
         }
         basketSection4={<BasketSectionClient slug={categories[4].slug} title={categories[4].title} sectionIndex={4} />}
-        ourArticlesSection={<Suspense fallback={<div className="h-40 w-full animate-pulse bg-gray-50 border border-gray-100 rounded-2xl" />}><OurArticlesSectionClient /></Suspense>}
+        ourArticlesSection={<OurArticlesSection />}
       />
     </>
   );
