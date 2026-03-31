@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { searchProducts } from '@/app/api/services/product.service'
+import { fetchEmiProducts } from './actions'
 import EmiProductCard from '@/app/product-details/ProductCards/EmiProductCard'
 import type { ProductSummary } from '@/app/types/ProductDetailsTypes'
 import { MOCK_EMI_PRODUCTS } from './mockData'
@@ -38,10 +38,9 @@ export default function EmiBasketSection({
     useEffect(() => {
         let active = true
         setLoading(true)
-        searchProducts({ categories: slug, per_page: 20 })
-            .then((res) => {
+        fetchEmiProducts(slug, 20)
+            .then((data) => {
                 if (!active) return
-                const data = res?.data ?? res?.products ?? []
                 if (Array.isArray(data) && data.length === 0 && MOCK_EMI_PRODUCTS[slug]) {
                     setProducts(MOCK_EMI_PRODUCTS[slug])
                 } else {
