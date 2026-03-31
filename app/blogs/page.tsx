@@ -118,6 +118,7 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
                 articles={allArticles}
                 categories={categories}
                 SectionOne={SectionOne}
+                heroBannerData={heroBannerData}
             />
         </>
     );

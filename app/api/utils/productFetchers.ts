@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { getCachedCategoryProducts } from './categoryCache';
 import { getBlogList } from '../services/blog.service';
 
@@ -21,6 +22,7 @@ export async function getRandomBasketProducts(slug: string, count: number = 10) 
         if (total <= perPage) return firstPage;
 
         // 2. Pick ONE random page
+        await connection();
         const totalPages = Math.ceil(total / perPage);
         const randomPage = Math.floor(Math.random() * Math.min(totalPages, 10)) + 1; // Limit to first 10 pages for quality
 

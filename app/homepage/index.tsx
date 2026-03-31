@@ -33,6 +33,8 @@ export default function HomePage({
       <div className="relative z-10 sm:px-2">
         {mainBannerSection}
         {sectionOne}
+    
+        
         {basketSection1}
         {basketSection2}
 
@@ -44,8 +46,8 @@ export default function HomePage({
           {basketSection3}
           {sectionTwo}
           {basketSection4}
-          {ourArticlesSection}
         </div>
+            {ourArticlesSection}
       </div>
     </main>
   );

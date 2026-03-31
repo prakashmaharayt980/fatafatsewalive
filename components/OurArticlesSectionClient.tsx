@@ -1,21 +1,29 @@
-'use client';
-
-import LazySection from './LazySection';
 import { getBlogList } from '@/app/api/services/blog.service';
 import OurArticles from '@/app/homepage/OurArticles';
+import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
+import { YOUTUBE_VIDEOS } from '@/app/blogs/components/youtubeData';
 
-async function fetchBlogs() {
-  const res = await getBlogList({ per_page: 5 });
-  return Array.isArray(res) ? res : (res.data ?? []);
-}
+export default async function OurArticlesSectionClient() {
+  const [blogRes, dealsRes] = await Promise.all([
+    getBlogList({ per_page: 6 }),
+    getRandomBasketProducts('mobile-price-in-nepal', 6)
+  ]);
 
-export default function OurArticlesSectionClient() {
+  const blogs = Array.isArray(blogRes) ? blogRes : (blogRes.data ?? []);
+  const dealsInner = dealsRes?.data ?? dealsRes;
+  const products = Array.isArray(dealsInner) ? dealsInner : (dealsInner?.products ?? []);
+  
+  // Latest video from our local YouTube data
+  const latestVideo = YOUTUBE_VIDEOS[0];
+
   return (
-    <LazySection
-      className="min-h-[400px] sm:min-h-[600px]"
-      minHeight="0"
-      fetcher={fetchBlogs}
-      render={(data) => <OurArticles blogpage="home" initialData={data} />}
-    />
+    <div className="w-full">
+      <OurArticles 
+        blogpage="home" 
+        initialData={blogs} 
+        videoDeal={latestVideo}
+        productDeals={products}
+      />
+    </div>
   );
 }

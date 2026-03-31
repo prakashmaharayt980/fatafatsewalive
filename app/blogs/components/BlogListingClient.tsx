@@ -27,12 +27,14 @@ interface BlogListingClientProps {
     articles: Article[];
     categories: any[];
     SectionOne?: React.ReactNode;
+    heroBannerData?: any;
 }
 
 export default function BlogListingClient({
     articles,
     categories,
     SectionOne,
+    heroBannerData,
 }: BlogListingClientProps) {
 
     const [storyViewerOpen, setStoryViewerOpen] = useState(false);
@@ -74,12 +76,9 @@ export default function BlogListingClient({
                 <h1 className="sr-only">Latest Tech News, Reviews & Buying Guides | Fatafat Sewa Blog</h1>
                 <div className="w-full px-3 sm:px-5 lg:px-6 pt-4 pb-16">
 
-                    {/* ─── Hero Banner ─── */}
-                    <LazySection
-                        fetcher={() => getBannerData('blog-banner-test')}
-                        render={(data) => <HeroBanner data={data} />}
-                        fallback={<div className="h-[200px] w-full bg-[var(--colour-bg4)] rounded-lg animate-pulse" />}
-                    />
+                    {/* ─── Hero Banner: Now Instant from Server Prop ─── */}
+                    {heroBannerData && <HeroBanner data={heroBannerData} />}
+
                     {/* ─── Category Navigation ─── */}
                     {categories?.length > 0 && (
                         <nav

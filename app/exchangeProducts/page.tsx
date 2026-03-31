@@ -5,7 +5,7 @@ import { getAllCategories, getCategoryProducts } from '../api/services/category.
 import type { NavbarItem } from '../context/navbar.interface'
 import type { ProductListItem } from './exchange-helpers'
 import { cacheLife, cacheTag } from 'next/cache'
-import { Suspense } from 'react'
+import { Suspense, type ReactNode } from 'react'
 
 import LazySection from '@/components/LazySection'
 import BannerSectionServer from '@/components/BannerSectionServer'
@@ -68,7 +68,7 @@ async function getCachedInitialProducts(categorySlug: string, brandSlug?: string
 
 // ── Page Content ───────────────────────────────────────────
 
-async function ExchangePageContent() {
+async function ExchangePageContent({ blogSection }: { blogSection: ReactNode }) {
     'use cache'
     cacheLife('hours')
     cacheTag('exchange-discovery')
@@ -77,9 +77,8 @@ async function ExchangePageContent() {
     let initialProducts: ProductListItem[] = []
 
     if (categories.length > 0) {
-        // Find the first "Mobile" or "Laptop" category to use for initial products
-        const firstValidCat = categories.find(cat => 
-            cat.title?.toLowerCase().includes('mobile') || 
+        const firstValidCat = categories.find(cat =>
+            cat.title?.toLowerCase().includes('mobile') ||
             cat.title?.toLowerCase().includes('laptop') ||
             cat.title?.toLowerCase().includes('smartphone') ||
             cat.title?.toLowerCase().includes('macbook') ||
@@ -103,8 +102,6 @@ async function ExchangePageContent() {
         </LazySection>
     )
 
-    const blogSection = <OurArticlesSectionClient />
-
     return (
         <ExchangeClient
             categories={categories}
@@ -113,6 +110,15 @@ async function ExchangePageContent() {
             blogSection={blogSection}
         />
     )
+}
+
+async function ExchangePageWrapper() {
+    const blogSection = (
+        <Suspense fallback={<div className="h-40 w-full animate-pulse bg-gray-50 border border-gray-100 rounded-2xl" />}>
+            <OurArticlesSectionClient />
+        </Suspense>
+    )
+    return <ExchangePageContent blogSection={blogSection} />
 }
 
 export default function ExchangePage() {
@@ -155,7 +161,7 @@ export default function ExchangePage() {
                 </div>
             </div>
         }>
-            <ExchangePageContent />
+            <ExchangePageWrapper />
         </Suspense>
     )
 }
