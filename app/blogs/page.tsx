@@ -11,6 +11,7 @@ import BlogSkeleton from './components/BlogSkeleton';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
+
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }): Promise<Metadata> {
     const resolvedParams = await searchParams;
     const categoryName = resolvedParams.category ? resolvedParams.category.charAt(0).toUpperCase() + resolvedParams.category.slice(1).replace(/-/g, ' ') : '';
@@ -32,8 +33,6 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
         },
     };
 }
-
-import { Suspense as SuspenseReact } from 'react';
 
 async function BlogPageContent({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }) {
     const resolvedParams = await searchParams;

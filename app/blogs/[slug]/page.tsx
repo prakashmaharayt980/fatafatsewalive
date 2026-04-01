@@ -1,4 +1,4 @@
-import React from 'react';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -100,8 +100,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         },
     };
 }
-
-import { Suspense } from 'react';
 
 // Optimized Data Fetcher Content
 async function BlogPostPageContent({ params }: PageProps) {
