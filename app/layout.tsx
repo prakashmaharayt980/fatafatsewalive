@@ -71,7 +71,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </main>
 
         <ClientSideDrawers />
-        <LazyFooter />
+        <Suspense fallback={null}>
+          <LazyFooter />
+        </Suspense>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID ?? ''} />
       </body>
     </html>
