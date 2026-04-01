@@ -47,17 +47,12 @@ function BasketCardwithImage({ title, slug, imageUrl, initialData, isFirstSectio
   const products = initialData?.products ?? [];
   const { state, updateState } = useBasketState(slug, products.length > 0);
   const { auth, cart } = useStoreSelectors();
-  const { totalPages } = usePagination(products.length, state.width, true);
-
+  
   const wishlistSet = useMemo(() => new Set(cart.wishlistItems.map((i: any) => i.id)), [cart.wishlistItems]);
 
   if (!state.ready || !products.length) return <SkeletonCard />;
 
-  const scrollToPage = (pageIndex: number) => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollTo({ left: pageIndex * scrollRef.current.offsetWidth, behavior: 'smooth' });
-    updateState({ activeDot: pageIndex });
-  };
+
 
   const goToCategory = () => {
     trackCategoryClick(title ?? slug, 'view_all');
@@ -134,27 +129,7 @@ function BasketCardwithImage({ title, slug, imageUrl, initialData, isFirstSectio
               ))}
             </div>
 
-            {totalPages > 1 && (
-              <div className="absolute bottom-1 left-0 right-0 flex justify-center pb-2 pointer-events-none">
-                <div className="flex gap-2 pointer-events-auto items-center px-4 py-1.5 bg-gray-50/50 rounded-full backdrop-blur-sm">
-                  {Array.from({ length: Math.min(totalPages, 8) }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => scrollToPage(i)}
-                      className="group cursor-pointer focus:outline-none p-1"
-                      aria-label={`Go to page ${i + 1}`}
-                    >
-                      <div
-                        className={cn(
-                          'h-1.5 rounded-full transition-all duration-500',
-                          i === state.activeDot ? 'bg-[var(--colour-fsP1)] w-8 shadow-sm' : 'bg-gray-200 group-hover:bg-gray-400 w-1.5'
-                        )}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+         
           </div>
         </div>
       </div>

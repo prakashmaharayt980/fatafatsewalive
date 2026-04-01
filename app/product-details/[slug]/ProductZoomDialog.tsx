@@ -120,8 +120,9 @@ const ProductZoomDialog: React.FC<ProductZoomDialogProps> = ({
                                             : "border-white/20 opacity-60 hover:opacity-90 hover:border-white/50"
                                     )}
                                 >
+                                     {/* || "/placeholder.png" */}
                                     <Image
-                                        src={image || "/placeholder.png"}
+                                        src={image}
                                         alt={`${productName} ${idx + 1}`}
                                         fill
                                         className="object-contain p-0.5"

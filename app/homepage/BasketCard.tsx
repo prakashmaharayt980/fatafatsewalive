@@ -70,18 +70,7 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
 
   if (!state.ready || !products.length) return <SkeletonCard />;
 
-  const scrollToPage = (pageIndex: number) => {
-    if (!scrollRef.current) return;
-    if (!itemWidthRef.current) {
-      itemWidthRef.current = scrollRef.current.children[0]?.getBoundingClientRect().width ?? 0;
-    }
-    scrollRef.current.scrollTo({ left: pageIndex * itemsPerPage * (itemWidthRef.current + 16), behavior: 'smooth' });
-    updateState({ activeDot: pageIndex });
-    const needed = (pageIndex + 1) * itemsPerPage;
-    if (needed > state.visibleCount) {
-      updateState({ visibleCount: Math.min(needed + BATCH_SIZE, products.length) });
-    }
-  };
+
 
   const visibleProducts = useMemo(() => products.slice(0, state.visibleCount), [products, state.visibleCount]);
 
@@ -126,12 +115,10 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
               />
             </div>
           ))}
-          {state.visibleCount < products.length && (
-            <div ref={sentinelRef} className="flex-shrink-0 w-8 self-stretch" aria-hidden="true" />
-          )}
+       
         </div>
 
-        {totalPages > 1 && (
+        {/* {totalPages > 1 && (
           <div className="flex justify-center gap-3">
             {Array.from({ length: isMobile ? Math.min(totalPages, 2) : totalPages }, (_, i) => (
               <button
@@ -149,7 +136,7 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
               </button>
             ))}
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

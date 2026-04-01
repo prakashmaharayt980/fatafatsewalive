@@ -117,9 +117,9 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                                         "absolute inset-0 border-2 border-[var(--colour-fsP2)] rounded-lg transition-opacity duration-200 pointer-events-none z-10",
                                         isActive ? "opacity-100" : "opacity-0"
                                     )} />
-                                    
+                                    {/* || "/placeholder.png" */}
                                     <Image
-                                        src={image || "/placeholder.png"}
+                                        src={image }
                                         alt={`${productName} ${idx + 1}`}
                                         fill
                                         className="object-contain p-1"
@@ -177,7 +177,7 @@ const ProductMainImage: React.FC<ProductMainImageProps> = ({
                         )}
 
                         {/* Image */}
-                        <div className="relative w-full h-full p-5">
+                        <div className="relative aspect-auto w-full h-full p-5">
                             <Image
                                 src={src}
                                 alt={productName}
