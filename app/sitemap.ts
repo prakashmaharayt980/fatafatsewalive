@@ -2,64 +2,48 @@ import type { MetadataRoute } from 'next'
 import { getAllCategories } from './api/services/category.service';
 import { getBlogList } from './api/services/blog.service';
 
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://fatafatsewa.com'
 
-    // Static routes
     const routes = [
-        '',
-        '/login',
-        '/blog',
-        '/compare',
-        '/emi/shop',
-    ].map((route) => ({
-        url: `${baseUrl}${route}`,
+        { path: '', priority: 1.0 },
+        { path: '/blogs', priority: 0.9 },
+        { path: '/emi/shop', priority: 0.9 },
+        { path: '/compare', priority: 0.7 },
+        { path: '/login', priority: 0.5 },
+    ].map(({ path, priority }) => ({
+        url: `${baseUrl}${path}`,
         lastModified: new Date(),
         changeFrequency: 'daily' as const,
-        priority: route === '/emi/shop' ? 0.9 : 1,
+        priority,
     }))
 
-    // Dynamic Categories
-    let categories = []
+    let categories: MetadataRoute.Sitemap = []
     try {
-        const res = await getAllCategories(); // Ensure this matches your API response structure
-        // If res is array
-        if (Array.isArray(res)) {
-            categories = res.map((cat: any) => ({
-                url: `${baseUrl}/category/${cat.slug}?id=${cat.id}`,
-                lastModified: new Date(),
-                changeFrequency: 'weekly' as const,
-                priority: 0.8,
-            }))
-        } else if (res && res.data && Array.isArray(res.data)) {
-            // If res has data property
-            categories = res.data.map((cat: any) => ({
-                url: `${baseUrl}/category/${cat.slug}?id=${cat.id}`,
-                lastModified: new Date(),
-                changeFrequency: 'weekly' as const,
-                priority: 0.8,
-            }))
-        }
-
-    } catch (error) {
-        console.error('Failed to fetch categories for sitemap:', error)
+        const res = await getAllCategories()
+        const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
+        categories = list.map((cat: any) => ({
+            url: `${baseUrl}/category/${cat.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+        }))
+    } catch {
+        console.error('sitemap: failed to fetch categories')
     }
 
-    // Dynamic Blogs
-    let blogs = []
+    let blogs: MetadataRoute.Sitemap = []
     try {
-        const res = await getBlogList();
-        if (res && res.data && Array.isArray(res.data)) {
-            blogs = res.data.map((blog: any) => ({
-                url: `${baseUrl}/blog/${blog.id}`, // Confirm if blog uses slug or ID
-                lastModified: new Date(blog.created_at || new Date()),
-                changeFrequency: 'weekly' as const,
-                priority: 0.7,
-            }))
-        }
-    } catch (error) {
-        console.error('Failed to fetch blogs for sitemap:', error)
+        const res = await getBlogList()
+        const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []
+        blogs = list.map((blog: any) => ({
+            url: `${baseUrl}/blogs/${blog.slug}`,
+            lastModified: new Date(blog.updated_at ?? blog.created_at ?? Date.now()),
+            changeFrequency: 'weekly' as const,
+            priority: 0.7,
+        }))
+    } catch {
+        console.error('sitemap: failed to fetch blogs')
     }
 
     return [...routes, ...categories, ...blogs]
