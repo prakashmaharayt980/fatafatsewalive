@@ -4,7 +4,6 @@ import ExchangeClient from './ExchangeClient'
 import { getAllCategories, getCategoryProducts } from '../api/services/category.service'
 import type { NavbarItem } from '../context/navbar.interface'
 import type { ProductListItem } from './exchange-helpers'
-import { cacheLife, cacheTag } from 'next/cache'
 import { Suspense, type ReactNode } from 'react'
 
 import LazySection from '@/components/LazySection'
@@ -69,10 +68,6 @@ async function getCachedInitialProducts(categorySlug: string, brandSlug?: string
 // ── Page Content ───────────────────────────────────────────
 
 async function ExchangePageContent({ blogSection }: { blogSection: ReactNode }) {
-    'use cache'
-    cacheLife('hours')
-    cacheTag('exchange-discovery')
-
     const categories = await getCachedCategories()
     let initialProducts: ProductListItem[] = []
 

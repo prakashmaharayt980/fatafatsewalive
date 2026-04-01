@@ -1,14 +1,9 @@
 'use server';
 
-import { unstable_cache } from 'next/cache';
-
 import { getBannerBySlug } from '../services/misc.service';
-
 import { getBlogList } from '../services/blog.service';
 
-// --- Homepage Data Fetcher ---
 export const getHomepageData = async () => {
-    // 1. Fetch Critical Banners
     const criticalSlugs = {
         main: 'main-banner-test',
         side: 'test-slug-banner',
@@ -31,31 +26,17 @@ export const getHomepageData = async () => {
         return acc;
     }, {} as Record<string, any>);
 
-    return {
-        criticalData
-    };
+    return { criticalData };
 };
 
-// --- Blog Page Data Fetcher ---
-export const getBlogPageData = unstable_cache(
-    async () => {
+export const getBlogPageData = async () => {
+    const [blogRes] = await Promise.allSettled([
+        getBlogList({ page: 1, per_page: 30 }),
+    ]);
 
+    const latestArticles = blogRes.status === 'fulfilled'
+        ? (Array.isArray(blogRes.value) ? blogRes.value : blogRes.value.data || [])
+        : [];
 
-        const [blogRes] = await Promise.allSettled([
-            getBlogList({ page: 1, per_page: 30 }),
-        ]);
-
-        const latestArticles = blogRes.status === 'fulfilled'
-            ? (Array.isArray(blogRes.value) ? blogRes.value : blogRes.value.data || [])
-            : [];
-
-        return {
-            latestArticles
-        };
-    },
-    ['blog-page-data'],
-    {
-        revalidate: 1,
-        tags: ['blog', 'banner', 'products']
-    }
-);
+    return { latestArticles };
+};

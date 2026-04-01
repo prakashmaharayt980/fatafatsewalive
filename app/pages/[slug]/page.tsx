@@ -1,15 +1,11 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { cacheLife, cacheTag } from "next/cache";
 import { PagesService } from "@/app/api/services/pages.service";
 import ParsedContent from "@/app/product-details/ParsedContent";
 import type { Metadata } from "next";
 import type { SlugProps } from "@/app/types/PropSlug";
 
 async function getPageData(slug: string) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('pages', `page-${slug}`);
   return PagesService.GetPages(slug);
 }
 

@@ -21,12 +21,12 @@ export const GetallOfferlist = async () =>
     unstable_cache(
         fetchAllOffers,
         ['all-campaigns'],
-        { revalidate: 7200, tags: ['campaigns'] }
+        { revalidate: 20, tags: ['campaigns'] }
     )();
 
 export const GetOfferDetailsBySlug = async (slug: string) =>
     unstable_cache(
         () => fetchOfferDetails(slug),
         [`campaign-details-${slug}`],
-        { revalidate: 7200, tags: [`campaign-${slug}`] }
+        { revalidate: 1, tags: [`campaign-${slug}`] }
     )();

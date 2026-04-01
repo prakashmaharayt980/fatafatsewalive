@@ -2,7 +2,6 @@ import './globals.css';
 import { Suspense, type ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { cacheLife } from 'next/cache';
 import { getNavbarData } from '@/app/context/GlobalData';
 import Header from './layouts/Header';
 import ClientSideDrawers from './clientlayout';
@@ -50,15 +49,11 @@ export const metadata = {
 };
 
 async function HeaderDataFetcher() {
-  'use cache';
-  cacheLife('minutes');
   const navItems = await getNavbarData();
   return <Header initialNavItems={navItems} />;
 }
 
 async function LazyFooter() {
-  'use cache';
-  cacheLife('days');
   const { default: Footer } = await import('./layouts/FooterBody');
   return <Footer />;
 }

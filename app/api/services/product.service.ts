@@ -1,6 +1,5 @@
 'use server';
- 
-import { unstable_cache } from 'next/cache';
+
 import { apiPublic } from './client';
 
 type SearchParams = {
@@ -13,30 +12,18 @@ type SearchParams = {
     exchange_available?: boolean;
 };
 
-// ─── Named exports (preferred for Server Actions / RSC) ──────────────────────
-
 export const getProductBySlug = async (slug: string) => {
-    return unstable_cache(
-        async () => {
-            if (!slug) return null;
-            try {
-                const res = await apiPublic.get(`/v1/products/${slug}`);
-                return res.data.data;
-            } catch (error: any) {
-                if (error.response?.status === 404) {
-                    // Cache the null so the 404 endpoint is NOT hammered again
-                    return null;
-                }
-                console.error(`Error fetching product by slug: ${slug}`, error);
-                return null;
-            }
-        },
-        [`product-${slug}`],
-        {
-            revalidate: 3600, // 1 hour — 404s are also cached
-            tags: ['products', `product-${slug}`],
+    if (!slug) return null;
+    try {
+        const res = await apiPublic.get(`/v1/products/${slug}`);
+        return res.data.data;
+    } catch (error: any) {
+        if (error.response?.status === 404) {
+            return null;
         }
-    )();
+        console.error(`Error fetching product by slug: ${slug}`, error);
+        return null;
+    }
 };
 
 export const searchProducts = async (params: SearchParams) => {
@@ -70,5 +57,3 @@ export const submitExchangeRequest = async (data: any) => {
 export const submitRepairRequest = async (data: any) => {
     return apiPublic.post('/v1/repair-requests', data).then(res => res.data);
 }
-
-

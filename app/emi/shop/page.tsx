@@ -24,9 +24,9 @@ export const metadata: Metadata = {
 }
 
 export default async function ShopByEmiPage() {
-    'use cache'
-    cacheLife('hours')
-    cacheTag('emi-shop-page')
+    // 'use cache'
+    // cacheLife('hours')
+    // cacheTag('emi-shop-page')
 
     const [banners, categories] = await Promise.all([
         Promise.all([getBannerData('home-banner-fourth-test')]),

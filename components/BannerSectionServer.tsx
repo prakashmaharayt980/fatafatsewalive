@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import Bannerfooter from '@/app/homepage/Bannerfooter';
 import Banner2 from '@/app/homepage/Banner2';
@@ -17,10 +16,6 @@ interface Props {
 }
 
 export default async function BannerSectionServer({ slug, type, className }: Props) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('banners', `banner-${slug}`);
-
   const data = await getBannerData(slug);
   const Component = BannerRegistry[type];
 

@@ -4,7 +4,6 @@
 import { apiPublic, apiPrivate, n8nApi } from './client';
 
 export const getBannerBySlug = async (slug: string) => {
-    'use cache';
     return apiPublic.get(`/v1/banners/${slug}`).then(res => res.data);
 };
 
