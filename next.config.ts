@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
     ],
     formats: [ "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+      loader: 'custom',
+    loaderFile: './app/imageLoader.ts',
   },
 
   reactCompiler: true,
@@ -24,6 +26,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"] // No longer needed; Turbopack handles this automatically
   },
+ 
 
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
