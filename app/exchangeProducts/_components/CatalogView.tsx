@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import type { NavbarItem } from '@/app/context/navbar.interface'
-import { type ProductListItem, getMaxExchangeValue } from '../exchange-helpers'
+import { calculateExchangeValueBreakdown, type ProductListItem } from '../exchange-helpers'
 
 interface CatalogViewProps {
     categories: NavbarItem[]
@@ -110,45 +110,45 @@ export default function CatalogView({
                         isLoadingProducts ? 'opacity-30' : 'opacity-100'
                     )}>
                         {products.map(product => {
-                            const maxVal = getMaxExchangeValue(product.discounted_price || product.price, product.created_at)
+                            const exchangeValue = calculateExchangeValueBreakdown(product.price, product.created_at).total
                             return (
-                            <div
-                                key={product.id}
-                                onClick={() => onSelectProduct(product)}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={e => e.key === 'Enter' && onSelectProduct(product)}
-                                className="group flex flex-col bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer overflow-hidden h-full"
-                            >
-                                <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
-                                    <Image
-                                        src={getProductImage(product)}
-                                        alt={product.name}
-                                        fill
-                                        className="object-contain p-4 mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
-                                        sizes="(max-width: 640px) 50vw, 20vw"
-                                    />
-                                </div>
-                                <div className="flex flex-col flex-1 p-3.5 pt-3">
-                                    {(product.brand?.name ?? selectedBrand) && (
-                                        <p className="text-[10.5px] font-bold uppercase tracking-widest text-gray-400 truncate mb-1">
-                                            {product.brand?.name ?? selectedBrand}
+                                <div
+                                    key={product.id}
+                                    onClick={() => onSelectProduct(product)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={e => e.key === 'Enter' && onSelectProduct(product)}
+                                    className="group flex flex-col bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer overflow-hidden h-full"
+                                >
+                                    <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
+                                        <Image
+                                            src={getProductImage(product)}
+                                            alt={product.name}
+                                            fill
+                                            className="object-contain p-4 mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                                            sizes="(max-width: 640px) 50vw, 20vw"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col flex-1 p-3.5 pt-3">
+                                        {(product.brand?.name ?? selectedBrand) && (
+                                            <p className="text-[10.5px] font-bold uppercase tracking-widest text-gray-400 truncate mb-1">
+                                                {product.brand?.name ?? selectedBrand}
+                                            </p>
+                                        )}
+                                        <p className="text-[13px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[36px] group-hover:text-[var(--colour-fsP2)] transition-colors">
+                                            {product.name}
                                         </p>
-                                    )}
-                                    <p className="text-[13px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[36px] group-hover:text-[var(--colour-fsP2)] transition-colors">
-                                        {product.name}
-                                    </p>
-                                    <div className="mt-auto pt-2.5 border-t border-gray-50 flex items-center justify-between">
-                                        <div>
-                                            <p className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400">Exchange up to</p>
-                                            <p className="text-[14px] font-bold text-[var(--colour-fsP2)]">Rs. {maxVal.toLocaleString()}</p>
-                                        </div>
-                                        <div className="w-7 h-7 rounded-full text-white flex items-center justify-center shrink-0" style={{ background: 'var(--colour-fsP2)' }}>
-                                            <ArrowRight size={13} />
+                                        <div className="mt-auto pt-2.5 border-t border-gray-50 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400">Exchange up to</p>
+                                                <p className="text-[14px] font-bold text-[var(--colour-fsP2)]">Rs. {exchangeValue.toLocaleString()}</p>
+                                            </div>
+                                            <div className="w-7 h-7 rounded-full text-white flex items-center justify-center shrink-0" style={{ background: 'var(--colour-fsP2)' }}>
+                                                <ArrowRight size={13} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
                             )
                         })}
                     </div>

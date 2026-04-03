@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
     type ProductListItem, type FullProduct, type ConditionAnswer,
-    calculateExchangeValueBreakdown,
+    calculateExchangeValueBreakdown, EVALUATION_VALUES,
     GET_CONDITION_QUESTIONS, IS_EXCHANGE_CATEGORY, getThumbnail, parsePrice
 } from './exchange-helpers'
-import { searchProducts, getProductBySlug, submitExchangeRequest } from '../api/services/product.service'
+import { searchProducts, getProductBySlug } from '../api/services/product.service'
 import { getCategoryProducts } from '../api/services/category.service'
 import type { NavbarItem } from '../context/navbar.interface'
 import { useAuth } from '../context/AuthContext'
@@ -52,15 +52,22 @@ interface State {
     governmentId: string
     devicePhoto: string | null
     phoneNumber: string
-    problems: string[]
-    reason: string
     isSubmitting: boolean
     selectedNewProduct: ProductListItem | null
     newProducts: ProductListItem[]
     isLoadingNewProducts: boolean
-    satisfactionChoice: 'yes' | 'no' | 'offer' | null
+    isSatisfied: boolean | null
+    expectedAmount: string
     satisfactionReason: string
-    offeredAmount: string
+}
+
+const BLANK_CONDITION: ConditionAnswer = {
+    switch_on: 1.0,
+    mdms_registered: 1.0,
+    problems: [],
+    // Best case reflects the "Up To" price
+    under_warranty: EVALUATION_VALUES.under_warranty_multiplier,
+    accessories: GET_CONDITION_QUESTIONS('', '', {}).find(q => q.key === 'accessories')?.options || [],
 }
 
 export default function ExchangeClient({ categories, initialProducts = [], bannerSection, blogSection }: Props) {
@@ -75,13 +82,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         isLoadingProducts: false,
         selectedProduct: null,
         isLoadingDetail: false,
-        conditionAnswers: {
-            switch_on: 1.0,
-            mdms_registered: 1.0,
-            problems: [],
-            under_warranty: 1.0,
-            accessories: []
-        },
+        conditionAnswers: BLANK_CONDITION,
         pickupSelected: true,
         selectedAddress: null,
         isFormOpen: false,
@@ -89,15 +90,13 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         governmentId: '',
         devicePhoto: null,
         phoneNumber: '',
-        problems: [],
-        reason: '',
         isSubmitting: false,
         selectedNewProduct: null,
         newProducts: [],
         isLoadingNewProducts: false,
-        satisfactionChoice: null,
+        isSatisfied: null,
+        expectedAmount: '',
         satisfactionReason: '',
-        offeredAmount: '',
     })
 
     const updateState = useCallback((updates: Partial<State>) => {
@@ -131,24 +130,22 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         )
     }, [state.selectedProduct, state.conditionAnswers])
 
-    const fetchProducts = useCallback(async (brandSlug: string, search?: string, forceCategorySlug?: string) => {
+    const fetchProducts = useCallback(async (categorySlug: string, brandSlug: string, search?: string) => {
         updateState({ isLoadingProducts: true })
         try {
             let fetched: ProductListItem[] = []
-            const targetCat = forceCategorySlug ?? state.selectedCategory?.slug
-
             if (search?.trim()) {
-                const res = await searchProducts({ search: search.trim(), categories: targetCat, brands: brandSlug, per_page: 10 })
+                const res = await searchProducts({ search: search.trim(), categories: categorySlug, brands: brandSlug, per_page: 10 })
                 fetched = res?.data ?? []
-            } else if (targetCat) {
-                const res = await getCategoryProducts(targetCat, { brand: brandSlug, exchange_available: true, per_page: 10 })
+            } else if (categorySlug) {
+                const res = await getCategoryProducts(categorySlug, { brand: brandSlug, exchange_available: true, per_page: 10 })
                 fetched = res?.data?.products ?? []
             }
             updateState({ products: fetched, isLoadingProducts: false })
         } catch {
             updateState({ products: [], isLoadingProducts: false })
         }
-    }, [state.selectedCategory, updateState])
+    }, [updateState])
 
     const handleResetAll = useCallback(() => {
         updateState({
@@ -156,21 +153,19 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             selectedBrand: '',
             selectedProduct: null,
             products: [],
-            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] },
+            conditionAnswers: BLANK_CONDITION,
             isFormOpen: false,
             serialNumber: '',
             governmentId: '',
             devicePhoto: null,
             phoneNumber: '',
-            problems: [],
-            reason: '',
             selectedAddress: null,
             selectedNewProduct: null,
             newProducts: [],
             isLoadingNewProducts: false,
-            satisfactionChoice: null,
+            isSatisfied: null,
+            expectedAmount: '',
             satisfactionReason: '',
-            offeredAmount: '',
         })
     }, [updateState])
 
@@ -184,11 +179,10 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             selectedBrand: '',
             selectedProduct: null,
             searchTerm: '',
-            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] }
+            conditionAnswers: BLANK_CONDITION,
         })
-        fetchProducts('', '', cat.slug)
-        const hasBrands = (cat.brands?.length ?? 0) > 0
-        const targetRef = hasBrands ? brandSectionRef : modelSectionRef
+        fetchProducts(cat.slug, '')
+        const targetRef = (cat.brands?.length ?? 0) > 0 ? brandSectionRef : modelSectionRef
         setTimeout(() => targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
     }
 
@@ -197,17 +191,19 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             selectedBrand: slug,
             selectedProduct: null,
             searchTerm: '',
-            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] }
+            conditionAnswers: BLANK_CONDITION,
         })
-        fetchProducts(slug)
+        fetchProducts(state.selectedCategory?.slug ?? '', slug)
         setTimeout(() => modelSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
     }
 
     const handleSearch = (value: string) => {
         updateState({ searchTerm: value })
         if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+        const catSlug = state.selectedCategory?.slug ?? ''
+        const brandSlug = state.selectedBrand
         searchTimerRef.current = setTimeout(() => {
-            fetchProducts(state.selectedBrand, value)
+            fetchProducts(catSlug, brandSlug, value)
         }, 400)
     }
 
@@ -225,9 +221,8 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         }
     }, [state.products, updateState])
 
-    const handleSelectProduct = async (product: ProductListItem) => {
+    const handleSelectProduct = (product: ProductListItem) => {
         updateState({
-            isLoadingDetail: true,
             selectedProduct: {
                 id: Number(product.id),
                 name: product.name,
@@ -237,20 +232,15 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                 created_at: product.created_at,
                 image: typeof product.image === 'string' ? { full: product.image, thumb: product.image, preview: product.image } : product.image,
                 brand: product.brand ?? { id: 0, name: '', slug: state.selectedBrand },
+
             },
-            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] },
+            conditionAnswers: BLANK_CONDITION,
             isFormOpen: true,
             phoneNumber: '',
             selectedAddress: null,
             selectedNewProduct: null,
+            isLoadingDetail: false,
         })
-
-        try {
-            const full = await getProductBySlug(product.slug)
-            updateState({ selectedProduct: full, isLoadingDetail: false })
-        } catch {
-            updateState({ isLoadingDetail: false })
-        }
     }
 
     const currentQuestions = useMemo(() => GET_CONDITION_QUESTIONS(
@@ -279,18 +269,17 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             customer: {
                 name: contactName,
                 phone: contactPhone,
-                user_id: user?.id ?? null
+                user_id: user?.id ?? null,
             },
             device_info: {
                 product_id: state.selectedProduct?.id,
                 name: state.selectedProduct?.name,
-
                 serial_number: state.serialNumber,
                 government_id: state.governmentId,
                 device_photo: state.devicePhoto ?? null,
                 condition_answers: state.conditionAnswers,
-                problems: state.problems,
-                reason: state.reason,
+                problems: state.conditionAnswers.problems,
+                reason: state.conditionAnswers.reason ?? '',
             },
             valuation: {
                 estimated_value: valuation.total,
@@ -300,7 +289,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                 product_id: state.selectedNewProduct.id,
                 name: state.selectedNewProduct.name,
                 price: Number(state.selectedNewProduct.price),
-                price_after_exchange: 0
+                price_after_exchange: Math.max(0, Number(state.selectedNewProduct.price) - valuation.total),
             } : null,
             pickup_info: {
                 selected: state.pickupSelected,
@@ -312,16 +301,8 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                     province: addr?.province ?? '',
                     lat: geo?.lat ?? null,
                     lng: geo?.lng ?? null,
-                }
+                },
             },
-            satisfaction: {
-                choice: state.satisfactionChoice,
-                reason: state.satisfactionReason,
-                offered_amount: state.offeredAmount ? Number(state.offeredAmount) : null,
-            },
-            //     source: 'exchange_wizard_v4_arko',
-            //     timestamp: new Date().toISOString(),
-            // }
         }
 
         updateState({ isSubmitting: true })
@@ -384,41 +365,39 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                         <SheetHeader className="px-6 py-4 border-b bg-white sticky top-0 z-50">
                             <SheetTitle className="text-xl hidden font-bold text-gray-900">Device Evaluation</SheetTitle>
                         </SheetHeader>
-                          <ExchangeForm
-                                questions={currentQuestions}
-                                selectedCategory={state.selectedCategory}
-                                selectedProduct={state.selectedProduct}
-                                isLoadingDetail={state.isLoadingDetail}
-                                conditionAnswers={state.conditionAnswers}
-                                exchangeValue={valuation.total}
-                                valuationBreakdown={valuation.breakdown}
-                                pickupSelected={state.pickupSelected}
-                                onConditionAnswer={(key, val) => updateState({ conditionAnswers: { ...state.conditionAnswers, [key]: val } })}
-                                onPickupSelect={(sel) => updateState({ pickupSelected: sel })}
-                                onCheckout={handleCheckout}
-                                isLoggedIn={isLoggedIn}
-                                onLoginRequest={() => setloginDailogOpen(true)}
-                                selectedAddress={state.selectedAddress}
-                                onAddressSelect={(addr: ShippingAddress) => updateState({ selectedAddress: addr })}
-                                serialNumber={state.serialNumber}
-                                governmentId={state.governmentId}
-                                devicePhoto={state.devicePhoto}
-                                phoneNumber={state.phoneNumber}
-                                onVerificationChange={(key, val) => updateState({ [key]: val } as any)}
-                                problems={state.problems}
-                                reason={state.reason}
-                                onConditionExtra={(key, val) => updateState({ [key]: val } as any)}
-                                availableProducts={state.newProducts.length > 0 ? state.newProducts : state.products}
-                                isLoadingProducts={state.isLoadingNewProducts}
-                                onSearchProducts={handleSearchNewProducts}
-                                selectedNewProduct={state.selectedNewProduct}
-                                onSelectNewProduct={(p) => updateState({ selectedNewProduct: p })}
-                                onBack={() => updateState({ isFormOpen: false })}
-                                satisfactionChoice={state.satisfactionChoice}
-                                satisfactionReason={state.satisfactionReason}
-                                offeredAmount={state.offeredAmount}
-                                onSatisfactionChange={(key, val) => updateState({ [key]: val } as any)}
-                            />
+                        <ExchangeForm
+                            questions={currentQuestions}
+                            selectedCategory={state.selectedCategory}
+                            selectedProduct={state.selectedProduct}
+                            isLoadingDetail={state.isLoadingDetail}
+                            conditionAnswers={state.conditionAnswers}
+                            exchangeValue={valuation.total}
+                            valuationBreakdown={valuation.breakdown}
+                            isSatisfied={state.isSatisfied}
+                            onSatisfactionChange={(val) => updateState({ isSatisfied: val })}
+                            expectedAmount={state.expectedAmount}
+                            satisfactionReason={state.satisfactionReason}
+                            onNegotiationChange={(key, val) => updateState({ [key]: val } as any)}
+                            pickupSelected={state.pickupSelected}
+                            onConditionAnswer={(key, val) => updateState({ conditionAnswers: { ...state.conditionAnswers, [key]: val } })}
+                            onPickupSelect={(sel) => updateState({ pickupSelected: sel })}
+                            onCheckout={handleCheckout}
+                            isLoggedIn={isLoggedIn}
+                            onLoginRequest={() => setloginDailogOpen(true)}
+                            selectedAddress={state.selectedAddress}
+                            onAddressSelect={(addr: ShippingAddress) => updateState({ selectedAddress: addr })}
+                            serialNumber={state.serialNumber}
+                            governmentId={state.governmentId}
+                            devicePhoto={state.devicePhoto}
+                            phoneNumber={state.phoneNumber}
+                            onVerificationChange={(key, val) => updateState({ [key]: val } as any)}
+                            availableProducts={state.newProducts.length > 0 ? state.newProducts : state.products}
+                            isLoadingProducts={state.isLoadingNewProducts}
+                            onSearchProducts={handleSearchNewProducts}
+                            selectedNewProduct={state.selectedNewProduct}
+                            onSelectNewProduct={(p) => updateState({ selectedNewProduct: p })}
+                            onBack={() => updateState({ isFormOpen: false })}
+                        />
                     </SheetContent>
                 </Sheet>
             </section>
@@ -440,7 +419,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             </section>
 
             {blogSection && (
-                <section className="bg-[#F5F7FA] border-t w-screen border-gray-100 ">
+                <section className="bg-[#F5F7FA] border-t w-screen border-gray-100">
                     {blogSection}
                 </section>
             )}

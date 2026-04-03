@@ -9,6 +9,8 @@ import {
     Camera as CameraIcon, Volume2, Wifi, Settings2,
     Package, Receipt, Cable,
     UploadCloud, Check, Loader2, MapPin,
+    TrendingUp, Wallet, ThumbsUp, AlertCircle,
+    Hash, Phone, RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -21,6 +23,7 @@ import type { ShippingAddress } from '../../checkout/checkoutTypes'
 import { ShippingAddressList, ShippingAddressUpdate, CreateShippingAddress } from '@/app/api/services/address.service'
 import {
     type FullProduct, type ProductListItem, type ConditionAnswer,
+    calculateExchangeValueBreakdown,
     getThumbnail, parsePrice,
 } from '../exchange-helpers'
 import GoogleMapAddress, { type LocationData } from '../../checkout/GoogleMapAddress'
@@ -32,7 +35,12 @@ interface Props {
     isLoadingDetail: boolean
     conditionAnswers: ConditionAnswer
     exchangeValue: number
-    valuationBreakdown: any[]
+    valuationBreakdown: { label: string; value: number }[]
+    isSatisfied: boolean | null
+    onSatisfactionChange: (val: boolean) => void
+    expectedAmount: string
+    satisfactionReason: string
+    onNegotiationChange: (key: string, val: string) => void
     pickupSelected: boolean
     onConditionAnswer: (key: string, value: any) => void
     onPickupSelect: (selected: boolean) => void
@@ -46,9 +54,6 @@ interface Props {
     devicePhoto: string | null
     phoneNumber: string
     onVerificationChange: (key: string, value: any) => void
-    problems: string[]
-    reason: string
-    onConditionExtra: (key: 'reason' | 'problems', value: any) => void
     availableProducts: ProductListItem[]
     isLoadingProducts: boolean
     onSearchProducts: (q: string) => void
@@ -79,26 +84,23 @@ const SL = ({ children }: { children: React.ReactNode }) => (
 // ── Boolean question row used inside a grouped card ──────────────────────────
 function BoolRow({ q, answers, onAnswer }: { q: any; answers: ConditionAnswer; onAnswer: (k: string, v: any) => void }) {
     return (
-        <div className="px-4 py-3.5">
-            <p className="text-xs font-semibold text-slate-800 mb-2.5">{q.label}</p>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="px-4 py-4 space-y-3">
+            <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wide">{q.label}</p>
+            <div className="grid grid-cols-2 gap-3">
                 {q.options.map((opt: any) => {
                     const isSelected = String(answers[q.key]) === String(opt.value)
-                    const isYes = opt.label === 'YES'
                     return (
                         <button
                             key={opt.label}
                             onClick={() => onAnswer(q.key, opt.value)}
                             className={cn(
-                                'h-10 rounded-lg border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2',
+                                'h-11 rounded-xl border-2 font-bold text-xs transition-all flex items-center justify-center gap-2',
                                 isSelected
-                                    ? isYes
-                                        ? 'border-emerald-500 bg-emerald-500 text-white'
-                                        : 'border-red-500 bg-red-500 text-white'
-                                    : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+                                    ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white shadow-md shadow-blue-100'
+                                    : 'border-gray-100 bg-gray-50 text-slate-500 hover:border-gray-200'
                             )}
                         >
-                            {isSelected && <Check size={13} strokeWidth={3} />}
+                            {isSelected && <Check size={14} strokeWidth={3} />}
                             {opt.label}
                         </button>
                     )
@@ -127,6 +129,11 @@ export default function ExchangeForm({
     conditionAnswers,
     exchangeValue,
     valuationBreakdown,
+    isSatisfied,
+    onSatisfactionChange,
+    expectedAmount,
+    satisfactionReason,
+    onNegotiationChange,
     onConditionAnswer,
     onCheckout,
     isLoggedIn,
@@ -247,13 +254,14 @@ export default function ExchangeForm({
 
     // 7 fixed wizard screens
     const STEPS = useMemo(() => [
-        { key: 'baseline',      label: 'Device Status',            group: 'Inspect' },
-        { key: 'defects',       label: 'Technical Inspection',      group: 'Inspect' },
-        { key: 'documentation', label: 'Documentation & Warranty',  group: 'Inspect' },
-        { key: 'new_device',    label: 'Choose Your Upgrade',       group: 'Upgrade' },
-        { key: 'verification',  label: 'Verify Your Device',        group: 'Verify'  },
-        { key: 'pickup',        label: 'Pickup Address',            group: 'Pickup'  },
-        { key: 'summary',       label: 'Exchange Summary',          group: 'Review'  },
+        { key: 'baseline',      label: 'Status',            group: 'Inspect' },
+        { key: 'defects',       label: 'Defects',           group: 'Inspect' },
+        { key: 'documentation', label: 'Warranty',          group: 'Inspect' },
+        { key: 'satisfaction',  label: 'Review',            group: 'Review'  },
+        { key: 'new_device',    label: 'Upgrade',           group: 'Upgrade' },
+        { key: 'verification',  label: 'Verify',            group: 'Verify'  },
+        { key: 'pickup',        label: 'Pickup',            group: 'Pickup'  },
+        { key: 'summary',       label: 'Summary',           group: 'Review'  },
     ], [])
 
     const step    = STEPS[uiState.stepIndex]
@@ -266,19 +274,44 @@ export default function ExchangeForm({
     // Compute depreciated base value from product price when exchangeValue is not yet ready
     const footerAmount = useMemo(() => {
         if (selectedNewProduct) return priceAfterExchange
-        if (exchangeValue > 0) return exchangeValue
-        if (!selectedProduct) return 0
-        const rawPrice = parsePrice(String(selectedProduct.price || selectedProduct.discounted_price || 0))
-        if (!rawPrice) return 0
-        const d = new Date(selectedProduct.created_at ?? '')
-        const months = isNaN(d.getTime())
-            ? 24
-            : (new Date().getFullYear() - d.getFullYear()) * 12 + (new Date().getMonth() - d.getMonth())
-        const mult = months <= 6 ? 0.9 : months <= 12 ? 0.75 : months <= 24 ? 0.6 : months <= 36 ? 0.45 : 0.3
-        return Math.round(rawPrice * mult)
-    }, [selectedNewProduct, priceAfterExchange, exchangeValue, selectedProduct])
+        return exchangeValue
+    }, [selectedNewProduct, priceAfterExchange, exchangeValue])
 
     const handleNext = () => {
+        const currentKey = step?.key
+
+        if (currentKey === 'baseline') {
+            if (conditionAnswers.switch_on === undefined) return toast.error('Please confirm if the device switches on.')
+            if (conditionAnswers.mdms_registered === undefined) return toast.error('Please confirm MDMS registration.')
+        }
+
+        if (currentKey === 'documentation') {
+            if (conditionAnswers.under_warranty === undefined) return toast.error('Please select warranty status.')
+        }
+
+        if (currentKey === 'satisfaction') {
+            if (isSatisfied === null) return toast.error('Please choose your satisfaction level.')
+            if (isSatisfied === false) {
+                if (!expectedAmount.trim()) return toast.error('Please enter your expected amount.')
+                if (satisfactionReason.trim().length <= 5) return toast.error('Please provide a reason for negotiation.')
+            }
+        }
+
+        if (currentKey === 'new_device' && !selectedNewProduct) {
+            return toast.error('Please select an upgrade device.')
+        }
+
+        if (currentKey === 'verification') {
+            if (serialNumber.trim().length <= 5) return toast.error('Please enter a valid IMEI/Serial Number.')
+            if (governmentId.trim().length <= 5) return toast.error('Please enter your Government ID.')
+            if (phoneNumber.trim().length <= 9) return toast.error('Please enter a valid phone number.')
+            if (!devicePhoto) return toast.error('Please upload a photo of your device.')
+        }
+
+        if (currentKey === 'pickup' && !selectedAddress) {
+            return toast.error('Please select a pickup address.')
+        }
+
         if (uiState.stepIndex < STEPS.length - 1) updateUi({ stepIndex: uiState.stepIndex + 1 })
         else onCheckout()
     }
@@ -296,6 +329,10 @@ export default function ExchangeForm({
                 return true
             case 'documentation':
                 return conditionAnswers.under_warranty !== undefined
+            case 'satisfaction':
+                if (isSatisfied === true) return true
+                if (isSatisfied === false) return expectedAmount.trim().length > 0 && satisfactionReason.trim().length > 5
+                return false
             case 'new_device':
                 return !!selectedNewProduct
             case 'verification':
@@ -317,22 +354,33 @@ export default function ExchangeForm({
                     onConditionAnswer(qKey, next)
                 }}
                 className={cn(
-                    'relative flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border-2 transition-all text-center',
-                    isSelected ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 bg-white hover:border-gray-300'
+                    'flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 transition-all text-left group',
+                    isSelected 
+                        ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 shadow-sm' 
+                        : 'border-gray-100 bg-white hover:border-gray-200'
                 )}
             >
-                <div className={cn(
-                    'absolute top-2 left-2 w-4 h-4 rounded border-2 flex items-center justify-center',
-                    isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
-                )}>
-                    {isSelected && <Check size={9} strokeWidth={4} className="text-white" />}
+                <div className="flex items-center justify-between w-full">
+                    <div className={cn(
+                        'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
+                        isSelected ? 'bg-[var(--colour-fsP2)] text-white' : 'bg-gray-100 text-slate-400 group-hover:bg-gray-200'
+                    )}>
+                        {renderIcon(opt.icon)}
+                    </div>
+                    {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-[var(--colour-fsP2)] flex items-center justify-center">
+                            <Check size={10} strokeWidth={4} className="text-white" />
+                        </div>
+                    )}
                 </div>
-                <div className={cn('transition-colors', isSelected ? 'text-emerald-600' : 'text-slate-400')}>
-                    {renderIcon(opt.icon)}
+                <div className="space-y-0.5">
+                    <p className={cn('text-[11px] font-black uppercase tracking-widest', isSelected ? 'text-[var(--colour-fsP2)]' : 'text-slate-700')}>
+                        {opt.label}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium leading-tight">
+                        {opt.description ?? 'Check for issues'}
+                    </p>
                 </div>
-                <span className={cn('text-[11px] font-semibold leading-tight', isSelected ? 'text-slate-800' : 'text-slate-600')}>
-                    {opt.label}
-                </span>
             </button>
         )
     }
@@ -340,43 +388,48 @@ export default function ExchangeForm({
     return (
         <div className="flex flex-col w-full h-full bg-white">
 
-            {/* ── Top bar ── */}
-            <div className="shrink-0 flex items-center gap-2.5 px-5 py-3 border-b border-gray-100">
-                <button
-                    onClick={handleBack}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
-                >
-                    <ArrowLeft size={13} />
-                    Back
-                </button>
-                {selectedProduct && (
-                    <>
-                        <span className="text-gray-200">·</span>
-                        <span className="text-xs font-semibold text-slate-700 truncate">{selectedProduct.name}</span>
-                    </>
-                )}
-                <span className="ml-auto text-[10px] font-semibold text-slate-400">
-                    {uiState.stepIndex + 1} / {totalSt}
-                </span>
+            {/* ── Top Progress Tracker (Repair Style) ── */}
+            <div className="px-6 py-8 pb-10 bg-[#F5F7FA] shrink-0">
+                <div className="relative w-full">
+                    <div className="absolute top-[7px] left-0 w-full h-[2px] bg-gray-200 z-0 rounded-full" />
+                    <div
+                        className="absolute top-[7px] left-0 h-[2px] bg-[var(--colour-fsP2)] z-0 transition-all duration-500 ease-out rounded-full"
+                        style={{ width: `${(uiState.stepIndex / (STEPS.length - 1)) * 100}%` }}
+                    />
+                    <div className="relative z-10 flex justify-between w-full">
+                        {STEPS.map((s, i) => {
+                            const isPast = uiState.stepIndex >= i
+                            const isActive = uiState.stepIndex === i
+                            const isFirst = i === 0
+                            const isLast = i === STEPS.length - 1
+                            return (
+                                <div key={s.key} className="flex flex-col items-center">
+                                    <div className={cn(
+                                        'w-4 h-4 rounded-full border-2 transition-all duration-300 z-20',
+                                        isPast ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] scale-110 shadow-md shadow-blue-200' : 'border-gray-300 bg-white'
+                                    )} />
+                                    <div className={cn(
+                                        'absolute top-6 w-24 transition-opacity duration-300',
+                                        isFirst ? 'left-0 text-left' : isLast ? 'right-0 text-right' : 'left-1/2 -translate-x-1/2 text-center',
+                                        (isActive || isFirst || isLast) ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                                    )}>
+                                        <span className={cn(
+                                            'text-[9px] font-black uppercase tracking-widest leading-tight transition-colors duration-300 block',
+                                            isActive ? 'text-[var(--colour-fsP2)]' : 'text-gray-400'
+                                        )}>
+                                            {s.label}
+                                        </span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
             </div>
 
-            {/* ── Progress bar ── */}
-            <div className="shrink-0 h-[3px] bg-gray-100">
-                <div
-                    className="h-full bg-[var(--colour-fsP2)] transition-all duration-500 ease-out"
-                    style={{ width: `${pct}%` }}
-                />
-            </div>
-
-            {/* ── Body ── */}
-            <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0">
-
-                {/* Step title block */}
-                <div className="px-5 pt-5 pb-4">
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-0.5">
-                        {step?.group}
-                    </p>
-                    <h2 className="text-base font-bold text-slate-900">{step?.label}</h2>
+            <div className="flex-1 overflow-y-auto px-1">
+                <div className="px-5 py-2">
+                    <h2 className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)] mb-4">{step?.label}</h2>
                 </div>
 
                 {/* ── 1. BASELINE: switch_on + mdms_registered ── */}
@@ -444,7 +497,110 @@ export default function ExchangeForm({
                     </div>
                 )}
 
-                {/* ── 4. NEW DEVICE PICKER ── */}
+                {/* ── 4. SATISFACTION (The big price card) ── */}
+                {step?.key === 'satisfaction' && (
+                    <div className="px-5 pb-8 space-y-6 flex flex-col items-center text-center">
+                        <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mb-2">
+                            <TrendingUp className="text-emerald-500" size={32} />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight">Are you happy with the offer?</h3>
+                            <p className="text-xs font-medium text-slate-400 max-w-[240px] mx-auto">We've calculated the best possible market value for your device.</p>
+                        </div>
+
+                        <div className="w-full bg-[#F8FAFC] border-2 border-dashed border-slate-200 rounded-3xl p-8 relative overflow-hidden group">
+                           <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                               <RefreshCw size={120} />
+                           </div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimated Exchange Credit</p>
+                            <p className="text-4xl font-black text-[var(--colour-fsP2)] tracking-tighter">
+                                Rs. {exchangeValue.toLocaleString()}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 w-full pt-2">
+                            <button
+                                onClick={() => onSatisfactionChange(true)}
+                                className={cn(
+                                    'flex flex-col items-center gap-3 p-5 rounded-3xl border-2 transition-all group',
+                                    isSatisfied === true 
+                                        ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] shadow-xl shadow-blue-100 scale-[1.02]' 
+                                        : 'border-gray-100 bg-white hover:border-gray-200 text-slate-600'
+                                )}
+                            >
+                                <div className={cn(
+                                    'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
+                                    isSatisfied === true ? 'bg-white/20 text-white' : 'bg-gray-50 text-slate-400 group-hover:bg-gray-100'
+                                )}>
+                                    <ThumbsUp size={18} />
+                                </div>
+                                <div className="text-center">
+                                    <p className={cn('text-xs font-black uppercase tracking-widest', isSatisfied === true ? 'text-white' : 'text-slate-800')}>Yes, Happy!</p>
+                                    <p className={cn('text-[9px] font-medium mt-0.5', isSatisfied === true ? 'text-white/70' : 'text-slate-400')}>Proceed to upgrade</p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => onSatisfactionChange(false)}
+                                className={cn(
+                                    'flex flex-col items-center gap-3 p-5 rounded-3xl border-2 transition-all group',
+                                    isSatisfied === false 
+                                        ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] shadow-xl shadow-blue-100 scale-[1.02]' 
+                                        : 'border-gray-100 bg-white hover:border-gray-200 text-slate-600'
+                                )}
+                            >
+                                <div className={cn(
+                                    'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
+                                    isSatisfied === false ? 'bg-white/20 text-white' : 'bg-gray-50 text-slate-400 group-hover:bg-gray-100'
+                                )}>
+                                    <AlertCircle size={18} />
+                                </div>
+                                <div className="text-center">
+                                    <p className={cn('text-xs font-black uppercase tracking-widest', isSatisfied === false ? 'text-white' : 'text-slate-800')}>Not Happy</p>
+                                    <p className={cn('text-[9px] font-medium mt-0.5', isSatisfied === false ? 'text-white/70' : 'text-slate-400')}>I need a better offer</p>
+                                </div>
+                            </button>
+                        </div>
+
+                        {isSatisfied === false && (
+                            <div className="w-full space-y-6 pt-6 border-t border-gray-100 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex items-start gap-4 text-left">
+                                    <div className="p-2 bg-white rounded-xl text-[var(--colour-fsP2)] shadow-sm">
+                                        <Info className="w-5 h-5" strokeWidth={2.5} />
+                                    </div>
+                                    <div className="space-y-0.5 text-left">
+                                        <p className="text-sm font-black text-slate-900 leading-none">Negotiation Details</p>
+                                        <p className="text-[11px] text-slate-600 font-medium">Tell us what you expected. Our team will review this.</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="space-y-2 text-left">
+                                        <Label className="text-[10px] font-black text-[var(--colour-fsP2)] uppercase tracking-widest">Expected Amount (Rs.)</Label>
+                                        <Input
+                                            type="number"
+                                            value={expectedAmount}
+                                            onChange={e => onNegotiationChange('expectedAmount', e.target.value)}
+                                            placeholder="e.g. 50000"
+                                            className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 text-left">
+                                        <Label className="text-[10px] font-black text-[var(--colour-fsP2)] uppercase tracking-widest">Why do you expect more?</Label>
+                                        <textarea
+                                            value={satisfactionReason}
+                                            onChange={e => onNegotiationChange('satisfactionReason', e.target.value)}
+                                            placeholder="Battery replaced, extra accessories, etc..."
+                                            className="w-full h-32 p-4 border-2 border-gray-100 bg-gray-50 rounded-2xl text-xs font-bold leading-relaxed resize-none focus:bg-white focus:border-[var(--colour-fsP2)] transition-all placeholder:text-gray-400 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── 5. NEW DEVICE PICKER ── */}
                 {step?.key === 'new_device' && (
                     <div className="px-5 pb-5 space-y-4">
                         <div className="relative">
@@ -511,60 +667,74 @@ export default function ExchangeForm({
                     </div>
                 )}
 
-                {/* ── 5. VERIFICATION ── */}
+                {/* ── 6. VERIFICATION: IMEI + Gov ID + Phone ── */}
                 {step?.key === 'verification' && (
-                    <div className="px-5 pb-5 space-y-4">
-                        <div className="border border-gray-200 rounded-xl overflow-hidden">
-                            {/* IMEI */}
-                            <div className="px-4 py-3.5 border-b border-gray-100">
-                                <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2 block">
-                                    IMEI / Serial Number
+                    <div className="px-5 pb-5 space-y-6">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
+                                    <ShieldCheck size={14} /> IMEI / Serial Number
                                 </Label>
-                                <div className="relative">
-                                    <Input
-                                        value={serialNumber}
-                                        onChange={e => onVerificationChange('serialNumber', e.target.value)}
-                                        placeholder="Dial *#06# to get IMEI"
-                                        className="h-10 rounded-lg border-gray-200 pr-8 text-sm"
-                                    />
-                                    <ShieldCheck size={13} className="absolute right-3 top-3 text-slate-400" />
-                                </div>
+                                <Input
+                                    value={serialNumber}
+                                    onChange={e => onVerificationChange('serialNumber', e.target.value)}
+                                    placeholder="Dial *#06# to get IMEI"
+                                    className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                />
                             </div>
-                            {/* ID + Phone */}
-                            <div className="grid grid-cols-2 divide-x divide-gray-100">
-                                <div className="px-4 py-3.5 space-y-1.5">
-                                    <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Gov. ID</Label>
-                                    <Input value={governmentId} onChange={e => onVerificationChange('governmentId', e.target.value)} placeholder="ID Number" className="h-10 rounded-lg border-gray-200 text-sm" />
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
+                                        <Hash size={14} /> Government ID
+                                    </Label>
+                                    <Input
+                                        value={governmentId}
+                                        onChange={e => onVerificationChange('governmentId', e.target.value)}
+                                        placeholder="ID Number"
+                                        className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                    />
                                 </div>
-                                <div className="px-4 py-3.5 space-y-1.5">
-                                    <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Phone</Label>
-                                    <Input value={phoneNumber} onChange={e => onVerificationChange('phoneNumber', e.target.value)} placeholder="98XXXXXXXX" className="h-10 rounded-lg border-gray-200 text-sm" />
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
+                                        <Phone size={14} /> Contact Phone
+                                    </Label>
+                                    <Input
+                                        value={phoneNumber}
+                                        onChange={e => onVerificationChange('phoneNumber', e.target.value)}
+                                        placeholder="98XXXXXXXX"
+                                        className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                    />
                                 </div>
                             </div>
                         </div>
 
                         {/* Device Photo */}
-                        <div>
-                            <SL>Device Photo</SL>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
+                                <CameraIcon size={14} /> Device Condition Photo
+                            </Label>
                             <input type="file" id="devphoto" className="hidden" accept="image/*" onChange={e => {
                                 const f = e.target.files?.[0]; if (!f) return
                                 const r = new FileReader(); r.onloadend = () => onVerificationChange('devicePhoto', r.result); r.readAsDataURL(f)
                             }} />
                             <label htmlFor="devphoto" className={cn(
-                                'flex flex-col items-center justify-center w-full h-36 rounded-xl border-2 border-dashed cursor-pointer relative overflow-hidden transition-all',
-                                devicePhoto ? 'border-emerald-400' : 'border-gray-200 hover:border-slate-300'
+                                'flex flex-col items-center justify-center w-full h-40 rounded-2xl border-2 border-dashed cursor-pointer relative overflow-hidden transition-all',
+                                devicePhoto ? 'border-emerald-400 bg-emerald-50/10' : 'border-gray-200 bg-gray-50 hover:border-[var(--colour-fsP2)] hover:bg-white group'
                             )}>
                                 {devicePhoto ? (
                                     <>
                                         <Image src={devicePhoto} alt="Device" fill className="object-cover" unoptimized />
-                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                            <span className="bg-white/90 px-3 py-1 rounded text-[10px] font-semibold text-slate-700">Change</span>
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                            <span className="bg-white px-4 py-2 rounded-xl text-xs font-bold text-slate-900 shadow-lg">Change Photo</span>
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex flex-col items-center gap-2 text-slate-400">
-                                        <UploadCloud size={22} />
-                                        <p className="text-xs font-semibold text-slate-500">Upload device photo</p>
+                                    <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-[var(--colour-fsP2)] transition-colors">
+                                        <div className="p-3 rounded-full bg-white shadow-sm border border-gray-100">
+                                            <UploadCloud size={24} />
+                                        </div>
+                                        <p className="text-[11px] font-bold uppercase tracking-wider">Tap to upload photo</p>
                                     </div>
                                 )}
                             </label>
@@ -578,35 +748,37 @@ export default function ExchangeForm({
                         {uiState.addrView === 'list' ? (
                             <>
                                 <SL>Pickup Location</SL>
-                                <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
-                                    {uiState.savedAddresses.map(addr => (
-                                        <div
-                                            key={addr.id}
-                                            onClick={() => onAddressSelect(addr)}
-                                            className={cn(
-                                                'flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors',
-                                                selectedAddress?.id === addr.id ? 'bg-blue-50/30' : 'bg-white hover:bg-gray-50/60'
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                'w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 mt-0.5',
-                                                selectedAddress?.id === addr.id ? 'border-[var(--colour-fsP2)] bg-blue-50' : 'border-gray-200 bg-gray-50'
-                                            )}>
-                                                <MapPin size={12} className={selectedAddress?.id === addr.id ? 'text-[var(--colour-fsP2)]' : 'text-slate-400'} />
+                                <div className="space-y-2.5">
+                                    {uiState.savedAddresses.map(addr => {
+                                        const isSel = selectedAddress?.id === addr.id
+                                        return (
+                                            <div
+                                                key={addr.id}
+                                                onClick={() => onAddressSelect(addr)}
+                                                className={cn(
+                                                    'flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200',
+                                                    isSel ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/[0.03] shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5',
+                                                    isSel ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]' : 'border-gray-200'
+                                                )}>
+                                                    {isSel && <Check size={10} className="text-white" strokeWidth={3} />}
+                                                </div>
+
+                                                <div className="flex-1 min-w-0 space-y-0.5">
+                                                    <span className={cn('text-[9px] font-black uppercase tracking-widest block', isSel ? 'text-[var(--colour-fsP2)]' : 'text-slate-400')}>
+                                                        {addr.address?.label ?? 'Pickup Location'}
+                                                    </span>
+                                                    <p className="text-[12.5px] font-bold text-slate-800 leading-snug">
+                                                        {[addr.address?.city, addr.address?.province].filter(Boolean).join(', ')}
+                                                    </p>
+                                                    {addr.address?.landmark && <p className="text-[11px] font-medium text-slate-500">Near: {addr.address.landmark}</p>}
+                                                </div>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-slate-900">
-                                                    {[addr.address?.landmark, addr.address?.city].filter(Boolean).join(', ')}
-                                                </p>
-                                                <p className="text-[11px] text-slate-500 mt-0.5">
-                                                    {[addr.address?.district, addr.address?.province].filter(Boolean).join(', ')}
-                                                </p>
-                                            </div>
-                                            {selectedAddress?.id === addr.id && (
-                                                <Check size={13} className="text-[var(--colour-fsP2)] shrink-0 mt-1" />
-                                            )}
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                                 <button
                                     onClick={() => openForm()}
@@ -620,31 +792,37 @@ export default function ExchangeForm({
                                 <SL>New Address</SL>
                                 <div className="space-y-3">
                                     <GoogleMapAddress onLocationSelect={handleMapSelect} initialPosition={uiState.mapLocation ?? undefined} />
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-2 gap-3">
                                         {[
                                             ['First Name', 'first_name'], ['Last Name', 'last_name'],
                                             ['Phone', 'contact_number'], ['City', 'city'],
                                             ['District', 'district'], ['Province', 'province'],
+                                            ['Landmark', 'landmark'],
                                         ].map(([ph, field]) => (
-                                            <Input
-                                                key={field}
-                                                placeholder={ph}
-                                                value={(uiState.addrForm as any)[field]}
-                                                onChange={e => updateUi({ addrForm: { ...uiState.addrForm, [field]: e.target.value } })}
-                                                className="h-10 rounded-lg text-sm"
-                                            />
+                                            <div key={field} className={cn('space-y-2', field === 'landmark' ? 'col-span-2' : '')}>
+                                                <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest">{ph}</Label>
+                                                <Input
+                                                    placeholder={`Enter ${ph.toLowerCase()}`}
+                                                    value={(uiState.addrForm as any)[field]}
+                                                    onChange={e => updateUi({ addrForm: { ...uiState.addrForm, [field]: e.target.value } })}
+                                                    className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                                />
+                                            </div>
                                         ))}
-                                        <Input
-                                            placeholder="Landmark"
-                                            value={uiState.addrForm.landmark}
-                                            onChange={e => updateUi({ addrForm: { ...uiState.addrForm, landmark: e.target.value } })}
-                                            className="h-10 rounded-lg text-sm col-span-2"
-                                        />
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => updateUi({ addrView: 'list' })} className="flex-1 h-10 rounded-lg border border-gray-200 text-xs font-semibold text-slate-600">Cancel</button>
-                                        <button onClick={handleSaveAddress} disabled={uiState.isSaving} className="flex-1 h-10 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 disabled:opacity-50 transition-colors">
-                                            {uiState.isSaving ? 'Saving…' : 'Save Address'}
+                                    <div className="flex gap-3 pt-2">
+                                        <button 
+                                            onClick={() => updateUi({ addrView: 'list' })} 
+                                            className="flex-1 h-11 rounded-xl border-2 border-gray-100 text-xs font-bold text-slate-500 hover:bg-gray-50 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            onClick={handleSaveAddress} 
+                                            disabled={uiState.isSaving} 
+                                            className="flex-[2] h-11 rounded-xl bg-[var(--colour-fsP2)] text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 transition-all shadow-md shadow-blue-100"
+                                        >
+                                            {uiState.isSaving ? 'Saving…' : 'Confirm Address'}
                                         </button>
                                     </div>
                                 </div>
@@ -658,15 +836,15 @@ export default function ExchangeForm({
                     <div className="px-5 pb-5 space-y-4">
 
                         {/* Device being exchanged */}
-                        <div>
-                            <SL>Device Being Exchanged</SL>
-                            <div className="flex items-center gap-3 px-4 py-3 border border-gray-200 rounded-xl">
-                                <div className="relative w-12 h-12 shrink-0 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
-                                    <Image src={getThumbnail(selectedProduct)} alt="Device" fill className="object-contain p-1" />
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Device Being Exchanged</Label>
+                            <div className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-3xl bg-white shadow-sm">
+                                <div className="relative w-14 h-14 shrink-0 rounded-2xl border border-gray-100 bg-gray-50 overflow-hidden flex items-center justify-center">
+                                    <Image src={getThumbnail(selectedProduct)} alt="Device" fill className="object-contain p-2" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{selectedCategory?.title}</p>
-                                    <p className="text-sm font-bold text-slate-900 truncate">{selectedProduct?.name}</p>
+                                    <p className="text-[10px] font-black text-[var(--colour-fsP2)] uppercase tracking-widest leading-none mb-1">{selectedCategory?.title}</p>
+                                    <p className="text-[15px] font-bold text-slate-900 truncate leading-none">{selectedProduct?.name}</p>
                                 </div>
                             </div>
                         </div>
@@ -746,15 +924,14 @@ export default function ExchangeForm({
                 </div>
                 <button
                     onClick={handleNext}
-                    disabled={!isStepValid()}
                     className={cn(
-                        'flex items-center gap-1.5 px-6 h-10 rounded-xl font-semibold text-sm transition-all',
+                        'flex items-center gap-1.5 px-6 h-10 rounded-xl font-bold text-sm transition-all shadow-md',
                         isStepValid()
-                            ? 'bg-slate-900 text-white hover:bg-slate-800 active:scale-95'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            ? 'bg-[var(--colour-fsP2)] text-white hover:opacity-90 active:scale-95 shadow-blue-100'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     )}
                 >
-                    {uiState.stepIndex === STEPS.length - 1 ? 'Submit' : 'Continue'}
+                    {uiState.stepIndex === STEPS.length - 1 ? 'Complete Exchange' : 'Continue'}
                     <ChevronRight size={16} />
                 </button>
             </div>

@@ -21,6 +21,7 @@ import EmiSection from './orders/EmiSection';
 import ChangePassword from './ChangePassword';
 import Notifications from './Notifications';
 import RepairSection from './RepairSection';
+import ExchangeSection from './ExchangeSection';
 
 import { useProfileState } from './hooks/useProfileState';
 import type { ProfileTab } from './hooks/useProfileState';
@@ -93,7 +94,7 @@ function ProfilePageContent() {
             case 'return-cancel': return <ReturnCancel />;
             case 'identity': return <IdentityVerification />;
             case 'tracking': return <OrderTracking />;
-            case 'exchange': return <ComingSoon label="Exchange" icon={<ArrowLeftRight size={18} />} />;
+            case 'exchange': return <ExchangeSection />;
             case 'repair': return <RepairSection />;
             case 'security': return <ChangePassword />;
             case 'notifications': return <Notifications />;

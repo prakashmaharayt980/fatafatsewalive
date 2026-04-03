@@ -37,7 +37,7 @@ const FormField: React.FC<FormFieldProps> = React.memo(({ field, error }) => (
                     value={field.value !== undefined && field.value !== null ? String(field.value) : undefined}
                     onValueChange={(value) => field.onChange({ target: { name: field.name, value } } as unknown as React.ChangeEvent<HTMLSelectElement>)}
                     disabled={field.disabled}
-                    modal={false}
+                   
                 >
                     <SelectTrigger className={`w-full h-10 pl-10 bg-white text-gray-700 text-sm rounded-lg border transition-all duration-150 ${error ? 'border-red-400 ring-1 ring-red-200' : 'border-gray-200 focus:border-(--colour-fsP2) focus:ring-1 focus:ring-(--colour-fsP2)'} ${field.disabled ? 'opacity-60 cursor-not-allowed bg-gray-50' : ''}`}>
                         <SelectValue placeholder={`Select ${field.label}`} />
