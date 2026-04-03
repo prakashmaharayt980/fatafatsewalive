@@ -36,7 +36,7 @@ export default function CreditCardComponent({ cardinfofield, errors }: CreditCar
                   <Select
                     value={field.value !== undefined && field.value !== null ? String(field.value) : undefined}
                     onValueChange={(value) => field.onChange({ target: { name: field.name, value } } as unknown as React.ChangeEvent<HTMLSelectElement>)}
-                    modal={false}
+                 
                   >
                     <SelectTrigger
                       className={`w-full h-10 pl-10 bg-white border-gray-200 text-gray-700 text-sm rounded-lg focus:border-(--colour-fsP2) focus:ring-1 focus:ring-(--colour-fsP2) transition-all duration-150 ${errors[field.name] ? 'border-red-500' : ''}`}

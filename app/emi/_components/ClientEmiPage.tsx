@@ -83,21 +83,12 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
     const selectedBank       = useMemo(() => banks.find(b => b.id === selectedBankId) ?? null, [banks, selectedBankId])
     const activeTenure       = selectedBank?.tenureOptions.includes(state.tenure) ? state.tenure : (selectedBank?.tenureOptions[0] ?? state.tenure)
 
-    const isAppleBrand      = !!(activeProduct?.brand?.name?.toLowerCase().match(/apple|iphone/))
-    const downPaymentPct    = activeProductPrice > 0 ? (state.downPayment / activeProductPrice) * 100 : 0
-    const isZeroInterest    = isAppleBrand || downPaymentPct >= 40
-    const bankPolicyRate    = selectedBank?.rateByTenure?.[activeTenure] 
-    const annualRate        = isZeroInterest ? 0 : bankPolicyRate
-
-
-
     const emiData = useMemo(() => calculateEMI({
         principal:   activeProductPrice,
         tenure:      activeTenure,
         downPayment: state.downPayment,
-        annualRate,
         bankId:      selectedBank?.id,
-    }), [activeProductPrice, activeTenure, annualRate, selectedBank?.id, state.downPayment])
+    }), [activeProductPrice, activeTenure, selectedBank?.id, state.downPayment])
 
     const quickDownPayments = useMemo(() => (
         [0, 20, 40].map(pct => ({
@@ -256,16 +247,7 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
                                     </button>
                                 ))}
                             </div>
-                            {!isAppleBrand && downPaymentPct > 0 && downPaymentPct < 40 && (
-                                <p className="text-[11px] text-slate-500 mt-2">
-                                    Add <span className="font-bold text-slate-800">{formatRs(Math.ceil(activeProductPrice * 0.4) - state.downPayment)}</span> more to reach 40% and unlock 0% interest.
-                                </p>
-                            )}
-                            {!isAppleBrand && downPaymentPct >= 40 && (
-                                <p className="text-[11px] text-emerald-700 font-semibold mt-2">
-                                    40% threshold reached — 0% interest applied.
-                                </p>
-                            )}
+
                         </div>
 
                         {/* Bank selection */}
@@ -274,7 +256,7 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
                                 <Banknote size={13} className="text-(--colour-fsP2) shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-bold text-slate-900">Partner Bank</p>
-                                    <p className="text-[11px] text-slate-500 mt-0.5">Interest rate is determined by your product and down payment</p>
+                                    <p className="text-[11px] text-slate-500 mt-0.5">Select your bank and preferred repayment tenure</p>
                                 </div>
                     
                             </div>
