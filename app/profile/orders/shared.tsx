@@ -321,7 +321,7 @@ export const MOCK_EMI_ORDERS: EmiOrder[] = [
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
-export const fmt = (d: string) => !d ? 'N/A' : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+export const fmt = (d?: string) => !d ? 'N/A' : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 export const fmtRs = (n: number) => `Rs ${(n || 0).toLocaleString()}`;
 export const isDelivered = (s: string) => { const l = s?.toLowerCase() ?? ''; return l.includes('deliver') || l.includes('success') || l.includes('received'); };
 
