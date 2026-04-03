@@ -16,7 +16,7 @@ export default function OrderHistory() {
     useEffect(() => {
         OrderService.OrderList()
             .then((res: { data?: Order[] } | Order[]) => {
-                const data = res?.data ?? (Array.isArray(res) ? res : []);
+                const data = Array.isArray(res) ? res : res?.data ?? [];
                 setOrders(data);
             })
             .catch((e: { message?: string }) => setError(e?.message ?? 'Failed to load orders'))
