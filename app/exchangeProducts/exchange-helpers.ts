@@ -170,12 +170,14 @@ export function calculateExchangeValueBreakdown(
 
     const depreciatedValue = Math.round(basePrice * ageMultiplier)
 
-    // Calculate the 'Best-Case' Max Value (Depreciated + All Accessory Credits)
-
-
-    let current = depreciatedValue
+    // Calculate the 'Best-Case' Max Value (Depreciated + All Accessory Credits + Warranty Bonus)
+    const maxAccessoryCredit = EVALUATION_VALUES.original_charger + EVALUATION_VALUES.purchase_bill + EVALUATION_VALUES.matching_box
+    
+    // Start with the absolute maximum (Highest current value)
+    let current = Math.round((depreciatedValue + maxAccessoryCredit) * EVALUATION_VALUES.under_warranty_multiplier)
+    
     const breakdown: { label: string; value: number }[] = [
-        { label: 'Maximum Exchange Value (Best Case)', value: current }
+        { label: 'Maximum Exchange Value (Perfect Condition)', value: current }
     ]
 
     // Use provided answers or default to 'Perfect' for initial display
@@ -184,6 +186,11 @@ export function calculateExchangeValueBreakdown(
         mdms_registered: 1.0,
         under_warranty: EVALUATION_VALUES.under_warranty_multiplier,
         problems: [],
+        accessories: [
+            { key: 'charger', credit: EVALUATION_VALUES.original_charger },
+            { key: 'bill', credit: EVALUATION_VALUES.purchase_bill },
+            { key: 'box', credit: EVALUATION_VALUES.matching_box },
+        ]
     } as any
 
     // 1. Power Status Deduction
@@ -218,6 +225,24 @@ export function calculateExchangeValueBreakdown(
         breakdown.push({ label: 'Out of Warranty Deduction', value: -cut })
     }
 
+    // 6. Missing Accessories Deductions
+    // Since our MAX assumes all accessories are present, we subtract for missing ones
+    if (effectiveAnswers.accessories) {
+        const has = (key: string) => effectiveAnswers.accessories.some((a: any) => a.key === key)
+        if (!has('charger')) {
+            current -= EVALUATION_VALUES.original_charger
+            breakdown.push({ label: 'Missing Charger Deduction', value: -EVALUATION_VALUES.original_charger })
+        }
+        if (!has('bill')) {
+            current -= EVALUATION_VALUES.purchase_bill
+            breakdown.push({ label: 'Missing Bill Deduction', value: -EVALUATION_VALUES.purchase_bill })
+        }
+        if (!has('box')) {
+            current -= EVALUATION_VALUES.matching_box
+            breakdown.push({ label: 'Missing Box Deduction', value: -EVALUATION_VALUES.matching_box })
+        }
+    }
+
     // 5. Technical defects Deductions
     if (effectiveAnswers.problems && effectiveAnswers.problems.length > 0) {
         effectiveAnswers.problems.forEach((p: any) => {
@@ -227,10 +252,12 @@ export function calculateExchangeValueBreakdown(
         })
     }
 
-
-
     return {
         total: Math.max(0, Math.round(current)),
         breakdown
     }
+}
+
+export function getMaxExchangeValue(price: number | string, createdAt: string) {
+    return calculateExchangeValueBreakdown(price, createdAt).total
 }

@@ -303,6 +303,11 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                     lng: geo?.lng ?? null,
                 },
             },
+            negotiation: {
+                is_satisfied: state.isSatisfied,
+                expected_amount: state.expectedAmount,
+                reason: state.satisfactionReason,
+            },
         }
 
         updateState({ isSubmitting: true })
@@ -361,10 +366,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                 </div>
 
                 <Sheet open={state.isFormOpen} onOpenChange={(open) => updateState({ isFormOpen: open })}>
-                    <SheetContent className="sm:max-w-[540px] bg-white p-0 border-l-0 overflow-y-auto">
-                        <SheetHeader className="px-6 py-4 border-b bg-white sticky top-0 z-50">
-                            <SheetTitle className="text-xl hidden font-bold text-gray-900">Device Evaluation</SheetTitle>
-                        </SheetHeader>
+                    <SheetContent className="sm:max-w-4xl bg-white p-0 border-l-0 overflow-y-auto">
                         <ExchangeForm
                             questions={currentQuestions}
                             selectedCategory={state.selectedCategory}
@@ -398,6 +400,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                             onSelectNewProduct={(p) => updateState({ selectedNewProduct: p })}
                             onBack={() => updateState({ isFormOpen: false })}
                         />
+
                     </SheetContent>
                 </Sheet>
             </section>

@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import {
-    ArrowLeft, ChevronRight, Info,
+    ChevronRight, Info,
     Smartphone, ShieldCheck, HardDrive,
     XCircle, AlertTriangle, Monitor, Battery,
     Camera as CameraIcon, Volume2, Wifi, Settings2,
     Package, Receipt, Cable,
-    UploadCloud, Check, Loader2, MapPin,
-    TrendingUp, Wallet, ThumbsUp, AlertCircle,
-    Hash, Phone, RefreshCw,
+    UploadCloud, Check, Loader2,
+    ThumbsUp, AlertCircle,
+    Hash, Phone,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -23,7 +23,7 @@ import type { ShippingAddress } from '../../checkout/checkoutTypes'
 import { ShippingAddressList, ShippingAddressUpdate, CreateShippingAddress } from '@/app/api/services/address.service'
 import {
     type FullProduct, type ProductListItem, type ConditionAnswer,
-    calculateExchangeValueBreakdown,
+    calculateExchangeValueBreakdown, EVALUATION_VALUES,
     getThumbnail, parsePrice,
 } from '../exchange-helpers'
 import GoogleMapAddress, { type LocationData } from '../../checkout/GoogleMapAddress'
@@ -81,12 +81,12 @@ const SL = ({ children }: { children: React.ReactNode }) => (
     </p>
 )
 
-// ── Boolean question row used inside a grouped card ──────────────────────────
+// ── Boolean question row — inline: question left, Yes/No buttons right ───────
 function BoolRow({ q, answers, onAnswer }: { q: any; answers: ConditionAnswer; onAnswer: (k: string, v: any) => void }) {
     return (
-        <div className="px-4 py-4 space-y-3">
-            <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wide">{q.label}</p>
-            <div className="grid grid-cols-2 gap-3">
+        <div className="flex items-center justify-between px-4 py-3 gap-4">
+            <p className="text-xs font-semibold text-slate-700 flex-1 leading-snug">{q.label}</p>
+            <div className="flex items-center gap-2 shrink-0">
                 {q.options.map((opt: any) => {
                     const isSelected = String(answers[q.key]) === String(opt.value)
                     return (
@@ -94,13 +94,12 @@ function BoolRow({ q, answers, onAnswer }: { q: any; answers: ConditionAnswer; o
                             key={opt.label}
                             onClick={() => onAnswer(q.key, opt.value)}
                             className={cn(
-                                'h-11 rounded-xl border-2 font-bold text-xs transition-all flex items-center justify-center gap-2',
+                                'h-8 px-5 rounded-lg border font-bold text-xs transition-all',
                                 isSelected
-                                    ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] text-white shadow-md shadow-blue-100'
-                                    : 'border-gray-100 bg-gray-50 text-slate-500 hover:border-gray-200'
+                                    ? 'border-(--colour-fsP2) bg-(--colour-fsP2) text-white'
+                                    : 'border-gray-200 bg-white text-slate-500 hover:border-gray-300 hover:bg-gray-50'
                             )}
                         >
-                            {isSelected && <Check size={14} strokeWidth={3} />}
                             {opt.label}
                         </button>
                     )
@@ -249,27 +248,27 @@ export default function ExchangeForm({
 
     // ── Split flat questions into 3 grouped screens ──────────────────────────
     const baselineQs = useMemo(() => questions.filter(q => q.key === 'switch_on' || q.key === 'mdms_registered'), [questions])
-    const defectQs   = useMemo(() => questions.filter(q => q.key === 'problems'), [questions])
-    const docQs      = useMemo(() => questions.filter(q => q.key === 'under_warranty' || q.key === 'accessories'), [questions])
+    const defectQs = useMemo(() => questions.filter(q => q.key === 'problems'), [questions])
+    const docQs = useMemo(() => questions.filter(q => q.key === 'under_warranty' || q.key === 'accessories'), [questions])
 
     // 7 fixed wizard screens
     const STEPS = useMemo(() => [
-        { key: 'baseline',      label: 'Status',            group: 'Inspect' },
-        { key: 'defects',       label: 'Defects',           group: 'Inspect' },
-        { key: 'documentation', label: 'Warranty',          group: 'Inspect' },
-        { key: 'satisfaction',  label: 'Review',            group: 'Review'  },
-        { key: 'new_device',    label: 'Upgrade',           group: 'Upgrade' },
-        { key: 'verification',  label: 'Verify',            group: 'Verify'  },
-        { key: 'pickup',        label: 'Pickup',            group: 'Pickup'  },
-        { key: 'summary',       label: 'Summary',           group: 'Review'  },
+        { key: 'baseline', label: 'Status', group: 'Inspect' },
+   
+        { key: 'documentation', label: 'Warranty', group: 'Inspect' },
+        { key: 'satisfaction', label: 'Review', group: 'Review' },
+        { key: 'new_device', label: 'Upgrade', group: 'Upgrade' },
+        { key: 'verification', label: 'Verify', group: 'Verify' },
+        { key: 'pickup', label: 'Pickup', group: 'Pickup' },
+        { key: 'summary', label: 'Summary', group: 'Review' },
     ], [])
 
-    const step    = STEPS[uiState.stepIndex]
+    const step = STEPS[uiState.stepIndex]
     const totalSt = STEPS.length
-    const pct     = ((uiState.stepIndex + 1) / totalSt) * 100
+    const pct = ((uiState.stepIndex + 1) / totalSt) * 100
 
     const selectedNewProductPrice = selectedNewProduct ? parsePrice(selectedNewProduct.price) : 0
-    const priceAfterExchange      = Math.max(0, selectedNewProductPrice - exchangeValue)
+    const priceAfterExchange = Math.max(0, selectedNewProductPrice - exchangeValue)
 
     // Compute depreciated base value from product price when exchangeValue is not yet ready
     const footerAmount = useMemo(() => {
@@ -325,14 +324,11 @@ export default function ExchangeForm({
         switch (step?.key) {
             case 'baseline':
                 return conditionAnswers.switch_on !== undefined && conditionAnswers.mdms_registered !== undefined
-            case 'defects':
-                return true
+     
             case 'documentation':
                 return conditionAnswers.under_warranty !== undefined
             case 'satisfaction':
-                if (isSatisfied === true) return true
-                if (isSatisfied === false) return expectedAmount.trim().length > 0 && satisfactionReason.trim().length > 5
-                return false
+                return isSatisfied !== null
             case 'new_device':
                 return !!selectedNewProduct
             case 'verification':
@@ -344,7 +340,7 @@ export default function ExchangeForm({
         }
     }
 
-    // ── Multi-select option card (defects + accessories) ─────────────────────
+    // ── Multi-select row (defects + accessories) ────────────────────────────
     const MultiCard = ({ opt, collection, qKey }: { opt: any; collection: any[]; qKey: string }) => {
         const isSelected = collection.some((x: any) => x.key === opt.key)
         return (
@@ -354,32 +350,22 @@ export default function ExchangeForm({
                     onConditionAnswer(qKey, next)
                 }}
                 className={cn(
-                    'flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 transition-all text-left group',
-                    isSelected 
-                        ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 shadow-sm' 
-                        : 'border-gray-100 bg-white hover:border-gray-200'
+                    'flex items-center gap-3 px-4 py-2.5 w-full text-left',
+                    isSelected ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
                 )}
             >
-                <div className="flex items-center justify-between w-full">
-                    <div className={cn(
-                        'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
-                        isSelected ? 'bg-[var(--colour-fsP2)] text-white' : 'bg-gray-100 text-slate-400 group-hover:bg-gray-200'
-                    )}>
-                        {renderIcon(opt.icon)}
-                    </div>
-                    {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-[var(--colour-fsP2)] flex items-center justify-center">
-                            <Check size={10} strokeWidth={4} className="text-white" />
-                        </div>
-                    )}
+                <div className={cn(
+                    'w-6 h-6 rounded flex items-center justify-center shrink-0',
+                    isSelected ? 'bg-(--colour-fsP2) text-white' : 'bg-gray-100 text-slate-400'
+                )}>
+                    {renderIcon(opt.icon)}
                 </div>
-                <div className="space-y-0.5">
-                    <p className={cn('text-[11px] font-black uppercase tracking-widest', isSelected ? 'text-[var(--colour-fsP2)]' : 'text-slate-700')}>
-                        {opt.label}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-medium leading-tight">
-                        {opt.description ?? 'Check for issues'}
-                    </p>
+                <p className="flex-1 text-xs font-medium text-slate-700 text-left">{opt.label}</p>
+                <div className={cn(
+                    'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0',
+                    isSelected ? 'border-(--colour-fsP2) bg-(--colour-fsP2)' : 'border-gray-300'
+                )}>
+                    {isSelected && <Check size={9} strokeWidth={4} className="text-white" />}
                 </div>
             </button>
         )
@@ -388,100 +374,118 @@ export default function ExchangeForm({
     return (
         <div className="flex flex-col w-full h-full bg-white">
 
-            {/* ── Top Progress Tracker (Repair Style) ── */}
-            <div className="px-6 py-8 pb-10 bg-[#F5F7FA] shrink-0">
+            {/* ── Top Progress Tracker ── */}
+            <div className="px-6 pt-5 pb-4 bg-white border-b border-gray-100 shrink-0">
                 <div className="relative w-full">
-                    <div className="absolute top-[7px] left-0 w-full h-[2px] bg-gray-200 z-0 rounded-full" />
+                    <div className="absolute top-3 left-0 w-full h-0.5 bg-gray-200 z-0" />
                     <div
-                        className="absolute top-[7px] left-0 h-[2px] bg-[var(--colour-fsP2)] z-0 transition-all duration-500 ease-out rounded-full"
+                        className="absolute top-3 left-0 h-0.5 bg-(--colour-fsP2) z-0 transition-all duration-500 ease-out"
                         style={{ width: `${(uiState.stepIndex / (STEPS.length - 1)) * 100}%` }}
                     />
                     <div className="relative z-10 flex justify-between w-full">
                         {STEPS.map((s, i) => {
-                            const isPast = uiState.stepIndex >= i
+                            const isDone = uiState.stepIndex > i
                             const isActive = uiState.stepIndex === i
-                            const isFirst = i === 0
-                            const isLast = i === STEPS.length - 1
+                            const isClickable = i <= uiState.stepIndex
                             return (
-                                <div key={s.key} className="flex flex-col items-center">
+                                <button
+                                    key={s.key}
+                                    onClick={() => { if (isClickable) updateUi({ stepIndex: i }) }}
+                                    disabled={!isClickable}
+                                    className={cn('flex flex-col items-center gap-1.5', isClickable ? 'cursor-pointer' : 'cursor-default')}
+                                >
                                     <div className={cn(
-                                        'w-4 h-4 rounded-full border-2 transition-all duration-300 z-20',
-                                        isPast ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] scale-110 shadow-md shadow-blue-200' : 'border-gray-300 bg-white'
-                                    )} />
-                                    <div className={cn(
-                                        'absolute top-6 w-24 transition-opacity duration-300',
-                                        isFirst ? 'left-0 text-left' : isLast ? 'right-0 text-right' : 'left-1/2 -translate-x-1/2 text-center',
-                                        (isActive || isFirst || isLast) ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                                        'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300',
+                                        isDone ? 'border-(--colour-fsP2) bg-(--colour-fsP2)'
+                                            : isActive ? 'border-(--colour-fsP2) bg-white'
+                                            : 'border-gray-300 bg-white'
                                     )}>
-                                        <span className={cn(
-                                            'text-[9px] font-black uppercase tracking-widest leading-tight transition-colors duration-300 block',
-                                            isActive ? 'text-[var(--colour-fsP2)]' : 'text-gray-400'
-                                        )}>
-                                            {s.label}
-                                        </span>
+                                        {isDone
+                                            ? <Check size={11} strokeWidth={3} className="text-white" />
+                                            : isActive
+                                            ? <div className="w-2 h-2 rounded-full bg-(--colour-fsP2)" />
+                                            : null
+                                        }
                                     </div>
-                                </div>
+                                    <span className={cn(
+                                        'text-[8px] font-bold uppercase tracking-wider text-center leading-none',
+                                        isActive ? 'text-(--colour-fsP2)' : isDone ? 'text-slate-500' : 'text-gray-300'
+                                    )}>
+                                        {s.label}
+                                    </span>
+                                </button>
                             )
                         })}
                     </div>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-1">
-                <div className="px-5 py-2">
-                    <h2 className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)] mb-4">{step?.label}</h2>
-                </div>
+            <div className="flex-1 overflow-y-auto">
+                <div className="w-full py-3">
 
-                {/* ── 1. BASELINE: switch_on + mdms_registered ── */}
+                {/* ── 1. BASELINE + DEFECTS (combined) ── */}
                 {step?.key === 'baseline' && baselineQs.length > 0 && (
-                    <div className="px-5 pb-5">
+                    <div className="px-5 space-y-3">
                         <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
                             {baselineQs.map(q => (
                                 <BoolRow key={q.key} q={q} answers={conditionAnswers} onAnswer={onConditionAnswer} />
                             ))}
                         </div>
+                        {defectQs.length > 0 && (
+                            <div className="border border-gray-200 rounded-xl overflow-hidden">
+                                <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Issues · skip if none</p>
+                                </div>
+                                <div className="divide-y divide-gray-100">
+                                    {defectQs[0]?.options.map((opt: any) => (
+                                        <MultiCard key={opt.key} opt={opt} collection={conditionAnswers.problems ?? []} qKey="problems" />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {/* ── 2. DEFECTS: problems multi-select ── */}
-                {step?.key === 'defects' && defectQs.length > 0 && (
-                    <div className="px-5 pb-5">
-                        <div className="border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="px-4 py-3 bg-gray-50/60 border-b border-gray-100">
-                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-                                    Select any issues · Skip if none
-                                </p>
-                            </div>
-                            <div className="p-3 grid grid-cols-2 gap-2">
-                                {defectQs[0]?.options.map((opt: any) => (
-                                    <MultiCard
-                                        key={opt.key}
-                                        opt={opt}
-                                        collection={conditionAnswers.problems ?? []}
-                                        qKey="problems"
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
-                {/* ── 3. DOCUMENTATION: under_warranty (bool) + accessories (multi) ── */}
+                {/* ── 3. DOCUMENTATION: under_warranty (doc toggle) + accessories (multi) ── */}
                 {step?.key === 'documentation' && docQs.length > 0 && (
-                    <div className="px-5 pb-5 space-y-4">
+                    <div className="px-5 space-y-3">
                         {docQs.map(q => (
                             q.type === 'boolean' ? (
                                 <div key={q.key} className="border border-gray-200 rounded-xl overflow-hidden">
-                                    <BoolRow q={q} answers={conditionAnswers} onAnswer={onConditionAnswer} />
+                                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{q.label}</p>
+                                    </div>
+                                    <div className="flex gap-3 p-3">
+                                        {q.options.map((opt: any) => {
+                                            const isSelected = String(conditionAnswers[q.key]) === String(opt.value)
+                                            const isWarranty = opt.value === EVALUATION_VALUES.under_warranty_multiplier
+                                            return (
+                                                <button
+                                                    key={opt.label}
+                                                    onClick={() => onConditionAnswer(q.key, opt.value)}
+                                                    className={cn(
+                                                        'flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border font-bold text-xs transition-all',
+                                                        isSelected
+                                                            ? 'border-(--colour-fsP2) bg-(--colour-fsP2) text-white'
+                                                            : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+                                                    )}
+                                                >
+                                                    <ShieldCheck size={14} />
+                                                    {isWarranty ? 'Under Warranty' : 'Expired / None'}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
                             ) : (
                                 <div key={q.key} className="border border-gray-200 rounded-xl overflow-hidden">
-                                    <div className="px-4 py-3 bg-gray-50/60 border-b border-gray-100">
-                                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                                             Accessories / Documents · Select all you have
                                         </p>
                                     </div>
-                                    <div className="p-3 grid grid-cols-3 gap-2">
+                                    <div className="divide-y divide-gray-100">
                                         {q.options.map((opt: any) => (
                                             <MultiCard
                                                 key={opt.key}
@@ -497,101 +501,64 @@ export default function ExchangeForm({
                     </div>
                 )}
 
-                {/* ── 4. SATISFACTION (The big price card) ── */}
+                {/* ── 4. SATISFACTION ── */}
                 {step?.key === 'satisfaction' && (
-                    <div className="px-5 pb-8 space-y-6 flex flex-col items-center text-center">
-                        <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mb-2">
-                            <TrendingUp className="text-emerald-500" size={32} />
-                        </div>
-                        <div className="space-y-1">
-                            <h3 className="text-xl font-black text-slate-900 tracking-tight">Are you happy with the offer?</h3>
-                            <p className="text-xs font-medium text-slate-400 max-w-[240px] mx-auto">We've calculated the best possible market value for your device.</p>
-                        </div>
-
-                        <div className="w-full bg-[#F8FAFC] border-2 border-dashed border-slate-200 rounded-3xl p-8 relative overflow-hidden group">
-                           <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                               <RefreshCw size={120} />
-                           </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimated Exchange Credit</p>
-                            <p className="text-4xl font-black text-[var(--colour-fsP2)] tracking-tighter">
-                                Rs. {exchangeValue.toLocaleString()}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 w-full pt-2">
-                            <button
-                                onClick={() => onSatisfactionChange(true)}
-                                className={cn(
-                                    'flex flex-col items-center gap-3 p-5 rounded-3xl border-2 transition-all group',
-                                    isSatisfied === true 
-                                        ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] shadow-xl shadow-blue-100 scale-[1.02]' 
-                                        : 'border-gray-100 bg-white hover:border-gray-200 text-slate-600'
-                                )}
-                            >
-                                <div className={cn(
-                                    'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
-                                    isSatisfied === true ? 'bg-white/20 text-white' : 'bg-gray-50 text-slate-400 group-hover:bg-gray-100'
-                                )}>
-                                    <ThumbsUp size={18} />
+                    <div className="px-5 space-y-3">
+                        <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                            <div className="flex items-center justify-between px-4 py-3">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Exchange Credit</p>
+                                    <p className="text-xl font-black text-(--colour-fsP2) mt-0.5">Rs. {exchangeValue.toLocaleString()}</p>
                                 </div>
-                                <div className="text-center">
-                                    <p className={cn('text-xs font-black uppercase tracking-widest', isSatisfied === true ? 'text-white' : 'text-slate-800')}>Yes, Happy!</p>
-                                    <p className={cn('text-[9px] font-medium mt-0.5', isSatisfied === true ? 'text-white/70' : 'text-slate-400')}>Proceed to upgrade</p>
+                            </div>
+                            <div className="flex items-center justify-between px-4 py-3 bg-gray-50">
+                                <p className="text-xs font-semibold text-slate-600">Satisfied with offer?</p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => onSatisfactionChange(true)}
+                                        className={cn(
+                                            'flex items-center gap-1.5 h-8 px-4 rounded-lg border font-bold text-xs',
+                                            isSatisfied === true ? 'border-(--colour-fsP2) bg-(--colour-fsP2) text-white' : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+                                        )}
+                                    >
+                                        <ThumbsUp size={12} /> Yes
+                                    </button>
+                                    <button
+                                        onClick={() => onSatisfactionChange(false)}
+                                        className={cn(
+                                            'flex items-center gap-1.5 h-8 px-4 rounded-lg border font-bold text-xs',
+                                            isSatisfied === false ? 'border-(--colour-fsP2) bg-(--colour-fsP2) text-white' : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+                                        )}
+                                    >
+                                        <AlertCircle size={12} /> Negotiate
+                                    </button>
                                 </div>
-                            </button>
-
-                            <button
-                                onClick={() => onSatisfactionChange(false)}
-                                className={cn(
-                                    'flex flex-col items-center gap-3 p-5 rounded-3xl border-2 transition-all group',
-                                    isSatisfied === false 
-                                        ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] shadow-xl shadow-blue-100 scale-[1.02]' 
-                                        : 'border-gray-100 bg-white hover:border-gray-200 text-slate-600'
-                                )}
-                            >
-                                <div className={cn(
-                                    'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
-                                    isSatisfied === false ? 'bg-white/20 text-white' : 'bg-gray-50 text-slate-400 group-hover:bg-gray-100'
-                                )}>
-                                    <AlertCircle size={18} />
-                                </div>
-                                <div className="text-center">
-                                    <p className={cn('text-xs font-black uppercase tracking-widest', isSatisfied === false ? 'text-white' : 'text-slate-800')}>Not Happy</p>
-                                    <p className={cn('text-[9px] font-medium mt-0.5', isSatisfied === false ? 'text-white/70' : 'text-slate-400')}>I need a better offer</p>
-                                </div>
-                            </button>
+                            </div>
                         </div>
 
                         {isSatisfied === false && (
-                            <div className="w-full space-y-6 pt-6 border-t border-gray-100 animate-in fade-in slide-in-from-top-4 duration-500">
-                                <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex items-start gap-4 text-left">
-                                    <div className="p-2 bg-white rounded-xl text-[var(--colour-fsP2)] shadow-sm">
-                                        <Info className="w-5 h-5" strokeWidth={2.5} />
-                                    </div>
-                                    <div className="space-y-0.5 text-left">
-                                        <p className="text-sm font-black text-slate-900 leading-none">Negotiation Details</p>
-                                        <p className="text-[11px] text-slate-600 font-medium">Tell us what you expected. Our team will review this.</p>
-                                    </div>
+                            <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                                <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Negotiation Details</p>
                                 </div>
-
-                                <div className="space-y-4">
-                                    <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] font-black text-[var(--colour-fsP2)] uppercase tracking-widest">Expected Amount (Rs.)</Label>
+                                <div className="p-4 space-y-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-(--colour-fsP2) uppercase tracking-widest">Expected Amount (Rs.)</Label>
                                         <Input
                                             type="number"
                                             value={expectedAmount}
                                             onChange={e => onNegotiationChange('expectedAmount', e.target.value)}
                                             placeholder="e.g. 50000"
-                                            className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                            className="h-9 text-sm px-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-(--colour-fsP2) font-bold focus-visible:ring-0"
                                         />
                                     </div>
-                                    <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] font-black text-[var(--colour-fsP2)] uppercase tracking-widest">Why do you expect more?</Label>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-(--colour-fsP2) uppercase tracking-widest">Why do you expect more?</Label>
                                         <textarea
                                             value={satisfactionReason}
                                             onChange={e => onNegotiationChange('satisfactionReason', e.target.value)}
                                             placeholder="Battery replaced, extra accessories, etc..."
-                                            className="w-full h-32 p-4 border-2 border-gray-100 bg-gray-50 rounded-2xl text-xs font-bold leading-relaxed resize-none focus:bg-white focus:border-[var(--colour-fsP2)] transition-all placeholder:text-gray-400 outline-none"
+                                            className="w-full h-20 p-3 border border-gray-200 bg-gray-50 rounded-lg text-xs font-medium leading-relaxed resize-none focus:bg-white focus:border-(--colour-fsP2) placeholder:text-gray-400 outline-none"
                                         />
                                     </div>
                                 </div>
@@ -602,38 +569,32 @@ export default function ExchangeForm({
 
                 {/* ── 5. NEW DEVICE PICKER ── */}
                 {step?.key === 'new_device' && (
-                    <div className="px-5 pb-5 space-y-4">
-                        <div className="relative">
-                            <HardDrive size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <div className="px-5 space-y-3">
+                        <div className="flex items-center gap-2 h-10 px-3 border border-gray-200 rounded-lg bg-gray-50 focus-within:border-(--colour-fsP2) focus-within:bg-white">
+                            <HardDrive size={13} className="text-slate-400 shrink-0" />
                             <Input
                                 placeholder="Search model..."
                                 value={uiState.newProductSearch}
                                 onChange={e => { updateUi({ newProductSearch: e.target.value }); onSearchProducts(e.target.value) }}
-                                className="h-10 pl-9 rounded-xl border-gray-200 text-sm"
+                                className="flex-1 h-full border-0 bg-transparent shadow-none focus-visible:ring-0 text-sm font-bold p-0 placeholder:text-slate-400"
                             />
+                            {uiState.newProductSearch && (
+                                <button onClick={() => { updateUi({ newProductSearch: '' }); onSearchProducts('') }} className="text-slate-400 hover:text-slate-600 shrink-0">
+                                    <XCircle size={14} />
+                                </button>
+                            )}
                         </div>
 
-                        {selectedNewProduct && (
-                            <div className="flex items-center gap-3 px-3 py-2.5 border border-emerald-200 bg-emerald-50/40 rounded-xl">
-                                <div className="relative w-9 h-9 shrink-0 rounded-lg border border-gray-100 bg-white overflow-hidden">
-                                    <Image src={getThumbnail(selectedNewProduct)} alt={selectedNewProduct.name} fill className="object-contain p-0.5" unoptimized />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-widest">Selected</p>
-                                    <p className="text-xs font-bold text-slate-800 truncate">{selectedNewProduct.name}</p>
-                                </div>
-                                <Check size={14} className="text-emerald-500 shrink-0" />
+                        <div className="border border-gray-200 rounded-xl overflow-hidden">
+                            <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Available Devices</p>
                             </div>
-                        )}
-
-                        <div>
-                            <SL>Available Devices</SL>
                             {isLoadingProducts ? (
                                 <div className="flex justify-center py-10">
                                     <Loader2 size={20} className="animate-spin text-slate-400" />
                                 </div>
                             ) : (
-                                <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                                <div className="divide-y divide-gray-100">
                                     {availableProducts.map(p => {
                                         const isSelected = selectedNewProduct?.id === p.id
                                         return (
@@ -642,7 +603,7 @@ export default function ExchangeForm({
                                                 onClick={() => onSelectNewProduct(p)}
                                                 className={cn(
                                                     'flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors',
-                                                    isSelected ? 'bg-emerald-50/30' : 'bg-white hover:bg-gray-50/60'
+                                                    isSelected ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
                                                 )}
                                             >
                                                 <div className="relative w-10 h-10 shrink-0 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
@@ -654,13 +615,16 @@ export default function ExchangeForm({
                                                 </div>
                                                 <div className={cn(
                                                     'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
-                                                    isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+                                                    isSelected ? 'border-(--colour-fsP2) bg-(--colour-fsP2)' : 'border-gray-300'
                                                 )}>
                                                     {isSelected && <Check size={9} strokeWidth={4} className="text-white" />}
                                                 </div>
                                             </div>
                                         )
                                     })}
+                                    {availableProducts.length === 0 && !isLoadingProducts && (
+                                        <div className="py-10 text-center text-[11px] text-slate-400 font-medium">No devices found</div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -669,72 +633,64 @@ export default function ExchangeForm({
 
                 {/* ── 6. VERIFICATION: IMEI + Gov ID + Phone ── */}
                 {step?.key === 'verification' && (
-                    <div className="px-5 pb-5 space-y-6">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                    <ShieldCheck size={14} /> IMEI / Serial Number
-                                </Label>
+                    <div className="px-5 space-y-3">
+                        <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                            <div className="flex items-center gap-3 px-4 py-2.5">
+                                <ShieldCheck size={13} className="text-(--colour-fsP2) shrink-0" />
+                                <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest w-28 shrink-0">IMEI / Serial</Label>
                                 <Input
                                     value={serialNumber}
                                     onChange={e => onVerificationChange('serialNumber', e.target.value)}
                                     placeholder="Dial *#06# to get IMEI"
-                                    className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                    className="flex-1 h-8 text-sm px-2 border border-gray-200 bg-gray-50 focus:bg-white focus:border-(--colour-fsP2) font-medium rounded-lg focus-visible:ring-0"
                                 />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                        <Hash size={14} /> Government ID
-                                    </Label>
-                                    <Input
-                                        value={governmentId}
-                                        onChange={e => onVerificationChange('governmentId', e.target.value)}
-                                        placeholder="ID Number"
-                                        className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                        <Phone size={14} /> Contact Phone
-                                    </Label>
-                                    <Input
-                                        value={phoneNumber}
-                                        onChange={e => onVerificationChange('phoneNumber', e.target.value)}
-                                        placeholder="98XXXXXXXX"
-                                        className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
-                                    />
-                                </div>
+                            <div className="flex items-center gap-3 px-4 py-2.5">
+                                <Hash size={13} className="text-(--colour-fsP2) shrink-0" />
+                                <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest w-28 shrink-0">Gov. ID No.</Label>
+                                <Input
+                                    value={governmentId}
+                                    onChange={e => onVerificationChange('governmentId', e.target.value)}
+                                    placeholder="ID Number"
+                                    className="flex-1 h-8 text-sm px-2 border border-gray-200 bg-gray-50 focus:bg-white focus:border-(--colour-fsP2) font-medium rounded-lg focus-visible:ring-0"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 px-4 py-2.5">
+                                <Phone size={13} className="text-(--colour-fsP2) shrink-0" />
+                                <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest w-28 shrink-0">Contact</Label>
+                                <Input
+                                    value={phoneNumber}
+                                    onChange={e => onVerificationChange('phoneNumber', e.target.value)}
+                                    placeholder="98XXXXXXXX"
+                                    className="flex-1 h-8 text-sm px-2 border border-gray-200 bg-gray-50 focus:bg-white focus:border-(--colour-fsP2) font-medium rounded-lg focus-visible:ring-0"
+                                />
                             </div>
                         </div>
 
-                        {/* Device Photo */}
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                <CameraIcon size={14} /> Device Condition Photo
-                            </Label>
+                        <div className="border border-gray-200 rounded-xl overflow-hidden">
+                            <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                                <CameraIcon size={13} className="text-(--colour-fsP2)" />
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Device Photo</p>
+                            </div>
                             <input type="file" id="devphoto" className="hidden" accept="image/*" onChange={e => {
                                 const f = e.target.files?.[0]; if (!f) return
                                 const r = new FileReader(); r.onloadend = () => onVerificationChange('devicePhoto', r.result); r.readAsDataURL(f)
                             }} />
                             <label htmlFor="devphoto" className={cn(
-                                'flex flex-col items-center justify-center w-full h-40 rounded-2xl border-2 border-dashed cursor-pointer relative overflow-hidden transition-all',
-                                devicePhoto ? 'border-emerald-400 bg-emerald-50/10' : 'border-gray-200 bg-gray-50 hover:border-[var(--colour-fsP2)] hover:bg-white group'
+                                'flex items-center justify-center w-full h-32 cursor-pointer relative overflow-hidden',
+                                devicePhoto ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
                             )}>
                                 {devicePhoto ? (
                                     <>
                                         <Image src={devicePhoto} alt="Device" fill className="object-cover" unoptimized />
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                            <span className="bg-white px-4 py-2 rounded-xl text-xs font-bold text-slate-900 shadow-lg">Change Photo</span>
+                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100">
+                                            <span className="bg-white px-3 py-1.5 rounded-lg text-xs font-bold text-slate-900">Change Photo</span>
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-[var(--colour-fsP2)] transition-colors">
-                                        <div className="p-3 rounded-full bg-white shadow-sm border border-gray-100">
-                                            <UploadCloud size={24} />
-                                        </div>
-                                        <p className="text-[11px] font-bold uppercase tracking-wider">Tap to upload photo</p>
+                                    <div className="flex items-center gap-2 text-slate-400">
+                                        <UploadCloud size={18} />
+                                        <p className="text-xs font-medium">Tap to upload photo</p>
                                     </div>
                                 )}
                             </label>
@@ -757,18 +713,18 @@ export default function ExchangeForm({
                                                 onClick={() => onAddressSelect(addr)}
                                                 className={cn(
                                                     'flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200',
-                                                    isSel ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/[0.03] shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'
+                                                    isSel ? 'border-(--colour-fsP2) bg-(--colour-fsP2)/[0.03] shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'
                                                 )}
                                             >
                                                 <div className={cn(
                                                     'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5',
-                                                    isSel ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]' : 'border-gray-200'
+                                                    isSel ? 'border-(--colour-fsP2) bg-(--colour-fsP2)' : 'border-gray-200'
                                                 )}>
                                                     {isSel && <Check size={10} className="text-white" strokeWidth={3} />}
                                                 </div>
 
                                                 <div className="flex-1 min-w-0 space-y-0.5">
-                                                    <span className={cn('text-[9px] font-black uppercase tracking-widest block', isSel ? 'text-[var(--colour-fsP2)]' : 'text-slate-400')}>
+                                                    <span className={cn('text-[9px] font-black uppercase tracking-widest block', isSel ? 'text-(--colour-fsP2)' : 'text-slate-400')}>
                                                         {addr.address?.label ?? 'Pickup Location'}
                                                     </span>
                                                     <p className="text-[12.5px] font-bold text-slate-800 leading-snug">
@@ -800,27 +756,27 @@ export default function ExchangeForm({
                                             ['Landmark', 'landmark'],
                                         ].map(([ph, field]) => (
                                             <div key={field} className={cn('space-y-2', field === 'landmark' ? 'col-span-2' : '')}>
-                                                <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest">{ph}</Label>
+                                                <Label className="text-[10px] font-bold text-(--colour-fsP2) uppercase tracking-widest">{ph}</Label>
                                                 <Input
                                                     placeholder={`Enter ${ph.toLowerCase()}`}
                                                     value={(uiState.addrForm as any)[field]}
                                                     onChange={e => updateUi({ addrForm: { ...uiState.addrForm, [field]: e.target.value } })}
-                                                    className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
+                                                    className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-(--colour-fsP2) font-bold transition-all focus-visible:ring-0"
                                                 />
                                             </div>
                                         ))}
                                     </div>
                                     <div className="flex gap-3 pt-2">
-                                        <button 
-                                            onClick={() => updateUi({ addrView: 'list' })} 
+                                        <button
+                                            onClick={() => updateUi({ addrView: 'list' })}
                                             className="flex-1 h-11 rounded-xl border-2 border-gray-100 text-xs font-bold text-slate-500 hover:bg-gray-50 transition-all"
                                         >
                                             Cancel
                                         </button>
-                                        <button 
-                                            onClick={handleSaveAddress} 
-                                            disabled={uiState.isSaving} 
-                                            className="flex-[2] h-11 rounded-xl bg-[var(--colour-fsP2)] text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 transition-all shadow-md shadow-blue-100"
+                                        <button
+                                            onClick={handleSaveAddress}
+                                            disabled={uiState.isSaving}
+                                            className="flex-[2] h-11 rounded-xl bg-(--colour-fsP2) text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 transition-all shadow-md shadow-blue-100"
                                         >
                                             {uiState.isSaving ? 'Saving…' : 'Confirm Address'}
                                         </button>
@@ -843,7 +799,7 @@ export default function ExchangeForm({
                                     <Image src={getThumbnail(selectedProduct)} alt="Device" fill className="object-contain p-2" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-black text-[var(--colour-fsP2)] uppercase tracking-widest leading-none mb-1">{selectedCategory?.title}</p>
+                                    <p className="text-[10px] font-black text-(--colour-fsP2) uppercase tracking-widest leading-none mb-1">{selectedCategory?.title}</p>
                                     <p className="text-[15px] font-bold text-slate-900 truncate leading-none">{selectedProduct?.name}</p>
                                 </div>
                             </div>
@@ -863,7 +819,7 @@ export default function ExchangeForm({
                                 ))}
                                 <div className="flex justify-between items-center px-4 py-3 bg-gray-50/60">
                                     <p className="text-xs font-bold text-slate-700">Exchange Credit</p>
-                                    <p className="text-base font-bold text-[var(--colour-fsP2)]">Rs. {exchangeValue.toLocaleString()}</p>
+                                    <p className="text-base font-bold text-(--colour-fsP2)">Rs. {exchangeValue.toLocaleString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -903,7 +859,7 @@ export default function ExchangeForm({
                         </div>
                     </div>
                 )}
-
+                </div>
             </div>
 
             {/* ── Footer ── */}
@@ -927,7 +883,7 @@ export default function ExchangeForm({
                     className={cn(
                         'flex items-center gap-1.5 px-6 h-10 rounded-xl font-bold text-sm transition-all shadow-md',
                         isStepValid()
-                            ? 'bg-[var(--colour-fsP2)] text-white hover:opacity-90 active:scale-95 shadow-blue-100'
+                            ? 'bg-(--colour-fsP2) text-white hover:opacity-90 active:scale-95 shadow-blue-100'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     )}
                 >
