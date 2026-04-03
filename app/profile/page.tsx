@@ -1,179 +1,193 @@
 'use client';
 
-import React from 'react';
-import { User, MapPin, ShieldCheck, LogOut, Package2, Bell } from 'lucide-react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
+import {
+    User, MapPin, Bell, LogOut, ShieldCheck,
+    Truck, CreditCard, Layers, ShoppingBag, Undo2, ChevronRight, Menu, X,
+    Shield, Wrench, ArrowLeftRight
+} from 'lucide-react';
 import { useAuthStore } from '../context/AuthContext';
 import { useShallow } from 'zustand/react/shallow';
+import { useRouter } from 'next/navigation';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-
-// Components
 import ProfileContent from './Profile';
 import OrderHistory from './OrderHistory';
-
+import AddressBook from './AddressBook';
+import ReturnCancel from './ReturnCancel';
+import IdentityVerification from './IdentityVerification';
+import OrderTracking from './OrderTracking';
+import PreOrdersSection from './orders/PreOrdersSection';
+import EmiSection from './orders/EmiSection';
 import ChangePassword from './ChangePassword';
 import Notifications from './Notifications';
+import RepairSection from './RepairSection';
 
-// Wrapped component that uses searchParams
+import { useProfileState } from './hooks/useProfileState';
+import type { ProfileTab } from './hooks/useProfileState';
+
+const NAV = [
+    { id: 'user-info', label: 'My Profile', icon: User },
+    { id: 'orders', label: 'Normal Orders', icon: ShoppingBag },
+    { id: 'emi', label: 'EMI Orders', icon: CreditCard },
+    { id: 'pre-orders', label: 'Pre-orders', icon: Layers },
+    { id: 'addresses', label: 'Address Book', icon: MapPin },
+    { id: 'return-cancel', label: 'Return & Cancel', icon: Undo2 },
+    { id: 'identity', label: 'Identity Verification', icon: ShieldCheck },
+    { id: 'tracking', label: 'Track Order', icon: Truck },
+    { id: 'exchange', label: 'Exchange', icon: ArrowLeftRight },
+    { id: 'repair', label: 'Repair', icon: Wrench },
+    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+] as const;
+
+const emptySubscribe = () => () => { };
+
+function FullHeightLoader() {
+    return (
+        <div className="min-h-screen bg-slate-100">
+            <div className="mx-auto flex min-h-screen max-w-7xl items-center justify-center px-4">
+                <div className="flex min-h-[420px] w-full items-center justify-center rounded-2xl border border-slate-200 bg-white">
+                    <div className="flex flex-col items-center gap-4 text-center">
+                        <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-(--colour-fsP2)" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-black text-slate-900">Loading profile page</p>
+                            <p className="text-xs font-semibold text-slate-500">Preparing your account dashboard.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ComingSoon({ label, icon }: { label: string; icon: React.ReactNode }) {
+    return (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+            <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 text-(--colour-fsP2)">{icon}</div>
+            <p className="text-sm font-bold text-slate-900">{label} — Coming Soon</p>
+            <p className="text-xs text-slate-500">This section is under development.</p>
+        </div>
+    );
+}
+
 function ProfilePageContent() {
-    const { logout, user } = useAuthStore(useShallow(state => ({
+    const { logout, user, isLoggedIn } = useAuthStore(useShallow(state => ({
         logout: state.logout,
-        user: state.user
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
     })));
 
     const router = useRouter();
-    const searchParams = useSearchParams();
+    const { currentTab, setTab } = useProfileState();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const hydrated = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-    // Default tab
-    const currentTab = searchParams.get('tab') || 'user-info';
-
-    const menuItems = [
-        { id: 'user-info', label: 'User Info', icon: User },
-        { id: 'orders', label: 'My Orders', icon: Package2 },
-        { id: 'notifications', label: 'Notifications', icon: Bell },
-        { id: 'addresses', label: 'Addresses', icon: MapPin },
-        { id: 'auth', label: 'Security', icon: ShieldCheck },
-    ];
-
-    const handleLogout = () => {
-        logout();
-        router.push('/');
-    };
+    useEffect(() => { if (hydrated && !isLoggedIn) router.push('/login'); }, [hydrated, isLoggedIn, router]);
 
     const renderContent = () => {
         switch (currentTab) {
-            case 'orders':
-                return <OrderHistory />;
-            case 'notifications':
-                return <Notifications />;
-            case 'addresses':
-                return (
-                    <div className="space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                        <div className="border-b border-slate-100 pb-4">
-                            <h2 className="text-xl font-bold text-slate-800">Address Book</h2>
-                            <p className="text-slate-500 text-sm mt-1">Manage your shipping addresses for faster checkout.</p>
-                        </div>
-
-                    </div>
-                );
-            case 'auth':
-                return <ChangePassword />;
-            case 'user-info':
-            default:
-                return <ProfileContent />;
+            case 'orders': return <OrderHistory />;
+            case 'emi': return <EmiSection />;
+            case 'pre-orders': return <PreOrdersSection />;
+            case 'addresses': return <AddressBook />;
+            case 'return-cancel': return <ReturnCancel />;
+            case 'identity': return <IdentityVerification />;
+            case 'tracking': return <OrderTracking />;
+            case 'exchange': return <ComingSoon label="Exchange" icon={<ArrowLeftRight size={18} />} />;
+            case 'repair': return <RepairSection />;
+            case 'security': return <ChangePassword />;
+            case 'notifications': return <Notifications />;
+            default: return <ProfileContent />;
         }
     };
 
+    const activeItem = NAV.find(n => n.id === currentTab) ?? NAV[0];
+    const ActiveIcon = activeItem.icon;
+
+    if (!hydrated) return <FullHeightLoader />;
+
     return (
-        <div className="min-h-screen bg-slate-50 lg:py-4">
-            <div className=" mx-auto px-0 sm:px-4 max-w-7xl">
+        <div className="min-h-screen bg-slate-100">
+            <div className="max-w-7xl mx-auto px-4 py-8 pb-20">
+                <div className="flex flex-col lg:flex-row gap-5">
 
-                {/* Header Welcome (Desktop Only) */}
-                <div className="mb-5 hidden lg:block px-4 sm:px-0">
-                    <h1 className="text-2xl font-bold text-[var(--colour-fsP2)]">My Account</h1>
-                    <p className="text-sm text-slate-500  ">Manage your profile and preferences.</p>
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-2">
-                    {/* Mobile Profile Header */}
-                    <div className="lg:hidden bg-white p-6 pb-8 flex flex-col items-center text-center border-b border-slate-100">
-                        <div className="w-24 h-24 rounded-full bg-[var(--colour-fsP2)] p-0.5 mb-4 relative overflow-hidden">
-                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[var(--colour-fsP2)] text-3xl font-bold overflow-hidden">
-                                {user?.avatar_image?.thumb ? (
-                                    <Image src={user.avatar_image.thumb} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
-                                ) : (
-                                    user?.name?.substring(0, 2).toUpperCase() || <User size={40} />
-                                )}
+                    {/* Sidebar */}
+                    <aside className={`
+                        lg:w-64 shrink-0 bg-white rounded-xl border border-slate-200 overflow-hidden lg:sticky lg:top-24 h-fit
+                        ${isSidebarOpen ? 'fixed inset-4 z-50 lg:relative lg:inset-auto' : 'hidden lg:block'}
+                    `}>
+                        {isSidebarOpen && (
+                            <div className="lg:hidden flex justify-end p-3 border-b border-slate-100">
+                                <button onClick={() => setIsSidebarOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600">
+                                    <X size={16} />
+                                </button>
                             </div>
+                        )}
+
+                        {/* User Info */}
+                        <div className="px-4 py-4 border-b border-slate-100 bg-slate-50">
+                            <p className="text-[10px] font-bold text-(--colour-fsP2) uppercase tracking-widest mb-1">Signed in as</p>
+                            <p className="text-sm font-bold text-slate-900 truncate">{user?.name ?? 'Member'}</p>
+                            <p className="text-xs font-semibold text-slate-500 truncate">{user?.email}</p>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800">{user?.name || 'Guest User'}</h2>
-                        <p className="text-slate-500 font-medium">{user?.email}</p>
-                    </div>
 
-                    {/* Mobile Navigation (Sticky) */}
-                    <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 py-3 overflow-x-auto scrollbar-hide">
-                        <div className="flex px-4 space-x-3 min-w-max">
-                            {menuItems.map(item => (
-                                <Link
-                                    key={item.id}
-                                    href={`/profile?tab=${item.id}`}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${currentTab === item.id
-                                        ? 'bg-[var(--colour-fsP2)] text-white'
-                                        : 'bg-white text-slate-600 border border-slate-200'
-                                        }`}
-                                >
-                                    <item.icon className={`w-4 h-4 ${currentTab === item.id ? 'text-white' : 'text-slate-500'}`} />
-                                    {item.label}
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Sidebar (Desktop Only) */}
-                    <aside className="hidden lg:block w-60 flex-shrink-0">
-                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-24">
-
-                            {/* User Profile Summary */}
-                            <div className="p-5 border-b border-slate-100 flex flex-col items-center text-center bg-gray-50">
-                                <div className="w-16 h-16 rounded-full bg-[var(--colour-fsP2)] p-0.5 mb-3 relative overflow-hidden">
-                                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-[var(--colour-fsP2)] text-lg font-bold">
-                                        {user?.avatar_image?.thumb ? (
-                                            <Image src={user.avatar_image.thumb} alt="Profile" width={64} height={64} className="w-full h-full object-cover rounded-full" />
-                                        ) : (
-                                            user?.name?.substring(0, 2).toUpperCase() || <User size={24} />
-                                        )}
-                                    </div>
-                                </div>
-                                <h3 className="font-semibold text-slate-800 text-sm truncate w-full">{user?.name || 'Guest User'}</h3>
-                                <p className="text-xs text-slate-400 truncate w-full">{user?.email}</p>
-                            </div>
-
-                            {/* Navigation */}
-                            <nav className="p-2 space-y-0.5">
-                                {menuItems.map(item => (
-                                    <Link
-                                        key={item.id}
-                                        href={`/profile?tab=${item.id}`}
-                                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium ${currentTab === item.id
-                                            ? 'bg-gray-50 text-slate-800'
-                                            : 'text-slate-500'
-                                            }`}
-                                    >
-                                        <item.icon className={`w-4 h-4 ${currentTab === item.id ? 'text-[var(--colour-fsP2)]' : 'text-slate-400'}`} />
-                                        {item.label}
-                                    </Link>
-                                ))}
-
-                                <div className="pt-2 mt-2 border-t border-slate-100">
+                        {/* Navigation */}
+                        <nav className="p-2 space-y-0.5 max-h-[80vh] overflow-y-auto">
+                            {NAV.map(item => {
+                                const active = currentTab === item.id;
+                                const Icon = item.icon;
+                                return (
                                     <button
-                                        onClick={handleLogout}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 text-left"
+                                        key={item.id}
+                                        onClick={() => { setTab(item.id as ProfileTab); setIsSidebarOpen(false); }}
+                                        className={`
+                                            w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-xs font-bold transition-colors
+                                            ${active
+                                                ? 'bg-(--colour-fsP2) text-white'
+                                                : 'text-slate-700 hover:bg-slate-50 hover:text-(--colour-fsP2)'}
+                                        `}
                                     >
-                                        <LogOut className="w-4 h-4" />
-                                        Sign Out
+                                        <div className="flex items-center gap-2.5">
+                                            <Icon size={14} strokeWidth={2} />
+                                            {item.label}
+                                        </div>
+                                        {active && <ChevronRight size={12} strokeWidth={2.5} />}
                                     </button>
-                                </div>
-                            </nav>
+                                );
+                            })}
+                        </nav>
+
+                        <div className="p-2 border-t border-slate-100">
+                            <button
+                                onClick={() => { logout(); router.push('/'); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-50 transition-colors"
+                            >
+                                <LogOut size={14} strokeWidth={2} />
+                                Sign Out
+                            </button>
                         </div>
                     </aside>
 
                     {/* Main Content */}
                     <main className="flex-1 min-w-0">
-                        <div className="bg-white lg:rounded-xl lg:border lg:border-slate-200 p-2 min-h-[400px]">
-                            {renderContent()}
-
-                            {/* Mobile Logout Button (Bottom of Content) */}
-                            <div className="lg:hidden mt-8 pt-8 border-t border-slate-100">
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-medium"
-                                >
-                                    <LogOut className="w-5 h-5" />
-                                    Sign Out
-                                </button>
+                        {/* Mobile header */}
+                        <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-slate-200 mb-4">
+                            <div className="flex items-center gap-2.5">
+                                <ActiveIcon size={15} className="text-(--colour-fsP2)" />
+                                <span className="text-xs font-bold text-slate-800">
+                                    {NAV.find(n => n.id === currentTab)?.label ?? 'Dashboard'}
+                                </span>
                             </div>
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-(--colour-fsP2) text-white text-xs font-bold rounded-lg"
+                            >
+                                <Menu size={13} /> Menu
+                            </button>
+                        </div>
+
+                        <div className="bg-white border border-slate-200 rounded-xl p-5 md:p-7 min-h-[600px]">
+                            {renderContent()}
                         </div>
                     </main>
                 </div>
@@ -184,7 +198,9 @@ function ProfilePageContent() {
 
 export default function ProfilePage() {
     return (
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--colour-fsP2)]"></div></div>}>
+        <React.Suspense fallback={
+            <FullHeightLoader />
+        }>
             <ProfilePageContent />
         </React.Suspense>
     );

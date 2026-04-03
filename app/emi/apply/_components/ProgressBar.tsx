@@ -20,10 +20,8 @@ const ProgressBar = ({ currentstep, onStepClick }: { currentstep: number, onStep
   return (
     <div className="w-full py-8 px-2 sm:px-0 max-w-8xl mx-auto">
       <div className="relative w-full">
-        {/* Background Line */}
         <div className="absolute top-[7px] left-0 w-full h-[2px] bg-gray-200 z-0 rounded-full" />
 
-        {/* Active Progress Line */}
         <div
           className="absolute top-[7px] left-0 h-[2px] bg-[var(--colour-fsP2)] z-0 transition-all duration-500 ease-out rounded-full shadow-sm"
           style={{ width: `${(currentstep / (steps.length - 1)) * 100}%` }}
@@ -48,7 +46,6 @@ const ProgressBar = ({ currentstep, onStepClick }: { currentstep: number, onStep
                   }
                 }}
               >
-                {/* Dot Indicator */}
                 <div
                   className={`
                                         w-4 h-4 rounded-full border-2 transition-all duration-300 bg-white relative z-20 mx-auto
@@ -59,7 +56,6 @@ const ProgressBar = ({ currentstep, onStepClick }: { currentstep: number, onStep
                                     `}
                 />
 
-                {/* Label Container - Absolute positioned to dot */}
                 <div
                   className={`
                                         absolute top-8 w-32
@@ -83,7 +79,6 @@ const ProgressBar = ({ currentstep, onStepClick }: { currentstep: number, onStep
           })}
         </div>
       </div>
-      {/* Mobile spacing buffer */}
       <div className="h-10 sm:h-8" />
     </div>
   );

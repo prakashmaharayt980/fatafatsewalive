@@ -1,6 +1,5 @@
 import * as Yup from 'yup';
 
-// Personal Details Schema (used for userInfo and granterPersonalDetails)
 export const personalDetailsSchema = (isGranter = false) =>
   Yup.object().shape({
     name: Yup.string()
@@ -35,7 +34,6 @@ export const personalDetailsSchema = (isGranter = false) =>
     }),
   });
 
-// Credit Card Details Schema
 export const creditCardSchema = Yup.object().shape({
   bankname: Yup.string().required('Please select a bank'),
   cardHolderName: Yup.string()
@@ -48,7 +46,6 @@ export const creditCardSchema = Yup.object().shape({
     .positive('Card limit must be a positive number'),
 });
 
-// Bank Details Schema
 export const bankDetailsSchema = Yup.object().shape({
   bankname: Yup.string().required('Please select a bank'),
   accountNumber: Yup.string()
@@ -62,10 +59,6 @@ export const bankDetailsSchema = Yup.object().shape({
     .required('Salary amount is required'),
 });
 
-/**
- * Resolves a raw downPayment value (number or '40%' string) to a concrete number.
- * This matches the same logic as calculateEMI so validation uses the same resolved amount.
- */
 function resolveDownPayment(value, productPrice) {
   if (typeof value === 'string' && value.includes('%')) {
     return (parseFloat(value) / 100) * productPrice;
@@ -73,9 +66,6 @@ function resolveDownPayment(value, productPrice) {
   return Number(value) || 0;
 }
 
-// EMI Conditions Schema (Down Payment / Make Card paths — require min 40%)
-// NOTE: handleContinue passes already-resolved emiData.downPayment (a number),
-// so this schema validates the resolved amount directly.
 export const emiConditionsSchema = (productPrice) => {
   const min40 = Math.ceil(productPrice * 0.4);
   return Yup.object().shape({
@@ -94,7 +84,6 @@ export const emiConditionsSchema = (productPrice) => {
   });
 };
 
-// EMI Conditions Schema for Credit Card (no minimum down payment requirement)
 export const emiConditionsCreditSchema = (productPrice) =>
   Yup.object().shape({
     downPayment: Yup.number()

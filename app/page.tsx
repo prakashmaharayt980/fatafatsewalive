@@ -137,7 +137,7 @@ export default async function Page() {
         offerSection={<OfferSectionClient />}
         basketSection3={<BasketSectionClient slug={categories[3].slug} title={categories[3].title} sectionIndex={3} />}
         sectionTwo={
-          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="200px">
+          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="200px"  >
             <BannerSectionServer slug={banners[1].slug} type={banners[1].type} />
           </LazySection>
         }

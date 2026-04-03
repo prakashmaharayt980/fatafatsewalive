@@ -21,8 +21,7 @@ const nextConfig: NextConfig = {
 
   reactCompiler: true,
 
-  // React Compiler is now stable in v16! 
-  // It automatically handles memoization (no more manual useMemo)
+
   experimental: {
     optimizePackageImports: ["lucide-react"] // No longer needed; Turbopack handles this automatically
   },

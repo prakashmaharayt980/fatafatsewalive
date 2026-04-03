@@ -20,9 +20,7 @@ const CompanyJourney = dynamic(() => import('@/components/about/CompanyJourney')
     ssr: true
 });
 
-const BoardMembers = dynamic(() => import('@/components/about/BoardMembers'), {
-    ssr: true
-});
+
 
 const GoogleReviews = dynamic(() => import('@/components/about/GoogleReviews'), {
     ssr: true
@@ -69,9 +67,9 @@ const AboutUsPage = async () => {
                 // eslint-disable-next-line @next/next/no-head-element
                 <link rel="preload" as="image" href={preloadImage} fetchPriority="high" />
             )}
-            
+
             <AboutHero bannerData={bannerData} />
-            
+
             <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50" />}>
                 <CompanyStats />
             </Suspense>
@@ -86,9 +84,9 @@ const AboutUsPage = async () => {
                 <CompanyJourney />
             </LazyAboutSection>
 
-            <LazyAboutSection minHeight="600px">
+            {/* <LazyAboutSection minHeight="600px">
                 <BoardMembers />
-            </LazyAboutSection>
+            </LazyAboutSection> */}
 
             <LazyAboutSection minHeight="400px">
                 <GoogleReviews />

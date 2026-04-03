@@ -1,6 +1,6 @@
 
 
-import { apiPublic, apiPrivate } from './client';
+import { apiPublic, apiPrivate } from '../ServiceHelper/index';
 
 export const ReviewService = {
 

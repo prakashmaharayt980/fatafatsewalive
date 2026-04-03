@@ -1,18 +1,16 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react'
+import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { fetchEmiProducts } from './actions'
 import EmiProductCard from '@/app/product-details/ProductCards/EmiProductCard'
 import type { ProductSummary } from '@/app/types/ProductDetailsTypes'
-import { MOCK_EMI_PRODUCTS } from './mockData'
 
 interface Props {
     slug: string
     title: string
-    category?: any
+    brandSlug?: string
     budget: number
     tenure: number
     downPayment: number
@@ -21,7 +19,8 @@ interface Props {
 }
 
 export default function EmiBasketSection({
-    slug, title, category,
+    slug, title,
+    brandSlug,
     budget, tenure, downPayment, zeroEmi, emiPlan,
 }: Props) {
     const router = useRouter()
@@ -29,28 +28,17 @@ export default function EmiBasketSection({
     const [products, setProducts] = useState<ProductSummary[]>([])
     const [loading, setLoading] = useState(true)
 
-    const categoryImage: string | null =
-        category?.image?.full ??
-        category?.thumbnail_image?.full ??
-        category?.image_url ??
-        null
-
     useEffect(() => {
         let active = true
-        setLoading(true)
-        fetchEmiProducts(slug, 20)
+        fetchEmiProducts(slug, 10, brandSlug)
             .then((data) => {
                 if (!active) return
-                if (Array.isArray(data) && data.length === 0 && MOCK_EMI_PRODUCTS[slug]) {
-                    setProducts(MOCK_EMI_PRODUCTS[slug])
-                } else {
-                    setProducts(Array.isArray(data) ? data : [])
-                }
+                setProducts(Array.isArray(data) ? data : [])
             })
-            .catch(() => { if (active) setProducts(MOCK_EMI_PRODUCTS[slug] ?? []) })
+            .catch(() => { if (active) setProducts([]) })
             .finally(() => { if (active) setLoading(false) })
         return () => { active = false }
-    }, [slug])
+    }, [brandSlug, slug])
 
     const filteredProducts = useMemo(() => {
         return products
@@ -106,81 +94,53 @@ export default function EmiBasketSection({
                 </button>
             </div>
 
-            {/* Body: side banner + horizontal scroll */}
-            <div className="flex gap-4 items-stretch">
-
-                {/* Side Banner — like TwoImageBanner but vertical */}
-                {categoryImage && (
-                    <button
-                        onClick={() => router.push(`/category/${slug}`)}
-                        className="hidden md:block relative w-40 lg:w-50 shrink-0 overflow-hidden rounded-xl border border-gray-100 shadow-sm group aspect-2/3 cursor-pointer"
-                    >
-                        <Image
-                            src={categoryImage}
-                            alt={title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            sizes="200px"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                        <div className="absolute bottom-4 left-4 right-4 text-white text-left">
-                            <p className="text-[11px] font-bold leading-snug mb-2">{title}</p>
-                            <div className="inline-flex items-center gap-1 text-[10px] font-bold bg-white/20 border border-white/30 rounded-full px-2.5 py-1">
-                                Shop <ArrowRight className="w-3 h-3" />
+            <div className="relative min-w-0 group/scroll">
+                <div
+                    ref={scrollRef}
+                    className="flex overflow-x-auto scrollbar-hide snap-x pb-2 pt-1 gap-3"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                    {loading
+                        ? Array.from({ length: 4 }, (_, i) => (
+                            <div key={i} className="shrink-0 snap-start w-45 sm:w-52.5">
+                                <div className="bg-white border border-gray-100 rounded-2xl p-4 animate-pulse h-70 flex flex-col">
+                                    <div className="aspect-square bg-gray-100 rounded-xl mb-4" />
+                                    <div className="h-3 w-1/3 bg-gray-100 rounded mb-2" />
+                                    <div className="h-4 w-3/4 bg-gray-100 rounded mb-3" />
+                                    <div className="mt-auto h-8 w-full bg-gray-100 rounded-lg" />
+                                </div>
                             </div>
-                        </div>
-                    </button>
-                )}
-
-                {/* Scroll area — same as BasketCard */}
-                <div className="flex-1 min-w-0 relative group/scroll">
-                    <div
-                        ref={scrollRef}
-                        className="flex overflow-x-auto scrollbar-hide snap-x pb-2 pt-1 gap-3"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                    >
-                        {loading
-                            ? Array.from({ length: 4 }, (_, i) => (
-                                <div key={i} className="shrink-0 snap-start w-45 sm:w-52.5">
-                                    <div className="bg-white border border-gray-100 rounded-2xl p-4 animate-pulse h-70 flex flex-col">
-                                        <div className="aspect-square bg-gray-100 rounded-xl mb-4" />
-                                        <div className="h-3 w-1/3 bg-gray-100 rounded mb-2" />
-                                        <div className="h-4 w-3/4 bg-gray-100 rounded mb-3" />
-                                        <div className="mt-auto h-8 w-full bg-gray-100 rounded-lg" />
-                                    </div>
-                                </div>
-                            ))
-                            : filteredProducts.map((p, idx) => (
-                                <div key={p.id} className="shrink-0 snap-start w-45 sm:w-52.5">
-                                    <EmiProductCard
-                                        product={p}
-                                        tenure={tenure}
-                                        zeroEmi={zeroEmi}
-                                        downPayment={downPayment}
-                                        index={idx}
-                                    />
-                                </div>
-                            ))
-                        }
-                    </div>
-
-                    {!loading && filteredProducts.length > 3 && (
-                        <>
-                            <button
-                                onClick={() => scroll('left')}
-                                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-sm hidden md:flex items-center justify-center opacity-0 group-hover/scroll:opacity-100 transition-opacity"
-                            >
-                                <ChevronLeft className="w-4 h-4 text-gray-700" />
-                            </button>
-                            <button
-                                onClick={() => scroll('right')}
-                                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-sm hidden md:flex items-center justify-center opacity-0 group-hover/scroll:opacity-100 transition-opacity"
-                            >
-                                <ChevronRight className="w-4 h-4 text-gray-700" />
-                            </button>
-                        </>
-                    )}
+                        ))
+                        : filteredProducts.map((p, idx) => (
+                            <div key={p.id} className="shrink-0 snap-start w-45 sm:w-52.5">
+                                <EmiProductCard
+                                    product={p}
+                                    tenure={tenure}
+                                    zeroEmi={zeroEmi}
+                                    downPayment={downPayment}
+                                    index={idx}
+                                />
+                            </div>
+                        ))
+                    }
                 </div>
+
+                {!loading && filteredProducts.length > 3 && (
+                    <>
+                        <button
+                            onClick={() => scroll('left')}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-sm hidden md:flex items-center justify-center opacity-0 group-hover/scroll:opacity-100 transition-opacity"
+                        >
+                            <ChevronLeft className="w-4 h-4 text-gray-700" />
+                        </button>
+                        <button
+                            onClick={() => scroll('right')}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-sm hidden md:flex items-center justify-center opacity-0 group-hover/scroll:opacity-100 transition-opacity"
+                        >
+                            <ChevronRight className="w-4 h-4 text-gray-700" />
+                        </button>
+                    </>
+                )}
             </div>
         </section>
     )

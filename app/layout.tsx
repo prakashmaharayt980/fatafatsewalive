@@ -60,7 +60,7 @@ async function LazyFooter() {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en"  className={inter.className}>
       <body className="flex flex-col min-h-screen">
         <Suspense fallback={<div className="h-16 w-full bg-white shadow-sm animate-pulse" />}>
           <HeaderDataFetcher />

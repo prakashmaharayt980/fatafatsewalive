@@ -36,7 +36,7 @@ function SuccessPageContent() {
         try {
             const stored = sessionStorage.getItem('exchangeDevicePhoto')
             if (stored) setDevicePhoto(stored)
-        } catch {}
+        } catch { }
     }, [])
 
     const p = {

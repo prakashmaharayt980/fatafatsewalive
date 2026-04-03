@@ -1,73 +1,63 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Layers, CreditCard } from 'lucide-react';
-
+import { Search } from 'lucide-react';
 import OrdersSection from './orders/OrdersSection';
-import PreOrdersSection from './orders/PreOrdersSection';
-import EmiSection from './orders/EmiSection';
-import { MOCK_PRE_ORDERS, MOCK_EMI_ORDERS, type Order } from './orders/shared';
+import { MOCK_ORDERS } from './orders/shared';
 import { OrderService } from '../api/services/order.service';
-
-type TabType = 'orders' | 'pre_orders' | 'emi';
-
-const TABS: { id: TabType; label: string; icon: typeof ShoppingBag }[] = [
-    { id: 'orders', label: 'Orders', icon: ShoppingBag },
-    { id: 'pre_orders', label: 'Pre-orders', icon: Layers },
-    { id: 'emi', label: 'EMI Orders', icon: CreditCard },
-];
+import type { Order } from './types';
 
 export default function OrderHistory() {
-    const [activeTab, setActiveTab] = useState<TabType>('orders');
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         OrderService.OrderList()
-            .then((res: any) => setOrders(res?.data ?? (Array.isArray(res) ? res : [])))
-            .catch((e: any) => setError(e?.message ?? 'Failed to load orders'))
+            .then((res: { data?: Order[] } | Order[]) => {
+                const data = res?.data ?? (Array.isArray(res) ? res : []);
+                setOrders(data);
+            })
+            .catch((e: { message?: string }) => setError(e?.message ?? 'Failed to load orders'))
             .finally(() => setLoading(false));
     }, []);
 
-    const counts: Record<TabType, number> = {
-        orders: orders.length,
-        pre_orders: MOCK_PRE_ORDERS.length,
-        emi: MOCK_EMI_ORDERS.length,
-    };
+    const effectiveOrders = orders.length > 0 ? orders : MOCK_ORDERS;
+
+    const filteredOrders = effectiveOrders.filter(order => {
+        const id = String(order.id ?? '').toLowerCase();
+        const status = String(order.status ?? '').toLowerCase();
+        const search = searchTerm.toLowerCase();
+        const hasProduct = order.items?.some(item =>
+            (item.product?.name ?? '').toLowerCase().includes(search) ||
+            (item.name ?? '').toLowerCase().includes(search)
+        );
+        return id.includes(search) || status.includes(search) || hasProduct;
+    });
 
     return (
-        <div className="w-full max-w-5xl">
-            {/* Page heading */}
-            <h2 className="text-base font-bold text-[var(--colour-fsP2)] mb-3">Order History</h2>
-
-            {/* Tab pills */}
-            <div className="flex flex-wrap gap-2 pb-4 mb-4 border-b border-gray-100">
-                {TABS.map(tab => {
-                    const active = activeTab === tab.id;
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold border transition-all
-                                ${active
-                                    ? 'bg-[var(--colour-fsP2)] text-white border-[var(--colour-fsP2)]'
-                                    : 'bg-white text-gray-500 border-gray-200 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)]'}`}
-                        >
-                            <tab.icon size={13} />
-                            {tab.label}
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                                {counts[tab.id]}
-                            </span>
-                        </button>
-                    );
-                })}
+        <div className="space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
+                <div>
+                    <h2 className="text-lg font-bold text-slate-900">Orders</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                        {effectiveOrders.length > 0 ? `${effectiveOrders.length} total orders` : 'Your purchase history'}
+                    </p>
+                </div>
+                <div className="relative w-full sm:w-52">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                    <input
+                        type="text"
+                        placeholder="Search by order or product..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-9 pl-9 pr-3 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-(--colour-fsP2) focus:bg-white transition-colors"
+                    />
+                </div>
             </div>
 
-            {/* Sections — only the active one renders */}
-            {activeTab === 'orders' && <OrdersSection orders={orders} loading={loading} error={error} />}
-            {activeTab === 'pre_orders' && <PreOrdersSection />}
-            {activeTab === 'emi' && <EmiSection />}
+            <OrdersSection orders={filteredOrders} loading={loading} error={orders.length > 0 ? error : null} />
         </div>
     );
 }

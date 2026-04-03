@@ -1,28 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import {
-    Loader2, CheckCircle2, RotateCcw, Camera,
-    FileText, Hash, UploadCloud, ChevronLeft,
-    Plus, MapPin, Navigation, Phone,
-    User, Check, Crosshair, Trash2, Edit2
+    ArrowLeft, ChevronRight, Info,
+    Smartphone, ShieldCheck, HardDrive,
+    XCircle, AlertTriangle, Monitor, Battery,
+    Camera as CameraIcon, Volume2, Wifi, Settings2,
+    Package, Receipt, Cable,
+    UploadCloud, Check, Loader2, MapPin,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 import type { NavbarItem } from '@/app/context/navbar.interface'
 import type { ShippingAddress } from '../../checkout/checkoutTypes'
-import { ShippingAddressList, ShippingAddressUpdate, CreateShippingAddress, ShippingAddressDelete } from '@/app/api/services/address.service'
-import GoogleMapAddress, { type LocationData } from '../../checkout/GoogleMapAddress'
+import { ShippingAddressList, ShippingAddressUpdate, CreateShippingAddress } from '@/app/api/services/address.service'
 import {
-    type FullProduct, type ConditionAnswer,
-    GET_CONDITION_QUESTIONS, GET_PROBLEM_OPTIONS, REASON_OPTIONS,
+    type FullProduct, type ProductListItem, type ConditionAnswer,
+    getThumbnail, parsePrice,
 } from '../exchange-helpers'
+import GoogleMapAddress, { type LocationData } from '../../checkout/GoogleMapAddress'
 
 interface Props {
     questions: any[]
@@ -30,10 +31,10 @@ interface Props {
     selectedProduct: FullProduct | null
     isLoadingDetail: boolean
     conditionAnswers: ConditionAnswer
-    conditionComplete: boolean
     exchangeValue: number
+    valuationBreakdown: any[]
     pickupSelected: boolean
-    onConditionAnswer: (key: string, value: number) => void
+    onConditionAnswer: (key: string, value: any) => void
     onPickupSelect: (selected: boolean) => void
     onCheckout: () => void
     onLoginRequest: () => void
@@ -42,26 +43,92 @@ interface Props {
     onAddressSelect: (address: ShippingAddress) => void
     serialNumber: string
     governmentId: string
-    devicePhoto: File | string | null
+    devicePhoto: string | null
     phoneNumber: string
-    onVerificationChange: (key: any, value: any) => void
+    onVerificationChange: (key: string, value: any) => void
     problems: string[]
     reason: string
     onConditionExtra: (key: 'reason' | 'problems', value: any) => void
+    availableProducts: ProductListItem[]
+    isLoadingProducts: boolean
+    onSearchProducts: (q: string) => void
+    selectedNewProduct: ProductListItem | null
+    onSelectNewProduct: (p: ProductListItem) => void
+    onBack: () => void
 }
+
+interface State {
+    stepIndex: number
+    addrView: 'list' | 'form'
+    savedAddresses: ShippingAddress[]
+    isLoadingAddr: boolean
+    isSaving: boolean
+    editingId: number | null
+    addrForm: { city: string; district: string; province: string; landmark: string; contact_number: string; first_name: string; last_name: string }
+    newProductSearch: string
+    mapLocation: LocationData | null
+}
+
+// ── Shared label style identical to OrdersSection ────────────────────────────
+const SL = ({ children }: { children: React.ReactNode }) => (
+    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest border-b border-gray-100 pb-1.5 mb-3">
+        {children}
+    </p>
+)
+
+// ── Boolean question row used inside a grouped card ──────────────────────────
+function BoolRow({ q, answers, onAnswer }: { q: any; answers: ConditionAnswer; onAnswer: (k: string, v: any) => void }) {
+    return (
+        <div className="px-4 py-3.5">
+            <p className="text-xs font-semibold text-slate-800 mb-2.5">{q.label}</p>
+            <div className="grid grid-cols-2 gap-2">
+                {q.options.map((opt: any) => {
+                    const isSelected = String(answers[q.key]) === String(opt.value)
+                    const isYes = opt.label === 'YES'
+                    return (
+                        <button
+                            key={opt.label}
+                            onClick={() => onAnswer(q.key, opt.value)}
+                            className={cn(
+                                'h-10 rounded-lg border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2',
+                                isSelected
+                                    ? isYes
+                                        ? 'border-emerald-500 bg-emerald-500 text-white'
+                                        : 'border-red-500 bg-red-500 text-white'
+                                    : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+                            )}
+                        >
+                            {isSelected && <Check size={13} strokeWidth={3} />}
+                            {opt.label}
+                        </button>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
+
+// ── Icon map for multi-select options ────────────────────────────────────────
+const ICONS: Record<string, React.ReactNode> = {
+    Smartphone: <Smartphone size={18} />, Monitor: <Monitor size={18} />,
+    Battery: <Battery size={18} />, Camera: <CameraIcon size={18} />,
+    Volume2: <Volume2 size={18} />, Wifi: <Wifi size={18} />,
+    Settings2: <Settings2 size={18} />, AlertTriangle: <AlertTriangle size={18} />,
+    XCircle: <XCircle size={18} />, Package: <Package size={18} />,
+    Receipt: <Receipt size={18} />, Cable: <Cable size={18} />,
+    HardDrive: <HardDrive size={18} />,
+}
+const renderIcon = (name: string) => ICONS[name] ?? <Info size={18} />
 
 export default function ExchangeForm({
     questions,
     selectedCategory,
     selectedProduct,
-    isLoadingDetail,
     conditionAnswers,
-    conditionComplete,
     exchangeValue,
-    pickupSelected,
+    valuationBreakdown,
     onConditionAnswer,
     onCheckout,
-    onLoginRequest,
     isLoggedIn,
     selectedAddress,
     onAddressSelect,
@@ -70,670 +137,626 @@ export default function ExchangeForm({
     devicePhoto,
     phoneNumber,
     onVerificationChange,
-    problems,
-    reason,
-    onConditionExtra,
+    availableProducts,
+    isLoadingProducts,
+    onSearchProducts,
+    selectedNewProduct,
+    onSelectNewProduct,
+    onBack,
 }: Props) {
-
-    const [step, setStep] = useState(1)
-    const [addrView, setAddrView] = useState<'list' | 'form'>('list')
-    const [savedAddresses, setSavedAddresses] = useState<ShippingAddress[]>([])
-    const [isLoadingAddr, setIsLoadingAddr] = useState(false)
-    const [isSaving, setIsSaving] = useState(false)
-    const [mapLocation, setMapLocation] = useState<LocationData | null>(null)
-    const [editingId, setEditingId] = useState<number | null>(null)
-    const [addrForm, setAddrForm] = useState({
-        city: '', district: '', province: '', landmark: '',
-        contact_number: '', first_name: '', last_name: ''
+    const [uiState, setUiState] = useState<State>({
+        stepIndex: 0,
+        addrView: 'list',
+        savedAddresses: [],
+        isLoadingAddr: false,
+        isSaving: false,
+        editingId: null,
+        addrForm: { city: '', district: '', province: '', landmark: '', contact_number: '', first_name: '', last_name: '' },
+        newProductSearch: '',
+        mapLocation: null,
     })
 
+    const updateUi = useCallback((upd: Partial<State>) => setUiState(p => ({ ...p, ...upd })), [])
+
     useEffect(() => {
-        if (!isLoggedIn || addrView !== 'list') return
-        if (savedAddresses.length > 0) return
-        setIsLoadingAddr(true)
+        if (!isLoggedIn || uiState.addrView !== 'list' || uiState.savedAddresses.length > 0) return
+        updateUi({ isLoadingAddr: true })
         ShippingAddressList()
             .then(res => {
                 const list: ShippingAddress[] = Array.isArray(res) ? res : (res.data ?? [])
-                setSavedAddresses(list)
+                updateUi({ savedAddresses: list })
                 if (list.length > 0 && !selectedAddress) onAddressSelect(list[0])
             })
             .catch(() => { })
-            .finally(() => setIsLoadingAddr(false))
-    }, [isLoggedIn, addrView])
+            .finally(() => updateUi({ isLoadingAddr: false }))
+    }, [isLoggedIn, uiState.addrView, uiState.savedAddresses.length, selectedAddress, onAddressSelect, updateUi])
 
     const handleMapSelect = (loc: LocationData) => {
-        setMapLocation(loc)
-        if (!loc.addressComponents) return
-        setAddrForm(p => ({
-            ...p,
-            province: loc.addressComponents?.province ?? p.province,
-            district: loc.addressComponents?.district ?? p.district,
-            city: loc.addressComponents?.municipality ?? loc.addressComponents?.city ?? p.city,
-            landmark: loc.addressComponents?.tole ?? loc.addressComponents?.city ?? p.landmark,
-        }))
+        updateUi({
+            mapLocation: loc,
+            addrForm: {
+                ...uiState.addrForm,
+                province: loc.addressComponents?.province ?? uiState.addrForm.province,
+                district: loc.addressComponents?.district ?? uiState.addrForm.district,
+                city: loc.addressComponents?.municipality ?? loc.addressComponents?.city ?? uiState.addrForm.city,
+                landmark: loc.addressComponents?.tole ?? loc.addressComponents?.city ?? uiState.addrForm.landmark,
+            }
+        })
     }
 
     const openForm = (addr?: ShippingAddress) => {
         if (addr) {
-            setAddrForm({
-                city: addr.address.city ?? '',
-                district: addr.address.district ?? '',
-                province: addr.address.province ?? '',
-                landmark: addr.address.landmark ?? '',
-                contact_number: addr.contact_info?.contact_number ?? '',
-                first_name: addr.contact_info?.first_name ?? '',
-                last_name: addr.contact_info?.last_name ?? '',
+            updateUi({
+                editingId: addr.id ?? null, addrView: 'form',
+                addrForm: {
+                    city: addr.address.city ?? '', district: addr.address.district ?? '',
+                    province: addr.address.province ?? '', landmark: addr.address.landmark ?? '',
+                    contact_number: addr.contact_info?.contact_number ?? '',
+                    first_name: addr.contact_info?.first_name ?? '', last_name: addr.contact_info?.last_name ?? '',
+                },
+                mapLocation: addr.geo?.lat ? { lat: addr.geo.lat, lng: addr.geo.lng!, address: addr.address.landmark ?? addr.address.city ?? '' } : null
             })
-            setMapLocation(addr.geo?.lat ? {
-                lat: addr.geo.lat, lng: addr.geo.lng!,
-                address: addr.address.landmark ?? addr.address.city ?? ''
-            } : null)
-            setEditingId(addr.id ?? null)
         } else {
-            setAddrForm({ city: '', district: '', province: '', landmark: '', contact_number: '', first_name: '', last_name: '' })
-            setMapLocation(null)
-            setEditingId(null)
+            updateUi({
+                editingId: null, addrView: 'form',
+                addrForm: { city: '', district: '', province: '', landmark: '', contact_number: '', first_name: '', last_name: '' },
+                mapLocation: null
+            })
         }
-        setAddrView('form')
     }
 
-    const closeForm = () => { setAddrView('list'); setEditingId(null) }
-
     const handleSaveAddress = async () => {
-        if (!addrForm.city || !addrForm.province) {
-            toast.error('City and Province are required')
-            return
-        }
-        setIsSaving(true)
+        const { addrForm, editingId, mapLocation } = uiState
+        if (!addrForm.city || !addrForm.province) { toast.error('City and Province are required'); return }
+        updateUi({ isSaving: true })
         try {
-            const fullAddress = [addrForm.landmark, addrForm.city, addrForm.district, addrForm.province].filter(Boolean).join(', ')
+            const addrStr = [addrForm.landmark, addrForm.city, addrForm.district, addrForm.province].filter(Boolean).join(', ')
             const payload = {
-                first_name: addrForm.first_name || 'Customer',
-                last_name: addrForm.last_name || 'User',
-                contact_number: addrForm.contact_number || '0000000000',
+                first_name: addrForm.first_name, last_name: addrForm.last_name,
+                contact_number: addrForm.contact_number,
                 lat: mapLocation?.lat ?? null, lng: mapLocation?.lng ?? null,
                 label: 'Home', landmark: addrForm.landmark,
                 city: addrForm.city, district: addrForm.district,
                 province: addrForm.province, country: 'Nepal',
-                address: fullAddress, state: addrForm.province,
+                address: addrStr, state: addrForm.province,
             }
-            const res = editingId
-                ? await ShippingAddressUpdate(editingId, payload)
-                : await CreateShippingAddress(payload)
-
+            const res = editingId ? await ShippingAddressUpdate(editingId, payload) : await CreateShippingAddress(payload)
             const saved: ShippingAddress = {
                 id: res?.id ?? editingId ?? Date.now(),
-                contact_info: {
-                    first_name: addrForm.first_name || 'Customer',
-                    last_name: addrForm.last_name || 'User',
-                    contact_number: addrForm.contact_number || '',
-                },
-                address: {
-                    label: 'Home', landmark: addrForm.landmark,
-                    city: addrForm.city, district: addrForm.district,
-                    province: addrForm.province, country: 'Nepal', is_default: false,
-                },
-                geo: { lat: mapLocation?.lat ?? null, lng: mapLocation?.lng ?? null },
+                contact_info: { first_name: payload.first_name, last_name: payload.last_name, contact_number: payload.contact_number },
+                address: { label: 'Home', landmark: addrForm.landmark, city: addrForm.city, district: addrForm.district, province: addrForm.province, country: 'Nepal', is_default: false },
+                geo: { lat: payload.lat, lng: payload.lng },
             }
-            setSavedAddresses(p => editingId ? p.map(a => a.id === editingId ? saved : a) : [...p, saved])
+            updateUi({
+                savedAddresses: editingId ? uiState.savedAddresses.map(a => a.id === editingId ? saved : a) : [...uiState.savedAddresses, saved],
+                addrView: 'list', editingId: null
+            })
             onAddressSelect(saved)
-            closeForm()
             toast.success(editingId ? 'Address updated' : 'Address saved')
         } catch {
             toast.error('Failed to save address')
         } finally {
-            setIsSaving(false)
+            updateUi({ isSaving: false })
         }
     }
 
-    const handleDelete = async (id: number) => {
-        try {
-            await ShippingAddressDelete(id)
-            setSavedAddresses(p => p.filter(a => a.id !== id))
-            if (selectedAddress?.id === id) onAddressSelect(null as any)
-            toast.success('Address deleted')
-        } catch {
-            toast.error('Failed to delete address')
+    // ── Split flat questions into 3 grouped screens ──────────────────────────
+    const baselineQs = useMemo(() => questions.filter(q => q.key === 'switch_on' || q.key === 'mdms_registered'), [questions])
+    const defectQs   = useMemo(() => questions.filter(q => q.key === 'problems'), [questions])
+    const docQs      = useMemo(() => questions.filter(q => q.key === 'under_warranty' || q.key === 'accessories'), [questions])
+
+    // 7 fixed wizard screens
+    const STEPS = useMemo(() => [
+        { key: 'baseline',      label: 'Device Status',            group: 'Inspect' },
+        { key: 'defects',       label: 'Technical Inspection',      group: 'Inspect' },
+        { key: 'documentation', label: 'Documentation & Warranty',  group: 'Inspect' },
+        { key: 'new_device',    label: 'Choose Your Upgrade',       group: 'Upgrade' },
+        { key: 'verification',  label: 'Verify Your Device',        group: 'Verify'  },
+        { key: 'pickup',        label: 'Pickup Address',            group: 'Pickup'  },
+        { key: 'summary',       label: 'Exchange Summary',          group: 'Review'  },
+    ], [])
+
+    const step    = STEPS[uiState.stepIndex]
+    const totalSt = STEPS.length
+    const pct     = ((uiState.stepIndex + 1) / totalSt) * 100
+
+    const selectedNewProductPrice = selectedNewProduct ? parsePrice(selectedNewProduct.price) : 0
+    const priceAfterExchange      = Math.max(0, selectedNewProductPrice - exchangeValue)
+
+    // Compute depreciated base value from product price when exchangeValue is not yet ready
+    const footerAmount = useMemo(() => {
+        if (selectedNewProduct) return priceAfterExchange
+        if (exchangeValue > 0) return exchangeValue
+        if (!selectedProduct) return 0
+        const rawPrice = parsePrice(String(selectedProduct.price || selectedProduct.discounted_price || 0))
+        if (!rawPrice) return 0
+        const d = new Date(selectedProduct.created_at ?? '')
+        const months = isNaN(d.getTime())
+            ? 24
+            : (new Date().getFullYear() - d.getFullYear()) * 12 + (new Date().getMonth() - d.getMonth())
+        const mult = months <= 6 ? 0.9 : months <= 12 ? 0.75 : months <= 24 ? 0.6 : months <= 36 ? 0.45 : 0.3
+        return Math.round(rawPrice * mult)
+    }, [selectedNewProduct, priceAfterExchange, exchangeValue, selectedProduct])
+
+    const handleNext = () => {
+        if (uiState.stepIndex < STEPS.length - 1) updateUi({ stepIndex: uiState.stepIndex + 1 })
+        else onCheckout()
+    }
+
+    const handleBack = () => {
+        if (uiState.stepIndex > 0) updateUi({ stepIndex: uiState.stepIndex - 1 })
+        else onBack()
+    }
+
+    const isStepValid = (): boolean => {
+        switch (step?.key) {
+            case 'baseline':
+                return conditionAnswers.switch_on !== undefined && conditionAnswers.mdms_registered !== undefined
+            case 'defects':
+                return true
+            case 'documentation':
+                return conditionAnswers.under_warranty !== undefined
+            case 'new_device':
+                return !!selectedNewProduct
+            case 'verification':
+                return serialNumber.trim().length > 5 && governmentId.trim().length > 5 && phoneNumber.trim().length > 9 && !!devicePhoto
+            case 'pickup':
+                return !!selectedAddress
+            default:
+                return true
         }
     }
 
-    const isVerified = serialNumber.trim().length > 3 && governmentId.trim().length > 3 && phoneNumber.trim().length > 3 && !!devicePhoto
-    const canSubmit = conditionComplete && isVerified && (!pickupSelected || !!selectedAddress)
-
-    const NavBtn = ({ label, onClick, disabled = false }: { label: string; onClick: () => void; disabled?: boolean }) => (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            className={cn(
-                'w-full h-10 flex items-center justify-center gap-1.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]',
-                disabled
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-[var(--colour-fsP2)] text-white hover:opacity-90'
-            )}
-        >
-            {label}
-            {!disabled && (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-            )}
-        </button>
-    )
+    // ── Multi-select option card (defects + accessories) ─────────────────────
+    const MultiCard = ({ opt, collection, qKey }: { opt: any; collection: any[]; qKey: string }) => {
+        const isSelected = collection.some((x: any) => x.key === opt.key)
+        return (
+            <button
+                onClick={() => {
+                    const next = isSelected ? collection.filter((x: any) => x.key !== opt.key) : [...collection, opt]
+                    onConditionAnswer(qKey, next)
+                }}
+                className={cn(
+                    'relative flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border-2 transition-all text-center',
+                    isSelected ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 bg-white hover:border-gray-300'
+                )}
+            >
+                <div className={cn(
+                    'absolute top-2 left-2 w-4 h-4 rounded border-2 flex items-center justify-center',
+                    isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+                )}>
+                    {isSelected && <Check size={9} strokeWidth={4} className="text-white" />}
+                </div>
+                <div className={cn('transition-colors', isSelected ? 'text-emerald-600' : 'text-slate-400')}>
+                    {renderIcon(opt.icon)}
+                </div>
+                <span className={cn('text-[11px] font-semibold leading-tight', isSelected ? 'text-slate-800' : 'text-slate-600')}>
+                    {opt.label}
+                </span>
+            </button>
+        )
+    }
 
     return (
-        <div className="flex py-4 flex-col h-full bg-[#F5F7FA]">
-            <div className="px-4 py-5 space-y-5 max-w-2xl mx-auto w-full bg-[#F5F7FA]">
+        <div className="flex flex-col w-full h-full bg-white">
 
-                {/* ── Step indicator ── */}
-                <div className="relative w-full mb-10 mt-2 px-2 sm:px-0">
-                    <div className="relative w-full">
-                        <div className="absolute top-[7px] left-0 w-full h-[2px] bg-gray-200 z-0 rounded-full" />
-                        <div
-                            className="absolute top-[7px] left-0 h-[2px] bg-[var(--colour-fsP2)] z-0 transition-all duration-500 ease-out rounded-full"
-                            style={{ width: `${((step - 1) / 2) * 100}%` }}
-                        />
-                        <div className="relative z-10 flex justify-between w-full">
-                            {(['Condition', 'Verification', 'Address'] as const).map((label, i) => {
-                                const s = i + 1
-                                const isPast = step >= s
-                                const isActive = step === s
-                                const isFirst = i === 0
-                                const isLast = i === 2
-                                return (
-                                    <div key={label} className="flex flex-col items-center cursor-pointer" onClick={() => setStep(s)}>
-                                        <div className={cn(
-                                            'w-4 h-4 rounded-full border-2 transition-all duration-300 z-20',
-                                            isPast ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)] scale-110 shadow-md shadow-blue-200' : 'border-gray-300 bg-white'
-                                        )} />
-                                        <div className={cn(
-                                            'absolute top-6 w-24 sm:w-32',
-                                            isFirst ? 'left-0 text-left' : isLast ? 'right-0 text-right' : 'left-1/2 -translate-x-1/2 text-center'
-                                        )}>
-                                            <span className={cn(
-                                                'text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-colors duration-300 block leading-tight',
-                                                isActive ? 'text-[var(--colour-fsP2)]' : isPast ? 'text-[var(--colour-fsP2)] opacity-70' : 'text-gray-400'
-                                            )}>
-                                                {label}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
+            {/* ── Top bar ── */}
+            <div className="shrink-0 flex items-center gap-2.5 px-5 py-3 border-b border-gray-100">
+                <button
+                    onClick={handleBack}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                >
+                    <ArrowLeft size={13} />
+                    Back
+                </button>
+                {selectedProduct && (
+                    <>
+                        <span className="text-gray-200">·</span>
+                        <span className="text-xs font-semibold text-slate-700 truncate">{selectedProduct.name}</span>
+                    </>
+                )}
+                <span className="ml-auto text-[10px] font-semibold text-slate-400">
+                    {uiState.stepIndex + 1} / {totalSt}
+                </span>
+            </div>
+
+            {/* ── Progress bar ── */}
+            <div className="shrink-0 h-[3px] bg-gray-100">
+                <div
+                    className="h-full bg-[var(--colour-fsP2)] transition-all duration-500 ease-out"
+                    style={{ width: `${pct}%` }}
+                />
+            </div>
+
+            {/* ── Body ── */}
+            <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0">
+
+                {/* Step title block */}
+                <div className="px-5 pt-5 pb-4">
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-0.5">
+                        {step?.group}
+                    </p>
+                    <h2 className="text-base font-bold text-slate-900">{step?.label}</h2>
                 </div>
 
-                {/* ── Step 1: Condition ── */}
-                {step === 1 && (
-                    <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)]">Device Condition</h3>
-                            {conditionComplete && <CheckCircle2 size={14} className="text-emerald-500" />}
+                {/* ── 1. BASELINE: switch_on + mdms_registered ── */}
+                {step?.key === 'baseline' && baselineQs.length > 0 && (
+                    <div className="px-5 pb-5">
+                        <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                            {baselineQs.map(q => (
+                                <BoolRow key={q.key} q={q} answers={conditionAnswers} onAnswer={onConditionAnswer} />
+                            ))}
                         </div>
+                    </div>
+                )}
 
-                        {questions.map((q: any) => {
-                            const val = conditionAnswers[q.key]
-                            return (
-                                <div key={q.key} className="space-y-3">
-                                    <p className="text-[13px] font-bold text-gray-800 leading-snug">{q.label}</p>
-                                    <RadioGroup
-                                        value={val > 0 ? String(val) : ''}
-                                        onValueChange={v => onConditionAnswer(q.key as any, Number(v))}
-                                        className="grid grid-cols-2 gap-3"
-                                    >
-                                        {q.options.map((opt: any) => {
-                                            const isSel = val === opt.value
-                                            const isGood = opt.label === 'Yes'
-                                            return (
-                                                <label
-                                                    key={opt.label}
-                                                    htmlFor={`${q.key}-${opt.label}`}
-                                                    className={cn(
-                                                        'flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all duration-200 cursor-pointer select-none',
-                                                        isSel
-                                                            ? isGood ? 'bg-emerald-50/50 border-emerald-500' : 'bg-red-50/50 border-red-500'
-                                                            : 'bg-white border-gray-100 hover:border-gray-200'
-                                                    )}
-                                                >
-                                                    <div className={cn(
-                                                        'w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0',
-                                                        isSel ? isGood ? 'border-emerald-500' : 'border-red-500' : 'border-gray-300'
-                                                    )}>
-                                                        {isSel && <div className={cn('w-1.5 h-1.5 rounded-full', isGood ? 'bg-emerald-500' : 'bg-red-500')} />}
-                                                    </div>
-                                                    <span className={cn('text-[12.5px] font-bold', isSel ? (isGood ? 'text-emerald-700' : 'text-red-700') : 'text-gray-500')}>
-                                                        {opt.label}
-                                                    </span>
-                                                    <RadioGroupItem value={String(opt.value)} id={`${q.key}-${opt.label}`} className="sr-only" />
-                                                </label>
-                                            )
-                                        })}
-                                    </RadioGroup>
+                {/* ── 2. DEFECTS: problems multi-select ── */}
+                {step?.key === 'defects' && defectQs.length > 0 && (
+                    <div className="px-5 pb-5">
+                        <div className="border border-gray-200 rounded-xl overflow-hidden">
+                            <div className="px-4 py-3 bg-gray-50/60 border-b border-gray-100">
+                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                                    Select any issues · Skip if none
+                                </p>
+                            </div>
+                            <div className="p-3 grid grid-cols-2 gap-2">
+                                {defectQs[0]?.options.map((opt: any) => (
+                                    <MultiCard
+                                        key={opt.key}
+                                        opt={opt}
+                                        collection={conditionAnswers.problems ?? []}
+                                        qKey="problems"
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── 3. DOCUMENTATION: under_warranty (bool) + accessories (multi) ── */}
+                {step?.key === 'documentation' && docQs.length > 0 && (
+                    <div className="px-5 pb-5 space-y-4">
+                        {docQs.map(q => (
+                            q.type === 'boolean' ? (
+                                <div key={q.key} className="border border-gray-200 rounded-xl overflow-hidden">
+                                    <BoolRow q={q} answers={conditionAnswers} onAnswer={onConditionAnswer} />
+                                </div>
+                            ) : (
+                                <div key={q.key} className="border border-gray-200 rounded-xl overflow-hidden">
+                                    <div className="px-4 py-3 bg-gray-50/60 border-b border-gray-100">
+                                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                                            Accessories / Documents · Select all you have
+                                        </p>
+                                    </div>
+                                    <div className="p-3 grid grid-cols-3 gap-2">
+                                        {q.options.map((opt: any) => (
+                                            <MultiCard
+                                                key={opt.key}
+                                                opt={opt}
+                                                collection={conditionAnswers.accessories ?? []}
+                                                qKey="accessories"
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             )
-                        })}
+                        ))}
+                    </div>
+                )}
 
-                        <div className="pt-4 border-t border-gray-100 space-y-4">
-                            <div>
-                                <p className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)] mb-3">Current issues</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {GET_PROBLEM_OPTIONS(selectedCategory?.slug ?? '').map(problem => {
-                                        const isSel = problems.includes(problem)
+                {/* ── 4. NEW DEVICE PICKER ── */}
+                {step?.key === 'new_device' && (
+                    <div className="px-5 pb-5 space-y-4">
+                        <div className="relative">
+                            <HardDrive size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <Input
+                                placeholder="Search model..."
+                                value={uiState.newProductSearch}
+                                onChange={e => { updateUi({ newProductSearch: e.target.value }); onSearchProducts(e.target.value) }}
+                                className="h-10 pl-9 rounded-xl border-gray-200 text-sm"
+                            />
+                        </div>
+
+                        {selectedNewProduct && (
+                            <div className="flex items-center gap-3 px-3 py-2.5 border border-emerald-200 bg-emerald-50/40 rounded-xl">
+                                <div className="relative w-9 h-9 shrink-0 rounded-lg border border-gray-100 bg-white overflow-hidden">
+                                    <Image src={getThumbnail(selectedNewProduct)} alt={selectedNewProduct.name} fill className="object-contain p-0.5" unoptimized />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-widest">Selected</p>
+                                    <p className="text-xs font-bold text-slate-800 truncate">{selectedNewProduct.name}</p>
+                                </div>
+                                <Check size={14} className="text-emerald-500 shrink-0" />
+                            </div>
+                        )}
+
+                        <div>
+                            <SL>Available Devices</SL>
+                            {isLoadingProducts ? (
+                                <div className="flex justify-center py-10">
+                                    <Loader2 size={20} className="animate-spin text-slate-400" />
+                                </div>
+                            ) : (
+                                <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                                    {availableProducts.map(p => {
+                                        const isSelected = selectedNewProduct?.id === p.id
                                         return (
-                                            <button
-                                                key={problem}
-                                                type="button"
-                                                onClick={() => onConditionExtra('problems', isSel ? problems.filter(p => p !== problem) : [...problems, problem])}
+                                            <div
+                                                key={p.id}
+                                                onClick={() => onSelectNewProduct(p)}
                                                 className={cn(
-                                                    'px-3.5 py-2 rounded-xl border-2 text-[12px] font-bold transition-all duration-200',
-                                                    isSel ? 'border-[#eb5a2c] bg-[#eb5a2c]/5 text-[#eb5a2c]' : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                                                    'flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors',
+                                                    isSelected ? 'bg-emerald-50/30' : 'bg-white hover:bg-gray-50/60'
                                                 )}
                                             >
-                                                {problem}
-                                            </button>
+                                                <div className="relative w-10 h-10 shrink-0 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
+                                                    <Image src={getThumbnail(p)} alt={p.name} fill className="object-contain p-0.5" unoptimized />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-semibold text-slate-900 truncate">{p.name}</p>
+                                                    <p className="text-[11px] text-slate-500 mt-0.5">{p.brand?.name}</p>
+                                                </div>
+                                                <div className={cn(
+                                                    'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
+                                                    isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+                                                )}>
+                                                    {isSelected && <Check size={9} strokeWidth={4} className="text-white" />}
+                                                </div>
+                                            </div>
                                         )
                                     })}
                                 </div>
-                            </div>
-
-                            <div>
-                                <p className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)] mb-3">Reason for exchanging</p>
-                                <RadioGroup value={reason} onValueChange={v => onConditionExtra('reason', v)} className="space-y-2">
-                                    {REASON_OPTIONS.map(r => (
-                                        <label
-                                            key={r}
-                                            htmlFor={`reason-${r}`}
-                                            className={cn(
-                                                'flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all duration-200',
-                                                reason === r ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5' : 'bg-white border-gray-100 hover:border-gray-200'
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                'w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0',
-                                                reason === r ? 'border-[var(--colour-fsP2)]' : 'border-gray-300'
-                                            )}>
-                                                {reason === r && <div className="w-1.5 h-1.5 rounded-full bg-[var(--colour-fsP2)]" />}
-                                            </div>
-                                            <span className={cn('text-[13px] font-bold', reason === r ? 'text-[var(--colour-fsP2)]' : 'text-gray-600')}>
-                                                {r}
-                                            </span>
-                                            <RadioGroupItem value={r} id={`reason-${r}`} className="sr-only" />
-                                        </label>
-                                    ))}
-                                </RadioGroup>
-                            </div>
-
-                            <div className="pt-2">
-                                <NavBtn
-                                    label={isLoggedIn ? 'Next' : 'Login to Continue'}
-                                    onClick={() => isLoggedIn ? setStep(2) : onLoginRequest()}
-                                    disabled={!conditionComplete}
-                                />
-                            </div>
+                            )}
                         </div>
-                    </section>
+                    </div>
                 )}
 
-                {/* ── Step 2: Verification ── */}
-                {step === 2 && (
-                    <section className="space-y-5">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)]">Verification</h3>
-                            {isVerified && <CheckCircle2 size={14} className="text-emerald-500" />}
+                {/* ── 5. VERIFICATION ── */}
+                {step?.key === 'verification' && (
+                    <div className="px-5 pb-5 space-y-4">
+                        <div className="border border-gray-200 rounded-xl overflow-hidden">
+                            {/* IMEI */}
+                            <div className="px-4 py-3.5 border-b border-gray-100">
+                                <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2 block">
+                                    IMEI / Serial Number
+                                </Label>
+                                <div className="relative">
+                                    <Input
+                                        value={serialNumber}
+                                        onChange={e => onVerificationChange('serialNumber', e.target.value)}
+                                        placeholder="Dial *#06# to get IMEI"
+                                        className="h-10 rounded-lg border-gray-200 pr-8 text-sm"
+                                    />
+                                    <ShieldCheck size={13} className="absolute right-3 top-3 text-slate-400" />
+                                </div>
+                            </div>
+                            {/* ID + Phone */}
+                            <div className="grid grid-cols-2 divide-x divide-gray-100">
+                                <div className="px-4 py-3.5 space-y-1.5">
+                                    <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Gov. ID</Label>
+                                    <Input value={governmentId} onChange={e => onVerificationChange('governmentId', e.target.value)} placeholder="ID Number" className="h-10 rounded-lg border-gray-200 text-sm" />
+                                </div>
+                                <div className="px-4 py-3.5 space-y-1.5">
+                                    <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Phone</Label>
+                                    <Input value={phoneNumber} onChange={e => onVerificationChange('phoneNumber', e.target.value)} placeholder="98XXXXXXXX" className="h-10 rounded-lg border-gray-200 text-sm" />
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                <Hash size={15} className="text-[var(--colour-fsP2)]" />
-                                Serial / IMEI Number
-                            </Label>
-                            <Input
-                                value={serialNumber}
-                                onChange={e => onVerificationChange('serialNumber', e.target.value)}
-                                placeholder="Dial *#06# to find IMEI"
-                                className={cn(
-                                    'h-12 text-[14px] px-4 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 font-bold',
-                                    serialNumber.length > 3
-                                        ? 'border-[var(--colour-fsP2)] bg-blue-50/20'
-                                        : 'border-gray-100 bg-gray-50/50 focus-visible:border-[var(--colour-fsP2)] focus-visible:bg-white'
-                                )}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                <FileText size={15} className="text-[var(--colour-fsP2)]" />
-                                Government ID Number
-                            </Label>
-                            <Input
-                                value={governmentId}
-                                onChange={e => onVerificationChange('governmentId', e.target.value)}
-                                placeholder="Citizenship or Licence Number"
-                                className={cn(
-                                    'h-12 text-[14px] px-4 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 font-bold',
-                                    governmentId.length > 3
-                                        ? 'border-[var(--colour-fsP2)] bg-blue-50/20'
-                                        : 'border-gray-100 bg-gray-50/50 focus-visible:border-[var(--colour-fsP2)] focus-visible:bg-white'
-                                )}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                <Phone size={15} className="text-[var(--colour-fsP2)]" />
-                                Device Owner's Phone Number
-                            </Label>
-                            <Input
-                                value={phoneNumber}
-                                onChange={e => onVerificationChange('phoneNumber', e.target.value)}
-                                placeholder="98XXXXXXXX"
-                                className={cn(
-                                    'h-12 text-[14px] px-4 rounded-xl border-2 transition-all duration-200 focus-visible:ring-0 font-bold',
-                                    phoneNumber.length >= 10
-                                        ? 'border-[var(--colour-fsP2)] bg-blue-50/20'
-                                        : 'border-gray-100 bg-gray-50/50 focus-visible:border-[var(--colour-fsP2)] focus-visible:bg-white'
-                                )}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                <Camera size={15} className="text-[var(--colour-fsP2)]" />
-                                Front Side Photo
-                                <span className="text-gray-300 font-medium normal-case tracking-normal">(max 300 KB)</span>
-                            </Label>
-                            <input
-                                type="file"
-                                id="device-photo"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={e => {
-                                    const file = e.target.files?.[0]
-                                    if (!file) return
-                                    if (file.size > 300 * 1024) {
-                                        toast.error('Photo must be under 300 KB')
-                                        e.target.value = ''
-                                        return
-                                    }
-                                    const reader = new FileReader()
-                                    reader.onloadend = () => onVerificationChange('devicePhoto', reader.result)
-                                    reader.readAsDataURL(file)
-                                }}
-                            />
-                            <label
-                                htmlFor="device-photo"
-                                className={cn(
-                                    'flex flex-col items-center justify-center gap-3 w-full h-32 rounded-2xl border-2 border-dashed cursor-pointer overflow-hidden relative transition-all duration-300',
-                                    devicePhoto
-                                        ? 'border-[var(--colour-fsP2)] bg-blue-50/10'
-                                        : 'bg-gray-50/50 border-gray-200 hover:border-[var(--colour-fsP2)] hover:bg-white'
-                                )}
-                            >
+                        {/* Device Photo */}
+                        <div>
+                            <SL>Device Photo</SL>
+                            <input type="file" id="devphoto" className="hidden" accept="image/*" onChange={e => {
+                                const f = e.target.files?.[0]; if (!f) return
+                                const r = new FileReader(); r.onloadend = () => onVerificationChange('devicePhoto', r.result); r.readAsDataURL(f)
+                            }} />
+                            <label htmlFor="devphoto" className={cn(
+                                'flex flex-col items-center justify-center w-full h-36 rounded-xl border-2 border-dashed cursor-pointer relative overflow-hidden transition-all',
+                                devicePhoto ? 'border-emerald-400' : 'border-gray-200 hover:border-slate-300'
+                            )}>
                                 {devicePhoto ? (
                                     <>
-                                        <Image src={devicePhoto as string} alt="Preview" fill className="object-cover" />
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                                            <RotateCcw size={18} className="text-white" />
-                                            <span className="text-[11px] font-bold text-white uppercase tracking-widest">Change Photo</span>
+                                        <Image src={devicePhoto} alt="Device" fill className="object-cover" unoptimized />
+                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                            <span className="bg-white/90 px-3 py-1 rounded text-[10px] font-semibold text-slate-700">Change</span>
                                         </div>
                                     </>
                                 ) : (
-                                    <>
-                                        <div className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center border border-gray-100">
-                                            <UploadCloud size={20} className="text-[var(--colour-fsP2)]" />
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="text-[13px] font-bold text-gray-700">Upload Device Front Photo</p>
-                                            <p className="text-[10px] uppercase font-bold tracking-widest text-gray-400 mt-1">Tap to select</p>
-                                        </div>
-                                    </>
+                                    <div className="flex flex-col items-center gap-2 text-slate-400">
+                                        <UploadCloud size={22} />
+                                        <p className="text-xs font-semibold text-slate-500">Upload device photo</p>
+                                    </div>
                                 )}
                             </label>
                         </div>
-
-                        <div className="pt-2">
-                            <NavBtn
-                                label={isLoggedIn ? 'Next' : 'Login to Continue'}
-                                onClick={() => isLoggedIn ? setStep(3) : onLoginRequest()}
-                                disabled={!isVerified}
-                            />
-                        </div>
-                    </section>
+                    </div>
                 )}
 
-                {/* ── Step 3: Address ── */}
-                {step === 3 && (
-                    <section className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-[11px] font-black uppercase tracking-widest text-[var(--colour-fsP2)]">Pickup Address</h3>
-                            {selectedAddress && <CheckCircle2 size={14} className="text-emerald-500" />}
-                        </div>
-
-                        {/* List */}
-                        {addrView === 'list' && (
-                            <div className="space-y-2">
-                                {isLoadingAddr ? (
-                                    <div className="py-10 flex items-center justify-center gap-2">
-                                        <Loader2 size={16} className="animate-spin text-[var(--colour-fsP2)]" />
-                                        <p className="text-[10px] font-bold text-gray-400">Loading...</p>
-                                    </div>
-                                ) : savedAddresses.length > 0 ? (
-                                    savedAddresses.slice(0, 3).map(addr => {
-                                        const isSel = selectedAddress?.id === addr.id
-                                        const hasGeo = !!(addr.geo?.lat && addr.geo?.lng)
-                                        return (
-                                            <div
-                                                key={addr.id}
-                                                onClick={() => onAddressSelect(addr)}
-                                                className={cn(
-                                                    'flex items-start gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200',
-                                                    isSel ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5' : 'border-gray-100 bg-white hover:border-gray-200'
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5',
-                                                    isSel ? 'border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]' : 'border-gray-300'
-                                                )}>
-                                                    {isSel && <Check size={10} className="text-white" strokeWidth={3} />}
-                                                </div>
-
-                                                <div className="flex-1 min-w-0 space-y-0.5">
-                                                    <span className={cn(
-                                                        'text-[9px] font-black uppercase tracking-widest block',
-                                                        isSel ? 'text-[var(--colour-fsP2)]' : 'text-gray-400'
-                                                    )}>
-                                                        {addr.address?.label ?? 'Home'}
-                                                    </span>
-                                                    <p className="text-[12.5px] font-semibold text-gray-800 leading-snug">
-                                                        {[addr.address?.city, addr.address?.district, addr.address?.province].filter(Boolean).join(', ') || 'No address details'}
-                                                    </p>
-                                                    {addr.address?.landmark && (
-                                                        <p className="text-[11px] font-medium text-[var(--colour-fsP2)]/80">
-                                                            Near: <span className="font-bold">{addr.address.landmark}</span>
-                                                        </p>
-                                                    )}
-                                                    {(addr.contact_info?.first_name || addr.contact_info?.contact_number) && (
-                                                        <div className="flex items-center gap-3 pt-0.5 flex-wrap">
-                                                            {addr.contact_info?.first_name && (
-                                                                <span className="text-[10px] font-semibold text-gray-500 flex items-center gap-1">
-                                                                    <User size={9} className="text-gray-400" />
-                                                                    {addr.contact_info.first_name} {addr.contact_info.last_name ?? ''}
-                                                                </span>
-                                                            )}
-                                                            {addr.contact_info?.contact_number && (
-                                                                <span className="text-[10px] font-semibold text-gray-500 flex items-center gap-1">
-                                                                    <Phone size={9} className="text-gray-400" />
-                                                                    {addr.contact_info.contact_number}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                    {hasGeo && (
-                                                        <div className="flex items-center gap-1 pt-0.5">
-                                                            <span className="flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
-                                                                <Crosshair size={8} /> GPS
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex flex-col gap-1.5 shrink-0">
-                                                    <button
-                                                        onClick={e => { e.stopPropagation(); openForm(addr) }}
-                                                        className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--colour-fsP2)] hover:bg-blue-50 transition-colors"
-                                                    >
-                                                        <Edit2 size={13} />
-                                                    </button>
-                                                    <button
-                                                        onClick={e => { e.stopPropagation(); addr.id && handleDelete(addr.id) }}
-                                                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                                                    >
-                                                        <Trash2 size={13} />
-                                                    </button>
-                                                </div>
+                {/* ── 6. PICKUP ADDRESS ── */}
+                {step?.key === 'pickup' && (
+                    <div className="px-5 pb-5 space-y-3">
+                        {uiState.addrView === 'list' ? (
+                            <>
+                                <SL>Pickup Location</SL>
+                                <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                                    {uiState.savedAddresses.map(addr => (
+                                        <div
+                                            key={addr.id}
+                                            onClick={() => onAddressSelect(addr)}
+                                            className={cn(
+                                                'flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors',
+                                                selectedAddress?.id === addr.id ? 'bg-blue-50/30' : 'bg-white hover:bg-gray-50/60'
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                'w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 mt-0.5',
+                                                selectedAddress?.id === addr.id ? 'border-[var(--colour-fsP2)] bg-blue-50' : 'border-gray-200 bg-gray-50'
+                                            )}>
+                                                <MapPin size={12} className={selectedAddress?.id === addr.id ? 'text-[var(--colour-fsP2)]' : 'text-slate-400'} />
                                             </div>
-                                        )
-                                    })
-                                ) : (
-                                    <div className="flex flex-col items-center py-10 rounded-2xl bg-gray-50">
-                                        <MapPin size={22} className="text-gray-200 mb-2" />
-                                        <p className="text-[11px] font-bold text-gray-400">No saved addresses</p>
-                                        <p className="text-[10px] text-gray-300 mt-0.5">Add a pickup location below</p>
-                                    </div>
-                                )}
-
-                                {savedAddresses.length < 4 && (
-                                    <button
-                                        onClick={() => openForm()}
-                                        className="w-full h-11 rounded-xl border border-dashed border-gray-200 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:border-[var(--colour-fsP2)] hover:text-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/[0.03] transition-all flex items-center justify-center gap-1.5"
-                                    >
-                                        <Plus size={12} /> Add Address
-                                    </button>
-                                )}
-
-                                {(!isLoggedIn || canSubmit) && (
-                                    <button
-                                        onClick={isLoggedIn ? onCheckout : onLoginRequest}
-                                        className="w-full h-10 mt-2 flex items-center justify-center gap-2 rounded-xl text-[11px] font-bold uppercase tracking-widest text-white bg-[var(--colour-fsP2)] hover:opacity-90 transition-all active:scale-[0.98]"
-                                    >
-                                        <CheckCircle2 size={14} />
-                                        {isLoggedIn ? 'Submit Exchange' : 'Login to Continue'}
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Form */}
-                        {addrView === 'form' && (
-                            <div className="space-y-4">
-                                <button
-                                    onClick={closeForm}
-                                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[var(--colour-fsP2)] transition-colors"
-                                >
-                                    <ChevronLeft size={14} />
-                                    Back
-                                </button>
-
-                                <div className="h-52 rounded-2xl overflow-hidden relative">
-                                    <GoogleMapAddress onLocationSelect={handleMapSelect} initialPosition={mapLocation ?? undefined} />
-                                    {!mapLocation && (
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div className="bg-white/90 px-4 py-2 rounded-full shadow flex items-center gap-2">
-                                                <Navigation size={13} className="text-[var(--colour-fsP2)] animate-bounce" />
-                                                <span className="text-[10px] font-bold text-gray-600">Tap map to pin location</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-bold text-slate-900">
+                                                    {[addr.address?.landmark, addr.address?.city].filter(Boolean).join(', ')}
+                                                </p>
+                                                <p className="text-[11px] text-slate-500 mt-0.5">
+                                                    {[addr.address?.district, addr.address?.province].filter(Boolean).join(', ')}
+                                                </p>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {mapLocation && (
-                                    <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl px-3 py-2">
-                                        <Navigation size={11} className="shrink-0 text-green-500" />
-                                        <span className="text-[11px] font-medium text-green-700 truncate">{mapLocation.address}</span>
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-3 gap-2">
-                                    {([
-                                        { label: 'Province', key: 'province', placeholder: 'Bagmati', req: true },
-                                        { label: 'District', key: 'district', placeholder: 'Kathmandu', req: false },
-                                        { label: 'City', key: 'city', placeholder: 'City', req: true },
-                                    ] as const).map(f => (
-                                        <div key={f.key} className="space-y-1">
-                                            <Label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                {f.label}{f.req && <span className="text-[#eb5a2c]">*</span>}
-                                            </Label>
-                                            <Input
-                                                value={addrForm[f.key]}
-                                                onChange={e => setAddrForm(p => ({ ...p, [f.key]: e.target.value }))}
-                                                placeholder={f.placeholder}
-                                                className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium focus-visible:ring-0"
-                                            />
+                                            {selectedAddress?.id === addr.id && (
+                                                <Check size={13} className="text-[var(--colour-fsP2)] shrink-0 mt-1" />
+                                            )}
                                         </div>
                                     ))}
                                 </div>
-
-                                <div className="space-y-1">
-                                    <Label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                        Landmark <span className="normal-case font-medium text-gray-300">(optional)</span>
-                                    </Label>
-                                    <Input
-                                        value={addrForm.landmark}
-                                        onChange={e => setAddrForm(p => ({ ...p, landmark: e.target.value }))}
-                                        placeholder="Near temple, school, etc."
-                                        className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium focus-visible:ring-0"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div className="space-y-1">
-                                        <Label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                            <User size={9} className="text-[var(--colour-fsP2)]" />First Name
-                                        </Label>
-                                        <Input
-                                            value={addrForm.first_name}
-                                            onChange={e => setAddrForm(p => ({ ...p, first_name: e.target.value }))}
-                                            placeholder="John"
-                                            className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium focus-visible:ring-0"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Last Name</Label>
-                                        <Input
-                                            value={addrForm.last_name}
-                                            onChange={e => setAddrForm(p => ({ ...p, last_name: e.target.value }))}
-                                            placeholder="Doe"
-                                            className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium focus-visible:ring-0"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <Label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Phone size={9} className="text-[var(--colour-fsP2)]" />Pickup Contact Number
-                                    </Label>
-                                    <Input
-                                        value={addrForm.contact_number}
-                                        onChange={e => setAddrForm(p => ({ ...p, contact_number: e.target.value }))}
-                                        placeholder="98XXXXXXXX"
-                                        className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium focus-visible:ring-0"
-                                    />
-                                </div>
-
                                 <button
-                                    onClick={handleSaveAddress}
-                                    disabled={isSaving}
-                                    className="w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-widest text-white bg-[var(--colour-fsP2)] hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                                    onClick={() => openForm()}
+                                    className="w-full h-10 rounded-xl border-2 border-dashed border-gray-200 text-xs font-semibold text-slate-500 hover:border-slate-300 hover:text-slate-700 transition-all"
                                 >
-                                    {isSaving
-                                        ? <Loader2 size={15} className="animate-spin" />
-                                        : <><CheckCircle2 size={13} />{editingId ? 'Update' : 'Save'} Location</>
-                                    }
+                                    + Add New Address
                                 </button>
+                            </>
+                        ) : (
+                            <>
+                                <SL>New Address</SL>
+                                <div className="space-y-3">
+                                    <GoogleMapAddress onLocationSelect={handleMapSelect} initialPosition={uiState.mapLocation ?? undefined} />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {[
+                                            ['First Name', 'first_name'], ['Last Name', 'last_name'],
+                                            ['Phone', 'contact_number'], ['City', 'city'],
+                                            ['District', 'district'], ['Province', 'province'],
+                                        ].map(([ph, field]) => (
+                                            <Input
+                                                key={field}
+                                                placeholder={ph}
+                                                value={(uiState.addrForm as any)[field]}
+                                                onChange={e => updateUi({ addrForm: { ...uiState.addrForm, [field]: e.target.value } })}
+                                                className="h-10 rounded-lg text-sm"
+                                            />
+                                        ))}
+                                        <Input
+                                            placeholder="Landmark"
+                                            value={uiState.addrForm.landmark}
+                                            onChange={e => updateUi({ addrForm: { ...uiState.addrForm, landmark: e.target.value } })}
+                                            className="h-10 rounded-lg text-sm col-span-2"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => updateUi({ addrView: 'list' })} className="flex-1 h-10 rounded-lg border border-gray-200 text-xs font-semibold text-slate-600">Cancel</button>
+                                        <button onClick={handleSaveAddress} disabled={uiState.isSaving} className="flex-1 h-10 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 disabled:opacity-50 transition-colors">
+                                            {uiState.isSaving ? 'Saving…' : 'Save Address'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {/* ── 7. SUMMARY ── */}
+                {step?.key === 'summary' && (
+                    <div className="px-5 pb-5 space-y-4">
+
+                        {/* Device being exchanged */}
+                        <div>
+                            <SL>Device Being Exchanged</SL>
+                            <div className="flex items-center gap-3 px-4 py-3 border border-gray-200 rounded-xl">
+                                <div className="relative w-12 h-12 shrink-0 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
+                                    <Image src={getThumbnail(selectedProduct)} alt="Device" fill className="object-contain p-1" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{selectedCategory?.title}</p>
+                                    <p className="text-sm font-bold text-slate-900 truncate">{selectedProduct?.name}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Valuation */}
+                        <div>
+                            <SL>Valuation Breakdown</SL>
+                            <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                                {valuationBreakdown.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center px-4 py-2.5 text-xs">
+                                        <span className={cn('font-medium', item.value < 0 ? 'text-red-500' : 'text-slate-600')}>{item.label}</span>
+                                        <span className={cn('font-bold', item.value < 0 ? 'text-red-500' : 'text-slate-800')}>
+                                            {item.value > 0 ? '+' : ''}Rs. {Math.abs(item.value).toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+                                <div className="flex justify-between items-center px-4 py-3 bg-gray-50/60">
+                                    <p className="text-xs font-bold text-slate-700">Exchange Credit</p>
+                                    <p className="text-base font-bold text-[var(--colour-fsP2)]">Rs. {exchangeValue.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Upgrade device */}
+                        {selectedNewProduct && (
+                            <div>
+                                <SL>Upgrade Device</SL>
+                                <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                                    <div className="flex items-center gap-3 px-4 py-3">
+                                        <div className="relative w-10 h-10 shrink-0 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
+                                            <Image src={getThumbnail(selectedNewProduct)} alt={selectedNewProduct.name} fill className="object-contain p-0.5" unoptimized />
+                                        </div>
+                                        <p className="text-xs font-semibold text-slate-900 truncate">{selectedNewProduct.name}</p>
+                                    </div>
+                                    <div className="flex justify-between px-4 py-2.5 text-xs">
+                                        <span className="text-slate-500">Retail Price</span>
+                                        <span className="font-semibold text-slate-800">Rs. {selectedNewProductPrice.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between px-4 py-2.5 text-xs">
+                                        <span className="text-slate-500">Exchange Credit</span>
+                                        <span className="font-semibold text-emerald-600">−Rs. {exchangeValue.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center px-4 py-3 bg-gray-50/60">
+                                        <p className="text-xs font-bold text-slate-700">Amount To Pay</p>
+                                        <p className="text-base font-bold text-emerald-600">Rs. {priceAfterExchange.toLocaleString()}</p>
+                                    </div>
+                                </div>
                             </div>
                         )}
-                    </section>
+
+                        <div className="flex gap-2.5 p-3 rounded-xl bg-orange-50 border border-orange-100">
+                            <Info size={13} className="text-orange-500 shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-orange-700 font-medium leading-relaxed">
+                                Final valuation confirmed after our technician's physical check at time of pickup.
+                            </p>
+                        </div>
+                    </div>
                 )}
+
+            </div>
+
+            {/* ── Footer ── */}
+            <div className="shrink-0 flex items-center justify-between gap-4 px-5 py-3.5 border-t border-gray-100 bg-gray-50/40">
+                <div>
+                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest leading-none">
+                        {selectedNewProduct ? 'Payable Amount' : 'Evaluated Price'}
+                    </p>
+                    <p className={cn(
+                        'text-xl font-bold mt-0.5',
+                        selectedNewProduct ? 'text-emerald-600' : 'text-slate-900'
+                    )}>
+                        Rs. {footerAmount.toLocaleString()}
+                    </p>
+                    {!selectedNewProduct && exchangeValue === 0 && footerAmount > 0 && (
+                        <p className="text-[9px] text-slate-400 mt-0.5">Estimate · decreases with defects</p>
+                    )}
+                </div>
+                <button
+                    onClick={handleNext}
+                    disabled={!isStepValid()}
+                    className={cn(
+                        'flex items-center gap-1.5 px-6 h-10 rounded-xl font-semibold text-sm transition-all',
+                        isStepValid()
+                            ? 'bg-slate-900 text-white hover:bg-slate-800 active:scale-95'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    )}
+                >
+                    {uiState.stepIndex === STEPS.length - 1 ? 'Submit' : 'Continue'}
+                    <ChevronRight size={16} />
+                </button>
             </div>
         </div>
     )

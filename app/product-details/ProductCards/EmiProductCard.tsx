@@ -1,15 +1,13 @@
 'use client'
 
-import { cn } from '@/lib/utils'
-import { Star, CreditCard, Clock, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { ArrowRight, Clock3, CreditCard, Star, Truck } from 'lucide-react'
 import banner2 from '@/public/imgfile/banner2.jpeg'
 import type { ProductSummary } from '@/app/types/ProductDetailsTypes'
-import { trackViewContent } from '@/lib/Analytic';
-import { trackProductClick } from '@/lib/analytics';
+import { trackViewContent } from '@/lib/Analytic'
+import { trackProductClick } from '@/lib/analytics'
 
-// ─── Types ───────────────────────────────────────────────────
 export interface EmiProductCardProps {
     product: ProductSummary & { monthlyEmi: number; numericPrice: number }
     tenure: number
@@ -19,174 +17,154 @@ export interface EmiProductCardProps {
     priority?: boolean
 }
 
-// ─── Component ───────────────────────────────────────────────
 const EmiProductCard = ({
     product,
     tenure,
     zeroEmi,
     downPayment,
-    index,
+    index = 0,
     priority = false,
 }: EmiProductCardProps) => {
-    if (!product || !product.id) return null
+    if (!product?.id) return null
 
-    const imgSrc = product.image?.thumb || product.image?.full || product.image?.preview || banner2
-    const brandName = product.brand?.name || ''
-    const originalPrice = Number(product.original_price) || 0
-    const discount = originalPrice && product.numericPrice < originalPrice
-        ? Math.round((1 - product.numericPrice / originalPrice) * 100)
-        : 0
-    const rating = product.average_rating || (4 + Math.random()).toFixed(1)
+    const imgSrc = product.image?.thumb ?? product.image?.full ?? product.image?.preview ?? banner2
+    const brandName = product.brand?.name ?? 'Featured'
+    const originalPrice = Number(product.original_price ?? 0)
+    const currentPrice = Number(product.numericPrice ?? 0)
+    const hasDiscount = originalPrice > currentPrice && currentPrice > 0
+    const discount = hasDiscount ? Math.round((1 - currentPrice / originalPrice) * 100) : 0
+    const rating = Number(product.average_rating ?? 0)
     const productUrl = `/emi?slug=${product.slug}`
 
     return (
-        <div
-            data-track={`emi-card-${product.id}`}
-            className="group relative w-full flex flex-col bg-white h-full shadow-sm hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] hover:border-[var(--colour-fsP2)]/30 hover:-translate-y-1 transition-all duration-300 rounded-[12px] overflow-hidden border border-gray-100"
+        <Link
+            href={productUrl}
+            onClick={() => {
+                trackViewContent(product as never)
+                trackProductClick({
+                    id: product.id.toString(),
+                    name: product.name,
+                    price: currentPrice,
+                    category: product.categories?.[0]?.title ?? '',
+                })
+            }}
+            className="group relative flex h-full flex-col overflow-hidden rounded-[26px] border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_20px_50px_-35px_rgba(15,23,42,0.35)]"
+            style={{ animationDelay: `${(index % 12) * 40}ms` }}
         >
-            {/* ── Image ── */}
-            <div className="relative aspect-[5/4] w-full bg-white p-2">
-                {/* Badges - Top Left */}
-                <div className="absolute top-0 left-0 z-10 flex flex-col gap-1">
-                    {discount > 0 && (
-                        <div className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-tl-[10px] rounded-br-[10px] shadow-sm">
-                            {discount}% OFF
-                        </div>
+            <div className="relative aspect-square overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef3fb_100%)]">
+                <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">
+                    {hasDiscount && (
+                        <span className="rounded-full bg-rose-500 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+                            -{discount}%
+                        </span>
                     )}
+                    {product.emi_enabled ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f0fb] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-(--colour-fsP2)">
+                            <CreditCard className="h-3 w-3" />
+                            EMI
+                        </span>
+                    ) : null}
                 </div>
 
-                {/* EMI badge - Top Right */}
-                {product.emi_enabled === 1 && (
-                    <div className="absolute top-2 right-2 z-10 flex items-center gap-0.5 bg-[var(--colour-fsP2)] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">
-                        <CreditCard className="w-2.5 h-2.5" /> EMI
+                {rating > 0 ? (
+                    <div className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-white/95 px-2.5 py-1 text-[10px] font-black text-slate-700 shadow-sm">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        {rating.toFixed(1)}
                     </div>
-                )}
+                ) : null}
 
-                <div className="relative w-full h-full">
-                    <Image
-                        src={imgSrc}
-                        alt={`${product.name} - ${brandName}`}
-                        fill
-                        className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
-                        priority={priority}
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-
-                    />
-                </div>
+                <Image
+                    src={imgSrc}
+                    alt={`${product.name} - ${brandName}`}
+                    fill
+                    priority={priority}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    className="object-contain p-5 mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                />
             </div>
 
-            {/* ── Content ── */}
-            <div className="p-2 flex flex-col gap-0.5 flex-grow">
-                {/* Brand + Rating */}
-                <div className="flex justify-between items-start">
-                    <span className="text-[11px] text-gray-700 font-bold uppercase tracking-wide">
-                        {brandName || 'Brand'}
-                    </span>
-                    <div className="flex items-center gap-0.5 bg-[var(--colour-fsP2)] text-white px-1.5 py-0.5 rounded-[4px] shadow-sm">
-                        <span className="text-[10px] font-extrabold">{rating}</span>
-                        <Star className="w-2 h-2 fill-current" />
-                    </div>
-                </div>
+            <div className="flex flex-1 flex-col p-4">
+                <p className="text-[10.5px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    {brandName}
+                </p>
 
-                {/* Title */}
-                <h3
-                    className="text-[13px] sm:text-[14px] font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.6em] group-hover:text-[var(--colour-fsP2)] transition-colors mt-0.5"
-                    title={product.name}
-                >
-                    <Link href={productUrl} className="focus:outline-none" onClick={() => {
-                        trackViewContent(product as any);
-                        trackProductClick({
-                            id: product.id.toString(),
-                            name: product.name,
-                            price: product.numericPrice,
-                            category: '',
-                        });
-                    }}>
-                        <span aria-hidden="true" className="absolute inset-0 z-10" />
-                        {product.name}
-                    </Link>
+                <h3 className="mt-2 min-h-[42px] text-[14px] font-bold leading-snug text-slate-800 transition-colors group-hover:text-(--colour-fsP2)">
+                    {product.name}
                 </h3>
 
-                {/* Price */}
-                <div className="mt-1 space-y-0.5">
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-base sm:text-lg font-extrabold text-[#1f2937]">
-                            Rs. {product.numericPrice.toLocaleString()}
-                        </span>
-                    </div>
-                    {originalPrice > product.numericPrice && (
-                        <div className="flex items-center gap-2 text-[14px]">
-                            <span className="text-gray-500 line-through decoration-gray-500 font-medium">
+                <div className="mt-4 space-y-1">
+                    <div className="flex items-end gap-2">
+                        <p className="text-[21px] font-black tracking-tight text-slate-950">
+                            Rs. {currentPrice.toLocaleString()}
+                        </p>
+                        {hasDiscount ? (
+                            <p className="pb-0.5 text-[12px] font-bold text-slate-400 line-through">
                                 Rs. {originalPrice.toLocaleString()}
-                            </span>
-                            {discount > 0 && (
-                                <span className="text-[var(--colour-fsP2)] font-bold bg-blue-50 px-1 py-0.5 rounded-sm text-[12px]">
-                                    {discount}% OFF
-                                </span>
-                            )}
-                        </div>
-                    )}
+                            </p>
+                        ) : null}
+                    </div>
+                    <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.16em] text-(--colour-fsP1)">
+                        <Truck className="h-3 w-3" />
+                        Free delivery
+                    </div>
                 </div>
 
-                {/* ── EMI Section ── */}
-                <div className="mt-1.5 space-y-1.5">
-                    {/* EMI Monthly badge */}
-                    <div className="flex flex-wrap gap-1">
-                        <span className="inline-flex items-center text-[12px] font-semibold text-white bg-[#1967b3] px-1.5 py-0.5 rounded-sm shadow-sm">
-                            EMI Rs. {product.monthlyEmi.toLocaleString()}/mo
-                        </span>
-                        <span className="inline-flex items-center text-[11px] font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-sm">
-                            <Clock className="w-3 h-3 mr-0.5" /> {tenure} mon
-                        </span>
+                <div className="mt-4 rounded-[22px] border border-blue-100 bg-[linear-gradient(135deg,#eef5ff_0%,#ffffff_100%)] p-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Monthly EMI</p>
+                            <p className="mt-1 text-[20px] font-black tracking-tight text-(--colour-fsP2)">
+                                Rs. {product.monthlyEmi.toLocaleString()}
+                                <span className="ml-1 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">/ month</span>
+                            </p>
+                        </div>
+                        <div className="rounded-2xl bg-white px-2.5 py-2 text-center shadow-sm">
+                            <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
+                                <Clock3 className="h-3 w-3" />
+                                {tenure}M
+                            </div>
+                        </div>
                     </div>
 
-                    {/* EMI info chips */}
-                    <div className="flex flex-wrap gap-1">
-                        {zeroEmi ? (
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-sm">
-                                ✓ 0% Interest
-                            </span>
-                        ) : (
-                            <span className="text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-sm">
-                                With Interest
-                            </span>
-                        )}
-                        {downPayment > 0 && (
-                            <span className="text-[10px] font-medium text-gray-600 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-sm">
-                                DP: Rs. {downPayment.toLocaleString()}
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Apply CTA */}
-                    <div className="pt-0.5">
-                        <span className="inline-flex items-center gap-1 text-[12px] font-bold text-[var(--colour-fsP2)] group-hover:underline">
-                            Apply for EMI <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${zeroEmi ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                            {zeroEmi ? '0% EMI View' : 'Standard EMI'}
                         </span>
+                        {downPayment > 0 ? (
+                            <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600">
+                                DP Rs. {downPayment.toLocaleString()}
+                            </span>
+                        ) : null}
                     </div>
+                </div>
+
+                <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                        Open EMI details
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-950 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-(--colour-fsP2)">
+                        Apply
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </span>
                 </div>
             </div>
-        </div>
+        </Link>
     )
 }
 
-// ─── Skeleton ────────────────────────────────────────────────
 export const EmiProductCardSkeleton = () => (
-    <div className="bg-white rounded-[12px] overflow-hidden border border-gray-100 h-full">
-        <div className="aspect-[5/4] bg-gray-50 animate-pulse" />
-        <div className="p-2 space-y-2">
-            <div className="flex justify-between">
-                <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
-                <div className="h-3 w-10 bg-gray-200 rounded animate-pulse" />
+    <div className="h-full overflow-hidden rounded-[26px] border border-slate-200 bg-white">
+        <div className="aspect-square animate-pulse bg-slate-100" />
+        <div className="space-y-3 p-4">
+            <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+            <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+            <div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" />
+            <div className="h-6 w-28 animate-pulse rounded bg-slate-100" />
+            <div className="rounded-[22px] bg-slate-50 p-3">
+                <div className="h-5 w-32 animate-pulse rounded bg-slate-100" />
+                <div className="mt-3 h-4 w-24 animate-pulse rounded bg-slate-100" />
             </div>
-            <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
-            <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
-            <div className="h-5 w-24 bg-gray-200 rounded animate-pulse mt-1" />
-            <div className="flex gap-1 mt-1">
-                <div className="h-5 w-28 bg-blue-100 rounded animate-pulse" />
-                <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" />
-            </div>
-            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+            <div className="h-10 w-full animate-pulse rounded-full bg-slate-100" />
         </div>
     </div>
 )

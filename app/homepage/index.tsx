@@ -45,7 +45,9 @@ export default function HomePage({
         <div className="md:px-2">
           {basketSection3}
           {sectionTwo}
-          {basketSection4}
+         <div className='mt-20 sm:mt-0'>
+           {basketSection4}
+         </div>
         </div>
             {ourArticlesSection}
       </div>

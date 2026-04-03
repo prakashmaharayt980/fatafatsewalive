@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import type { FieldOption } from "./FormField";
 import { useContextEmi } from "../../_components/emiContext";
+
 interface CreditCardComponentProps {
   cardinfofield: {
     fields: FieldOption[];
@@ -17,14 +18,12 @@ interface CreditCardComponentProps {
 export default function CreditCardComponent({ cardinfofield, errors }: CreditCardComponentProps) {
   const { banks } = useContextEmi();
 
-  // Extract expiryDate and cardLimit fields
   const expiryField = cardinfofield.fields.find((field: FieldOption) => field.name === 'expiryDate');
   const limitField = cardinfofield.fields.find((field: FieldOption) => field.name === 'cardLimit');
 
   return (
     <div className="bg-white rounded-xl p-1 sm:p-2">
       <div className="w-full space-y-4">
-        {/* Main fields (excluding expiryDate and cardLimit) */}
         {cardinfofield.fields
           .filter((field) => field.name !== 'expiryDate' && field.name !== 'cardLimit')
           .map((field, fieldIndex) => (
@@ -35,8 +34,9 @@ export default function CreditCardComponent({ cardinfofield, errors }: CreditCar
               <div className="relative">
                 {field.type === 'select' ? (
                   <Select
-                    value={field.value ? String(field.value) : undefined}
+                    value={field.value !== undefined && field.value !== null ? String(field.value) : undefined}
                     onValueChange={(value) => field.onChange({ target: { name: field.name, value } } as unknown as React.ChangeEvent<HTMLSelectElement>)}
+                    modal={false}
                   >
                     <SelectTrigger
                       className={`w-full h-10 pl-10 bg-white border-gray-200 text-gray-700 text-sm rounded-lg focus:border-(--colour-fsP2) focus:ring-1 focus:ring-(--colour-fsP2) transition-all duration-150 ${errors[field.name] ? 'border-red-500' : ''}`}
@@ -98,7 +98,6 @@ export default function CreditCardComponent({ cardinfofield, errors }: CreditCar
             </div>
           ))}
 
-        {/* Grid for expiryDate and cardLimit */}
         {(expiryField || limitField) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {expiryField && (

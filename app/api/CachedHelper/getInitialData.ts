@@ -31,7 +31,7 @@ export const getHomepageData = async () => {
 
 export const getBlogPageData = async () => {
     const [blogRes] = await Promise.allSettled([
-        getBlogList({ page: 1, per_page: 30 }),
+        getBlogList({ page: 1, per_page:  20, sort:'asc'}),
     ]);
 
     const latestArticles = blogRes.status === 'fulfilled'

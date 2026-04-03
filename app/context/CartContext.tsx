@@ -97,7 +97,7 @@ export const useCartStore = create<CartStore>()(
             // Guest Address Actions
             addGuestAddress: (address) =>
                 set((state) => ({ 
-                    guestAddresses: [...state.guestAddresses, { ...address, id: Date.now() + Math.floor(Math.random() * 1000) }] 
+                    guestAddresses: [...state.guestAddresses, { ...address, id: Date.now() + Math.floor(Math.random() * 100) }] 
                 })),
             updateGuestAddress: (id, address) =>
                 set((state) => ({ 
@@ -172,7 +172,7 @@ export const useCartStore = create<CartStore>()(
                     let localItems = cartItems?.items ? [...cartItems.items] : [];
                     
                     const existingItem = localItems.find((i) => i.product_id === id);
-                    
+                    console.log('Existing cart items:', localItems);
                     if (existingItem) {
                         existingItem.quantity += quantity;
                         existingItem.subtotal = existingItem.price * existingItem.quantity;

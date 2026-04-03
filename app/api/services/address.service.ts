@@ -1,6 +1,6 @@
 'use server';
 
-import { apiPrivate, apiPublic } from './client';
+import { apiPrivate, apiPublic } from '../ServiceHelper/index';
 
 
 // Shipping Address Endpoints
@@ -15,8 +15,5 @@ export const ShippingAddressUpdate = async (id: number, data: any) =>
 
 export const ShippingAddressDelete = async (id: number) =>
     apiPrivate.delete(`/v1/shipping-addresses/${id}`).then(res => res.data);
-
-export const GetLocations = async () =>
-    apiPublic.get(`/v1/pages/locations`).then(res => res.data);
 
 

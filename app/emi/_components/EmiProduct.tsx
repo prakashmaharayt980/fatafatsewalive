@@ -3,574 +3,350 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  Drawer, DrawerContent, DrawerHeader,
-  DrawerTitle, DrawerDescription,
-} from "@/components/ui/drawer";
-import {
-  Search, X, Smartphone, Loader2, ChevronRight,
-  Check, RefreshCw, Shield, ShoppingCart, Scale,
-  Truck, Eye, Zap, Info,
-} from "lucide-react";
-
-import { useContextEmi } from "./emiContext";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Check, Eye, Loader2, RefreshCw, Search, Smartphone, X } from "lucide-react";
+import { fetchProductBySlug, fetchSearchProducts } from "@/app/emi/actions";
 import type { ProductDetails } from "@/app/types/ProductDetailsTypes";
-import { fetchSearchProducts, fetchProductBySlug } from "@/app/emi/actions";
-import { useCartStore } from "@/app/context/CartContext";
-import { useShallow } from "zustand/react/shallow";
+import { useContextEmi } from "./emiContext";
 
-interface ProductEMIUIProps {
-  chooseProduct: (col: string) => void;
-  setProductPrice: (price: number) => void;
-  product: ProductDetails | null;
+interface Props {
+    chooseProduct:    (col: string) => void;
+    setProductPrice:  (price: number) => void;
+    onProductChange:  (product: ProductDetails) => void;
+    product:          ProductDetails | null;
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-const getPrice = (val: any) =>
-  Number(typeof val === "object" ? val?.current : val) || 0;
+interface State {
+    selectedColor: string;
+    selectItems:   ProductDetails[];
+    searchQuery:   string;
+    isDrawerOpen:  boolean;
+    loading:       boolean;
+}
 
-export default function ProductEMIUI({
-  chooseProduct,
-  setProductPrice,
-  product,
-}: ProductEMIUIProps) {
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectItems, setSelectItems] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const { setEmiContextInfo } = useContextEmi();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [selectedInsurance, setSelectedInsurance] = useState<string | null>(null);
+const getPrice = (value: number | { current: number } | null | undefined) => {
+    if (typeof value === "object") return Number(value?.current ?? 0);
+    return Number(value ?? 0);
+};
 
-  const { addToCompare, removeFromCompare, compareList, isInCompare } =
-    useCartStore(
-      useShallow((state) => ({
-        addToCompare: state.addToCompare,
-        removeFromCompare: state.removeFromCompare,
-        compareList: state.compareItems,
-        isInCompare: state.isInCompare,
-      }))
-    );
+const getDisplayPrice = (product: ProductDetails | null) => {
+    if (!product) return 0;
+    const discounted = getPrice(product.discounted_price);
+    if (discounted > 0) return discounted;
+    return getPrice(product.price);
+};
 
-  const availableVariants =
-    product?.variants?.filter((v) => v.quantity > 0) || [];
-  const uniqueColors = Array.from(
-    new Set(availableVariants.map((v) => v.attributes?.Color))
-  ).filter(Boolean);
+const getProductImage = (product: ProductDetails | null) => {
+    if (!product) return "";
+    if (typeof product.image === "string") return product.image;
+    return product.image?.full ?? product.image?.thumb ?? product.thumb?.url ?? product.images?.[0]?.url ?? "";
+};
 
-  // debounced search
-  useEffect(() => {
-    const id = setTimeout(() => {
-      if (searchQuery.trim()) {
-        setLoading(true);
-        fetchSearchProducts({ search: searchQuery.trim() })
-          .then((res: any) => setSelectItems(res.data || []))
-          .catch(console.error)
-          .finally(() => setLoading(false));
-      } else {
-        setSelectItems([]);
-      }
-    }, 500);
-    return () => clearTimeout(id);
-  }, [searchQuery]);
+const labelCls = "text-[10px] font-bold text-(--colour-fsP2) uppercase tracking-widest";
+const noBar    = "[&::-webkit-scrollbar]:w-0 [scrollbar-width:none]";
 
-  const handleProductSelect = async (slug: string) => {
-    setLoading(true);
-    try {
-      const full = await fetchProductBySlug(slug);
-      if (full) {
-        setEmiContextInfo((prev) => ({ ...prev, product: full as ProductDetails }));
-        setProductPrice(getPrice(full.discounted_price) || getPrice(full.price));
-        setIsDrawerOpen(false);
-        setSearchQuery("");
-        setSelectItems([]);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function ProductEMIUI({ chooseProduct, setProductPrice, onProductChange, product }: Props) {
+    const { setEmiContextInfo } = useContextEmi();
+    const [state, setState] = useState<State>({
+        selectedColor: "",
+        selectItems:   [],
+        searchQuery:   "",
+        isDrawerOpen:  false,
+        loading:       false,
+    });
 
-  const closeDrawer = () => {
-    setIsDrawerOpen(false);
-    setSearchQuery("");
-    setSelectItems([]);
-  };
+    const update = (u: Partial<State>) => setState(p => ({ ...p, ...u }));
 
-  const productPrice =
-    getPrice(product?.discounted_price) || getPrice(product?.price);
-  const originalPrice = getPrice(product?.price);
-  const hasDiscount = originalPrice > productPrice && productPrice > 0;
-  const discountPct = hasDiscount
-    ? Math.round(((originalPrice - productPrice) / originalPrice) * 100)
-    : 0;
+    useEffect(() => { update({ selectedColor: "" }); }, [product?.id]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  return (
-    <div className="w-full">
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const query = state.searchQuery.trim();
+            if (!query) { update({ selectItems: [] }); return; }
+            update({ loading: true });
+            fetchSearchProducts({ search: query, emi: true })
+                .then(res => update({ selectItems: res.data ?? [] }))
+                .catch(console.error)
+                .finally(() => update({ loading: false }));
+        }, 450);
+        return () => clearTimeout(timer);
+    }, [state.searchQuery]);
 
-      {/* ── SEARCH DRAWER ─────────────────────────────────────────────── */}
-      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="h-[82vh] max-w-2xl mx-auto rounded-t-2xl bg-white flex flex-col overflow-hidden p-0">
+    const handleProductSelect = async (slug: string) => {
+        update({ loading: true });
+        try {
+            const full = await fetchProductBySlug(slug);
+            if (!full) return;
+            setEmiContextInfo(prev => ({ ...prev, product: full as ProductDetails, selectedVariant: "" }));
+            onProductChange(full as ProductDetails);
+            setProductPrice(getDisplayPrice(full));
+            update({ isDrawerOpen: false, searchQuery: "", selectItems: [], selectedColor: "" });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            update({ loading: false });
+        }
+    };
 
-          {/* Header */}
-          <DrawerHeader className="p-0 border-none shrink-0">
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
-              <DrawerTitle className="text-[14px] font-extrabold text-slate-800 flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[var(--colour-fsP2)]/10 flex items-center justify-center">
-                  <Search className="w-3.5 h-3.5 text-[var(--colour-fsP2)]" />
-                </div>
-                Search Products
-              </DrawerTitle>
-              <DrawerDescription className="sr-only">
-                Find a product to calculate EMI.
-              </DrawerDescription>
-              <button
-                onClick={closeDrawer}
-                className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
-              >
-                <X className="w-3.5 h-3.5 text-slate-500" />
-              </button>
-            </div>
+    const closeDrawer = () => update({ isDrawerOpen: false, searchQuery: "", selectItems: [] });
 
-            {/* Search input */}
-            <div className="px-4 py-3 border-b border-slate-100">
-              <div className={cn(
-                "flex items-center gap-2 bg-slate-50 border rounded-xl px-3 py-2.5 transition-all",
-                "border-slate-200 focus-within:border-[var(--colour-fsP2)] focus-within:bg-white focus-within:ring-2 focus-within:ring-[var(--colour-fsP2)]/10"
-              )}>
-                <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  placeholder="Search mobiles, laptops, accessories…"
-                  className="flex-1 bg-transparent border-none outline-none text-[13px] text-slate-800 placeholder-slate-400 font-medium"
-                  autoFocus
-                />
-                {loading && (
-                  <Loader2 className="w-4 h-4 text-[var(--colour-fsP2)] animate-spin shrink-0" />
-                )}
-                {searchQuery && !loading && (
-                  <button
-                    onClick={() => { setSearchQuery(""); setSelectItems([]); }}
-                    className="w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center transition-colors shrink-0"
-                  >
-                    <X className="w-3 h-3 text-slate-500" />
-                  </button>
-                )}
-              </div>
-              {selectItems.length > 0 && (
-                <p className="text-[11px] text-slate-400 mt-1.5 px-1">
-                  {selectItems.length} result{selectItems.length !== 1 ? "s" : ""} found
-                </p>
-              )}
-            </div>
-          </DrawerHeader>
+    const availableVariants = product?.variants?.filter(v => v.quantity > 0) ?? [];
+    const uniqueColors      = Array.from(new Set(availableVariants.map(v => v.attributes?.Color).filter(Boolean)));
+    const productPrice      = getDisplayPrice(product);
+    const originalPrice     = getPrice(product?.price);
+    const hasDiscount       = originalPrice > productPrice && productPrice > 0;
+    const discountPct       = hasDiscount ? Math.round(((originalPrice - productPrice) / originalPrice) * 100) : 0;
+    const productImage      = getProductImage(product);
+    const highlights        = (product?.highlights ?? product?.description?.highlights ?? "")
+        .split(/[,\n]/).map(s => s.trim()).filter(Boolean).slice(0, 4);
 
-          {/* Results */}
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            {selectItems.length > 0 ? (
-              <div className="space-y-1.5">
-                {selectItems.map((item: any) => {
-                  const itemPrice = getPrice(item.discounted_price) || getPrice(item.price);
-                  const itemOriginal = getPrice(item.price);
-                  const itemHasDiscount = itemOriginal > itemPrice && itemPrice > 0;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleProductSelect(item.slug)}
-                      className="w-full flex items-center gap-3 p-3 bg-white hover:bg-slate-50 rounded-xl border border-slate-100 hover:border-[var(--colour-fsP2)]/30 transition-all text-left group"
-                    >
-                      {/* Thumbnail */}
-                      <div className="relative w-12 h-12 bg-slate-50 rounded-lg overflow-hidden shrink-0 border border-slate-100">
-                        {item.image ? (
-                          <Image
-                            src={typeof item.image === "string" ? item.image : item.image?.thumb || ""}
-                            alt={item.name}
-                            fill
-                            sizes="48px"
-                            className="object-contain p-1 group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Smartphone className="w-5 h-5 text-slate-300" />
-                          </div>
-                        )}
-                      </div>
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-slate-800 truncate group-hover:text-[var(--colour-fsP2)] transition-colors">
-                          {item.name}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[12px] font-bold text-[var(--colour-fsP2)]">
-                            Rs. {itemPrice.toLocaleString()}
-                          </span>
-                          {itemHasDiscount && (
-                            <span className="text-[11px] text-slate-400 line-through">
-                              Rs. {itemOriginal.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[var(--colour-fsP2)] transition-colors shrink-0" />
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mb-3">
-                  {searchQuery
-                    ? <Search className="w-6 h-6 text-slate-400" />
-                    : <Smartphone className="w-6 h-6 text-slate-400" />
-                  }
-                </div>
-                <p className="text-[13px] font-bold text-slate-700">
-                  {searchQuery ? "No results found" : "Search for a product"}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-1 max-w-[200px]">
-                  {searchQuery
-                    ? "Try different keywords or check the spelling"
-                    : "Type to search mobiles, laptops & more"}
-                </p>
-              </div>
-            )}
-          </div>
+    return (
+        <div className="w-full">
+            {/* ── Search Drawer ─────────────────────────────────────────────── */}
+            <Drawer open={state.isDrawerOpen} onOpenChange={open => update({ isDrawerOpen: open })}>
+                <DrawerContent className={`mx-auto flex h-[85vh] max-w-2xl flex-col overflow-hidden rounded-t-xl border border-gray-200 bg-white p-0 ${noBar}`}>
 
-        </DrawerContent>
-      </Drawer>
-
-      {/* ── PRODUCT SELECTED ──────────────────────────────────────────── */}
-      {product ? (
-        <div className="bg-white">
-          <div className="flex flex-col md:flex-row">
-
-            {/* LEFT — image + info */}
-            <div className="flex-1 p-4 md:p-5 space-y-4">
-
-              {/* Image row */}
-              <div className="flex gap-4 items-start">
-
-                {/* Image */}
-                <div className="relative w-40 h-40 sm:w-52 sm:h-52 shrink-0 bg-slate-50 rounded-xl border border-slate-100 p-2">
-                  <Image
-                    src={typeof product.image === "string" ? product.image : product.image?.full || ""}
-                    alt={product.name || "Product"}
-                    fill
-                    sizes="(max-width:640px) 160px, 208px"
-                    className="object-contain p-1"
-                    priority
-                  />
-                  {/* Change product */}
-                  <button
-                    onClick={() => setIsDrawerOpen(true)}
-                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm hover:border-[var(--colour-fsP2)]/40 hover:text-[var(--colour-fsP2)] text-slate-400 flex items-center justify-center transition-colors"
-                    title="Change Product"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                  </button>
-                  {product.emi_enabled === 1 && (
-                    <span className="absolute bottom-2 left-2 text-[9px] font-bold bg-[var(--colour-fsP2)] text-white px-2 py-0.5 rounded-md">
-                      EMI Available
-                    </span>
-                  )}
-                </div>
-
-                {/* Core info */}
-                <div className="flex-1 min-w-0 space-y-2">
-                  {product.brand?.name && (
-                    <p className="text-[11px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest">
-                      {product.brand.name}
-                    </p>
-                  )}
-                  <h2 className="text-[15px] font-bold text-slate-800 leading-snug line-clamp-2">
-                    {product.name}
-                  </h2>
-
-                  {/* Price */}
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-[20px] font-extrabold text-slate-900 tabular-nums">
-                      Rs. {productPrice.toLocaleString()}
-                    </span>
-                    {hasDiscount && (
-                      <>
-                        <span className="text-[12px] text-slate-400 line-through tabular-nums">
-                          Rs. {originalPrice.toLocaleString()}
-                        </span>
-                        <span className="text-[11px] font-bold text-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/8 px-1.5 py-0.5 rounded-md">
-                          {discountPct}% OFF
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Colors */}
-                  {uniqueColors.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                        Color
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {uniqueColors.map((color: any) => {
-                          const ci = product.images?.find(
-                            (img) => img.color === color || img.custom_properties?.color === color
-                          );
-                          const src = ci?.thumb || ci?.url || (typeof product.image === "string" ? product.image : product.image?.full || "");
-                          const isSel = selectedColor === color;
-                          return (
+                    <DrawerHeader className="shrink-0 p-0">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                            <div>
+                                <DrawerTitle className="text-sm font-bold text-slate-900">
+                                    Search EMI Products
+                                </DrawerTitle>
+                                <DrawerDescription className="text-xs text-slate-500 mt-0.5">
+                                    Only EMI-eligible products shown.
+                                </DrawerDescription>
+                            </div>
                             <button
-                              key={color}
-                              onClick={() => { setSelectedColor(color); chooseProduct(color); }}
-                              title={color}
-                              className={cn(
-                                "relative w-9 h-9 rounded-lg border-2 overflow-hidden transition-all",
-                                isSel
-                                  ? "border-[var(--colour-fsP2)] shadow-sm"
-                                  : "border-slate-200 hover:border-[var(--colour-fsP2)]/50"
-                              )}
+                                onClick={closeDrawer}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-slate-500 hover:border-(--colour-fsP2) hover:text-(--colour-fsP2) transition-colors"
                             >
-                              <Image src={src} alt={color} fill sizes="36px" className="object-cover" />
-                              {isSel && (
-                                <div className="absolute inset-0 bg-[var(--colour-fsP2)]/20 flex items-center justify-center">
-                                  <div className="w-4 h-4 rounded-full bg-[var(--colour-fsP2)] flex items-center justify-center">
-                                    <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                                  </div>
-                                </div>
-                              )}
+                                <X size={14} />
                             </button>
-                          );
-                        })}
-                      </div>
+                        </div>
+
+                        {/* Search input */}
+                        <div className="px-5 py-3 border-b border-gray-100">
+                            <div className="flex items-center gap-2.5 h-10 px-3 border border-gray-200 rounded-lg bg-gray-50 focus-within:border-(--colour-fsP2) focus-within:bg-white transition-colors">
+                                <Search size={13} className="text-slate-400 shrink-0" />
+                                <input
+                                    type="text"
+                                    value={state.searchQuery}
+                                    onChange={e => update({ searchQuery: e.target.value })}
+                                    placeholder="Search mobiles, laptops, tablets..."
+                                    className="flex-1 bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none"
+                                    autoFocus
+                                />
+                                {state.loading
+                                    ? <Loader2 size={13} className="animate-spin text-(--colour-fsP2) shrink-0" />
+                                    : state.searchQuery
+                                        ? <button onClick={() => update({ searchQuery: "", selectItems: [] })}><X size={13} className="text-slate-400 hover:text-slate-700" /></button>
+                                        : null}
+                            </div>
+                        </div>
+                    </DrawerHeader>
+
+                    {/* Results */}
+                    <div className={`flex-1 overflow-y-auto ${noBar} px-5 py-3`}>
+                        {state.selectItems.length > 0 ? (
+                            <div className="space-y-1">
+                                {state.selectItems.map(item => {
+                                    const itemPrice    = getDisplayPrice(item);
+                                    const itemOriginal = getPrice(item.price);
+                                    const itemDiscount = itemOriginal > itemPrice && itemPrice > 0;
+                                    const img          = getProductImage(item);
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => handleProductSelect(item.slug)}
+                                            className="group flex w-full items-center gap-3 px-3 py-3 rounded-xl border border-transparent hover:border-gray-200 hover:bg-gray-50 text-left transition-colors"
+                                        >
+                                            <div className="w-12 h-12 shrink-0 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
+                                                {img
+                                                    ? <Image src={img} alt={item.name} width={48} height={48} className="object-contain p-1 w-full h-full" />
+                                                    : <div className="w-full h-full flex items-center justify-center"><Smartphone size={16} className="text-gray-300" /></div>}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                {item.brand?.name && (
+                                                    <p className={labelCls + " mb-0.5"}>{item.brand.name}</p>
+                                                )}
+                                                <p className="text-sm font-bold text-slate-900 truncate group-hover:text-(--colour-fsP2) transition-colors">
+                                                    {item.name}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-xs font-bold text-slate-800">
+                                                        Rs. {itemPrice.toLocaleString()}
+                                                    </span>
+                                                    {itemDiscount && (
+                                                        <span className="text-[10px] text-slate-400 line-through">
+                                                            Rs. {itemOriginal.toLocaleString()}
+                                                        </span>
+                                                    )}
+                                                    {item.emi_enabled && (
+                                                        <span className="text-[9px] font-bold text-(--colour-fsP2) bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                                                            EMI
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center min-h-[220px] text-center gap-3">
+                                <div className="w-12 h-12 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+                                    {state.searchQuery
+                                        ? <Search size={18} className="text-gray-400" />
+                                        : <Smartphone size={18} className="text-gray-400" />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-900">
+                                        {state.searchQuery ? "No products found" : "Search EMI products"}
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        {state.searchQuery
+                                            ? "Try a shorter name or different keyword."
+                                            : "Search for the device you want to finance on EMI."}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                  )}
+                </DrawerContent>
+            </Drawer>
 
-                  {(product as any).short_description && (
-                    <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2">
-                      {(product as any).short_description}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Highlights */}
-              {product.highlights && (
-                <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-1.5">
-                    <Zap className="w-3 h-3 text-amber-500" /> Highlights
-                  </p>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-                    {product.highlights
-                      .split(/[,\n]/).map(h => h.trim()).filter(Boolean).slice(0, 6)
-                      .map((h, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-[11px] text-slate-600">
-                          <Check className="w-3 h-3 text-[var(--colour-fsP2)] mt-0.5 shrink-0" />
-                          <span className="line-clamp-1">{h}</span>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Key specs */}
-              {product.attributes?.product_attributes &&
-                Object.keys(product.attributes.product_attributes).length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-1.5">
-                      <Info className="w-3 h-3 text-[var(--colour-fsP2)]" /> Key Specs
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {Object.entries(product.attributes.product_attributes)
-                        .slice(0, 4)
-                        .map(([key, value]) => (
-                          <div key={key} className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
-                            <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide">{key}</p>
-                            <p className="text-[11px] font-bold text-slate-800 line-clamp-1 mt-0.5">{value as any}</p>
-                          </div>
-                        ))}
+            {/* ── Product card ──────────────────────────────────────────────── */}
+            {product ? (
+                <div className="grid gap-5 lg:grid-cols-[200px_1fr] lg:items-start">
+                    {/* Image */}
+                    <div className="relative w-full max-w-[200px] mx-auto lg:mx-0 aspect-square rounded-xl border border-gray-200 bg-gray-50 overflow-hidden">
+                        {productImage
+                            ? <Image src={productImage} alt={product.name || "Product"} fill sizes="200px" className="object-contain p-4" priority />
+                            : <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">No image</div>}
+                        <button
+                            onClick={() => update({ isDrawerOpen: true })}
+                            title="Change product"
+                            className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-slate-500 hover:border-(--colour-fsP2) hover:text-(--colour-fsP2) transition-colors"
+                        >
+                            <RefreshCw size={12} />
+                        </button>
                     </div>
-                  </div>
-                )}
 
-              {/* Bottom links */}
-              <div className="flex items-center gap-3 pt-0.5">
-                <Link href={`/product-details/${product.slug}`}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--colour-fsP2)] hover:opacity-80 transition-opacity group/link">
-                  <Eye className="w-3 h-3" />
-                  View Details
-                  <ChevronRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
-                </Link>
-                <span className="text-slate-200">|</span>
+                    {/* Info */}
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                                {product.brand?.name && (
+                                    <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border text-(--colour-fsP2) bg-blue-50 border-blue-200 uppercase tracking-widest">
+                                        {product.brand.name}
+                                    </span>
+                                )}
+                                {product.emi_enabled && (
+                                    <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border text-emerald-700 bg-emerald-50 border-emerald-200 uppercase tracking-widest">
+                                        EMI Eligible
+                                    </span>
+                                )}
+                            </div>
+                            <h2 className="text-base font-black text-slate-900">{product.name}</h2>
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                                <span className="text-2xl font-black text-slate-900">
+                                    Rs. {productPrice.toLocaleString()}
+                                </span>
+                                {hasDiscount && (
+                                    <>
+                                        <span className="text-sm text-slate-400 line-through">Rs. {originalPrice.toLocaleString()}</span>
+                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded uppercase tracking-widest">
+                                            {discountPct}% off
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Highlights */}
+                        {highlights.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {highlights.map(h => (
+                                    <span key={h} className="text-[10px] font-semibold text-slate-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">
+                                        {h}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Variants */}
+                        {uniqueColors.length > 0 && (
+                            <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                <p className={labelCls + " mb-3"}>Choose Variant</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {uniqueColors.map(color => {
+                                        const imgForColor = product.images?.find(img => img.color === color || img.custom_properties?.color === color);
+                                        const src         = imgForColor?.thumb ?? imgForColor?.url ?? productImage;
+                                        const active      = state.selectedColor === color;
+                                        return (
+                                            <button
+                                                key={color}
+                                                onClick={() => {
+                                                    update({ selectedColor: color });
+                                                    chooseProduct(color);
+                                                    setEmiContextInfo(prev => ({ ...prev, selectedVariant: color }));
+                                                }}
+                                                className={cn(
+                                                    "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors",
+                                                    active
+                                                        ? "bg-(--colour-fsP2) border-(--colour-fsP2) text-white"
+                                                        : "bg-white border-gray-200 text-slate-700 hover:border-(--colour-fsP2) hover:text-(--colour-fsP2)"
+                                                )}
+                                            >
+                                                <span className="w-5 h-5 rounded border border-gray-200 overflow-hidden shrink-0">
+                                                    <Image src={src} alt={color} width={20} height={20} className="object-cover w-full h-full" />
+                                                </span>
+                                                {color}
+                                                {active && <Check size={11} className="stroke-2" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={() => update({ isDrawerOpen: true })}
+                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 text-xs font-bold text-slate-700 hover:border-(--colour-fsP2) hover:text-(--colour-fsP2) transition-colors"
+                            >
+                                <Search size={12} /> Change Product
+                            </button>
+                            <Link
+                                href={`/product-details/${product.slug}`}
+                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 text-xs font-bold text-slate-700 hover:border-(--colour-fsP2) hover:text-(--colour-fsP2) transition-colors"
+                            >
+                                <Eye size={12} /> View Details
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                /* ── Empty: no product selected ── */
                 <button
-                  onClick={() => setIsDrawerOpen(true)}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-[var(--colour-fsP2)] transition-colors"
+                    onClick={() => update({ isDrawerOpen: true })}
+                    className="w-full flex flex-col items-center justify-center gap-3 py-10 border-2 border-dashed border-gray-200 rounded-xl hover:border-(--colour-fsP2)/50 hover:bg-gray-50 transition-colors text-center"
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  Change Product
-                </button>
-              </div>
-            </div>
-
-            {/* RIGHT — plans + actions */}
-            <div className="w-full md:w-[320px] lg:w-[360px] border-t md:border-t-0 md:border-l border-slate-100 bg-slate-50/60 p-4 flex flex-col gap-3">
-
-              {/* Protection plans */}
-              <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100">
-                  <Shield className="w-3.5 h-3.5 text-[var(--colour-fsP2)]" />
-                  <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">
-                    Protection Plans
-                  </span>
-                </div>
-                <div className="p-2 space-y-0.5">
-                  {[
-                    { key: "screen", label: "Screen Protection", desc: "1 yr accidental screen damage", pct: 0.03 },
-                    { key: "warranty", label: "Extended Warranty", desc: "+1 yr manufacturer warranty", pct: 0.05 },
-                    { key: "complete", label: "Complete Protection", desc: "Screen + warranty + accidental", pct: 0.08 },
-                  ].map((plan) => (
-                    <label
-                      key={plan.key}
-                      className={cn(
-                        "flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all",
-                        selectedInsurance === plan.key
-                          ? "bg-[var(--colour-fsP2)]/6 border border-[var(--colour-fsP2)]/25"
-                          : "hover:bg-slate-50 border border-transparent"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="insurance"
-                        checked={selectedInsurance === plan.key}
-                        onChange={() =>
-                          setSelectedInsurance((prev) =>
-                            prev === plan.key ? null : plan.key
-                          )
-                        }
-                        className="accent-[var(--colour-fsP2)] w-3 h-3 shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-slate-800 leading-tight">{plan.label}</p>
-                        <p className="text-[9px] text-slate-400">{plan.desc}</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-[var(--colour-fsP2)] whitespace-nowrap tabular-nums">
-                        Rs. {Math.round(productPrice * plan.pct).toLocaleString()}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {selectedInsurance && (
-                  <div className="px-3 pb-2.5">
-                    <p className="text-[10px] font-semibold text-[var(--colour-fsP2)] flex items-center gap-1 bg-[var(--colour-fsP2)]/6 rounded-lg px-2.5 py-1.5">
-                      <Check className="w-3 h-3" /> Plan included in your EMI
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Exchange */}
-              <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100">
-                  <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">
-                    Exchange Plan
-                  </span>
-                </div>
-                <div className="p-3 space-y-2">
-                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+                        <Search size={16} className="text-(--colour-fsP2)" />
+                    </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-700">Trade-in your old device</p>
-                      <p className="text-[10px] text-slate-400">Get value up to</p>
+                        <p className="text-sm font-bold text-slate-900">Select a product</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Search EMI-eligible devices to get started</p>
                     </div>
-                    <span className="text-[15px] font-extrabold text-amber-500 tabular-nums">
-                      Rs. {Math.round(productPrice * 0.15).toLocaleString()}
+                    <span className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-(--colour-fsP2) px-4 text-xs font-bold text-white">
+                        <Search size={12} /> Search Products
                     </span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 flex items-center gap-1">
-                    <Check className="w-3 h-3 text-amber-500 shrink-0" />
-                    Instant evaluation · Free pickup · Reduce your EMI
-                  </p>
-                  <Link
-                    href="/exchangeProducts"
-                    className="flex items-center justify-center gap-1.5 w-full text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg py-1.5 transition-colors"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    Check Exchange Value
-                    <ChevronRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* CTA buttons */}
-              <div className="flex gap-2 mt-auto">
-                <Link
-                  href={`/product-details/${product.slug}`}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 text-white font-bold text-[12px] py-2.5 rounded-lg shadow-sm transition-all"
-                >
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  Buy Now
-                </Link>
-                <button
-                  onClick={() => {
-                    if (!product) return;
-                    isInCompare(Number(product.id))
-                      ? removeFromCompare(Number(product.id))
-                      : addToCompare(product);
-                  }}
-                  className={cn(
-                    "flex items-center justify-center gap-1 text-[12px] font-semibold py-2.5 px-3 rounded-lg border transition-all",
-                    isInCompare(Number(product.id))
-                      ? "border-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 text-[var(--colour-fsP2)]"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-[var(--colour-fsP2)]/40 hover:text-[var(--colour-fsP2)]"
-                  )}
-                >
-                  <Scale className="w-3.5 h-3.5" />
-                  {isInCompare(Number(product.id)) ? "Added" : "Compare"}
                 </button>
-                <Link
-                  href={`/product-details/${product.slug}`}
-                  className="flex items-center justify-center gap-1 text-[12px] font-semibold py-2.5 px-3 rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-[var(--colour-fsP2)]/40 hover:text-[var(--colour-fsP2)] transition-all"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-
-              {/* Delivery badge */}
-              <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium bg-white rounded-lg px-3 py-2 border border-slate-100">
-                <Truck className="w-3 h-3 text-[var(--colour-fsP2)] shrink-0" />
-                Free delivery across Nepal ·{" "}
-                <span className="text-[var(--colour-fsP2)] font-bold">Fatafat Delivery</span>
-              </div>
-
-            </div>
-          </div>
+            )}
         </div>
-
-      ) : (
-        /* ── EMPTY STATE ────────────────────────────────────────────── */
-        <button
-          onClick={() => setIsDrawerOpen(true)}
-          className="w-full group flex flex-col items-center justify-center gap-4 py-12 px-6 text-center bg-white hover:bg-slate-50/80 transition-colors border-0"
-        >
-          <div className="w-14 h-14 bg-[var(--colour-fsP2)]/8 rounded-2xl flex items-center justify-center group-hover:bg-[var(--colour-fsP2)]/12 transition-colors">
-            <Search className="w-6 h-6 text-[var(--colour-fsP2)]" />
-          </div>
-          <div>
-            <h3 className="text-[15px] font-bold text-slate-800 mb-1">Select a Product</h3>
-            <p className="text-[12px] text-slate-500 max-w-[240px] mx-auto">
-              Search and select a product to calculate EMI options with live bank rates
-            </p>
-          </div>
-          <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-white bg-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/90 px-5 py-2 rounded-lg shadow-sm transition-colors">
-            <Search className="w-3.5 h-3.5" />
-            Search Products
-          </span>
-        </button>
-      )}
-    </div>
-  );
+    );
 }

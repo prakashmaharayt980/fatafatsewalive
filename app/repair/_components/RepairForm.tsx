@@ -39,9 +39,9 @@ interface Props {
     selectedAddress: ShippingAddress | null
     onAddressSelect: (address: ShippingAddress) => void
     serialNumber: string
-    governmentId: string
+
     phoneNumber: string
-    onVerificationChange: (key: 'serialNumber' | 'governmentId' | 'phoneNumber', value: string) => void
+    onVerificationChange: (key: 'serialNumber'  | 'phoneNumber', value: string) => void
     isSubmitting: boolean
 }
 
@@ -63,7 +63,7 @@ export default function RepairForm({
     selectedAddress,
     onAddressSelect,
     serialNumber,
-    governmentId,
+  
     phoneNumber,
     onVerificationChange,
     isSubmitting,
@@ -191,7 +191,7 @@ export default function RepairForm({
         }
     }
 
-    const isVerified = serialNumber.trim().length > 3 && governmentId.trim().length > 3 && phoneNumber.trim().length > 3
+    const isVerified = serialNumber.trim().length > 3 &&  phoneNumber.trim().length > 3
     const canSubmit = selectedRepairs.length > 0 && isVerified && (!!selectedAddress)
 
     const NavBtn = ({ label, onClick, disabled = false }: { label: string; onClick: () => void; disabled?: boolean }) => (
@@ -333,17 +333,7 @@ export default function RepairForm({
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">
-                                <FileText size={15} /> Government ID Number
-                            </Label>
-                            <Input
-                                value={governmentId}
-                                onChange={e => onVerificationChange('governmentId', e.target.value)}
-                                placeholder="Citizen ID or License Number"
-                                className="h-12 text-sm px-4 rounded-xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[var(--colour-fsP2)] font-bold transition-all focus-visible:ring-0"
-                            />
-                        </div>
+                 
 
                         <div className="space-y-2">
                             <Label className="text-[10px] font-bold text-[var(--colour-fsP2)] uppercase tracking-widest flex items-center gap-2">

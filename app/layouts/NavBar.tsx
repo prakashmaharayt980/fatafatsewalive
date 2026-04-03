@@ -60,21 +60,8 @@ export const navbarExtradata: navitemsExtra[] = [
         title: 'Exchange',
         icon: <ArrowLeftRight className="h-3.5 w-3.5" />,
     },
-    {
-        path: '/about-us',
-        title: 'About',
-        icon: <Info className="h-3.5 w-3.5" />,
-    },
-    {
-        path: '/Insurance',
-        title: 'Insurance',
-        icon: <BookCopy className="h-3.5 w-3.5" />,
-    },
-    {
-        path: '/EarnInvestReferral',
-        title: 'Earn & Invest',
-        icon: <Star className="h-3.5 w-3.5" />,
-    },
+   
+
     {
         path: '/emi/shop',
         title: 'Shop by EMI',
@@ -86,10 +73,10 @@ export const navbarExtradata: navitemsExtra[] = [
         title: 'Repair',
         icon: <Wrench className="h-3.5 w-3.5" />,
     },
-    {
-        path: '/help',
-        title: 'Help',
-        icon: <HelpCircle className="h-3.5 w-3.5" />,
+     {
+        path: '/about-us',
+        title: 'About',
+        icon: <Info className="h-3.5 w-3.5" />,
     }
 ]
 

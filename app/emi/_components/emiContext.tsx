@@ -4,7 +4,6 @@
 import { create } from 'zustand';
 import type { EmiContextState } from '../types';
 import { GetEMiBanks } from '@/app/api/services/payments.service';
-import { BANK_PROVIDERS } from './_func_emiCalacutor';
 
 export interface FetchedBank {
     id: string;
@@ -90,14 +89,14 @@ export const useEmiStore = create<EmiStore>((set, get) => ({
                         24: parseFloat(b.finance_percentage?.month_24 || "0"),
                         36: parseFloat(b.finance_percentage?.month_36 || "0"),
                     };
-                    const localMatch = BANK_PROVIDERS.find(lb => lb.name.toLowerCase().includes(b.name.toLowerCase()) || b.name.toLowerCase().includes(lb.name.toLowerCase()));
+
                     return {
                         id: String(b.id),
                         name: b.name,
                         rate: rateByTenure[12] || 0,
                         tenureOptions: Object.keys(rateByTenure).map(Number).filter(k => rateByTenure[k] > 0),
                         rateByTenure,
-                        img: localMatch?.img || null,
+                    
                     };
                 });
                 set({ banks: mapped });

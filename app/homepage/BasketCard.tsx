@@ -76,7 +76,7 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
 
   return (
     <div className="w-full py-2 sm:py-3 bg-transparent">
-      <div className="flex items-center justify-between px-4 sm:px-6 mb-3">
+      <div className="flex  items-center justify-between px-4 sm:px-6 mb-3">
         <div className="flex items-center gap-3">
           <div className="w-1 h-7 bg-slate-800 rounded-full" />
           <h2 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight">{title}</h2>

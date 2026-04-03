@@ -124,32 +124,7 @@ export default function RepairSEOSections({ onGetQuoteClick }: RepairSEOSections
                 </div>
             </section>
 
-            {/* Our Pickup Locations */}
-            <section className="bg-white py-16 border-t border-gray-100">
-                <div className="container mx-auto px-4 lg:px-8">
-                    <h2 className="text-2xl font-bold text-[var(--colour-text2)] text-center mb-2">Our Service Centers</h2>
-                    <p className="text-sm text-gray-500 text-center mb-8 max-w-xl mx-auto">Drop off your device at any of our authorized service centers across the valley</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {PICKUP_LOCATIONS.map(loc => (
-                            <div key={loc.id} className="bg-[var(--colour-bg4)] rounded-2xl p-5 border border-[var(--colour-border3)] hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                                <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-4">
-                                    <MapPin className="h-5 w-5 text-[var(--colour-fsP1)]" />
-                                </div>
-                                <h3 className="text-sm font-bold text-[var(--colour-text2)] mb-1.5">{loc.name}</h3>
-                                <p className="text-xs text-gray-500 mb-4 leading-relaxed h-[36px]">{loc.address}</p>
-                                <div className="space-y-2 pt-3 border-t border-gray-200/60">
-                                    <p className="text-[11px] text-gray-600 flex items-center gap-2 font-medium">
-                                        <Phone className="h-3.5 w-3.5 text-gray-400" /> {loc.phone}
-                                    </p>
-                                    <p className="text-[11px] text-gray-600 flex items-center gap-2 font-medium">
-                                        <Clock className="h-3.5 w-3.5 text-gray-400" /> {loc.hours}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+
         </div>
     )
 }

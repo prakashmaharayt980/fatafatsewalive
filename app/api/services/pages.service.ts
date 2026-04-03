@@ -1,4 +1,4 @@
-import { apiPrivate } from './client';
+import { apiPrivate } from '../ServiceHelper/index';
 import { unstable_cache } from 'next/cache';
 
 export const PagesService = {

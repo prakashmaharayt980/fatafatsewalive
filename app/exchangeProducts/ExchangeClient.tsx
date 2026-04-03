@@ -4,19 +4,18 @@ import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
-    type ProductListItem, type FullProduct, type ColorOption, type ConditionAnswer,
-    calculateExchangeValue, getMaxExchangeValue,
-    extractColorsFromVariants, GET_CONDITION_QUESTIONS
+    type ProductListItem, type FullProduct, type ConditionAnswer,
+    calculateExchangeValueBreakdown,
+    GET_CONDITION_QUESTIONS, IS_EXCHANGE_CATEGORY, getThumbnail, parsePrice
 } from './exchange-helpers'
 import { searchProducts, getProductBySlug, submitExchangeRequest } from '../api/services/product.service'
-import { getBrandProducts, getCategoryProducts } from '../api/services/category.service'
+import { getCategoryProducts } from '../api/services/category.service'
 import type { NavbarItem } from '../context/navbar.interface'
-import { useAuth, useAuthStore } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import type { ShippingAddress } from '../checkout/checkoutTypes'
 // @ts-ignore
 import EmiFaq from '../emi/apply/_components/EmiFaq'
 
-// Sub-components
 import ExchangeHero from './_components/ExchangeHero'
 import ExchangeBreadcrumb from './_components/ExchangeBreadcrumb'
 import CatalogView from './_components/CatalogView'
@@ -26,19 +25,18 @@ import ExchangeSeoSections from './_components/ExchangeSeoSections'
 import {
     Sheet,
     SheetContent,
-    SheetDescription,
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet'
 
-interface MainProps {
+interface Props {
     categories: NavbarItem[]
     initialProducts?: ProductListItem[]
     bannerSection?: React.ReactNode
     blogSection?: React.ReactNode
 }
 
-interface ExchangeState {
+interface State {
     selectedCategory: NavbarItem | null
     selectedBrand: string
     searchTerm: string
@@ -46,27 +44,30 @@ interface ExchangeState {
     isLoadingProducts: boolean
     selectedProduct: FullProduct | null
     isLoadingDetail: boolean
-    colorOptions: ColorOption[]
-    selectedColor: ColorOption | null
     conditionAnswers: ConditionAnswer
-    conditionComplete: boolean
     pickupSelected: boolean
     selectedAddress: ShippingAddress | null
     isFormOpen: boolean
-    // Verification Data
     serialNumber: string
     governmentId: string
-    devicePhoto: File | string | null
+    devicePhoto: string | null
     phoneNumber: string
     problems: string[]
     reason: string
     isSubmitting: boolean
+    selectedNewProduct: ProductListItem | null
+    newProducts: ProductListItem[]
+    isLoadingNewProducts: boolean
+    satisfactionChoice: 'yes' | 'no' | 'offer' | null
+    satisfactionReason: string
+    offeredAmount: string
 }
 
-export default function ExchangeClient({ categories, initialProducts = [], bannerSection, blogSection }: MainProps) {
+export default function ExchangeClient({ categories, initialProducts = [], bannerSection, blogSection }: Props) {
     const router = useRouter()
+    const { isLoggedIn, setloginDailogOpen, user } = useAuth()
 
-    const [state, setState] = useState<ExchangeState>({
+    const [state, setState] = useState<State>({
         selectedCategory: null,
         selectedBrand: '',
         searchTerm: '',
@@ -74,10 +75,13 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         isLoadingProducts: false,
         selectedProduct: null,
         isLoadingDetail: false,
-        colorOptions: [],
-        selectedColor: null,
-        conditionAnswers: {},
-        conditionComplete: false,
+        conditionAnswers: {
+            switch_on: 1.0,
+            mdms_registered: 1.0,
+            problems: [],
+            under_warranty: 1.0,
+            accessories: []
+        },
         pickupSelected: true,
         selectedAddress: null,
         isFormOpen: false,
@@ -88,34 +92,25 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         problems: [],
         reason: '',
         isSubmitting: false,
+        selectedNewProduct: null,
+        newProducts: [],
+        isLoadingNewProducts: false,
+        satisfactionChoice: null,
+        satisfactionReason: '',
+        offeredAmount: '',
     })
 
-    // ── Filter Categories to Mobile & Laptop Only ──
-    const filteredCategories = useMemo(() => {
-        return categories.filter(cat =>
-            cat.title?.toLowerCase().includes('mobile') ||
-            cat.title?.toLowerCase().includes('laptop') ||
-            cat.title?.toLowerCase().includes('smartphone') ||
-            cat.title?.toLowerCase().includes('macbook') ||
-            cat.slug?.toLowerCase().includes('mobile') ||
-            cat.slug?.toLowerCase().includes('laptop') ||
-            cat.slug?.toLowerCase().includes('smartphone') ||
-            cat.slug?.toLowerCase().includes('macbook')
-        )
-    }, [categories])
-
-    const { isLoggedIn, setloginDailogOpen, user } = useAuth()
-
-    const updateState = useCallback((updates: Partial<ExchangeState>) => {
+    const updateState = useCallback((updates: Partial<State>) => {
         setState(prev => ({ ...prev, ...updates }))
     }, [])
+
+    const filteredCategories = useMemo(() => categories.filter(IS_EXCHANGE_CATEGORY), [categories])
 
     const formSectionRef = useRef<HTMLDivElement>(null)
     const brandSectionRef = useRef<HTMLDivElement>(null)
     const modelSectionRef = useRef<HTMLDivElement>(null)
     const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-    // ── Pre-select first category if none selected
     useEffect(() => {
         if (filteredCategories.length > 0 && !state.selectedCategory) {
             updateState({
@@ -123,43 +118,31 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                 products: state.products.length === 0 && initialProducts.length > 0 ? initialProducts : state.products
             })
         }
-    }, [categories, initialProducts, state.selectedCategory, state.products.length, updateState])
+    }, [filteredCategories, initialProducts, state.selectedCategory, state.products.length, updateState])
 
-    // ── Derived
-    const activePrice = useCallback((product: FullProduct, color: ColorOption | null) =>
-        color ? color.discountedPrice || color.price : product.discounted_price || product.price
-        , [])
-
-    const exchangeValue = useMemo(() => {
-        if (!state.selectedProduct) return 0
-        return calculateExchangeValue(
-            activePrice(state.selectedProduct, state.selectedColor),
-            state.selectedProduct.created_at,
-            state.conditionComplete ? state.conditionAnswers : undefined
+    const valuation = useMemo(() => {
+        if (!state.selectedProduct) return { total: 0, breakdown: [] }
+        const price = state.selectedProduct.price
+        if (!price) return { total: 0, breakdown: [] }
+        return calculateExchangeValueBreakdown(
+            price,
+            state.selectedProduct.created_at ?? '',
+            state.conditionAnswers
         )
-    }, [state.selectedProduct, state.selectedColor, state.conditionAnswers, state.conditionComplete, activePrice])
+    }, [state.selectedProduct, state.conditionAnswers])
 
-    const maxExchangeValue = useMemo(() => {
-        if (!state.selectedProduct) return 0
-        return getMaxExchangeValue(activePrice(state.selectedProduct, state.selectedColor), state.selectedProduct.created_at)
-    }, [state.selectedProduct, state.selectedColor, activePrice])
-
-    // ── Data fetchers
     const fetchProducts = useCallback(async (brandSlug: string, search?: string, forceCategorySlug?: string) => {
         updateState({ isLoadingProducts: true })
         try {
             let fetched: ProductListItem[] = []
-            const targetCat = forceCategorySlug !== undefined ? forceCategorySlug : state.selectedCategory?.slug;
+            const targetCat = forceCategorySlug ?? state.selectedCategory?.slug
 
             if (search?.trim()) {
                 const res = await searchProducts({ search: search.trim(), categories: targetCat, brands: brandSlug, per_page: 10 })
-                fetched = res?.data || []
+                fetched = res?.data ?? []
             } else if (targetCat) {
                 const res = await getCategoryProducts(targetCat, { brand: brandSlug, exchange_available: true, per_page: 10 })
-                fetched = res?.data?.products || []
-            } else {
-                const res = await getBrandProducts(brandSlug, { per_page: 10 })
-                fetched = res?.data || []
+                fetched = res?.data?.products ?? []
             }
             updateState({ products: fetched, isLoadingProducts: false })
         } catch {
@@ -167,17 +150,13 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         }
     }, [state.selectedCategory, updateState])
 
-    // ── Reset helpers
     const handleResetAll = useCallback(() => {
         updateState({
             selectedCategory: null,
             selectedBrand: '',
             selectedProduct: null,
-            colorOptions: [],
-            selectedColor: null,
             products: [],
-            conditionComplete: false,
-            conditionAnswers: {},
+            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] },
             isFormOpen: false,
             serialNumber: '',
             governmentId: '',
@@ -186,30 +165,29 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             problems: [],
             reason: '',
             selectedAddress: null,
+            selectedNewProduct: null,
+            newProducts: [],
+            isLoadingNewProducts: false,
+            satisfactionChoice: null,
+            satisfactionReason: '',
+            offeredAmount: '',
         })
     }, [updateState])
 
-    // ── Resets state on unmount to avoid conflicts ──
     useEffect(() => {
-        return () => {
-            handleResetAll()
-        }
+        return () => { handleResetAll() }
     }, [handleResetAll])
 
-    // ── Handlers
     const handleSelectCategory = (cat: NavbarItem) => {
         updateState({
             selectedCategory: cat,
             selectedBrand: '',
             selectedProduct: null,
-            colorOptions: [],
-            selectedColor: null,
             searchTerm: '',
-            conditionComplete: false,
-            conditionAnswers: {}
+            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] }
         })
         fetchProducts('', '', cat.slug)
-        const hasBrands = (cat.brands?.length || 0) > 0
+        const hasBrands = (cat.brands?.length ?? 0) > 0
         const targetRef = hasBrands ? brandSectionRef : modelSectionRef
         setTimeout(() => targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
     }
@@ -218,11 +196,8 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         updateState({
             selectedBrand: slug,
             selectedProduct: null,
-            colorOptions: [],
-            selectedColor: null,
             searchTerm: '',
-            conditionComplete: false,
-            conditionAnswers: { screen: 0, body: 0, battery: 0, functional: 0 }
+            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] }
         })
         fetchProducts(slug)
         setTimeout(() => modelSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
@@ -236,76 +211,53 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
         }, 400)
     }
 
+    const handleSearchNewProducts = useCallback(async (query: string) => {
+        if (!query.trim()) {
+            updateState({ newProducts: state.products, isLoadingNewProducts: false })
+            return
+        }
+        updateState({ isLoadingNewProducts: true })
+        try {
+            const res = await searchProducts({ search: query.trim(), per_page: 20 })
+            updateState({ newProducts: res?.data ?? [], isLoadingNewProducts: false })
+        } catch {
+            updateState({ newProducts: [], isLoadingNewProducts: false })
+        }
+    }, [state.products, updateState])
+
     const handleSelectProduct = async (product: ProductListItem) => {
         updateState({
             isLoadingDetail: true,
-            selectedColor: null,
-            conditionComplete: false,
-            conditionAnswers: {},
+            selectedProduct: {
+                id: Number(product.id),
+                name: product.name,
+                slug: product.slug,
+                price: parsePrice(product.price) || parsePrice(product.discounted_price ?? '') || 0,
+                discounted_price: parsePrice(product.discounted_price ?? product.price) || parsePrice(product.price) || 0,
+                created_at: product.created_at,
+                image: typeof product.image === 'string' ? { full: product.image, thumb: product.image, preview: product.image } : product.image,
+                brand: product.brand ?? { id: 0, name: '', slug: state.selectedBrand },
+            },
+            conditionAnswers: { switch_on: 1.0, mdms_registered: 1.0, problems: [], under_warranty: 1.0, accessories: [] },
             isFormOpen: true,
             phoneNumber: '',
             selectedAddress: null,
+            selectedNewProduct: null,
         })
 
         try {
             const full = await getProductBySlug(product.slug)
-            const colors = extractColorsFromVariants(full)
-            updateState({
-                selectedProduct: full,
-                colorOptions: colors,
-                selectedColor: colors.length === 1 ? colors[0] : null,
-                isLoadingDetail: false
-            })
+            updateState({ selectedProduct: full, isLoadingDetail: false })
         } catch {
-            updateState({
-                selectedProduct: {
-                    id: Number(product.id), name: product.name, slug: product.slug,
-                    price: Number(product.price), discounted_price: Number(product.discounted_price),
-                    created_at: product.created_at,
-                    image: typeof product.image === 'string' ? { full: product.image, thumb: product.image, preview: product.image } : product.image,
-                    images: [], variants: [],
-                    brand: { id: 0, name: '', slug: state.selectedBrand },
-                },
-                colorOptions: [],
-                isLoadingDetail: false
-            })
+            updateState({ isLoadingDetail: false })
         }
     }
 
-    const handleConditionAnswer = (key: string, value: number) => {
-        const updatedAnswers = { ...state.conditionAnswers, [key]: value }
-        
-        const currentQuestions = GET_CONDITION_QUESTIONS(
-            state.selectedCategory?.slug ?? '',
-            state.selectedProduct?.brand.name ?? ''
-        )
-        const allAnswered = currentQuestions.every((q: any) => updatedAnswers[q.key] > 0)
-
-        updateState({
-            conditionAnswers: updatedAnswers,
-            conditionComplete: allAnswered,
-        })
-    }
-    
     const currentQuestions = useMemo(() => GET_CONDITION_QUESTIONS(
         state.selectedCategory?.slug ?? '',
-        state.selectedProduct?.brand.name ?? ''
+        state.selectedProduct?.brand.name ?? '',
+        state.selectedProduct?.attributes?.product_attributes ?? {}
     ), [state.selectedCategory, state.selectedProduct])
-
-    const handleVerificationChange = (key: 'serialNumber' | 'governmentId' | 'devicePhoto' | 'phoneNumber', value: any) => {
-        updateState({ [key]: value } as any)
-    }
-
-    const handleConditionExtra = (key: 'problems' | 'reason', value: any) => {
-        updateState({ [key]: value } as any)
-    }
-
-    const getProductImage = (p: any) => {
-
-        if (p.thumb?.url) return p.thumb.url;
-
-        return '/imgfile/logoimg.png';
-    }
 
     const handleCheckout = async () => {
         if (!isLoggedIn) {
@@ -322,37 +274,34 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
             : (user?.name ?? '')
         const contactPhone = state.phoneNumber || contact?.contact_number || user?.phone || ''
 
-        // ── Map condition answers from numbers to Yes/No ──
-        const currentQuestions = GET_CONDITION_QUESTIONS(
-            state.selectedCategory?.slug ?? '',
-            state.selectedProduct?.brand.name ?? ''
-        )
-        const condition_answers = currentQuestions.map(q => ({
-            question: q.label,
-            answer: state.conditionAnswers[q.key] === 1.0 ? 'Yes' : 'No'
-        }))
-
         const payload = {
             service_type: 'exchange_request',
             customer: {
                 name: contactName,
                 phone: contactPhone,
-                user_id: user?.id || null
+                user_id: user?.id ?? null
             },
             device_info: {
                 product_id: state.selectedProduct?.id,
                 name: state.selectedProduct?.name,
-                color: state.selectedColor?.name ?? '',
+
                 serial_number: state.serialNumber,
                 government_id: state.governmentId,
                 device_photo: state.devicePhoto ?? null,
-                condition_answers, // "all question ans" with Yes/No
+                condition_answers: state.conditionAnswers,
                 problems: state.problems,
                 reason: state.reason,
             },
             valuation: {
-                estimated_value: exchangeValue,
+                estimated_value: valuation.total,
+                breakdown: valuation.breakdown,
             },
+            target_device: state.selectedNewProduct ? {
+                product_id: state.selectedNewProduct.id,
+                name: state.selectedNewProduct.name,
+                price: Number(state.selectedNewProduct.price),
+                price_after_exchange: 0
+            } : null,
             pickup_info: {
                 selected: state.pickupSelected,
                 address: {
@@ -365,33 +314,30 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                     lng: geo?.lng ?? null,
                 }
             },
-            metadata: {
-                source: 'exchange_wizard_v2',
-                timestamp: new Date().toISOString(),
-            }
+            satisfaction: {
+                choice: state.satisfactionChoice,
+                reason: state.satisfactionReason,
+                offered_amount: state.offeredAmount ? Number(state.offeredAmount) : null,
+            },
+            //     source: 'exchange_wizard_v4_arko',
+            //     timestamp: new Date().toISOString(),
+            // }
         }
 
         updateState({ isSubmitting: true })
         try {
-            await submitExchangeRequest(payload)
-
+            // await submitExchangeRequest(payload)
             if (state.devicePhoto) {
-                try { sessionStorage.setItem('exchangeDevicePhoto', state.devicePhoto as string) } catch { }
+                try { sessionStorage.setItem('exchangeDevicePhoto', state.devicePhoto) } catch { }
             }
 
             const params = new URLSearchParams({
-                name: payload.customer.name || 'Customer',
+                name: payload.customer.name,
                 phone: payload.customer.phone,
                 device: payload.device_info.name ?? '',
-                value: String(exchangeValue),
-                color: payload.device_info.color,
-                image: getProductImage(state.selectedProduct),
+                value: String(valuation.total),
+                image: getThumbnail(state.selectedProduct),
                 address: payload.pickup_info.address.full_address,
-                serial: payload.device_info.serial_number,
-                govtId: payload.device_info.government_id,
-                pickup: payload.pickup_info.selected ? 'Yes' : 'No',
-                problems: payload.device_info.problems.join(', '),
-                reason: payload.device_info.reason,
             })
 
             handleResetAll()
@@ -406,15 +352,11 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
     return (
         <main className="min-h-screen bg-[#F5F7FA] text-gray-800 pb-28">
             <ExchangeHero
-                onWizardClick={() => {
-                    formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                onCatalogClick={() => {
-                    formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
-                }}
+                onWizardClick={() => { formSectionRef.current?.scrollIntoView({ behavior: 'smooth' }) }}
+                onCatalogClick={() => { formSectionRef.current?.scrollIntoView({ behavior: 'smooth' }) }}
             />
 
-            <section ref={formSectionRef} className="mx-auto px-4 lg:px-8 max-w-8xl py-8">
+            <section ref={formSectionRef} className="mx-auto px-4 lg:px-8 max-w-8xl py-4 sm:py-6">
                 <ExchangeBreadcrumb
                     selectedCategory={state.selectedCategory}
                     selectedBrand={state.selectedBrand}
@@ -433,29 +375,25 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                         onSelectBrand={handleSelectBrand}
                         onSearch={handleSearch}
                         onSelectProduct={handleSelectProduct}
-                        getProductImage={getProductImage}
+                        getProductImage={getThumbnail}
                     />
+                </div>
 
-                    {/* Wizard Popup (Sheet) */}
-                    <Sheet
-                        open={state.isFormOpen}
-                        onOpenChange={(open) => updateState({ isFormOpen: open })}
-                    >
-                        <SheetContent side="right" showOverlay={false} className="w-full sm:max-w-105 p-0 overflow-y-auto border-0 shadow-2xl ring-1 ring-black/5">
-                            <SheetHeader className="sr-only">
-                                <SheetTitle>Exchange Details</SheetTitle>
-                                <SheetDescription>Complete the details below to get an instant quote</SheetDescription>
-                            </SheetHeader>
-                            <ExchangeForm
+                <Sheet open={state.isFormOpen} onOpenChange={(open) => updateState({ isFormOpen: open })}>
+                    <SheetContent className="sm:max-w-[540px] bg-white p-0 border-l-0 overflow-y-auto">
+                        <SheetHeader className="px-6 py-4 border-b bg-white sticky top-0 z-50">
+                            <SheetTitle className="text-xl hidden font-bold text-gray-900">Device Evaluation</SheetTitle>
+                        </SheetHeader>
+                          <ExchangeForm
                                 questions={currentQuestions}
                                 selectedCategory={state.selectedCategory}
                                 selectedProduct={state.selectedProduct}
                                 isLoadingDetail={state.isLoadingDetail}
                                 conditionAnswers={state.conditionAnswers}
-                                conditionComplete={state.conditionComplete}
-                                exchangeValue={exchangeValue}
+                                exchangeValue={valuation.total}
+                                valuationBreakdown={valuation.breakdown}
                                 pickupSelected={state.pickupSelected}
-                                onConditionAnswer={handleConditionAnswer}
+                                onConditionAnswer={(key, val) => updateState({ conditionAnswers: { ...state.conditionAnswers, [key]: val } })}
                                 onPickupSelect={(sel) => updateState({ pickupSelected: sel })}
                                 onCheckout={handleCheckout}
                                 isLoggedIn={isLoggedIn}
@@ -466,14 +404,23 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                                 governmentId={state.governmentId}
                                 devicePhoto={state.devicePhoto}
                                 phoneNumber={state.phoneNumber}
-                                onVerificationChange={handleVerificationChange}
+                                onVerificationChange={(key, val) => updateState({ [key]: val } as any)}
                                 problems={state.problems}
                                 reason={state.reason}
-                                onConditionExtra={handleConditionExtra}
+                                onConditionExtra={(key, val) => updateState({ [key]: val } as any)}
+                                availableProducts={state.newProducts.length > 0 ? state.newProducts : state.products}
+                                isLoadingProducts={state.isLoadingNewProducts}
+                                onSearchProducts={handleSearchNewProducts}
+                                selectedNewProduct={state.selectedNewProduct}
+                                onSelectNewProduct={(p) => updateState({ selectedNewProduct: p })}
+                                onBack={() => updateState({ isFormOpen: false })}
+                                satisfactionChoice={state.satisfactionChoice}
+                                satisfactionReason={state.satisfactionReason}
+                                offeredAmount={state.offeredAmount}
+                                onSatisfactionChange={(key, val) => updateState({ [key]: val } as any)}
                             />
-                        </SheetContent>
-                    </Sheet>
-                </div>
+                    </SheetContent>
+                </Sheet>
             </section>
 
             <ExchangeSeoSections onGetQuoteClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} />
@@ -488,7 +435,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                 <EmiFaq
                     params={{ type: 'brand', per_page: 15, page: 1 }}
                     title="Frequently asked questions about mobile exchange"
-                    subtitle="Everything you need to know before exchanging your phone"
+                    subtitle="Everything you need to know"
                 />
             </section>
 

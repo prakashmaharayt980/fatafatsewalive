@@ -3,10 +3,8 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Eye, Pencil, Trash, X, UploadCloud, FileCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Pencil, Trash, X, UploadCloud, FileCheck } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { cn } from '@/lib/utils';
 
 interface DocumentUploadProps {
   docTypes: string[];
@@ -56,7 +54,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   };
 
   return (
-
     <div className="bg-white py-4">
       <div className="w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -75,7 +72,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 />
 
                 {file ? (
-                  /* Uploaded State */
                   <div className="relative h-48 w-full rounded-xl overflow-hidden border border-[var(--colour-fsP2)]/20 shadow-sm bg-gray-50 flex items-center justify-center group-hover:shadow-md transition-all">
                     {previews[previewKey] && (
                       <Image
@@ -86,8 +82,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                         className="object-contain p-2"
                       />
                     )}
-
-                    {/* Overlay Actions */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
                       <Button
                         size="icon"
@@ -110,7 +104,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                     </div>
                   </div>
                 ) : (
-                  /* Empty State */
                   <label htmlFor={previewKey} className="cursor-pointer h-48 w-full rounded-xl border-2 border-dashed border-gray-200 hover:border-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/5 transition-all flex flex-col items-center justify-center gap-3 group">
                     <div className="h-12 w-12 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center group-hover:scale-110 transition-transform text-[var(--colour-fsP2)]">
                       <UploadCloud className="w-6 h-6" />
@@ -145,13 +138,11 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         </div>
       </div>
 
-      {/* Global Zoom Portal */}
       {zoomData && createPortal(
           <div
             className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200"
             onClick={() => setZoomData(null)}
           >
-            {/* Top bar */}
             <div className="absolute top-0 left-0 right-0 z-[10001] flex items-center justify-between px-6 py-4 bg-gradient-to-b from-black/60 to-transparent">
                 <span className="text-white font-bold text-lg tracking-wide uppercase">
                     {zoomData.label} Preview
@@ -165,7 +156,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 </button>
             </div>
 
-            {/* Main zoomed image */}
             <div className="relative w-full h-full max-w-4xl max-h-[85vh] mx-4 my-16 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                 <Image
                     src={zoomData.url}

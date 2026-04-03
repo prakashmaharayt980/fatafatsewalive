@@ -1,8 +1,8 @@
-import { apiPrivate } from './client';
+import { apiPrivate } from '../ServiceHelper/index';
 
 export const ProfileService = {
     ProfileView: () =>
-        apiPrivate.get(`/user`).then(res => res.data),
+        apiPrivate.get(`/v1/me`).then(res => res.data),
 
     ProfileUpdate: (data: any) =>
         apiPrivate.put(`/v1/profile`, data).then(res => res.data),

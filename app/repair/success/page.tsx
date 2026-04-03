@@ -13,6 +13,7 @@ import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { PICKUP_LOCATIONS, PICKUP_PARTNERS, CROSS_SELL_ITEMS } from '../repair-helpers'
 import { logoImg } from '@/app/CommonVue/Image'
+import EmiFaq from '@/app/emi/apply/_components/EmiFaq'
 
 const STEPS = [
     { label: 'Received', icon: Package },
@@ -30,38 +31,7 @@ const MOCK_DIAGNOSIS = [
     { part: 'Internal Components', issue: 'All other components tested and working', severity: 'none', action: 'No action needed', cost: 0, status: 'OK' },
 ]
 
-const STEP_FAQS: Record<number, { q: string; a: string }[]> = {
-    0: [
-        { q: 'How long until my repair starts?', a: 'Once we receive your device, diagnosis begins within 2-4 hours. You will be notified of the findings before any repair starts.' },
-        { q: 'Can I cancel my repair request?', a: 'Yes, you can cancel anytime before the repair begins. Contact us at +977 9828757575.' },
-        { q: 'Is there a diagnosis fee?', a: 'No! Diagnosis is completely free. You only pay if you approve the repair.' },
-        { q: 'Will I lose my data?', a: 'We always try to preserve your data. However, for some repairs (like motherboard work), data backup is recommended before sending your device.' },
-    ],
-    1: [
-        { q: 'When will my device be picked up?', a: 'Our pickup partner will contact you within 24-48 hours to schedule a time.' },
-        { q: 'Is pickup really free?', a: 'Yes, pickup and return delivery are completely free across the Kathmandu Valley.' },
-        { q: 'How should I prepare my device?', a: 'Remove SIM and memory cards, disable Find My Phone / Google lock, and back up important data.' },
-        { q: 'Can someone else hand over the device?', a: 'Yes, as long as they have a photocopy of your ID and know the repair reference.' },
-    ],
-    2: [
-        { q: 'What happens during diagnosis?', a: 'Our certified technician will thoroughly test all components including display, battery, charging, speakers, cameras, and internal circuitry to identify every issue.' },
-        { q: 'Do I have to approve the repair cost?', a: 'Absolutely. We will share the full diagnosis report with you. No repair starts without your explicit approval.' },
-        { q: 'What if additional issues are found?', a: 'We will update the diagnosis and inform you before proceeding. You can choose to repair some or all issues.' },
-        { q: 'How accurate is the cost estimate?', a: 'The post-diagnosis quote is the final cost. No surprises or hidden charges.' },
-    ],
-    3: [
-        { q: 'How long does the repair take?', a: 'Most repairs are completed within 1-3 business days depending on the complexity and parts availability.' },
-        { q: 'Do you use original parts?', a: 'We use OEM-quality parts. For Apple devices, we offer both original Apple parts and high-quality alternatives.' },
-        { q: 'What warranty do repairs carry?', a: 'All repairs come with a 90-day warranty covering the repaired parts and workmanship.' },
-        { q: 'Can I track repair progress?', a: 'Yes, you will receive SMS/call updates at each stage. You can also call us for real-time status.' },
-    ],
-    4: [
-        { q: 'How do I get my device back?', a: 'We will deliver it to your address for free, or you can pick it up from the service center where you dropped it off.' },
-        { q: 'What does the 90-day warranty cover?', a: 'If the same repaired component fails within 90 days due to a workmanship defect, we will fix it for free.' },
-        { q: 'What if the same issue returns?', a: 'Bring it back within 90 days and we will re-diagnose and repair at no additional cost.' },
-        { q: 'Can I repair another device?', a: 'Of course! Submit a new repair request from our repair page anytime.' },
-    ],
-}
+
 
 function RepairSuccessContent() {
     const searchParams = useSearchParams()
@@ -90,7 +60,7 @@ function RepairSuccessContent() {
 
     return (
         <main className="min-h-screen bg-gray-50 font-sans">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm mb-4 overflow-x-auto pb-1 scrollbar-hide" aria-label="Breadcrumb">
@@ -352,18 +322,14 @@ function RepairSuccessContent() {
                         {/* Done */}
                         {done && (
                             <div className="animate-in slide-in-from-bottom-2 duration-300 flex flex-col gap-4">
-                                <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-xl border border-green-200 p-6 md:p-8 text-center relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-100/50 rounded-full -translate-y-1/2 translate-x-1/2" />
-                                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-100/40 rounded-full translate-y-1/2 -translate-x-1/2" />
-                                    <div className="relative z-10">
-                                        <div className="inline-flex items-center gap-1.5 bg-[var(--colour-bg3)] text-white px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-4">
-                                            <Check className="h-3 w-3 stroke-[3]" /> Repair Complete
-                                        </div>
-                                        <h1 className="text-xl font-bold text-[var(--colour-text2)] mb-1">Your Device is Ready!</h1>
-                                        <p className="text-sm text-gray-500 mb-2">{p.device} has been repaired and tested.</p>
-                                        <p className="text-2xl font-extrabold text-[var(--colour-bg3)] mb-1">Rs. {diagnosisCost.toLocaleString()}</p>
-                                        <p className="text-xs text-gray-400">90-day warranty on all repaired parts</p>
+                                <div className="bg-white rounded-xl border border-gray-200 p-6 md:p-8 text-center">
+                                    <div className="inline-flex items-center gap-1.5 bg-[var(--colour-fsP2)] text-white px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-4">
+                                        <Check className="h-3 w-3 stroke-[3]" /> Repair Complete
                                     </div>
+                                    <h1 className="text-xl font-bold text-slate-900 mb-1">Your Device is Ready!</h1>
+                                    <p className="text-sm text-gray-500 mb-2">{p.device} has been repaired and tested.</p>
+                                    <p className="text-2xl font-extrabold text-[var(--colour-fsP2)] mb-1">Rs. {diagnosisCost.toLocaleString()}</p>
+                                    <p className="text-xs text-gray-400">90-day warranty on all repaired parts</p>
                                 </div>
 
                                 {/* What Was Repaired */}
@@ -417,31 +383,11 @@ function RepairSuccessContent() {
                 </div>
 
                 {/* FAQ */}
-                <div className="mt-6">
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                            <HelpCircle className="h-4 w-4 text-[var(--colour-fsP1)]" />
-                            <h2 className="text-sm font-bold text-[var(--colour-text2)]">Frequently Asked Questions</h2>
-                        </div>
-                        <div className="divide-y divide-gray-100">
-                            {(STEP_FAQS[done ? 4 : Math.min(step, 4)] || STEP_FAQS[0]).map((faq, i) => (
-                                <div key={i}>
-                                    <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                                        className="w-full flex items-center justify-between px-4 py-3 text-left cursor-pointer hover:bg-gray-50 transition-colors">
-                                        <span className="text-sm font-medium text-[var(--colour-text2)] pr-4">{faq.q}</span>
-                                        <ChevronDown className={cn('h-4 w-4 text-gray-400 shrink-0 transition-transform duration-200', openFaq === i && 'rotate-180 text-[var(--colour-fsP1)]')} />
-                                    </button>
-                                    {openFaq === i && (
-                                        <div className="px-4 pb-3 animate-in slide-in-from-top-1 duration-150">
-                                            <p className="text-xs text-gray-500 leading-relaxed">{faq.a}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+               <EmiFaq  params={{type:'brand',per_page:5}}
+    title = 'Frequently Asked Questions'
+    subtitle = 'Everything you need to know' />
             </div>
+            
         </main>
     )
 }

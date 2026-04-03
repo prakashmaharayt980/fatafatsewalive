@@ -106,9 +106,9 @@ const CheckoutDrawer = () => {
                   className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-all cursor-pointer group"
                 >
                   {/* Product Image */}
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-100 rounded-xl flex-shrink-0 overflow-hidden relative">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 aspect-auto bg-white border border-gray-100 rounded-xl flex-shrink-0 overflow-hidden relative">
                     <Image
-                      src={item?.product?.thumb?.url || item?.product?.image?.thumb || item?.product?.image?.full || '/placeholder.png'}
+                      src={item?.product?.thumb?.url ||'/placeholder.png'}
                       alt={item?.product?.name || 'Product'}
                       fill
                       sizes="80px"

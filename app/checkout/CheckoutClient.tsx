@@ -61,11 +61,7 @@ export default function CheckoutClient() {
 
 
     const router = useRouter();
-    // Auth protection - For guest checkout, we do NOT trigger login alert here.
-    // Guests can proceed freely.
-    useEffect(() => {
-        // triggerLoginAlert is no longer mandatory for checkout page view
-    }, []);
+
 
     // Track Initiate Checkout
     useEffect(() => {
@@ -121,6 +117,17 @@ export default function CheckoutClient() {
                     gift_recipient_photo: checkoutState.recipient.recipientPhoto,
                     gift_sender_photo: checkoutState.recipient.senderPhoto,
                 },
+
+
+
+
+
+
+
+
+
+
+                
             };
 
             await OrderService.CreateOrder(payload).then((res) => {

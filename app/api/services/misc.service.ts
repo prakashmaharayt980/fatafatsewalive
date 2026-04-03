@@ -1,7 +1,7 @@
 
 'use server'
 
-import { apiPublic, apiPrivate, n8nApi } from './client';
+import { apiPublic, apiPrivate, n8nApi } from '../ServiceHelper/index';
 
 export const getBannerBySlug = async (slug: string) => {
     return apiPublic.get(`/v1/banners/${slug}`).then(res => res.data);

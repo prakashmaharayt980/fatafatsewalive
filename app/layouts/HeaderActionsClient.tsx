@@ -55,6 +55,7 @@ export default function HeaderActionsClient() {
                                         <Link
                                             key={item.href}
                                             href={item.href}
+                                            onClick={() => setShowAccountMenu(false)}
                                             className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                                         >
                                             <item.icon className="w-4 h-4 text-gray-500" />

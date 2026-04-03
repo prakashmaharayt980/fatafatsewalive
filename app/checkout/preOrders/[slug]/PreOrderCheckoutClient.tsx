@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/app/context/AuthContext';
 import { useShallow } from 'zustand/react/shallow';
@@ -23,10 +23,8 @@ import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import NicAsiaPayment from '@/app/PaymentsBox/NicAsiaPayment';
 import EeswaPayment from '@/app/PaymentsBox/EeswaPayment';
-import DepositStep from './steps/DepositStep';
 import PreOrderPaymentStep from './steps/PreOrderPaymentStep';
 import PreOrderSummary from './PreOrderSummary';
-import PreOrderReceiptStep from './steps/PreOrderReceiptStep';
 import RecipientStep from '../../steps/RecipientStep';
 import CheckoutFaq from '../../CheckoutFaq';
 
@@ -50,10 +48,9 @@ const STEP_LABELS: Record<PreOrderStep, string> = {
 };
 
 export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClientProps) {
-    const { user, isLoading, triggerLoginAlert } = useAuthStore(useShallow(state => ({
+    const { user, isLoading } = useAuthStore(useShallow(state => ({
         user: state.user,
         isLoading: state.isLoading,
-        triggerLoginAlert: state.triggerLoginAlert
     })));
     const userInfo = user;
     const router = useRouter();
@@ -74,7 +71,7 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
         
         // Check product images with color property
         if (product.images) {
-            const img = product.images.find(i => (i as any).color === selectedColor);
+            const img = product.images.find(i => i.color === selectedColor);
             if (img?.url) return img.url;
         }
 
@@ -83,7 +80,7 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
 
     const [currentStep, setCurrentStep] = useState<PreOrderStep>(PRE_ORDER_STEPS.ADDRESS);
     const [checkoutState, setCheckoutState] = useState<CheckoutState>(initialCheckoutState);
-    const [depositAmount, setDepositAmount] = useState<number>(5000);
+    const [depositAmount] = useState<number>(5000);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [processingPaymentOrder, setProcessingPaymentOrder] = useState<number | null>(null);
 
@@ -119,9 +116,20 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
     const handlePlaceOrder = async () => {
         try {
             setIsSubmitting(true);
+            const productImage = variantImage ?? product.image?.full ?? product.thumb?.url ?? product.images?.[0]?.url ?? '';
             const payload = {
                 full_name: userInfo?.name,
-                products: [{ product_id: product.id, quantity: 1, is_preorder: true }],
+                products: [{
+                    product_id: product.id,
+                    quantity: 1,
+                    is_preorder: true,
+                    product_name: product.name,
+                    product_image: productImage,
+                    selected_color: selectedColor ?? undefined,
+                    slug: product.slug,
+                    category: product.categories?.[0]?.title ?? undefined,
+                    price: productPrice,
+                }],
                 shipping_address_id: checkoutState.address?.id,
                 total_amount: depositAmount,
                 order_total: productPrice,

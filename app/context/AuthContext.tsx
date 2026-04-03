@@ -49,9 +49,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             login: (token, userData) => {
                 setCookie('access_token', token, { maxAge: 60 * 60 * 24 * 7 });
                 set({ user: userData, isLoggedIn: true });
-                toast.success("Successfully logged in");
-                // Note: router.refresh() should be handled by the caller or specialized hook if needed
-                // For direct store actions, we just update the state
+             
             },
 
             logout: () => {

@@ -1,10 +1,9 @@
 'use client'
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { searchProducts, submitRepairRequest } from '../api/services/product.service'
-import { getBrandProducts, getCategoryProducts } from '../api/services/category.service'
+import { getCategoryProducts } from '../api/services/category.service'
 import { useAuth } from '../context/AuthContext'
 import type { ShippingAddress } from '../checkout/checkoutTypes'
 
@@ -14,6 +13,7 @@ import RepairBreadcrumb from './_components/RepairBreadcrumb'
 import RepairCatalogView from './_components/RepairCatalogView'
 import RepairForm from './_components/RepairForm'
 import RepairSEOSections from './_components/RepairSEOSections'
+import RepairSuccessDialog from './_components/RepairSuccessDialog'
 
 import {
     Sheet,
@@ -26,6 +26,15 @@ import {
 interface BrandItem { id: number; name: string; slug: string; image?: string }
 interface CategoryItem { id: number; title: string; slug: string; brands?: BrandItem[] }
 interface RepairClientProps { brands: BrandItem[]; categories: CategoryItem[] }
+
+interface SuccessData {
+    name: string
+    phone: string
+    device: string
+    image: string
+    repairs: string[]
+    address: string
+}
 
 interface State {
     selectedCategory: CategoryItem | null
@@ -41,14 +50,13 @@ interface State {
     photos: File[]
     isFormOpen: boolean
     serialNumber: string
-    governmentId: string
     phoneNumber: string
     isSubmitting: boolean
     selectedAddress: ShippingAddress | null
+    successData: SuccessData | null
 }
 
 export default function RepairClient({ brands, categories }: RepairClientProps) {
-    const router = useRouter()
     const { isLoggedIn, setloginDailogOpen, user } = useAuth()
 
     // ── Filter Categories to relevant ones (Mobile & Laptop) ──
@@ -79,10 +87,11 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
         photos: [],
         isFormOpen: false,
         serialNumber: '',
-        governmentId: '',
-        phoneNumber: '', // Always start empty as per request ("no campany num just keep ''")
+ 
+        phoneNumber: '',
         isSubmitting: false,
         selectedAddress: null,
+        successData: null,
     })
 
     const updateState = useCallback((updates: Partial<State>) => {
@@ -113,7 +122,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
                 const res = await getCategoryProducts(targetCat, { brand: brandSlug, per_page: 20 })
                 fetched = res?.data?.products || res?.data || []
             } else if (brandSlug) {
-                const res = await getBrandProducts(brandSlug, { per_page: 20 })
+                const res = await searchProducts({ brands: brandSlug, per_page: 20 })
                 fetched = res?.data || []
             } else {
                 const res = await searchProducts({ per_page: 20 })
@@ -170,10 +179,10 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
             photos: [],
             isFormOpen: false,
             serialNumber: '',
-            governmentId: '',
             phoneNumber: '',
             isSubmitting: false,
             selectedAddress: null,
+            successData: null,
         })
     }, [updateState])
 
@@ -230,7 +239,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
                 product_id: state.selectedProduct?.id,
                 name: state.selectedProduct?.name,
                 serial_number: state.serialNumber,
-                government_id: state.governmentId,
+           
             },
             repair_details: {
                 selected_repairs: state.selectedRepairs,
@@ -254,20 +263,21 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
 
         updateState({ isSubmitting: true })
         try {
-            await submitRepairRequest(payload)
+            // await submitRepairRequest(payload)
+            console.log('Repair Request Payload:', payload) // For debugging, remove in production
 
-            const params = new URLSearchParams({
-                name: payload.customer.name || 'Customer',
-                phone: payload.customer.phone,
-                device: payload.device_info.name ?? '',
-                image: getProductImage(state.selectedProduct),
-                repairs: state.selectedRepairs.join(','),
-                pickup: 'pickup',
-                address: payload.pickup_address.full_address,
+            updateState({
+                isFormOpen: false,
+                isSubmitting: false,
+                successData: {
+                    name: payload.customer.name || 'Customer',
+                    phone: payload.customer.phone,
+                    device: payload.device_info.name ?? '',
+                    image: getProductImage(state.selectedProduct),
+                    repairs: state.selectedRepairs,
+                    address: payload.pickup_address.full_address,
+                },
             })
-
-            updateState({ isFormOpen: false, isSubmitting: false })
-            router.push(`/repair/success?${params.toString()}`)
         } catch {
             toast.error('Failed to submit repair request. Please try again.')
             updateState({ isSubmitting: false })
@@ -282,7 +292,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
     }
 
     return (
-        <main className="min-h-screen bg-[#F5F7FA] text-gray-800 pb-28">
+        <><main className="min-h-screen bg-[#F5F7FA] text-gray-800 pb-28">
             <RepairHero
                 onStartClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
                 onCatalogClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
@@ -338,7 +348,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
                                 selectedAddress={state.selectedAddress}
                                 onAddressSelect={(addr) => updateState({ selectedAddress: addr })}
                                 serialNumber={state.serialNumber}
-                                governmentId={state.governmentId}
+                             
                                 phoneNumber={state.phoneNumber}
                                 onVerificationChange={handleVerificationChange}
                                 isSubmitting={state.isSubmitting}
@@ -350,5 +360,10 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
 
             <RepairSEOSections onGetQuoteClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} />
         </main>
+        <RepairSuccessDialog
+            data={state.successData}
+            onClose={() => updateState({ successData: null })}
+        />
+        </>
     )
 }

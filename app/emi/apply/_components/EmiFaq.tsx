@@ -81,8 +81,6 @@ export default function EmiFaq({
 
     return (
         <div className={`mt-10 mb-16 w-full ${className}`}>
-
-            {/* Header */}
             <div className="mb-6 border-l-4 border-[var(--colour-fsP2)] pl-4">
                 <h2 className="text-xl font-bold text-gray-900">
                     {title}
@@ -92,7 +90,6 @@ export default function EmiFaq({
                 </p>
             </div>
 
-            {/* Loading */}
             {loading && (
                 <div className="flex flex-col divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -104,12 +101,10 @@ export default function EmiFaq({
                 </div>
             )}
 
-            {/* Error */}
             {!loading && error && (
                 <p className="text-center py-10 text-sm text-red-400">{error}</p>
             )}
 
-            {/* Accordion */}
             {!loading && !error && faqs.length > 0 && (
                 <div className="flex flex-col divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden bg-white">
                     {faqs.map((item, i) => {
@@ -129,7 +124,6 @@ export default function EmiFaq({
                                     />
                                 </button>
 
-                                {/* Answer — CSS height transition */}
                                 <div
                                     className={`overflow-hidden transition-all duration-200 ease-in-out ${isOpen ? 'max-h-96' : 'max-h-0'}`}
                                 >
@@ -143,7 +137,6 @@ export default function EmiFaq({
                 </div>
             )}
 
-            {/* Empty */}
             {!loading && !error && faqs.length === 0 && (
                 <p className="text-center py-10 text-sm text-gray-400">
                     No FAQs available at the moment.

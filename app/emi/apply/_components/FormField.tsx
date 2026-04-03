@@ -34,9 +34,10 @@ const FormField: React.FC<FormFieldProps> = React.memo(({ field, error }) => (
             {field.type === 'select' ? (
                 <Select
                     name={field.name}
-                    value={field.value ? String(field.value) : undefined}
+                    value={field.value !== undefined && field.value !== null ? String(field.value) : undefined}
                     onValueChange={(value) => field.onChange({ target: { name: field.name, value } } as unknown as React.ChangeEvent<HTMLSelectElement>)}
                     disabled={field.disabled}
+                    modal={false}
                 >
                     <SelectTrigger className={`w-full h-10 pl-10 bg-white text-gray-700 text-sm rounded-lg border transition-all duration-150 ${error ? 'border-red-400 ring-1 ring-red-200' : 'border-gray-200 focus:border-(--colour-fsP2) focus:ring-1 focus:ring-(--colour-fsP2)'} ${field.disabled ? 'opacity-60 cursor-not-allowed bg-gray-50' : ''}`}>
                         <SelectValue placeholder={`Select ${field.label}`} />
@@ -65,13 +66,13 @@ const FormField: React.FC<FormFieldProps> = React.memo(({ field, error }) => (
                 />
             )}
         </div>
-        {/* Fixed-height error slot — prevents layout shift */}
-        <div className="h-4 mt-0.5">
-            {error && <p className="text-red-500 text-[11px] leading-tight">{error}</p>}
+        <div className="mt-1 min-h-9">
+            {error ? (
+                <p className="text-red-500 text-[11px] leading-tight">{error}</p>
+            ) : field.helper ? (
+                <p className="text-[11px] leading-tight text-gray-600">{field.helper}</p>
+            ) : null}
         </div>
-        {field.helper && !error && (
-            <p className="text-[11px] text-gray-600 -mt-3.5 ml-1">{field.helper}</p>
-        )}
     </div>
 ));
 

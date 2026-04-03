@@ -56,7 +56,8 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
             getBlogList({
                 category: activeCategory !== 'all' ? activeCategory : undefined,
                 search: searchQuery || undefined,
-                per_page: 30
+                per_page: 30,
+                 sort:'asc'
             }),
             getCategoryProducts('dslr-camera-price-in-nepal', { per_page: 8, page: 1 })
         ]);

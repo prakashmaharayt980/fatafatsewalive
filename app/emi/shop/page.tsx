@@ -87,11 +87,11 @@ export default async function ShopByEmiPage() {
                     </div>
                 </div>
             }>
-                {/* <ShopByEmiClient 
+                <ShopByEmiClient 
                     initialCategories={categories || []} 
                     footerBanners={banners.filter(Boolean)} 
-                /> */}
-                <h1>Shop by EMI</h1>
+                />
+                
             </Suspense>
         </main>
     )

@@ -1,4 +1,4 @@
-import { apiPrivate } from './client';
+import { apiPrivate } from '../ServiceHelper/index';
 
 export const InitiateNicasiaPayment = async (data: any) =>
     apiPrivate.post(`/v1/payment/nicasia/initiate`, data).then(res => res.data);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -25,13 +25,13 @@ import EmiProductDetails from './EmiProductDetails';
 import CreditCardform from './CreditCardform';
 import DocumentUpload from './DocumentUpload';
 import SignaturePad from './SignaturePad';
-import FormField from './FormField';
+import FormField, { type FieldOption } from './FormField';
 import EmiFaq from './EmiFaq';
 import NepaliDatePicker from '../../../CommonVue/NepaliDatePicker';
 import {
     ArrowBigLeft, Loader2, CheckCircle2, ChevronRight,
     CreditCard, Calendar, User, MapPin, Mail, Phone,
-    Hash, DollarSign, Building2, Banknote, CreditCardIcon, HandCoins, ShoppingBag,
+    Hash, DollarSign, Building2, Banknote, CreditCardIcon, HandCoins,
 } from 'lucide-react';
 import type { ProductData } from '@/app/types/ProductDetailsTypes';
 
@@ -47,10 +47,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     useEffect(() => {
         fetchBanks();
     }, [fetchBanks]);
-    const [hasMounted, setHasMounted] = useState(false);
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
 
     const [currentstep, setcurrentstep] = useState(0);
     const [previews, setPreviews] = useState<{ [key: string]: string }>({});
@@ -64,7 +60,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const [localFiles, setLocalFiles] = useState(emiContextInfo.files);
     const [localVariant, setLocalVariant] = useState(emiContextInfo.selectedVariant || '');
     const [localEmiCalculation, setLocalEmiCalculation] = useState(emiContextInfo.emiCalculation);
-    const [localInterestRate, setLocalInterestRate] = useState(10);
 
     const [localCreditCardInfo, setLocalCreditCardInfo] = useState({
         cardHolderName: '',
@@ -76,7 +71,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // Use prop product or fallback to context (though we prefer prop)
     const selectedOption = emiContextInfo.hasCreditCard === 'yes' ? 'creditCard' : emiContextInfo.hasCreditCard === 'make' ? 'makeCard' : 'downPayment';
     const product = initialProduct || emiContextInfo.product;
 
@@ -97,8 +91,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         if (bankParam || tenureParam || downPaymentParam) {
             if (bankParam) {
                 setLocalBankInfo(prev => ({ ...prev, bankname: bankParam }));
-                const bankMatch = banks.find(b => b.name === bankParam);
-                if (bankMatch) setLocalInterestRate(bankMatch.rate);
             }
             setLocalEmiCalculation(prev => ({
                 ...prev,
@@ -123,7 +115,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 });
             }
         });
-        // Handle standalone files
         if (files.bankStatement instanceof File) {
             newPreviews['bankStatement'] = URL.createObjectURL(files.bankStatement);
         }
@@ -144,7 +135,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             : Number(product.price) || 0;
     }, [product]);
 
-    const getValidationSchema = (sectionKey: string, option: string) => {
+    const getValidationSchema = useCallback((sectionKey: string, option: string) => {
         if (sectionKey === 'userInfo') return personalDetailsSchema();
         if (sectionKey === 'granterPersonalDetails') return personalDetailsSchema(true);
         if (sectionKey === 'bankinfo' && option === 'creditCard') return creditCardSchema;
@@ -154,9 +145,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             return emiConditionsCreditSchema(productPrice);
         }
         return Yup.object();
-    };
+    }, [productPrice]);
 
-    const validateFormSection = async (section: { sectionKey: string }, data: any) => {
+    const validateFormSection = useCallback(async (section: { sectionKey: string }, data: any) => {
         try {
             const schema = getValidationSchema(section.sectionKey, selectedOption);
             await schema.validate(data, { abortEarly: false });
@@ -172,8 +163,13 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             }
             return errors;
         }
-    };
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, section: string) => {
+    }, [getValidationSchema, selectedOption]);
+
+    const clearFieldError = useCallback((name: string) => {
+        setErrors((prev) => (prev[name] ? { ...prev, [name]: '' } : prev));
+    }, []);
+
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, section: string) => {
         const { name, value } = e.target;
 
         const setter = section === 'userInfo' ? setLocalUserInfo :
@@ -185,24 +181,25 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             setter((prev: any) => ({ ...prev, [name]: value }));
         }
 
-        // Clear any previous error for this field on typing
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: '' }));
-        }
-    };
+        clearFieldError(name);
+    }, [clearFieldError]);
 
-    const handleBSDateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, sectionKey: 'userInfo' | 'granterPersonalDetails') => {
+    const handleCreditCardFieldChange = useCallback((name: keyof typeof localCreditCardInfo, value: string) => {
+        setLocalCreditCardInfo((prev) => ({ ...prev, [name]: value }));
+        clearFieldError(name);
+    }, [clearFieldError]);
+
+    const handleBSDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, sectionKey: 'userInfo' | 'granterPersonalDetails') => {
         const value = e.target.value;
-        const bsDateStr = value; // Expected YYYY-MM-DD
+        const bsDateStr = value;
 
-        // Update BS date in state and clear error
         handleInputChange(e, sectionKey);
 
         if (/^\d{4}-\d{2}-\d{2}$/.test(bsDateStr)) {
             try {
                 const parts = bsDateStr.split('-');
                 const bsYear = parseInt(parts[0]);
-                const bsMonth = parseInt(parts[1]) - 1; // nepali-date-converter uses 0-11 for months
+                const bsMonth = parseInt(parts[1]) - 1;
                 const bsDay = parseInt(parts[2]);
 
                 const nd = new NepaliDate(bsYear, bsMonth, bsDay);
@@ -218,24 +215,21 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 } else if (sectionKey === 'granterPersonalDetails') {
                     setLocalGranterInfo(prev => ({ ...prev, dob: adDateString }));
                 }
-            } catch (err) {
-                // Ignore invalid BS date conversion
-            }
+            } catch {}
         }
-    };
+    }, [handleInputChange]);
 
-    const handleADDateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, sectionKey: 'userInfo' | 'granterPersonalDetails') => {
+    const handleADDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, sectionKey: 'userInfo' | 'granterPersonalDetails') => {
         const value = e.target.value;
-        const adDateStr = value; // Expected YYYY-MM-DD
+        const adDateStr = value;
 
-        // Update AD date in state and clear error
         handleInputChange(e, sectionKey);
 
         if (/^\d{4}-\d{2}-\d{2}$/.test(adDateStr)) {
             try {
                 const parts = adDateStr.split('-');
                 const adYear = parseInt(parts[0]);
-                const adMonth = parseInt(parts[1]) - 1; // JS Date months are 0-11
+                const adMonth = parseInt(parts[1]) - 1;
                 const adDay = parseInt(parts[2]);
 
                 const adDateObj = new Date(adYear, adMonth, adDay);
@@ -251,13 +245,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 } else if (sectionKey === 'granterPersonalDetails') {
                     setLocalGranterInfo(prev => ({ ...prev, dob_bs: bsDateString }));
                 }
-            } catch (err) {
-                // Ignore invalid AD date conversion
-            }
+            } catch {}
         }
-    };
+    }, [handleInputChange]);
 
-    const handleFileDelete = (docType: string, isGranter = false) => {
+    const handleFileDelete = useCallback((docType: string, isGranter = false) => {
         setLocalFiles((prev) => {
             if (docType === 'bankStatement') {
                 return { ...prev, bankStatement: null };
@@ -274,26 +266,25 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 },
             };
         });
-    };
+    }, []);
 
-    const handleBankSelect = async (section: string, name: string, value: string) => {
+    const handleBankSelect = useCallback(async (section: string, name: string, value: string) => {
         setLocalBankInfo((prev) => ({
             ...prev,
             [name]: value,
         }));
-        setLocalInterestRate(banks.find((b) => b.name === value)?.rate || 10);
         const currentOption = emiContextInfo.hasCreditCard === 'yes' ? 'creditCard' : emiContextInfo.hasCreditCard === 'make' ? 'makeCard' : 'downPayment';
         const schema = getValidationSchema(section, currentOption);
         try {
             await schema.validateAt(name, { [name]: value });
-            setErrors((prev) => ({ ...prev, [name]: '' }));
+            clearFieldError(name);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Validation error';
             setErrors((prev) => ({ ...prev, [name]: errorMessage }));
         }
-    };
+    }, [clearFieldError, emiContextInfo.hasCreditCard, getValidationSchema]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, docType: string, isGranter = false) => {
+    const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, docType: string, isGranter = false) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -329,18 +320,17 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 };
             }
         });
-    };
+    }, []);
 
     const handleContinue = async () => {
         if (currentstep === 0) {
             const hasVariants = product && product.variants && product.variants.length > 0;
-            const uniqueColors = hasVariants ? Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean) : [];
-            if (uniqueColors.length > 1 && !localVariant) {
+            if (hasVariants && variantColors.length > 1 && !localVariant) {
                 toast.error('Please select a product color/variant before continuing.');
                 return;
             }
-            if (uniqueColors.length === 1 && !localVariant) {
-                setLocalVariant(uniqueColors[0]);
+            if (hasVariants && variantColors.length === 1 && !localVariant) {
+                setLocalVariant(variantColors[0]);
             }
             setcurrentstep(1);
             return;
@@ -354,6 +344,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                     downPayment: emiData.downPayment,
                     bankname: localBankInfo.bankname,
                     financeAmount: emiData.financeAmount,
+                };
+            } else if (currentSection.sectionKey === 'bankinfo' && selectedOption === 'creditCard') {
+                data = {
+                    ...localBankInfo,
+                    ...localCreditCardInfo,
                 };
             } else {
                 data = (currentSection.sectionKey === 'userInfo' ? localUserInfo :
@@ -397,7 +392,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 }
             }
 
-            // All options require signature in Step 3
             if (currentstep === 3 && !files.userSignature) {
                 fileErrors.push("Your Digital Signature");
             }
@@ -414,7 +408,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 return;
             }
 
-            // All good, proceed
             setcurrentstep((prev) => Math.min(prev + 1, 4));
         }
     };
@@ -449,7 +442,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         try {
             const formData = new FormData();
 
-            // Map application type to API expected strings
             const typeMapping: Record<string, string> = {
                 'creditCard': 'craditcard',
                 'downPayment': 'with_cittizen',
@@ -457,17 +449,18 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             };
 
             const apiType = typeMapping[selectedOption] || selectedOption;
+            const productImage = allVariantImages.find((img) => img.color === localVariant)?.url ?? product.thumb?.url ?? product.images?.[0]?.url ?? '';
 
-            // Common Product Data
             const productData = {
                 id: product.id,
                 varient: localVariant,
-                quntioy: 1, // Kept specific naming as requested
-                price: productPrice
+                quntioy: 1,
+                price: productPrice,
+                name: product.name,
+                image: productImage,
+                slug: product.slug,
             };
 
-
-            // 3. Append Common Files
             const files = localFiles;
 
             if (files?.citizenshipFile?.ppphoto) formData.append('citizenship_ppphoto', files.citizenshipFile.ppphoto);
@@ -477,14 +470,12 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             if (files?.bankStatement) formData.append('bank_statement', files.bankStatement);
             if (files?.userSignature) formData.append('user_signature', files.userSignature);
 
-            // 4. Append Type-Specific Files (Only for downPayment/with_cittizen)
             if (selectedOption === 'downPayment' && files?.granterDocument) {
                 if (files.granterDocument.ppphoto) formData.append('granter_ppphoto', files.granterDocument.ppphoto);
                 if (files.granterDocument.front) formData.append('granter_front', files.granterDocument.front);
                 if (files.granterDocument.back) formData.append('granter_back', files.granterDocument.back);
             }
 
-            // Append JSON parts to FormData
             formData.append('product', JSON.stringify(productData));
             formData.append('applicationtype', apiType);
             formData.append('formdata', JSON.stringify({
@@ -493,10 +484,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 emiCalculation: localEmiCalculation,
                 ...(selectedOption === 'creditCard' && { creditCard: localCreditCardInfo }),
                 ...(selectedOption === 'downPayment' && { granterInfo: localGranterInfo }),
-                // for makeCard, bankInfo is already included above
             }));
 
-            // Execute API Request
             const response = await EmiRequest(formData);
 
             if (response && (response.success || response.id || response.status)) {
@@ -516,8 +505,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
     const handleOptionSelect = (option: string) => {
         const hasVariants = product && product.variants && product.variants.length > 0;
-        const uniqueColors = hasVariants ? Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean) : [];
-        if (uniqueColors.length > 1 && !localVariant) {
+        if (hasVariants && variantColors.length > 1 && !localVariant) {
             toast.error('Please select a product color/variant before choosing an EMI option.');
             return;
         }
@@ -540,7 +528,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
     const emiData = useMemo(() => {
         if (!product) return { downPayment: 0, financeAmount: 0, tenure: 0, principal: 0, paymentpermonth: 0 };
-        // Always use resolved numeric price
         const result = calculateEMI({
             principal: productPrice,
             tenure: localEmiCalculation.duration,
@@ -557,9 +544,60 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     }, [product, productPrice, localEmiCalculation.duration, localEmiCalculation.downPayment, localBankInfo.bankname]);
 
     const bankOptions = useMemo(() => banks.map((b) => b.name), [banks]);
+    const allVariantImages = useMemo(() => {
+        const images: Array<{ url: string; thumb: string; isDefault: boolean; color?: string }> = [];
 
-    // ── Form Field Definitions ────────────────────────────────────────────────
-    const personalDetailsInfolist = [
+        if (product?.images) {
+            product.images.forEach((img) => {
+                images.push({
+                    url: img.url,
+                    thumb: img.url,
+                    isDefault: img.custom_properties?.is_default ?? false,
+                    color: img.color ?? img.custom_properties?.color ?? undefined,
+                });
+            });
+        }
+
+        if (product?.variants) {
+            product.variants.forEach((variant) => {
+                if (variant.images) {
+                    variant.images.forEach((img) => {
+                        images.push({
+                            url: img.url,
+                            thumb: img.thumb ?? img.url,
+                            isDefault: false,
+                            color: variant.attributes?.Color ?? variant.attributes?.color ?? variant.color,
+                        });
+                    });
+                }
+            });
+        }
+
+        const unique = new Map();
+        images.forEach((img) => {
+            if (!unique.has(img.url)) {
+                unique.set(img.url, img);
+            }
+        });
+
+        return Array.from(unique.values());
+    }, [product]);
+    const variantColors = useMemo(
+        () =>
+            Array.from(
+                new Set(
+                    (product?.variants ?? [])
+                        .map((variant) => variant.attributes?.Color ?? variant.attributes?.color ?? variant.color)
+                        .filter(Boolean)
+                )
+            ) as string[],
+        [product?.variants]
+    );
+    const handleSignatureChange = useCallback((file: File | null) => {
+        setLocalFiles((prev) => ({ ...prev, userSignature: file }));
+    }, []);
+
+    const personalDetailsInfolist = useMemo<FieldOption[]>(() => [
         {
             label: 'User Name',
             name: 'name',
@@ -656,9 +694,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             svgicon: <MapPin className="w-5 h-5" />,
             extenduserinfo: 'md:col-span-2',
         },
-    ];
+    ], [handleADDateChange, handleBSDateChange, handleInputChange, localUserInfo]);
 
-    const creditCardDetailsInfo = [
+    const creditCardDetailsInfo = useMemo<FieldOption[]>(() => [
         {
             label: 'Bank Name',
             name: 'bankname',
@@ -673,10 +711,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             label: 'Card Holder Name',
             name: 'cardHolderName',
             value: localCreditCardInfo.cardHolderName,
-            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-                setLocalCreditCardInfo(prev => ({ ...prev, cardHolderName: e.target.value }));
-                if (errors['cardHolderName']) setErrors(prev => ({ ...prev, cardHolderName: '' }));
-            },
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleCreditCardFieldChange('cardHolderName', e.target.value),
             placeholder: 'Card Holder Name',
             svgicon: <User className="w-5 h-5" />,
             extenduserinfo: '',
@@ -688,8 +723,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
                 let val = e.target.value.replace(/\D/g, '');
                 val = val.replace(/(.{4})/g, '$1 ').trim();
-                setLocalCreditCardInfo(prev => ({ ...prev, creditCardNumber: val.slice(0, 19) }));
-                if (errors['creditCardNumber']) setErrors(prev => ({ ...prev, creditCardNumber: '' }));
+                handleCreditCardFieldChange('creditCardNumber', val.slice(0, 19));
             },
             placeholder: 'XXXX XXXX XXXX XXXX',
             maxLength: 19,
@@ -705,8 +739,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 if (val.length >= 2) {
                     val = val.slice(0, 2) + '/' + val.slice(2, 4);
                 }
-                setLocalCreditCardInfo(prev => ({ ...prev, expiryDate: val.slice(0, 5) }));
-                if (errors['expiryDate']) setErrors(prev => ({ ...prev, expiryDate: '' }));
+                handleCreditCardFieldChange('expiryDate', val.slice(0, 5));
             },
             placeholder: 'MM/YY',
             maxLength: 5,
@@ -717,27 +750,23 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             label: 'Card Limit',
             name: 'cardLimit',
             value: localCreditCardInfo.cardLimit,
-            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-                setLocalCreditCardInfo(prev => ({ ...prev, cardLimit: e.target.value }));
-                if (errors['cardLimit']) setErrors(prev => ({ ...prev, cardLimit: '' }));
-            },
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleCreditCardFieldChange('cardLimit', e.target.value),
             placeholder: 'Card Limit',
             svgicon: <HandCoins className="w-5 h-5" />,
             extenduserinfo: '',
             type: 'number',
             step: "0.01"
         },
-    ];
+    ], [bankOptions, handleBankSelect, handleCreditCardFieldChange, localBankInfo.bankname, localCreditCardInfo]);
 
-
-    const bankdetailsInfo = [
+    const bankdetailsInfo = useMemo<FieldOption[]>(() => [
         { label: 'Bank Name', name: 'bankname', value: localBankInfo.bankname, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBankSelect('bankinfo', 'bankname', e.target.value), type: 'select', options: bankOptions, svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Account Number', name: 'accountNumber', value: localBankInfo.accountNumber, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter account number', svgicon: <Hash className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Bank Branch', name: 'bankbranch', value: localBankInfo.bankbranch, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter Bank Branch', svgicon: <Building2 className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Salary Amount', name: 'salaryAmount', value: localBankInfo.salaryAmount, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'bankinfo'), placeholder: 'Enter salary amount', svgicon: <DollarSign className="w-5 h-5" />, extenduserinfo: '', type: 'number' },
-    ];
+    ], [bankOptions, handleBankSelect, handleInputChange, localBankInfo]);
 
-    const granterPersonalDetailsList = [
+    const granterPersonalDetailsList = useMemo<FieldOption[]>(() => [
         { label: 'Guarantors Full Name', name: 'name', value: localGranterInfo.name, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Guarantor name', svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Phone Number', name: 'phone', value: localGranterInfo.phone, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Phone Number', svgicon: <Phone className="w-5 h-5" />, extenduserinfo: '', type: 'tel', maxLength: 10 },
         { label: 'Gender', name: 'gender', value: localGranterInfo.gender, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), type: 'select', options: ['Male', 'Female'], svgicon: <User className="w-5 h-5" />, extenduserinfo: '' },
@@ -747,9 +776,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         { label: 'Date of Birth (BS)', name: 'dob_bs', value: localGranterInfo.dob_bs, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleBSDateChange(e, 'granterPersonalDetails'), placeholder: 'Select BS date', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Date of Birth (AD)', name: 'dob', value: localGranterInfo.dob, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleADDateChange(e, 'granterPersonalDetails'), type: 'date', svgicon: <Calendar className="w-5 h-5" />, extenduserinfo: '' },
         { label: 'Address', name: 'address', value: localGranterInfo.address, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => handleInputChange(e, 'granterPersonalDetails'), placeholder: 'Enter Address', maxLength: 100, svgicon: <MapPin className="w-5 h-5" />, extenduserinfo: 'md:col-span-2' },
-    ];
+    ], [handleADDateChange, handleBSDateChange, handleInputChange, localGranterInfo]);
 
-    const EmiConditionFields = [
+    const EmiConditionFields = useMemo<FieldOption[]>(() => [
         {
             label: 'Down Payment (Rs.)',
             name: 'downPayment',
@@ -775,9 +804,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             disabled: true,
             placeholder: 'Calculated automatically',
         },
-    ];
+    ], [bankOptions, emiData.downPayment, emiData.financeAmount, handleBankSelect, handleInputChange, localBankInfo.bankname, localEmiCalculation.downPayment, localEmiCalculation.duration, productPrice, tumerOptions]);
 
-    const EmiConditionFieldCredit = [
+    const EmiConditionFieldCredit = useMemo<FieldOption[]>(() => [
         {
             label: 'Down Payment (Rs.)',
             name: 'downPayment',
@@ -802,11 +831,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             disabled: true,
             placeholder: 'Calculated automatically',
         },
-    ];
+    ], [emiData.financeAmount, handleInputChange, localEmiCalculation.downPayment, localEmiCalculation.duration, tumerOptions]);
 
-
-
-    const formSections = {
+    const formSections = useMemo(() => ({
         creditCard: [
             { title: 'Credit Card Details', sectionKey: 'bankinfo', step: 1, fields: creditCardDetailsInfo },
             {
@@ -821,7 +848,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit, additionalContent: (
                     <div className="mt-6">
                         <SignaturePad
-                            onSignatureChange={(file) => setLocalFiles(prev => ({ ...prev, userSignature: file }))}
+                            onSignatureChange={handleSignatureChange}
                             existingSignature={previews['userSignature']}
                         />
                     </div>
@@ -846,7 +873,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFields, additionalContent: (
                     <div className="mt-6">
                         <SignaturePad
-                            onSignatureChange={(file) => setLocalFiles(prev => ({ ...prev, userSignature: file }))}
+                            onSignatureChange={handleSignatureChange}
                             existingSignature={previews['userSignature']}
                         />
                     </div>
@@ -874,16 +901,17 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 title: 'EMI Conditions', sectionKey: 'emiCalculation', step: 3, fields: EmiConditionFieldCredit, additionalContent: (
                     <div className="mt-6">
                         <SignaturePad
-                            onSignatureChange={(file) => setLocalFiles(prev => ({ ...prev, userSignature: file }))}
+                            onSignatureChange={handleSignatureChange}
                             existingSignature={previews['userSignature']}
                         />
                     </div>
                 )
             },
         ]
-    };
+    }), [EmiConditionFieldCredit, EmiConditionFields, bankdetailsInfo, creditCardDetailsInfo, granterPersonalDetailsList, handleFileChange, handleFileDelete, handleSignatureChange, localFiles, personalDetailsInfolist, previews]);
 
     const currentFormSection = currentstep > 0 && currentstep < 4 ? formSections[selectedOption as keyof typeof formSections]?.find((section) => section.step === currentstep) : null;
+    const faqParams = useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), []);
 
     if (!product) {
         return (
@@ -897,30 +925,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         );
     }
 
-
-
-    // --- RENDERING ---
-    // Breadcrumbs Navigation
-    const breadcrumbs = (
-        <nav className="flex items-center gap-1.5 text-sm mb-4 overflow-x-auto pb-1 scrollbar-hide">
-            <Button variant="link" className="p-0 h-auto text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] text-sm font-medium" onClick={() => router.push('/')}>
-                Home
-            </Button>
-            <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-            <Button variant="link" className="p-0 h-auto text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] text-sm font-medium" onClick={() => router.push(`/product-details/${product?.slug}`)}>
-                {product?.name?.substring(0, 30)}...
-            </Button>
-            <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-            <span className="text-slate-800 font-semibold text-sm">
-                Apply EMI
-            </span>
-        </nav>
-    );
-
     return (
         <div className="bg-gray-50 min-h-screen py-2 sm:py-4">
             <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-5">
-                {/* Breadcrumb */}
                 <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
                     <Button variant="link" className="p-0 h-auto text-(--colour-fsP2) hover:underline text-xs font-medium" onClick={() => router.push('/')}>
                         Home
@@ -932,20 +939,13 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                     <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
                     <span className="text-gray-700 font-semibold whitespace-nowrap">Apply EMI</span>
                 </nav>
-
-
-                {/* Progress Bar */}
                 <div className="mb-3">
                     <ProgressBar currentstep={currentstep} onStepClick={setcurrentstep} />
                 </div>
 
-                {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mt-2">
-                    {/* Left Column - Steps */}
                     <div className="lg:col-span-2 space-y-3">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-
-                            {/* Step Header */}
                             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-gray-900">
                                     {currentstep === 0 && 'Choose EMI Method'}
@@ -958,11 +958,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                             </div>
 
                             <div className="p-3 sm:p-4">
-                                {/* Step 0: Option Selection */}
                                 {currentstep === 0 && (
                                     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-
-                                        {/* Variant Selection if Variants exist */}
                                         {product && product.variants && product.variants.length > 0 && (
                                             <div className="space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -974,10 +971,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                     )}
                                                 </div>
                                                 <div className="flex flex-wrap gap-3">
-                                                    {Array.from(new Set(product.variants.map(v => v.attributes?.Color))).filter(Boolean).map((color: string) => {
+                                                    {variantColors.map((color) => {
                                                         const isSelected = localVariant === color;
-                                                        const variantImgRecord = product.images?.find(img => img.color === color || img.custom_properties?.color === color);
-                                                        const variantImg = variantImgRecord?.url || variantImgRecord?.thumb || product.thumb?.url || product.images?.[0]?.url;
+                                                        const variantImg = allVariantImages.find((img) => img.color === color)?.url ?? product.thumb?.url ?? product.images?.[0]?.url;
 
                                                         return (
                                                             <button
@@ -1005,13 +1001,11 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                             </div>
                                         )}
 
-                                        {/* EMI Method Selection Cards */}
                                         <div className="space-y-4">
                                             {!showPaymentSubOptions ? (
                                                 <>
                                                     <h3 className="text-gray-800 font-bold">Select EMI Method</h3>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                        {/* Credit Card */}
                                                         <div
                                                             onClick={() => handleOptionSelect('creditCard')}
                                                             className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'creditCard'
@@ -1032,7 +1026,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                             )}
                                                         </div>
 
-                                                        {/* With Citizenship */}
                                                         <div
                                                             onClick={() => setShowPaymentSubOptions(true)}
                                                             className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'downPayment' || selectedOption === 'makeCard'
@@ -1064,7 +1057,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                        {/* Apply for Credit Card */}
                                                         <div
                                                             onClick={() => handleOptionSelect('makeCard')}
                                                             className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'makeCard'
@@ -1077,13 +1069,12 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                                 <CreditCard className="w-5 h-5" />
                                                             </div>
                                                             <h3 className="font-bold text-gray-900">Apply for Credit Card</h3>
-                                                            <p className="text-xs text-gray-600 mt-1">Don't have a credit card? Apply for one now.</p>
+                                                            <p className="text-xs text-gray-600 mt-1">Don&apos;t have a credit card? Apply for one now.</p>
                                                             {selectedOption === 'makeCard' && (
                                                                 <div className="absolute top-3 right-3 text-orange-500"><CheckCircle2 size={20} /></div>
                                                             )}
                                                         </div>
 
-                                                        {/* 40% Down Payment */}
                                                         <div
                                                             onClick={() => handleOptionSelect('downPayment')}
                                                             className={`cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${selectedOption === 'downPayment'
@@ -1108,10 +1099,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                     </div>
                                 )}
 
-                                {/* Form Sections: Steps 1, 2, 3 */}
                                 {currentstep > 0 && currentstep < 4 && currentFormSection && (
                                     <div className="animate-in slide-in-from-right-4 duration-300 space-y-4">
-
                                         {currentFormSection.sectionKey === 'bankinfo' && selectedOption === 'creditCard' ? (
                                             <CreditCardform
                                                 cardinfofield={{ fields: currentFormSection.fields }}
@@ -1119,10 +1108,10 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                             />
                                         ) : (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1">
-                                                {currentFormSection.fields.map((field, index) => (
+                                                {currentFormSection.fields.map((field) => (
                                                     (field.name === 'dob_bs' || field.name === 'dob') ? (
                                                         <NepaliDatePicker
-                                                            key={index}
+                                                            key={field.name}
                                                             label={field.label}
                                                             name={field.name}
                                                             value={String(field.value ?? '')}
@@ -1131,16 +1120,14 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                                             mode={field.name === 'dob' ? 'AD' : 'BS'}
                                                         />
                                                     ) : (
-                                                        <FormField key={index} field={field} error={errors[field.name]} />
+                                                        <FormField key={field.name} field={field} error={errors[field.name]} />
                                                     )
                                                 ))}
                                             </div>
                                         )}
 
-                                        {/* Additional Content (e.g. Document Uploads, Signatures) */}
                                         {currentFormSection.additionalContent}
 
-                                        {/* Navigation Buttons */}
                                         <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-100">
                                             <Button
                                                 variant="ghost"
@@ -1170,7 +1157,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                                     </div>
                                 )}
 
-                                {/* Step 4: Review */}
                                 {currentstep === 4 && (
                                     <div className="animate-in slide-in-from-right-4 duration-300">
                                         <RenderReview
@@ -1205,7 +1191,6 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                         </div>
                     </div>
 
-                    {/* Right Column - Product Summary */}
                     <div className="lg:col-span-1">
                         <EmiProductDetails
                             emiData={emiData}
@@ -1215,9 +1200,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                     </div>
                 </div>
 
-                {/* FAQ Section */}
                 <hr className="border-t border-gray-200 mt-8" />
-                <EmiFaq params={useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])} />
+                <EmiFaq params={faqParams} />
             </div>
         </div>
     );

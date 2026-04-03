@@ -1,4 +1,4 @@
-import { apiPrivate } from "./client";
+import { apiPrivate } from "../ServiceHelper/index";
 
 export const WishlistService = {
     async getWishlist() {

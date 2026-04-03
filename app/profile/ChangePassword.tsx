@@ -1,260 +1,178 @@
-import { Button } from '@/components/ui/button'
-import { Eye, EyeOff, Loader2, Send, ThumbsUp, Trash, Shield, Lock, AlertCircle, ChevronRight, ShieldCheck } from 'lucide-react'
-import React, { useState } from 'react'
+'use client';
+
+import React, { useState } from 'react';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+    Eye, EyeOff, Loader2, Shield, Lock,
+    ShieldCheck, KeyRound, ShieldAlert, CheckCircle2, AlertCircle
+} from 'lucide-react';
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription,
+    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ProfileService } from '../api/services/profile.service';
 
+const FIELDS = [
+    { name: 'current_password', label: 'Current Password', icon: Lock },
+    { name: 'new_password1', label: 'New Password', icon: KeyRound },
+    { name: 'new_password2', label: 'Confirm New Password', icon: ShieldCheck },
+] as const;
 
+type FieldName = typeof FIELDS[number]['name'];
+
+const INIT = { current_password: '', new_password1: '', new_password2: '' };
+const INIT_ERR = { current_password: '', new_password1: '', new_password2: '', general: '' };
 
 function ChangePassword() {
-    const initialFormValues = {
-        current_password: '',
-        new_password1: '',
-        new_password2: '',
-    };
+    const [values, setValues] = useState(INIT);
+    const [errors, setErrors] = useState(INIT_ERR);
+    const [show, setShow] = useState<Record<FieldName, boolean>>({ current_password: false, new_password1: false, new_password2: false });
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
-    const [formValues, setFormValues] = useState(initialFormValues);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isFormVisible, setIsFormVisible] = useState(false); // Default hidden
-
-    const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({
-        current_password: false,
-        new_password1: false,
-        new_password2: false
-    });
-
-    const [errors, setErrors] = useState<Record<string, string>>({
-        current_password: '',
-        new_password1: '',
-        new_password2: '',
-        general: ''
-    });
-
-    const inputFields = [
-        { name: 'current_password', label: 'Current Password', id: 1 },
-        { name: 'new_password1', label: 'New Password', id: 2 },
-        { name: 'new_password2', label: 'Confirm New Password', id: 3 },
-    ];
-
-    const handleTogglePassword = (field: string) => {
-        setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormValues(prev => ({ ...prev, [name]: value }));
-        // Clear specific error when user types
-        if (errors[name as keyof typeof errors]) {
-            setErrors(prev => ({ ...prev, [name]: '', general: '' }));
-        }
+        setValues(p => ({ ...p, [name]: value }));
+        if (errors[name as FieldName]) setErrors(p => ({ ...p, [name]: '', general: '' }));
     };
 
-    const validateForm = () => {
-        const newErrors = { current_password: '', new_password1: '', new_password2: '', general: '' };
-        let isValid = true;
-
-        if (!formValues.current_password) {
-            newErrors.current_password = 'Current password is required';
-            isValid = false;
-        }
-        if (formValues.new_password1.length < 6) {
-            newErrors.new_password1 = 'Password must be at least 6 characters';
-            isValid = false;
-        }
-        if (formValues.new_password1 !== formValues.new_password2) {
-            newErrors.new_password2 = 'Passwords do not match';
-            isValid = false;
-        }
-
-        setErrors(newErrors);
-        return isValid;
+    const validate = () => {
+        const e = { ...INIT_ERR };
+        let ok = true;
+        if (!values.current_password) { e.current_password = 'Required'; ok = false; }
+        if (values.new_password1.length < 8) { e.new_password1 = 'Min 8 characters'; ok = false; }
+        if (values.new_password1 !== values.new_password2) { e.new_password2 = 'Does not match'; ok = false; }
+        setErrors(e);
+        return ok;
     };
 
-    const handleSubmit = async () => {
-        setIsSubmitting(true);
-        try {
-            // Prepare payload
-            const payload = {
-                current_password: formValues.current_password,
-                new_password: formValues.new_password1,
-                new_password_confirmation: formValues.new_password2
-
-            };
-
-            await ProfileService.ChangePassword(payload);
-
-            // Success reset
-            setFormValues(initialFormValues);
-            setIsConfirmOpen(false);
-            setIsFormVisible(false); // Hide form again on success
-            // Optionally show success toast
-            // toast.success("Password updated successfully!"); 
-        } catch (error: any) {
-            console.error('Error changing password:', error);
-            setErrors(prev => ({
-                ...prev,
-                general: error?.response?.data?.message || 'Failed to change password. Please try again.'
-            }));
-        } finally {
-            setIsSubmitting(false);
-        }
+    const handleSubmit = () => {
+        setSubmitting(true);
+        ProfileService.ChangePassword({
+            current_password: values.current_password,
+            new_password: values.new_password1,
+            new_password_confirmation: values.new_password2,
+        })
+            .then(() => { setValues(INIT); setConfirmOpen(false); })
+            .catch((err: any) => setErrors(p => ({ ...p, general: err?.response?.data?.message ?? 'Failed to update. Check your current password.' })))
+            .finally(() => setSubmitting(false));
     };
 
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-end border-b border-gray-100 pb-6 mb-8">
+            <div className="flex items-center gap-2 pb-4 border-b border-gray-100">
+                <Shield className="w-4 h-4 text-(--colour-fsP2)" />
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Sign-in & Security</h2>
-                    <p className="text-gray-500 mt-1">Manage your password and account security settings.</p>
+                    <h2 className="text-lg font-bold text-slate-900">Security</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Manage your password and account access.</p>
                 </div>
             </div>
 
-            <div className="space-y-6">
-
-                {/* Security Card */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row gap-6 md:items-center justify-between shadow-sm">
-                    <div className="flex items-start gap-4">
-                        <div className="bg-blue-50 p-3 rounded-full text-blue-600">
-                            <Lock className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900">Password</h3>
-                            <p className="text-gray-500 text-sm mt-1 max-w-sm">
-                                Change your password periodically to keep your account secure. Use a strong password with minimal 6 characters.
-                            </p>
-                        </div>
-                    </div>
-
-                    {!isFormVisible && (
-                        <button
-                            onClick={() => setIsFormVisible(true)}
-                            className="flex-shrink-0 flex items-center gap-2 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all shadow-lg hover:shadow-gray-200"
-                        >
-                            <Shield className="w-4 h-4" />
-                            Change Password
-                        </button>
-                    )}
-                </div>
-
-                {/* Hidden Form */}
-                {isFormVisible && (
-                    <div className="bg-gray-50/50 rounded-3xl border border-gray-200 p-6 md:p-10 animate-in slide-in-from-top-4 fade-in duration-300">
-                        <div className="max-w-md mx-auto">
-                            <div className="mb-6 text-center">
-                                <h3 className="text-xl font-bold text-gray-900">Update Password</h3>
-                                <p className="text-sm text-gray-500">Enter your current password and a new secure password.</p>
-                            </div>
-
-                            <form className="space-y-5">
-                                {inputFields.map((field) => (
-                                    <div key={field.id} className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700 block">
-                                            {field.label}
-                                        </label>
-                                        <div className="relative group">
-                                            <input
-                                                type={showPasswords[field.name as keyof typeof showPasswords] ? 'text' : 'password'}
-                                                name={field.name}
-                                                value={formValues[field.name as keyof typeof formValues]}
-                                                onChange={handleInputChange}
-                                                className={`w-full px-4 py-3 rounded-xl border-2 ${errors[field.name as keyof typeof errors] ? 'border-red-300 focus:border-red-400 bg-red-50/20' : 'border-gray-200 focus:border-blue-500'} focus:outline-none transition-all bg-white shadow-sm`}
-                                                placeholder={`Enter ${field.label.toLowerCase()}`}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleTogglePassword(field.name)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1"
-                                            >
-                                                {showPasswords[field.name as keyof typeof showPasswords] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                            </button>
-                                        </div>
-                                        {errors[field.name as keyof typeof errors] && (
-                                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                                                <AlertCircle className="w-3 h-3" />
-                                                {errors[field.name as keyof typeof errors]}
-                                            </p>
-                                        )}
-                                    </div>
-                                ))}
-
-                                {errors.general && (
-                                    <div className="p-3 rounded-xl bg-red-50 text-red-600 text-sm text-center border border-red-100 mb-4">
-                                        {errors.general}
-                                    </div>
-                                )}
-
-                                <div className="flex gap-4 pt-4">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => {
-                                            setIsFormVisible(false);
-                                            setFormValues(initialFormValues);
-                                            setErrors({ current_password: '', new_password1: '', new_password2: '', general: '' });
-                                        }}
-                                        className="flex-1 rounded-xl h-12 border-gray-200"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        onClick={() => validateForm() && setIsConfirmOpen(true)}
-                                        className="flex-1 rounded-xl h-12 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200"
-                                    >
-                                        Update Password
-                                    </Button>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10">
+                {/* Form */}
+                <div className="lg:col-span-3">
+                    <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); if (validate()) setConfirmOpen(true); }}>
+                        {FIELDS.map(field => (
+                            <div key={field.name}>
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">{field.label}</label>
+                                    {errors[field.name] && (
+                                        <span className="text-[10px] font-semibold text-red-500">{errors[field.name]}</span>
+                                    )}
                                 </div>
-                            </form>
+                                <div className="relative">
+                                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${errors[field.name] ? 'text-red-400' : 'text-slate-500'}`}>
+                                        <field.icon className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type={show[field.name] ? 'text' : 'password'}
+                                        name={field.name}
+                                        value={values[field.name]}
+                                        onChange={handleChange}
+                                        placeholder="••••••••"
+                                        className={`w-full h-10 pl-9 pr-10 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:bg-white transition-colors ${errors[field.name] ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-(--colour-fsP2)'}`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShow(p => ({ ...p, [field.name]: !p[field.name] }))}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                                    >
+                                        {show[field.name] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+
+                        {errors.general && (
+                            <div className="flex items-center gap-2.5 p-3 rounded-lg bg-red-50 border border-red-100 text-xs font-semibold text-red-600">
+                                <ShieldAlert className="w-4 h-4 shrink-0" />
+                                {errors.general}
+                            </div>
+                        )}
+
+                        <div className="pt-1">
+                            <button
+                                type="submit"
+                                className="w-full h-10 bg-(--colour-fsP2) text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
+                            >
+                                Update Password
+                            </button>
                         </div>
+                    </form>
+                </div>
+
+                {/* Tips sidebar */}
+                <div className="lg:col-span-2 space-y-4">
+                    <div className="p-4 rounded-xl border border-gray-200 bg-white">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Password Tips
+                        </p>
+                        <ul className="space-y-2">
+                            {['Mix letters, numbers & symbols', 'At least 8 characters long', 'Avoid reusing old passwords'].map((tip, i) => (
+                                <li key={i} className="flex items-center gap-2 text-xs text-slate-600">
+                                    <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+                                    {tip}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                )}
+
+            
+                </div>
             </div>
 
-            {/* Confirmation Dialog */}
-            <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-                <AlertDialogContent className="border border-gray-200 rounded-3xl overflow-hidden bg-white shadow-xl max-w-sm">
-                    <AlertDialogHeader className="text-center pt-8">
-                        <div className="mx-auto w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-4">
-                            <ShieldCheck className="w-6 h-6" />
+            {/* Confirm Dialog */}
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <AlertDialogContent className="rounded-2xl border border-gray-200 shadow-lg p-0 overflow-hidden max-w-sm mx-auto">
+                    <AlertDialogHeader className="px-6 py-5 border-b border-gray-100">
+                        <div className="flex items-center gap-2.5">
+                            <ShieldCheck className="w-4 h-4 text-(--colour-fsP2) shrink-0" />
+                            <AlertDialogTitle className="text-sm font-bold text-slate-900">Confirm Password Change</AlertDialogTitle>
                         </div>
-                        <AlertDialogTitle className="text-gray-900 text-xl">Confirm Update?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-gray-500 px-4">
-                            Your password will be changed immediately. You'll need to use the new password for next login.
+                        <AlertDialogDescription className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                            You will need this new password for all future logins. Make sure it is saved somewhere safe.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="p-6 flex flex-row gap-3 justify-center">
+                    <AlertDialogFooter className="px-6 py-4 bg-gray-50 flex gap-2 sm:flex-row flex-col">
                         <AlertDialogCancel
-                            disabled={isSubmitting}
-                            className="flex-1 rounded-xl border-gray-200 hover:bg-gray-50"
+                            disabled={submitting}
+                            className="flex-1 h-9 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-slate-700 hover:bg-gray-50 transition-colors"
                         >
-                            Cancel
+                            Go Back
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleSubmit();
-                            }}
-                            disabled={isSubmitting}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+                            onClick={e => { e.preventDefault(); handleSubmit(); }}
+                            disabled={submitting}
+                            className="flex-1 h-9 rounded-lg bg-(--colour-fsP2) text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
                         >
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm"}
+                            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Change'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
         </div>
-    )
+    );
 }
 
 export default ChangePassword;

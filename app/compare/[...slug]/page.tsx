@@ -1,57 +1,49 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useParams } from 'next/navigation';
-import useSWR from 'swr';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Check, X, ArrowLeft } from 'lucide-react';
-
-import type { ProductDetails } from '../../types/ProductDetailsTypes';
-
-import { fetchSearchProducts } from '@/app/compare/actions';
-import { useCartStore } from '@/app/context/CartContext';
-import { useShallow } from 'zustand/react/shallow';
-
+import { Check, X, Loader2, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import CustomIconImg from '@/app/CommonVue/CustomIconImg';
+import type { ProductData } from '../../types/ProductDetailsTypes';
+import { getProductBySlug } from '@/app/api/services/product.service';
 
 function ComparisonPageContent() {
     const params = useParams();
-    const slug = params.slug as string[]; // e.g., ['iphone-14-vs-samsung-s23']
-    const { addToCompare } = useCartStore(useShallow    (state => ({
-        addToCompare: state.addToCompare
-    })));
+    const slug = params.slug as string[];
 
-    const [products, setProducts] = useState<ProductDetails[]>([]);
+    const [products, setProducts] = useState<ProductData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
 
     useEffect(() => {
         const fetchProducts = async () => {
-            if (!slug || slug.length === 0) return;
+            if (!slug || slug.length === 0) {
+                setLoading(false);
+                setNotFound(true);
+                return;
+            }
 
             const rawSlug = Array.isArray(slug) ? slug.join('/') : slug;
-            const productSlugs = rawSlug.split('-vs-');
+            const productSlugs = rawSlug.split('-vs-').map(s => s.trim()).filter(Boolean);
 
             if (productSlugs.length === 0) {
                 setLoading(false);
+                setNotFound(true);
                 return;
             }
 
             try {
-                const fetchedProducts = await Promise.all(
-                    productSlugs.map(async (s) => {
-                        if (!isNaN(Number(s))) {
-                            const res = await fetchSearchProducts({ search: s });
-                            return res.data?.[0] || null;
-                        }
-
-                        const res = await fetchSearchProducts({ search: s.replace(/-/g, ' ') });
-                        return res.data?.[0] || null;
-                    })
+                const fetched = await Promise.all(
+                    productSlugs.map(s => getProductBySlug(s).catch(() => null))
                 );
-
-                setProducts(fetchedProducts.filter(p => p !== null) as ProductDetails[]);
-            } catch (error) {
-                console.error("Failed to fetch comparison products", error);
+                const valid = fetched.filter((p): p is ProductData => !!p);
+                if (valid.length === 0) setNotFound(true);
+                setProducts(valid);
+            } catch {
+                setNotFound(true);
             } finally {
                 setLoading(false);
             }
@@ -60,99 +52,164 @@ function ComparisonPageContent() {
         fetchProducts();
     }, [slug]);
 
-
-    if (loading) return <div className="min-h-screen flex items-center justify-center">Loading comparison...</div>;
-
-    if (products.length === 0) {
+    if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-4">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">No products found to compare</h1>
-                <Link href="/blog" className="text-blue-600 hover:underline">Back to Blog</Link>
+            <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-(--colour-fsP2)" />
+                <p className="text-gray-500 text-sm">Loading comparison...</p>
             </div>
         );
     }
 
+    if (notFound || products.length === 0) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
+                <p className="text-gray-500 text-sm">No products found to compare.</p>
+                <Link href="/compare" className="text-sm text-(--colour-fsP2) hover:underline">
+                    Go to Compare
+                </Link>
+            </div>
+        );
+    }
+
+    const allKeys = new Set<string>();
+    products.forEach(p => {
+        if ((p as any).attributes?.product_attributes) {
+            Object.keys((p as any).attributes.product_attributes).forEach(k => allKeys.add(k));
+        }
+    });
+    const specKeys = Array.from(allKeys).sort();
+
     return (
-        <div className="min-h-screen bg-white pb-20 pt-8">
-            <div className="container mx-auto px-4 max-w-[1600px]">
-                <div className="mb-8 flex items-center gap-4">
-                    <Link href="/blog" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        <ArrowLeft className="w-6 h-6 text-gray-600" />
-                    </Link>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 font-heading">
-                        Product Comparison
-                    </h1>
+        <main className="min-h-screen bg-white pb-20">
+            <div className="container mx-auto px-4 max-w-5xl">
+
+                <div className="py-4 flex items-center gap-1.5 text-sm border-b border-gray-100 mb-6">
+                    <Link href="/" className="text-(--colour-fsP2) hover:underline font-medium">Home</Link>
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                    <Link href="/compare" className="text-(--colour-fsP2) hover:underline font-medium">Compare</Link>
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-700 font-semibold truncate">
+                        {products.map(p => p.name).join(' vs ')}
+                    </span>
                 </div>
 
-                <div className="overflow-x-auto pb-8">
-                    <table className="w-full text-left border-collapse min-w-[800px]">
+                <div className="overflow-x-auto pb-6">
+                    <table className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden min-w-125">
                         <thead>
                             <tr>
-                                <th className="p-4 border-b-2 border-gray-100 w-48 bg-white sticky left-0 z-10">Specs</th>
+                                <th className="px-3 py-3 border-b border-gray-200 bg-gray-50 text-left w-40">
+                                    <span className="text-[11px] font-bold text-(--colour-fsP2) uppercase tracking-wide">Product</span>
+                                </th>
                                 {products.map(p => (
-                                    <th key={p.id} className="p-4 border-b-2 border-gray-100 min-w-[200px] align-top">
-                                        <div className="flex flex-col items-center text-center">
-                                            <div className="relative w-32 h-32 mb-4 bg-gray-50 rounded-xl overflow-hidden">
-                                                <Image src={p.image?.full || ''} alt={p.name} fill sizes="128px" className="object-contain p-2" />
+                                    <th key={p.id} className="p-4 border-b border-l border-gray-200 bg-white align-top">
+                                        <div className="flex flex-col items-center text-center gap-2">
+                                            <div className="relative w-28 h-28 bg-gray-50 rounded border border-gray-100">
+                                                <Image
+                                                    src={(p as any).thumb?.url ?? (p as any).image?.full ?? '/placeholder.png'}
+                                                    alt={p.name}
+                                                    fill
+                                                    sizes="112px"
+                                                    className="object-contain p-2"
+                                                />
                                             </div>
-                                            <h3 className="font-bold text-gray-900 leading-tight mb-2">{p.name}</h3>
-                                            <p className="text-blue-600 font-bold mb-4">Rs. {p.discounted_price.toLocaleString()}</p>
-                                            <button
-                                                className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition"
-                                                onClick={() => addToCompare(p as any)}
-                                            >
-                                                Add to Cart
-                                            </button>
+                                            <h3 className="text-[13px] font-semibold text-gray-800 leading-snug line-clamp-2">
+                                                <Link href={`/product-details/${p.slug}`} className="hover:text-(--colour-fsP2)">
+                                                    {p.name}
+                                                </Link>
+                                            </h3>
+                                            {p.discounted_price && (
+                                                <p className="text-sm font-bold text-(--colour-fsP2)">
+                                                    Rs. {p.discounted_price.toLocaleString()}
+                                                </p>
+                                            )}
                                         </div>
                                     </th>
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {/* General Specs */}
-                            <tr className="bg-gray-50/50"><td colSpan={products.length + 1} className="p-3 font-bold text-gray-500 text-xs uppercase tracking-wider sticky left-0">General</td></tr>
-                            <tr>
-                                <td className="p-4 font-semibold text-gray-700 sticky left-0 bg-white">Brand</td>
-                                {products.map(p => <td key={p.id} className="p-4 text-gray-600">{p.brand?.name}</td>)}
+                        <tbody>
+                            {/* Brand */}
+                            <tr className="border-b border-gray-100">
+                                <td className="px-3 py-3 bg-gray-50 border-r border-gray-100 align-middle">
+                                    <div className="flex items-center gap-1.5">
+                                        <CustomIconImg iconKey="brand" size={14} className="text-(--colour-fsP2) shrink-0" color="currentColor" />
+                                        <span className="text-[11px] font-bold text-(--colour-fsP2) uppercase tracking-wide">Brand</span>
+                                    </div>
+                                </td>
+                                {products.map(p => (
+                                    <td key={p.id} className="px-4 py-3 text-sm text-gray-800 border-l border-gray-100">
+                                        {p.brand?.name ?? '—'}
+                                    </td>
+                                ))}
                             </tr>
 
-                            {/* Stock Status */}
-                            <tr>
-                                <td className="p-4 font-semibold text-gray-700 sticky left-0 bg-white">Stock Status</td>
+                            {/* Stock */}
+                            <tr className="border-b border-gray-100">
+                                <td className="px-3 py-3 bg-gray-50 border-r border-gray-100 align-middle">
+                                    <div className="flex items-center gap-1.5">
+                                        <CustomIconImg iconKey="stock" size={14} className="text-(--colour-fsP2) shrink-0" color="currentColor" />
+                                        <span className="text-[11px] font-bold text-(--colour-fsP2) uppercase tracking-wide">Stock</span>
+                                    </div>
+                                </td>
                                 {products.map(p => (
-                                    <td key={p.id} className="p-4 text-gray-600">
+                                    <td key={p.id} className="px-4 py-3 text-sm border-l border-gray-100">
                                         {p.quantity > 0
-                                            ? <span className="flex items-center gap-2 text-green-600 font-bold"><Check className="w-4 h-4" /> In Stock</span>
-                                            : <span className="flex items-center gap-2 text-red-500 font-bold"><X className="w-4 h-4" /> Out of Stock</span>
+                                            ? <span className="flex items-center gap-1 text-green-600 font-medium"><Check className="w-3.5 h-3.5" /> In Stock</span>
+                                            : <span className="flex items-center gap-1 text-red-500 font-medium"><X className="w-3.5 h-3.5" /> Out of Stock</span>
                                         }
                                     </td>
                                 ))}
                             </tr>
 
-                            {/* Summary */}
-                            <tr>
-                                <td className="p-4 font-semibold text-gray-700 sticky left-0 bg-white align-top">Summary</td>
-                                {products.map(p => (
-                                    <td key={p.id} className="p-4 text-gray-600 text-sm leading-relaxed min-w-[250px]">
-                                        <div dangerouslySetInnerHTML={{ __html: typeof p.description === 'string' ? (p.description as string).substring(0, 150) + '...' : ((p.description as any)?.overview?.substring(0, 150) + '...' || '') }} />
-                                    </td>
-                                ))}
-                            </tr>
-
-
+                            {/* Dynamic Specs */}
+                            {specKeys.map(key => {
+                                const vals = products.map(p =>
+                                    (p as any).attributes?.product_attributes?.[key]?.trim().toLowerCase() ?? ''
+                                );
+                                return (
+                                    <tr key={key} className="border-b border-gray-100 last:border-b-0">
+                                        <td className="px-3 py-3 bg-gray-50 border-r border-gray-100 align-middle">
+                                            <div className="flex items-center gap-1.5">
+                                                <CustomIconImg iconKey={key} size={14} className="text-(--colour-fsP2) shrink-0" color="currentColor" />
+                                                <span className="text-[11px] font-bold text-(--colour-fsP2) uppercase tracking-wide">{key}</span>
+                                            </div>
+                                        </td>
+                                        {products.map((p, colIdx) => {
+                                            const value = p.attributes?.[key];
+                                            const v = vals[colIdx];
+                                            const highlight = !!v && v !== '-' && vals.filter(x => x === v).length > 1;
+                                            return (
+                                                <td
+                                                    key={p.id}
+                                                    className={cn(
+                                                        "px-4 py-3 text-sm border-l border-gray-100 leading-snug",
+                                                        highlight ? "text-(--colour-fsP2) font-semibold" : "text-gray-800"
+                                                    )}
+                                                >
+                                                    {value ?? '—'}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }
 
 export default function ComparisonPage() {
     return (
-        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading comparison...</div>}>
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-(--colour-fsP2)" />
+            </div>
+        }>
             <ComparisonPageContent />
-        </React.Suspense>
+        </Suspense>
     );
 }
-

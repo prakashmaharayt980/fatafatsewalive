@@ -7,7 +7,6 @@ import { EmiProvider } from '../../_components/emiContext';
 import type { ProductData } from '@/app/types/ProductDetailsTypes';
 import { getProductBySlug as fetchProductBySlug } from '@/app/api/services/product.service';
 
-// Fetch product by slug helper
 async function getProductBySlug(slug: string): Promise<ProductData | null> {
     if (!slug) return null;
     try {
@@ -60,7 +59,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 import { Suspense } from 'react';
 
-// --- CONTENT COMPONENT ---
 async function ApplyEmiPageContent({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams: Promise<{ selectedcolor: string }> }) {
     const resolvedParams = await params;
     const slug = resolvedParams.slug;
@@ -76,7 +74,6 @@ async function ApplyEmiPageContent({ params, searchParams }: { params: Promise<{
     );
 }
 
-// --- MAIN PAGE WRAPPER ---
 export default function ApplyEmiPage(props: { params: Promise<{ slug: string }>, searchParams: Promise<{ selectedcolor: string }> }) {
     return (
         <Suspense fallback={
@@ -91,5 +88,4 @@ export default function ApplyEmiPage(props: { params: Promise<{ slug: string }>,
         </Suspense>
     );
 }
-
 

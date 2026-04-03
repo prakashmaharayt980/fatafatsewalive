@@ -152,8 +152,6 @@ const RenderReview: React.FC<RenderReviewProps> = ({
 
   return (
     <div className="space-y-4 pb-6">
-
-      {/* Info cards */}
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         <InfoCard title="Personal information" icon={User} rows={personalRows} />
         {financialRows.length > 0 && (
@@ -161,7 +159,6 @@ const RenderReview: React.FC<RenderReviewProps> = ({
         )}
       </div>
 
-      {/* Uploaded documents */}
       {docKeys.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
           <div className="flex items-center gap-2.5 px-4 py-3 bg-gray-50/80 border-b border-gray-100">
@@ -194,7 +191,6 @@ const RenderReview: React.FC<RenderReviewProps> = ({
         </div>
       )}
 
-      {/* Consent & Signature */}
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
         <div className="flex items-center gap-2.5 px-4 py-3 bg-gray-50/80 border-b border-gray-100">
           <div className="flex items-center justify-center w-6 h-6 rounded-md bg-white border border-gray-200 shadow-sm">
@@ -239,7 +235,6 @@ const RenderReview: React.FC<RenderReviewProps> = ({
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center justify-between pt-2">
         <Button
           variant="outline"

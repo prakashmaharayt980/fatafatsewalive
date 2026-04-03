@@ -1,6 +1,6 @@
 'use server';
 
-import { apiPublic } from './client';
+import { apiPublic } from '../ServiceHelper/index';
 
 type SearchParams = {
     search?: string;

@@ -20,7 +20,7 @@ export async function getRandomBasketProducts(slug: string, count: number = 10) 
 
 export async function getRandomBlogList(params: { category?: string; per_page?: number } = {}) {
     try {
-        const result = await getBlogList({ ...params, page: 1 });
+        const result = await getBlogList({ ...params, page: 1 , sort:'asc'});
         return result?.data || result || [];
     } catch (error) {
         console.error('getRandomBlogList failed:', error);

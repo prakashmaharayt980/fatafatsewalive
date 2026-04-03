@@ -18,7 +18,6 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
 
   return (
     <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden sticky top-24">
-      {/* Header */}
       <div className="bg-[var(--colour-fsP2)] p-4 text-white">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-bold text-base whitespace-nowrap">Order Summary</h3>
@@ -26,7 +25,6 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
       </div>
 
       <div className="p-5 space-y-5 bg-white">
-        {/* Product Details */}
         <div className="flex gap-4">
           <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
             {product.thumb?.url || product.images?.[0]?.url ? (
@@ -60,7 +58,6 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
 
         <Separator />
 
-        {/* EMI Breakdown */}
         <div className="space-y-3">
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">Duration</span>
