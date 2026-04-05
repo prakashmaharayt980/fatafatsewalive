@@ -89,7 +89,7 @@ export interface ProductData {
     status?: number | boolean;
     is_featured?: number;
     attributes: {
-        product_attributes?: Record<string, string>;
+       
         [key: string]: any;
     };
     variant_attributes?: Record<string, string[]>;

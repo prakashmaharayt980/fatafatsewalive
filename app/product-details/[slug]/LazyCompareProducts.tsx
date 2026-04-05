@@ -88,7 +88,8 @@ function CompareCard({ left, right }: { left: DecoratedProduct; right: Decorated
             {/* CTA */}
             <div className="px-3 pb-3 pt-1">
                 <Link
-                    href={`/compare?ids=${left.id},${right.id}`}
+                    href={`/compare?slugs=${left.slug},${right.slug}`}
+                
                     className="block w-full py-2 rounded-xl text-[10.5px] font-bold uppercase tracking-wider text-center text-[var(--colour-fsP2)] bg-[#EBF3FC] hover:bg-[var(--colour-fsP2)] hover:text-white transition-all duration-200"
                 >
                     Compare Now

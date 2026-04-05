@@ -97,7 +97,8 @@ function CompareCard({ left, right }: { left: ProductDetails; right: ProductDeta
             {/* Compare Button */}
             <div className="px-3 pb-3">
                 <Link
-                    href={`/compare?ids=${left.id},${right.id}`}
+                    href={`/compare/slugs=${left.slug},${right.slug}`}
+                
                     className={`flex items-center justify-center w-full py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 ${hovered
                         ? 'bg-[var(--colour-fsP2)] text-white'
                         : 'bg-[var(--colour-bg4)] text-[var(--colour-text3)]'
