@@ -341,7 +341,7 @@ const FooterBody = async() => {
             <div className="flex items-center gap-3">
               <Image src={imglogo} alt="FatafatSewa Logo" width={86} height={24} className="object-contain brightness-0 invert h-6 w-auto" />
               <p className="text-blue-100 text-xs">
-                © {new Date().getFullYear()} FatafatSewa. All rights reserved.
+                © 2026 FatafatSewa. All rights reserved.
               </p>
             </div>
             <div className="flex flex-wrap gap-4 text-xs">
