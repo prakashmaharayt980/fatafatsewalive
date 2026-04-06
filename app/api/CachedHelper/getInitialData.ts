@@ -1,9 +1,12 @@
-'use server';
-
 import { getBannerBySlug } from '../services/misc.service';
 import { getBlogList } from '../services/blog.service';
+import { cacheLife, cacheTag } from 'next/cache';
 
 export const getHomepageData = async () => {
+    'use cache';
+    cacheLife('hours');
+    cacheTag('homepage-banner');
+
     const criticalSlugs = {
         main: 'main-banner-test',
         side: 'test-slug-banner',
