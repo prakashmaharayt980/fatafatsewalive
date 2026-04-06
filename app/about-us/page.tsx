@@ -50,8 +50,7 @@ export const metadata: Metadata = {
     },
 };
 
-const AboutUsPage = async () => {
-    // Globally cached banner fetch
+async function AboutHeroSection() {
     const bannerData = await getBannerData('about-page-banner');
 
     // Sort images by order if it exists, otherwise empty array
@@ -62,13 +61,22 @@ const AboutUsPage = async () => {
     const preloadImage = sortedImages[0]?.image?.full;
 
     return (
-        <main className="min-h-screen bg-white">
+        <>
             {preloadImage && (
                 // eslint-disable-next-line @next/next/no-head-element
                 <link rel="preload" as="image" href={preloadImage} fetchPriority="high" />
             )}
-
             <AboutHero bannerData={bannerData} />
+        </>
+    );
+}
+
+const AboutUsPage = () => {
+    return (
+        <main className="min-h-screen bg-white">
+            <Suspense fallback={<div className="w-full relative bg-slate-200 animate-pulse" style={{ aspectRatio: '20 / 6' }} />}>
+                <AboutHeroSection />
+            </Suspense>
 
             <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50" />}>
                 <CompanyStats />
