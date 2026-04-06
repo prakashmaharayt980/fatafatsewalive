@@ -5,11 +5,11 @@ import { Search } from 'lucide-react';
 import { searchProducts } from '../api/services/product.service';
 import { trackSearch } from '@/lib/Analytic';
 import SearchResults from './SearchResults';
-import { 
-    getSearchHistory, 
-    saveSearchTerm, 
-    clearSearchHistory, 
-    SUGGESTION_KEYWORDS 
+import {
+    getSearchHistory,
+    saveSearchTerm,
+    clearSearchHistory,
+    SUGGESTION_KEYWORDS
 } from './SearchUtils';
 
 export default function SearchBarClient() {
@@ -26,6 +26,7 @@ export default function SearchBarClient() {
     useEffect(() => {
         setSearchHistory(getSearchHistory());
     }, []);
+
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

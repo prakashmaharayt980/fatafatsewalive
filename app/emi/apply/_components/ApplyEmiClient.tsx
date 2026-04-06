@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import NepaliDate from 'nepali-date-converter';
 
 import { EmiRequest } from '@/app/api/services/emi.service';
-import { useAuth } from '@/app/context/AuthContext';
+import {  useAuthStore } from '@/app/context/AuthContext';
 import {
     personalDetailsSchema,
     creditCardSchema,
@@ -34,6 +34,7 @@ import {
     Hash, DollarSign, Building2, Banknote, CreditCardIcon, HandCoins,
 } from 'lucide-react';
 import type { ProductData } from '@/app/types/ProductDetailsTypes';
+import { useShallow } from 'zustand/react/shallow';
 
 interface ApplyEmiClientProps {
     initialProduct: ProductData | null;
@@ -41,7 +42,14 @@ interface ApplyEmiClientProps {
 }
 
 const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selectedcolor }) => {
-    const { isLoggedIn, setloginDailogOpen } = useAuth();
+ 
+    const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(
+        useShallow((s) => ({
+            isLoggedIn: s.isLoggedIn,
+            user: s.user,
+            triggerLoginAlert: s.triggerLoginAlert,
+        }))
+    );
     const { emiContextInfo, setEmiContextInfo, banks, fetchBanks } = useContextEmi();
 
     useEffect(() => {
@@ -422,7 +430,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const handleSubmit = async () => {
         if (!isLoggedIn) {
             toast.error("Please login to submit your application.");
-            setloginDailogOpen(true);
+      triggerLoginAlert();
             return;
         }
 

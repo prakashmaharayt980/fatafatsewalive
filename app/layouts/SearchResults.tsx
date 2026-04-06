@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Search, History, Clock, TrendingUp, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TRENDING_SEARCHES } from './SearchUtils';
+import { useRouter } from 'next/navigation';
 
 interface SearchResultsProps {
     search: string;
@@ -30,6 +31,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     onProductClick,
     isMobile = false
 }) => {
+
+    const router = useRouter();
+    const handleProductclick = (slug: string) => {
+        router.push(`/product-details/${slug}`);
+    }
+
+
     return (
         <div className={cn(
             "bg-white flex flex-col",
@@ -67,7 +75,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                             </div>
                         </div>
                     )}
-                    <div className="p-4">
+                    {/* <div className="p-4">
                         <div className="flex items-center gap-2 mb-3 px-1">
                             <TrendingUp className="w-4 h-4 text-[var(--colour-fsP2)]" />
                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Trending Searches</span>
@@ -84,11 +92,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             )}
 
-            {search && suggestions.length > 0 && (
+            {/* {search && suggestions.length > 0 && (
                 <div className="border-b border-gray-100 py-1">
                     {suggestions.map((suggestion, i) => (
                         <button
@@ -101,7 +109,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                         </button>
                     ))}
                 </div>
-            )}
+            )} */}
 
             {search && (
                 <div className="flex flex-col">
@@ -121,7 +129,10 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                             {searchResults.slice(0, 6).map((product) => (
                                 <div
                                     key={product.id}
-                                    onClick={(e) => onProductClick(product, e)}
+                                    onClick={(e) => {
+                                        handleProductclick(product.slug);
+                                        onProductClick(product, e)
+                                    }}
                                     className="flex items-center p-3 px-4 hover:bg-blue-50/50 cursor-pointer transition-colors group"
                                 >
                                     {product.thumb && (

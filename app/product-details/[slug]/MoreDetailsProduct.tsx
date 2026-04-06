@@ -35,7 +35,6 @@ interface MoreDetailsProductProps {
 }
 
 interface RatingInterface {
-  rating: number;
   hoverRating: number;
   newRating: number;
   newReview: string;
@@ -53,7 +52,6 @@ export default function MoreDetailsProduct({
   categoryId
 }: MoreDetailsProductProps) {
   const [Rating, setRating] = useState<RatingInterface>({
-    rating: 0,
     hoverRating: 0,
     newRating: 0,
     newReview: '',
@@ -146,7 +144,6 @@ export default function MoreDetailsProduct({
 
     setTimeout(() => {
       setRating({
-        rating: 0,
         hoverRating: 0,
         newRating: 0,
         newReview: '',
@@ -167,7 +164,6 @@ export default function MoreDetailsProduct({
   const toggleDesc = () => {
     if (isDescExpanded) {
       setIsDescExpanded(false);
-      // Wait for collapse transition to start/finish roughly, then scroll
       setTimeout(() => {
         descriptionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 100);
@@ -192,14 +188,12 @@ export default function MoreDetailsProduct({
     const shouldExpand = !isDescExpanded || !isSpecsExpanded;
 
     if (!shouldExpand) {
-      // We are collapsing both
       setIsDescExpanded(false);
       setIsSpecsExpanded(false);
       setTimeout(() => {
         desktopButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     } else {
-      // Expanding both
       setIsDescExpanded(true);
       setIsSpecsExpanded(true);
     }
@@ -207,128 +201,155 @@ export default function MoreDetailsProduct({
 
   const isBothExpanded = isDescExpanded && isSpecsExpanded;
 
+  const hasDescription = !!productDescription && productDescription.trim() !== "" && productDescription !== "<p><br></p>";
+
+  const showDescription = hasDescription;
+  const showSpecs = hasAnyFeatures;
+
   return (
     <div className="w-full  mx-auto py-4 px-3 bg-white" id="specifications">
       {/* Description + Specifications Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      {(showDescription || showSpecs) && (
+        <div className={cn(
+          "grid grid-cols-1 gap-6 lg:gap-8",
+          showDescription && showSpecs ? "lg:grid-cols-3" : "lg:grid-cols-1"
+        )}>
 
-        {/* Product Description Section (2/3 width on desktop) */}
-        <div className="lg:col-span-2">
-          <section ref={descriptionRef} className="bg-white sm:p-2 lg:p-3  sm:border-r sm:border-gray-200 h-full flex flex-col">
-            <div className=" flex items-center gap-3 mb-4 ">
-              <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Product Description</h2>
-            </div>
-
+          {/* Product Description Section */}
+          {showDescription && (
             <div className={cn(
-              "prose prose-sm sm:prose-base prose-slate max-w-none relative transition-all duration-500 ease-in-out",
-              !isDescExpanded && "max-h-[500px] overflow-hidden"
+              showSpecs ? "lg:col-span-2" : "lg:col-span-1"
             )}>
-              <div >
-                <ParsedContent description={productDescription} className="" />
-              </div>
-
-              {/* Gradient Overlay for Description */}
-              {!isDescExpanded && (
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
-              )}
-            </div>
-
-            {/* Mobile Toggle Button - Description */}
-            <div className="mt-4 lg:hidden">
-              <Button
-                variant="outline"
-                onClick={toggleDesc}
-                className="w-full rounded border-none cursor-pointer text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
-              >
-                {isDescExpanded ? 'Show Less' : 'Show More'}
-                <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isDescExpanded && "rotate-180")} />
-              </Button>
-            </div>
-          </section>
-        </div>
-
-        {/* Full Specifications Sidebar (1/3 width on desktop) */}
-        <div className="lg:col-span-1">
-          {hasAnyFeatures && (
-            <section ref={specsRef} className="lg:sticky lg:top-24">
-              <div className="relative">
-
-                {/* Header */}
-                <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-gray-100">
-                  <Scale className="w-4 h-4 text-[var(--colour-fsP2)]" />
-                  <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                    Specifications
-                  </h2>
+              <section ref={descriptionRef} className={cn(
+                "bg-white sm:p-2 lg:p-3 h-full flex flex-col",
+                showSpecs && "sm:border-r sm:border-gray-200"
+              )}>
+                <div className=" flex items-center gap-3 mb-4 ">
+                  <div className="w-1 h-8 bg-[var(--colour-fsP2)] rounded-full"></div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Product Description</h2>
                 </div>
 
-                {/* Spec rows */}
                 <div className={cn(
-                  "relative transition-all duration-500 ease-in-out",
-                  !isSpecsExpanded && "max-h-[500px] overflow-hidden"
+                  "prose prose-sm sm:prose-base prose-slate max-w-none relative transition-all duration-500 ease-in-out",
+                  !isDescExpanded && "max-h-[500px] overflow-hidden"
                 )}>
-                  <dl className="divide-y divide-gray-100">
-                    {Object.entries(specsData).map(([key, value], index) => (
-                      <div
-                        key={`spec-${index}`}
-                        className="flex flex-col items-start gap-3 py-2.5 group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <IconRenderer
-                            iconKey={key}
-                            size={15}
-                            className="mt-0.5 shrink-0 font-bold text-[var(--colour-fsP2)]"
-                          />
-                          <dt className=" shrink-0 text-[11px] font-bold text-[var(--colour-fsP2)] uppercase tracking-wide pt-px">
-                            {key}
-                          </dt>
-                        </div>
-                        <dd className="text-sm text-gray-800 leading-snug break-words min-w-0 flex-1">
-                          {value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
+                  <div >
+                    <ParsedContent description={productDescription} className="" />
+                  </div>
 
-                  {/* Fade overlay */}
-                  {!isSpecsExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                  {/* Gradient Overlay for Description */}
+                  {!isDescExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
                   )}
                 </div>
 
-                {/* Mobile toggle */}
-                <div className="mt-2 lg:hidden">
-                  <button
-                    onClick={toggleSpecs}
-                    className="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-gray-500 hover:text-[var(--colour-fsP2)] transition-colors"
+                {/* Mobile Toggle Button - Description */}
+                <div className="mt-4 lg:hidden">
+                  <Button
+                    variant="outline"
+                    onClick={toggleDesc}
+                    className="w-full rounded border-none cursor-pointer text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)]"
                   >
-                    {isSpecsExpanded ? 'Show less' : 'Show more'}
-                    <ChevronDown className={cn(
-                      "w-3.5 h-3.5 transition-transform",
-                      isSpecsExpanded && "rotate-180"
-                    )} />
-                  </button>
+                    {isDescExpanded ? 'Show Less' : 'Show More'}
+                    <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isDescExpanded && "rotate-180")} />
+                  </Button>
                 </div>
-
-              </div>
-            </section>
+              </section>
+            </div>
           )}
-        </div>
 
-      </div>
+          {/* Full Specifications Sidebar */}
+          {showSpecs && (
+            <div className={cn(
+              showDescription ? "lg:col-span-1" : "lg:col-span-1"
+            )}>
+              <section ref={specsRef} className="lg:sticky lg:top-24">
+                <div className="relative">
+
+                  {/* Header */}
+                  <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-gray-100">
+                    <Scale className="w-4 h-4 text-[var(--colour-fsP2)]" />
+                    <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                      Specifications
+                    </h2>
+                  </div>
+
+                  {/* Spec rows */}
+                  <div className={cn(
+                    "relative transition-all duration-500 ease-in-out",
+                    !isSpecsExpanded && "max-h-[500px] overflow-hidden"
+                  )}>
+                    <dl className={cn(
+                      "divide-y divide-gray-100",
+                      !showDescription && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 divide-none"
+                    )}>
+                      {Object.entries(specsData).map(([key, value], index) => (
+                        <div
+                          key={`spec-${index}`}
+                          className={cn(
+                            "flex flex-col items-start gap-3 py-2.5 group",
+                            !showDescription && "border-b border-gray-50"
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <IconRenderer
+                              iconKey={key}
+                              size={15}
+                              className="mt-0.5 shrink-0 font-bold text-[var(--colour-fsP2)]"
+                            />
+                            <dt className=" shrink-0 text-[11px] font-bold text-[var(--colour-fsP2)] uppercase tracking-wide pt-px">
+                              {key}
+                            </dt>
+                          </div>
+                          <dd className="text-sm text-gray-800 leading-snug break-words min-w-0 flex-1">
+                            {value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+
+                    {/* Fade overlay */}
+                    {!isSpecsExpanded && (
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                    )}
+                  </div>
+
+                  {/* Mobile toggle */}
+                  <div className="mt-2 lg:hidden">
+                    <button
+                      onClick={toggleSpecs}
+                      className="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-gray-500 hover:text-[var(--colour-fsP2)] transition-colors"
+                    >
+                      {isSpecsExpanded ? 'Show less' : 'Show more'}
+                      <ChevronDown className={cn(
+                        "w-3.5 h-3.5 transition-transform",
+                        isSpecsExpanded && "rotate-180"
+                      )} />
+                    </button>
+                  </div>
+
+                </div>
+              </section>
+            </div>
+          )}
+
+        </div>
+      )}
 
       {/* Desktop Unified Toggle Button */}
-      <div className="hidden lg:flex justify-center mt-8">
-        <Button
-          ref={desktopButtonRef}
-          variant="outline"
-          onClick={toggleBoth}
-          className="px-8 rounded border-none cursor-pointer text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-white"
-        >
-          {isBothExpanded ? 'Show Less' : 'Show More'}
-          <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isBothExpanded && "rotate-180")} />
-        </Button>
-      </div>
+      {(showDescription || showSpecs) && (
+        <div className="hidden lg:flex justify-center mt-8">
+          <Button
+            ref={desktopButtonRef}
+            variant="outline"
+            onClick={toggleBoth}
+            className="px-8 rounded border-none cursor-pointer text-gray-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-white"
+          >
+            {isBothExpanded ? 'Show Less' : 'Show More'}
+            <ChevronDown className={cn("ml-2 w-4 h-4 transition-transform", isBothExpanded && "rotate-180")} />
+          </Button>
+        </div>
+      )}
 
 
       {/* Reviews Section */}
@@ -520,7 +541,7 @@ export default function MoreDetailsProduct({
                     </button>
                     <button
                       type="submit"
-                      disabled={!Rating.newReview.trim() || Rating.newRating === 0}
+                      disabled={!Rating.newReview.trim() || Rating.newRating === 0 || Rating.isSubmittingReview}
                       className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--colour-fsP2)] text-white text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--colour-fsP2)]/90 cursor-pointer transition-colors"
                     >
                       <Send className="w-3 h-3" />

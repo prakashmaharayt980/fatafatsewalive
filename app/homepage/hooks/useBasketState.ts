@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from '@/app/context/AuthContext';
 import { useCartStore } from '@/app/context/CartContext';
@@ -69,7 +69,9 @@ export function useStoreSelectors() {
     isInCompare: s.isInCompare,
   })));
 
-  return { auth, cart };
+  const wishlistSet = useMemo(() => new Set(cart.wishlistItems.map((i: any) => i.id)), [cart.wishlistItems]);
+
+  return { auth, cart, wishlistSet };
 }
 
 export function usePagination(productCount: number, width: number, withImage = false) {

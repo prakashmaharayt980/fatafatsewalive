@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: SlugProps): Promise<Metadata>
   const canonicalUrl = `https://fatafatsewa.com/product-details/${product.slug}`;
   const description = (product.description?.short_description
     ?? `Buy ${product.name} at the best price in Nepal from Fatafat Sewa.`).slice(0, 160);
-  const images = product.images?.map((img: any) => img.url).filter(Boolean) ?? [product.thumb?.url ?? ""];
+  const images = product.images?.map((img: { url: string }) => img.url).filter(Boolean) ?? [product.thumb?.url ?? ""];
   const suffix = " | Fatafat Sewa";
   const titleCore = `${product.name} | Best Price Nepal`;
   const title = titleCore.length + suffix.length <= 60
@@ -80,7 +80,7 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: productDetails.name,
-    image: productDetails.images?.map((img: any) => img.url).filter(Boolean) ?? [productDetails.thumb?.url ?? ""],
+    image: productDetails.images?.map((img: { url: string }) => img.url).filter(Boolean) ?? [productDetails.thumb?.url ?? ""],
     description: productDetails.description?.short_description ?? "",
     sku: productDetails.sku,
     brand: {
@@ -92,7 +92,7 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
       url: canonicalUrl,
       priceCurrency: "NPR",
       price: currentPrice ?? 0,
-      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+
       itemCondition: "https://schema.org/NewCondition",
       availability:
         productDetails.quantity > 0

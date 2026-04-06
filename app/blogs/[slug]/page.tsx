@@ -3,11 +3,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 
-import { getBlogBySlug } from '../../api/services/blog.service';
+import { getBlogBySlug, getBlogList } from '../../api/services/blog.service';
 import BlogDetailsClient from '../components/BlogDetailsClient';
 import type { Article } from '../../types/Blogtypes';
 import imglogo from '../../assets/logoimg.png';
-import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
 
@@ -114,8 +113,10 @@ async function BlogPostPageContent({ params }: PageProps) {
     // Use related articles already present in the single response
     const relatedArticles: Article[] = response?.related || [];
 
-    // Fetch cached author/latest data for the sidebar
-    const { latestArticles } = await getBlogPageData();
+    // Fetch latest articles for the sidebar directly
+    const latestArticlesRes = await getBlogList({ page: 1, per_page: 10, sort: 'desc' });
+    const latestArticles = latestArticlesRes?.data || latestArticlesRes || [];
+
     const authorArticles = (latestArticles || [])
         .filter((a: Article) => a.id !== article.id && a.author === article.author)
         .slice(0, 6);

@@ -1,124 +1,114 @@
 'use client';
 
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React from 'react';
 import { toast } from 'sonner';
 import { deleteCookie, setCookie } from 'cookies-next';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { useRouter } from 'next/navigation';
-
-
 interface User {
-    id: string;
-    email: string;
-    name: string;
-    address: string;
-    phone: string;
-    avatar_image?: { thumb: string; full: string; };
+  id: string;
+  email: string;
+  name: string;
+  address: string;
+  phone: string;
+  avatar_image?: { thumb: string; full: string };
 }
 
 interface AuthState {
-    user: User | null;
-    isLoggedIn: boolean;
-    loginDailogOpen: boolean;
-    showLoginAlert: boolean;
-    isLoading: boolean;
+  user: User | null;
+  isLoggedIn: boolean;
+  loginDailogOpen: boolean;
+  showLoginAlert: boolean;
+  isLoading: boolean;
+  hasHydrated: boolean; // ✅ NEW
 }
 
 interface AuthActions {
-    login: (token: string, user: User) => void;
-    logout: () => void;
-    syncSession: (session: { user: User; access_token: string }) => void;
-    triggerLoginAlert: () => void;
-    setloginDailogOpen: (open: boolean) => void;
-    setShowLoginAlert: (show: boolean) => void;
+  login: (token: string, user: User) => void;
+  logout: () => void;
+  syncSession: (session: { user: User; access_token: string }) => void;
+  triggerLoginAlert: () => void;
+  setloginDailogOpen: (open: boolean) => void;
+  setShowLoginAlert: (show: boolean) => void;
+  setHasHydrated: (state: boolean) => void; // ✅ NEW
 }
 
 export const useAuthStore = create<AuthState & AuthActions>()(
-    persist(
-        (set, get) => ({
-            // State
-            user: null,
-            isLoggedIn: false,
-            loginDailogOpen: false,
-            showLoginAlert: false,
-            isLoading: false,
+  persist(
+    (set, get) => ({
+      user: null,
+      isLoggedIn: false,
+      loginDailogOpen: false,
+      showLoginAlert: false,
+      isLoading: false,
+      hasHydrated: false,
 
-            // Actions
-            login: (token, userData) => {
-                setCookie('access_token', token, { maxAge: 60 * 60 * 24 * 7 });
-                set({ user: userData, isLoggedIn: true });
-             
-            },
+      login: (token, userData) => {
+        if (get().isLoggedIn) return; 
 
-            logout: () => {
-                deleteCookie('access_token');
-                deleteCookie('refresh_token');
-                
-                // Clear all session related data from other stores
-                try {
-                    const { useCartStore } = require('./CartContext');
-                    useCartStore.getState().clearGuestData();
-                } catch (e) {
-                    console.error('Failed to clear cart data on logout', e);
-                }
+        setCookie('access_token', token, {
+          maxAge: 60 * 60 * 24 * 7,
+        });
 
-                set({ user: null, isLoggedIn: false });
-                toast.info("Logged out");
-                
-                // Redirect to home and refresh to clear any local component states (like checkout)
-                if (typeof window !== 'undefined') {
-                    window.location.href = '/';
-                }
-            },
+        set({
+          user: userData,
+          isLoggedIn: true,
+        });
+      },
 
-            syncSession: (session) => {
-                set({
-                    user: session.user,
-                    isLoggedIn: true
-                });
-            },
+      logout: () => {
+        deleteCookie('access_token');
+        deleteCookie('refresh_token');
 
-            triggerLoginAlert: () => {
-                set({ showLoginAlert: true });
-                setTimeout(() => set({ showLoginAlert: false }), 3000);
-            },
-
-            setloginDailogOpen: (open) => set({ loginDailogOpen: open }),
-            setShowLoginAlert: (show) => set({ showLoginAlert: show }),
-        }),
-        {
-            name: 'auth-storage',
-            partialize: (state) => ({
-                user: state.user,
-                isLoggedIn: state.isLoggedIn
-            }),
+        try {
+          const { useCartStore } = require('./CartContext');
+          useCartStore.getState().clearGuestData();
+        } catch (e) {
+          console.error('Failed to clear cart data on logout', e);
         }
-    )
+
+        set({ user: null, isLoggedIn: false });
+
+        toast.info('Logged out');
+
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
+      },
+
+   
+      syncSession: (session) => {
+        const current = get().user;
+        if (current?.id === session.user.id) return; 
+
+        set({
+          user: session.user,
+          isLoggedIn: true,
+        });
+      },
+
+      triggerLoginAlert: () => {
+        set({ showLoginAlert: true });
+        setTimeout(() => set({ showLoginAlert: false }), 3000);
+      },
+
+      setloginDailogOpen: (open) => set({ loginDailogOpen: open }),
+      setShowLoginAlert: (show) => set({ showLoginAlert: show }),
+      setHasHydrated: (state) => set({ hasHydrated: state }),
+    }),
+    {
+      name: 'auth-storage',
+
+      partialize: (state) => ({
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
+      }),
+
+
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    }
+  )
 );
-
-
-export const useAuth = useAuthStore;
-
-export const AuthProvider = ({
-    children,
-    initialState
-}: {
-    children: React.ReactNode,
-    initialState?: { user: User | null; isLoggedIn: boolean; accessToken?: string }
-}) => {
-    useEffect(() => {
-        if (initialState) {
-            useAuthStore.setState({
-                user: initialState.user,
-                isLoggedIn: initialState.isLoggedIn
-            });
-        }
-    }, [initialState]);
-
-    return <>{children}</>;
-};
-
-
-

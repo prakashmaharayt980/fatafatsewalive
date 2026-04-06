@@ -24,7 +24,7 @@ export default function EmiWidget({ price }: { price: number }) {
                     <span className="text-xs font-bold text-slate-700">Exchange Product</span>
                 </div>
                 <button
-                    onClick={() => router.push("/ExchangeProducts")}
+                    onClick={() => router.push("/exchangeProducts")}
                     className="w-full h-8 text-[11px] font-bold text-[var(--colour-fsP2)] bg-[var(--colour-fsP2)]/5 hover:bg-[var(--colour-fsP2)] hover:text-white border border-[var(--colour-fsP2)]/20 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                     <ArrowRightLeft className="w-3 h-3" />

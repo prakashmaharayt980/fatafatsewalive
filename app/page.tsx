@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import HomePage from './homepage';
-import LazySection from '@/components/LazySection';
+
 import TopHeroSection from '@/components/TopHeroSection';
-import BannerSectionServer from '@/components/BannerSectionServer';
-import BasketSectionClient from '@/components/BasketSectionClient';
-import OfferSectionClient from '@/components/OfferSectionClient';
+
 import OurArticlesSection from '@/components/OurArticlesSection';
+import OfferBanner from './homepage/OfferBanner';
+import BasketCard from './homepage/BasketCard';
+import BasketCardwithImage from './homepage/BasketCardwithImage';
+import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
+import TopBanner from './homepage/Bannerfooter';
+import TwoImageBanner from './homepage/Banner2';
 
 // Config
 const categories = [
@@ -113,10 +117,27 @@ const jsonLd = {
   ]
 };
 
-// Fallback component
-const BannerFallback = () => (
-  <div className="w-full aspect-[4/1] bg-gray-100 animate-pulse rounded" />
-);
+async function FooterBannerServer({ slug }: { slug: string }) {
+  try {
+    const data = await getBannerData(slug);
+    const inner = data?.data ?? data;
+    if (!inner?.images?.length) return null;
+    return <TopBanner data={inner} />;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function TwoImageBannerServer({ slug }: { slug: string }) {
+  try {
+    const data = await getBannerData(slug);
+    const inner = data?.data ?? data;
+    if (!inner?.images?.length) return null;
+    return <TwoImageBanner data={inner} />;
+  } catch (error) {
+    return null;
+  }
+}
 
 export default async function Page() {
   return (
@@ -128,20 +149,16 @@ export default async function Page() {
       <HomePage
         mainBannerSection={<TopHeroSection slug={categories[0].slug} title={categories[0].title} />}
         sectionOne={
-          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="200px">
-            <BannerSectionServer slug={banners[0].slug} type={banners[0].type} />
-          </LazySection>
+          <FooterBannerServer slug={banners[0].slug} />
         }
-        basketSection1={<BasketSectionClient slug={categories[1].slug} title={categories[1].title} sectionIndex={1} />}
-        basketSection2={<BasketSectionClient slug={categories[2].slug} title={categories[2].title} imgSlug={categories[2].imgSlug} sectionIndex={2} />}
-        offerSection={<OfferSectionClient />}
-        basketSection3={<BasketSectionClient slug={categories[3].slug} title={categories[3].title} sectionIndex={3} />}
+        basketSection1={<BasketCard slug={categories[1].slug} title={categories[1].title} />}
+        basketSection2={<BasketCardwithImage slug={categories[2].slug} title={categories[2].title} imgSlug={categories[2].imgSlug} />}
+        offerSection={<OfferBanner />}
+        basketSection3={<BasketCard slug={categories[3].slug} title={categories[3].title} />}
         sectionTwo={
-          <LazySection fallback={<BannerFallback />} aspectRatio="4/1" rootMargin="200px"  >
-            <BannerSectionServer slug={banners[1].slug} type={banners[1].type} />
-          </LazySection>
+          <TwoImageBannerServer slug={banners[1].slug} />
         }
-        basketSection4={<BasketSectionClient slug={categories[4].slug} title={categories[4].title} sectionIndex={4} />}
+        basketSection4={<BasketCard slug={categories[4].slug} title={categories[4].title} />}
         ourArticlesSection={<OurArticlesSection />}
       />
     </>

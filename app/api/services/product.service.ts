@@ -10,6 +10,7 @@ type SearchParams = {
     categories?: string | number;
     sort?: string;
     exchange_available?: boolean;
+    emi_available?: boolean;
 };
 
 export const getProductBySlug = async (slug: string) => {
@@ -33,8 +34,10 @@ export const searchProducts = async (params: SearchParams) => {
     if (params.brands) queryParams.append('brand', params.brands.toString());
     if (params.categories) queryParams.append('category', params.categories.toString());
     if (params.sort) queryParams.append('sort', params.sort.toString());
+    if (params.emi_available) queryParams.append('emi_available', params.emi_available.toString());
     if (params.exchange_available !== undefined) queryParams.append('exchange_available', params.exchange_available.toString());
     queryParams.append('per_page', (params.per_page || 10).toString());
+    queryParams.append('include', 'brand,category');
     return apiPublic.get(`/v1/products?${queryParams.toString()}`).then(res => res.data);
 };
 

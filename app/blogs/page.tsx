@@ -2,11 +2,12 @@ import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import BlogListingClient from './components/BlogListingClient';
 import type { Article } from '../types/Blogtypes';
-import { getBlogPageData } from '@/app/api/CachedHelper/getInitialData';
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
-import BannerSectionServer from '@/components/BannerSectionServer';
+import TopBanner from '@/app/homepage/Bannerfooter';
 import { getCategoryProducts } from '../api/services/category.service';
-import { getBlogCategories, getBlogList } from '../api/services/blog.service';
+import { getBlogList } from '../api/services/blog.service';
+import { getCachedBlogCategories } from '../api/utils/categoryCache';
+import { getRandomBasketProducts, getRandomBlogList } from '@/app/api/utils/productFetchers';
 import BlogSkeleton from './components/BlogSkeleton';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://fatafatsewa.com';
@@ -40,56 +41,37 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
     const searchQuery = resolvedParams.q;
 
     // Fetch primary data
-    const { latestArticles } = await getBlogPageData();
     const heroBannerData = await getBannerData('blog-banner-test');
 
-    // Fetch dynamic data in parallel
+    // Fetch dynamic data in parallel directly with the random fetcher (single chain)
     let categoriesResponse: any = null;
-    let trendingProductsResponse: any = null;
     let blogListResponse: any = null;
     let cameraDealsResponse: any = null;
 
     try {
-        const [categoriesRes, trendingRes, blogListRes, cameraDealsRes] = await Promise.all([
-            getBlogCategories(),
-            getCategoryProducts('mobile-price-in-nepal', { per_page: 10, page: 1 }),
+        const [categoriesRes, blogListRes, cameraRes] = await Promise.all([
+            getCachedBlogCategories(),
             getBlogList({
                 category: activeCategory !== 'all' ? activeCategory : undefined,
                 search: searchQuery || undefined,
-                per_page: 30,
-                 sort:'asc'
+                per_page: 12,
+                sort: 'desc',
             }),
-            getCategoryProducts('dslr-camera-price-in-nepal', { per_page: 8, page: 1 })
+            getRandomBasketProducts('dslr-camera-price-in-nepal', 5)
         ]);
         categoriesResponse = categoriesRes;
-        trendingProductsResponse = trendingRes;
         blogListResponse = blogListRes;
-        cameraDealsResponse = cameraDealsRes;
+        cameraDealsResponse = cameraRes;
     } catch (e) {
         console.error("Critical fetch failure in BlogPage", e);
     }
 
-    const allArticles: Article[] = blogListResponse?.data || latestArticles || [];
-
-    // ─── Server-Side Article Filtering ───
-    const developedCategories = Array.from(
-        new Map(
-            (latestArticles || [])
-                .filter((a: Article) => a.category)
-                .map((a: Article) => [a.category.id || a.category.slug, {
-                    id: a.category.id || a.category.slug,
-                    title: a.category.title || (a.category as any).name,
-                    slug: a.category.slug,
-                    blogs_count: 0,
-                    status: true
-                }])
-        ).values()
-    );
-
-    let categories: any[] = categoriesResponse?.success ? categoriesResponse.data : developedCategories;
+    const categories: any[] = categoriesResponse?.success ? categoriesResponse.data : [];
     if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
         categories.unshift({ id: 'all', title: 'All', slug: 'all' });
     }
+
+    const allArticles: Article[] = blogListResponse?.data || blogListResponse || [];
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -107,12 +89,17 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
         })),
     };
 
+
+    let footerBannerData = null;
+    try {
+        const res = await getBannerData('home-banner-fourth-test');
+        footerBannerData = res?.data ?? res;
+    } catch (e) { }
+
     const SectionOne = (
-        <BannerSectionServer
-            slug="home-banner-fourth-test"
-            type="Bannerfooter"
-            className="mt-4"
-        />
+        <div className="mt-4 w-full">
+            {footerBannerData && <TopBanner data={footerBannerData} />}
+        </div>
     );
 
     return (
@@ -126,7 +113,7 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
                 categories={categories}
                 SectionOne={SectionOne}
                 heroBannerData={heroBannerData}
-                cameraDeals={cameraDealsResponse?.data?.products || []}
+                cameraDeals={cameraDealsResponse?.products}
             />
         </>
     );

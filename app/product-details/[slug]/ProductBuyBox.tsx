@@ -88,6 +88,13 @@ const ProductBuyBox: React.FC<Props> = ({
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isPreOrderOpen, setIsPreOrderOpen] = useState(false);
 
+    const selectedColor =
+        selectedAttributes["Color"] ??
+        selectedAttributes["color"] ??
+        selectedVariant?.attributes?.Color ??
+        selectedVariant?.attributes?.color ??
+        selectedVariant?.color;
+
     const isInWishlist = wishlistItems.some(item => item.id === product.id);
     const isInCompare = compareItems.some(i => i.id === product.id);
 
@@ -100,12 +107,6 @@ const ProductBuyBox: React.FC<Props> = ({
     };
 
     const handleAddToCart = async () => {
-        const selectedColor =
-            selectedAttributes["Color"] ??
-            selectedAttributes["color"] ??
-            selectedVariant?.attributes?.Color ??
-            selectedVariant?.attributes?.color ??
-            selectedVariant?.color;
         await addToCart(product.id, quantity, { isLoggedIn }, triggerLoginAlert, product as unknown as BasketProduct, selectedColor);
     };
 
@@ -166,13 +167,13 @@ const ProductBuyBox: React.FC<Props> = ({
                         >
                             <Heart className={cn("w-4 h-4", isInWishlist && "fill-current")} />
                         </button>
-                        <button
+                        {/* <button
                             onClick={() => setIsShareOpen(true)}
                             aria-label="Share"
                             className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-(--colour-fsP1) hover:text-white transition-all cursor-pointer"
                         >
                             <Share2 className="w-4 h-4" />
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 
@@ -313,53 +314,60 @@ const ProductBuyBox: React.FC<Props> = ({
                     <button
                         onClick={handleAddToCart}
                         disabled={currentStock === 0}
-                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-(--colour-fsP2) hover:bg-(--colour-fsP2)/90 disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl shadow-sm transition-transform active:scale-[0.98] cursor-pointer"
+                        className="h-10 flex items-center justify-center gap-1.5 bg-(--colour-fsP2) hover:bg-(--colour-fsP2)/90 disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl shadow-sm transition-transform active:scale-[0.98] cursor-pointer"
                     >
                         <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
                         {currentStock === 0 ? "Out of Stock" : "Add to Cart"}
                     </button>
 
-                    <button
-                        onClick={() => setIsPreOrderOpen(true)}
-                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-xl transition-transform active:scale-[0.98] cursor-pointer"
-                    >
-                        <CalendarClock className="w-3.5 h-3.5 shrink-0" />
-                        Pre-Order
-                    </button>
+                    {product.pre_order?.available && (
+                        <button
+                            onClick={() => setIsPreOrderOpen(true)}
+                            className="h-10 flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-xl transition-transform active:scale-[0.98] cursor-pointer"
+                        >
+                            <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                            Pre-Order
+                        </button>
+                    )}
+
+                    {product.emi_enabled && (
+                        <button
+                            onClick={() =>
+                                router.push(
+                                    selectedVariant?.color
+                                        ? `/emi/apply/${product.slug}?selectedcolor=${selectedVariant.color}`
+                                        : `/emi/apply/${product.slug}`
+                                )
+                            }
+                            className="h-10 flex items-center justify-center gap-1.5 bg-(--colour-fsP1) hover:bg-(--colour-fsP1)/90 text-white text-[11px] font-bold rounded-xl transition-transform active:scale-[0.98] cursor-pointer"
+                        >
+                            <CreditCard className="w-3.5 h-3.5 shrink-0" />
+                            Apply EMI
+                        </button>
+                    )}
+
 
                     <button
-                        onClick={() =>
-                            router.push(
-                                selectedVariant?.color
-                                    ? `/emi/apply/${product.slug}?selectedcolor=${selectedVariant.color}`
-                                    : `/emi/apply/${product.slug}`
-                            )
-                        }
-                        className="col-span-1 h-10 flex items-center justify-center gap-1.5 bg-(--colour-fsP1) hover:bg-(--colour-fsP1)/90 text-white text-[11px] font-bold rounded-xl transition-transform active:scale-[0.98] cursor-pointer"
+                        onClick={handleCompareToggle}
+                        className={cn(
+                            "w-full h-10 flex items-center justify-center gap-1.5 text-[11px] font-bold rounded-xl border transition-transform active:scale-[0.98] cursor-pointer",
+                            isInCompare
+                                ? "bg-(--colour-fsP2)/5 border-(--colour-fsP2) text-(--colour-fsP2)"
+                                : "bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300"
+                        )}
                     >
-                        <CreditCard className="w-3.5 h-3.5 shrink-0" />
-                        Apply EMI
+                        <Scale className="w-3.5 h-3.5 shrink-0" />
+                        {isInCompare ? "Added to Compare" : "Compare"}
                     </button>
                 </div>
 
-                <button
-                    onClick={handleCompareToggle}
-                    className={cn(
-                        "w-full h-9 flex items-center justify-center gap-1.5 text-[11px] font-bold rounded-xl border transition-transform active:scale-[0.98] cursor-pointer",
-                        isInCompare
-                            ? "bg-(--colour-fsP2)/5 border-(--colour-fsP2) text-(--colour-fsP2)"
-                            : "bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300"
-                    )}
-                >
-                    <Scale className="w-3.5 h-3.5 shrink-0" />
-                    {isInCompare ? "Added to Compare" : "Compare"}
-                </button>
+
             </div>
 
             {/* Coupons */}
-            <div className="px-4 py-3 border-t border-gray-50">
+            {/* <div className="px-4 py-3 border-t border-gray-50">
                 <ProductCoupons />
-            </div>
+            </div> */}
 
             {/* Highlights */}
             {highlights.length > 0 && (
@@ -378,27 +386,21 @@ const ProductBuyBox: React.FC<Props> = ({
                 </div>
             )}
 
-            <ShareDialog
+            {/* <ShareDialog
                 isOpen={isShareOpen}
                 onClose={() => setIsShareOpen(false)}
                 productUrl={currentUrl}
                 productName={product.name}
                 productImage={product.image?.full}
                 productPrice={currentPrice}
-            />
+            /> */}
             <PreOrderDialog
                 isOpen={isPreOrderOpen}
                 onClose={() => setIsPreOrderOpen(false)}
                 productName={product.name}
                 productImage={selectedImage ?? product.image?.full}
                 productSlug={product.slug}
-                selectedColor={
-                    selectedAttributes["Color"] ??
-                    selectedAttributes["color"] ??
-                    selectedVariant?.attributes?.Color ??
-                    selectedVariant?.attributes?.color ??
-                    selectedVariant?.color
-                }
+                selectedColor={selectedColor}
             />
         </div>
     );

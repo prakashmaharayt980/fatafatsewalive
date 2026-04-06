@@ -11,11 +11,20 @@ import { useInView } from "react-intersection-observer";
 const MoreDetailsProduct = dynamic(() => import("./MoreDetailsProduct"), {
     ssr: false,
     loading: () => (
-        <div className="animate-pulse space-y-4 p-6">
-            <div className="h-6 bg-gray-100 rounded-lg w-1/3" />
-            <div className="h-4 bg-gray-100 rounded-lg w-full" />
-            <div className="h-4 bg-gray-100 rounded-lg w-5/6" />
-            <div className="h-4 bg-gray-100 rounded-lg w-4/6" />
+        <div className="animate-pulse h-full space-y-6 p-6 bg-white rounded-2xl">
+            <div className="flex border-b border-gray-100 mb-6 gap-4">
+                <div className="h-10 w-28 bg-gray-100 rounded-t-lg" />
+                <div className="h-10 w-28 bg-gray-50 rounded-t-lg" />
+            </div>
+            <div className="space-y-4">
+                <div className="h-6 w-1/4 bg-gray-100 rounded-lg" />
+                <div className="space-y-2">
+                    <div className="h-4 bg-gray-50 rounded w-full" />
+                    <div className="h-4 bg-gray-50 rounded w-11/12" />
+                    <div className="h-4 bg-gray-50 rounded w-10/12" />
+                    <div className="h-4 bg-gray-50 rounded w-3/4" />
+                </div>
+            </div>
         </div>
     ),
 });
@@ -23,9 +32,10 @@ const MoreDetailsProduct = dynamic(() => import("./MoreDetailsProduct"), {
 import ProductSidebar from "./ProductSidebar";
 import { trackViewContent } from "@/lib/Analytic";
 import LazySection from "@/components/LazySection";
-import { fetchCategoryProducts } from "@/app/product-details/actions";
-import { decorateProduct } from "@/app/api/utils/productDecorator";
+
 import SkeletonCard from "@/app/skeleton/SkeletonCard";
+import { getRandomBasketProducts } from "@/app/api/utils/productFetchers";
+import { getCategoryProducts } from "@/app/api/services/category.service";
 
 const BasketCard = dynamic(() => import("@/app/homepage/BasketCard"), { ssr: false });
 const LazyCompareProducts = dynamic(() => import("./LazyCompareProducts"), { ssr: false });
@@ -41,9 +51,9 @@ const ProductCarouselSection = ({
 }) => (
     <LazySection
         fetcher={async () => {
-            const resData = await fetcher() as any;
-            const products = resData?.products ?? (Array.isArray(resData) ? resData : []);
-            return { products: products.map((p: any, idx: number) => decorateProduct(p, idx)) };
+            const res = await fetcher() as any;
+            const rawProducts = res?.data?.products ?? res?.products ?? res?.data ?? res ?? [];
+            return { products: Array.isArray(rawProducts) ? rawProducts : [] };
         }}
         render={(data: any) => (
             <BasketCard title={title} slug={slug} initialData={data} />
@@ -62,19 +72,26 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
     const priceRange = useMemo(() => {
         const currentPrice = productDetails.price?.current ?? productDetails.discounted_price ?? productDetails.price;
         if (!currentPrice || typeof currentPrice !== "number") return null;
-        return { min: currentPrice * 0.8, max: currentPrice * 1.2 };
+        return { min: currentPrice * 0.5, max: currentPrice * 1.3 };
     }, [productDetails]);
 
-    const moreFromBrandFetcher = useCallback(
-        () => fetchCategoryProducts(relatedCategory.slug, { brand: productDetails.brand?.slug, per_page: 10 }).then(r => r.data),
+    const brandProductsFetcher = useCallback(
+        () => getCategoryProducts(relatedCategory.slug, {
+            per_page: 5,
+            brand: productDetails.brand?.slug,
+            sort: 'name_desc',
+        }),
         [relatedCategory.slug, productDetails.brand?.slug]
     );
 
     const similarPriceFetcher = useCallback(
-        () => priceRange
-            ? fetchCategoryProducts(relatedCategory.slug, { min_price: priceRange.min, per_page: 10 }).then(r => r.data)
-            : Promise.resolve([]),
-        [relatedCategory.slug, priceRange]
+        () => getCategoryProducts(relatedCategory.slug, {
+            per_page: 5,
+            max_price: priceRange?.max,
+            min_price: priceRange?.min,
+            sort: 'price_desc',
+        }),
+        [relatedCategory.slug, priceRange?.max, priceRange?.min]
     );
 
     const { ref: belowFoldRef, inView: isBelowFoldInView } = useInView({ triggerOnce: true, rootMargin: "300px" });
@@ -96,24 +113,22 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
     }, [productDetails]);
 
     const allVariantImages = useMemo(() => {
-        const images: Array<{ url: string; thumb: string; isDefault: boolean; color?: string }> = [];
+        const uniqueMap = new Map<string, { url: string; thumb: string; isDefault: boolean; color?: string }>();
         if (productDetails?.images) {
             productDetails.images.forEach((img: any) => {
-                images.push({ url: img.url, thumb: img.url, isDefault: img.custom_properties?.is_default ?? false, color: img.color });
+                if (!uniqueMap.has(img.url)) uniqueMap.set(img.url, { url: img.url, thumb: img.url, isDefault: img.custom_properties?.is_default ?? false, color: img.color });
             });
         }
         if (productDetails?.variants) {
             productDetails.variants.forEach((variant: any) => {
                 if (variant.images) {
-                    variant.images.forEach((img: any) =>
-                        images.push({ url: img.url, thumb: img.url, isDefault: false, color: variant.attributes?.Color })
-                    );
+                    variant.images.forEach((img: any) => {
+                        if (!uniqueMap.has(img.url)) uniqueMap.set(img.url, { url: img.url, thumb: img.url, isDefault: false, color: variant.attributes?.Color });
+                    });
                 }
             });
         }
-        const unique = new Map();
-        images.forEach(img => { if (!unique.has(img.url)) unique.set(img.url, img); });
-        return Array.from(unique.values());
+        return Array.from(uniqueMap.values());
     }, [productDetails]);
 
     const selectedVariant = useMemo(() => {
@@ -132,15 +147,29 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
     useEffect(() => {
         if (!productDetails) return;
         trackViewContent(productDetails);
-        const initialSelected: Record<string, string> = {};
-        if (productDetails.variants?.[0]?.attributes) {
-            Object.entries(productDetails.variants[0].attributes).forEach(([k, v]) => {
-                initialSelected[k] = v as string;
+
+        // 1. Determine Initial Attributes (from first variant)
+        const initialAttributes: Record<string, string> = {};
+        const firstVariant = productDetails.variants?.[0];
+        if (firstVariant?.attributes) {
+            Object.entries(firstVariant.attributes).forEach(([k, v]) => {
+                initialAttributes[k] = v as string;
             });
         }
-        setSelectedAttributes(initialSelected);
-        setSelectedImage(productDetails.thumb?.url ?? "");
-    }, [productDetails]);
+        setSelectedAttributes(initialAttributes);
+
+        // 2. Determine Initial Image (try to match first variant's color, else thumb)
+        const selectedColor = initialAttributes["Color"] ?? initialAttributes["color"] ?? firstVariant?.color;
+        let initialImage = productDetails.thumb?.url ?? "";
+
+        if (selectedColor) {
+            const variantMatchedImg = allVariantImages.find(img => img.color === selectedColor);
+            if (variantMatchedImg) {
+                initialImage = variantMatchedImg.url;
+            }
+        }
+        setSelectedImage(initialImage);
+    }, [productDetails, allVariantImages]);
 
     useEffect(() => {
         const selectedColor = selectedAttributes["Color"] ?? selectedAttributes["color"];
@@ -168,7 +197,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                     <span className="text-slate-600 font-semibold truncate">{productDetails.name}</span>
                 </nav>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2  mb-8">
                     <div className="md:col-span-1 lg:col-span-4 min-w-0">
                         <ProductMainImage
                             selectedImage={selectedImage}
@@ -207,16 +236,15 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
                                     productID={productDetails.id}
                                     product={productDetails}
                                     categoryId={relatedCategory.slug}
-                                    specifications={{}}
                                 />
                             </div>
 
-                            <section className="space-y-6 mt-4">
-                                {relatedCategory.slug && (
+                            <section className="space-y-6 mt-4 m-0 p-0">
+                                {relatedCategory.slug && productDetails.brand?.name && (
                                     <ProductCarouselSection
-                                        title={`More from ${productDetails.brand?.name ?? "Brand"}`}
+                                        title={`More from ${productDetails.brand.name}`}
                                         slug={relatedCategory.slug}
-                                        fetcher={moreFromBrandFetcher}
+                                        fetcher={brandProductsFetcher}
                                     />
                                 )}
                                 <LazyCompareProducts categorySlug={relatedCategory.slug} currentProductId={productDetails.id} />

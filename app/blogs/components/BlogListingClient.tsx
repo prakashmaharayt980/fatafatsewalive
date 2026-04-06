@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -8,18 +8,22 @@ import type { Article } from '../../types/Blogtypes';
 import imglogo from '../../assets/logoimg.png';
 
 import LazySection from '@/components/LazySection';
-import type { BannerItem } from '../../types/BannerTypes';
+
 import HeroBanner from './HeroBanner';
 import BlogCard from './BlogCard';
 import ProductDeals from './ProductDeals';
 import BlogProductBasket from './BlogProductBasket';
 import StoryViewer from './StoryViewer';
-import YouTubeVideoCard from './YouTubeVideoCard';
+
 import BlogCompareProducts from './BlogCompareProducts';
 import SectionHeader from './SectionHeader';
 import FeaturedArticleCard from './FeaturedArticleCard';
-import { YOUTUBE_VIDEOS } from './youtubeData';
-import { fetchRandomBasketProducts, fetchRandomBlogList, fetchCategoryProducts } from '@/app/blogs/actions';
+
+
+import useSWR from 'swr';
+import { getRandomBasketProducts, getRandomBlogList } from '@/app/api/utils/productFetchers';
+import { getCategoryProducts } from '@/app/api/services/category.service';
+import { getBlogCategories } from '@/app/api/services/blog.service';
 
 
 interface BlogListingClientProps {
@@ -27,7 +31,7 @@ interface BlogListingClientProps {
     categories: any[];
     SectionOne?: React.ReactNode;
     heroBannerData?: any;
-    cameraDeals?: any[];
+    cameraDeals?: any;
 }
 
 export default function BlogListingClient({
@@ -35,15 +39,34 @@ export default function BlogListingClient({
     categories,
     SectionOne,
     heroBannerData,
-    cameraDeals = [],
+    cameraDeals,
 }: BlogListingClientProps) {
 
     const searchParams = useSearchParams();
     const activeCategory = searchParams.get('category') ?? 'all';
+    const searchQuery = searchParams.get('q') ?? '';
+    console.log('cjsmc ', cameraDeals)
+    // ─── SWR Article Fetching ───
+    const { data: swrArticles, isLoading } = useSWR(
+        ['blogs', activeCategory, searchQuery],
+        async ([_, cat, q]: [string, string, string]) => {
+            const res = await getRandomBlogList({
+                category: cat !== 'all' ? cat : undefined,
+                search: q || undefined,
+                per_page: 12
+            });
+            return ensureArray(res);
+        },
+        {
+            fallbackData: articles,
+            revalidateOnFocus: false,
+        }
+    );
+
+    const displayArticles = swrArticles ?? articles;
 
     const [storyViewerOpen, setStoryViewerOpen] = useState(false);
     const [storyStartIndex, setStoryStartIndex] = useState(0);
-    const webStories = articles?.slice(0, 5) || [];
 
     const openStory = (idx: number) => {
         setStoryStartIndex(idx);
@@ -57,25 +80,41 @@ export default function BlogListingClient({
         return data.data?.products || data.data?.data || data.products || data.data || [];
     };
 
+    const fetchwebStories = async () => {
+        // Step 1: Fetch categories on demand
+        const catData = await getBlogCategories();
+        const cats = catData?.data || catData || [];
+
+        // Step 2: Randomly pick up to five categories to filter by
+        const filtered = cats.filter((c: any) => c.slug !== 'all' && (c.status === true || c.status === 1));
+        const selected = [...filtered].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+        // Step 3: Fetch 5 blogs for each of the selected categories
+        const results = await Promise.all(
+            selected.map(async (cat) => {
+                const res = await getRandomBlogList({ category: cat.slug, per_page: 5 });
+                return {
+                    category: cat,
+                    stories: ensureArray(res)
+                };
+            })
+        );
+
+        // Only return categories that actually have stories
+        return results.filter(item => item.stories.length > 0);
+    }
+
     // Randomized Fetchers (The "Func" Improvements)
-    const latestDealsFetcher = React.useMemo(() => () => fetchRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
-    const emiFetcher = React.useMemo(() => () => fetchRandomBasketProducts('mobile-price-in-nepal', 5), []);
-    const laptopsFetcher = React.useMemo(() => () => fetchRandomBasketProducts('laptop-price-in-nepal', 5).then(res => res.data || res), []);
-    const newsArticlesFetcher = React.useMemo(() => () => fetchRandomBlogList({ category: 'news', per_page: 9 }), []);
-    const featuredArticlesFetcher = React.useMemo(() => () => fetchRandomBlogList({ category: 'buying-guides', per_page: 7 }), []);
-    const youtubeSidebarFetcher = React.useMemo(() => () => fetchRandomBasketProducts('speaker-price-in-nepal', 8).then(res => res.data || res), []);
+    // const latestDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
+    const emiFetcher = React.useMemo(() => () => getCategoryProducts('mobile-price-in-nepal', { page: 1, per_page: 5, emi_enabled: true, brand: 'iphone-price-in-nepal' }), []);
+    const laptopsFetcher = React.useMemo(() => () => getRandomBasketProducts('laptop-price-in-nepal', 5), []);
+    const newsArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'news', per_page: 6 }), []);
+    const featuredArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'best-gaming-phones', per_page: 7 }), []);
+    const remainingBlogsFetcher = React.useMemo(() => () => getRandomBlogList({ per_page: 15, sort: 'asc' }), []);
+    // const youtubeSidebarFetcher = React.useMemo(() => () => getRandomBasketProducts('speaker-price-in-nepal', 8), []);
 
     return (
         <>
-            {/* Story Viewer Dialog */}
-            {storyViewerOpen && webStories.length > 0 && (
-                <StoryViewer
-                    isOpen={storyViewerOpen}
-                    webStories={webStories}
-                    initialStoryIndex={storyStartIndex}
-                    onClose={() => setStoryViewerOpen(false)}
-                />
-            )}
             <main className="min-h-screen max-w-8xl mx-auto bg-(--colour-bg4) w-full">
                 <h1 className="sr-only">Latest Tech News, Reviews & Buying Guides | Fatafat Sewa Blog</h1>
                 <div className="w-full px-3 sm:px-5 lg:px-6 pt-4 pb-16">
@@ -134,24 +173,28 @@ export default function BlogListingClient({
                                         accentColor="var(--colour-fsP1)"
                                         rightElement={
                                             <span className="text-[11px] font-medium text-(--colour-text3)">
-                                                {articles?.length || 0} {articles?.length === 1 ? 'Article' : 'Articles'}
+                                                {isLoading ? 'Loading...' : `${displayArticles?.length || 0} ${displayArticles?.length === 1 ? 'Article' : 'Articles'}`}
                                             </span>
                                         }
                                     />
-                                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                                        {articles?.slice(0, 12).map((post) => (
-                                            <BlogCard key={post.id} post={post} />
-                                        ))}
+                                    <div className={['grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 transition-opacity duration-300', isLoading ? 'opacity-50' : 'opacity-100'].join(' ')}>
+                                        {displayArticles?.length > 0 ? (
+                                            displayArticles.map((post: Article) => (
+                                                <BlogCard key={post.id} post={post} />
+                                            ))
+                                        ) : !isLoading && (
+                                            <div className="col-span-full py-20 text-center">
+                                                <p className="text-gray-500 font-medium">No articles found in this category.</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="hidden lg:block w-full lg:w-1/4">
                                     {cameraDeals.length > 0 ? (
-                                        <ProductDeals 
-                                            deals={cameraDeals.map((p: any) => ({
-                                                product: p,
-                                                sellPrice: p.discountedPriceVal ?? p.discounted_price ?? p.price ?? 0
-                                            }))} 
-                                            title="Camera Deals" 
+                                        <ProductDeals
+                                            products={cameraDeals}
+                                            title="Camera Deals"
+                                            slug="dslr-camera-price-in-nepal"
                                         />
                                     ) : (
                                         <div className="h-150 w-full bg-gray-100 rounded-xl animate-pulse" />
@@ -174,11 +217,11 @@ export default function BlogListingClient({
                                 return (
                                     <section id="mobile-emi-deals">
                                         <SectionHeader
-                                            title="Mobile EMI Deals"
+                                            title=" EMI Offer"
                                             accentColor="var(--colour-fsP1)"
                                             linkHref="/category/mobile-price-in-nepal"
-                                            linkText="Shop All Mobiles"
-                                            rightElement={<span className="text-[10px] font-bold text-green-600 uppercase">0% Interest EMI</span>}
+                                            linkText="View More "
+                                            rightElement={<span className="text-[14px] font-bold text-[var(--colour-fsP2)]  uppercase">0% Interest EMI</span>}
                                         />
                                         <div className="w-full">
                                             <BlogProductBasket
@@ -194,51 +237,76 @@ export default function BlogListingClient({
                             }}
                             fallback={<div className="h-95 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         />
-                        {/* ═══ 3. Web Stories ═══ */}
+
                         <LazySection
-                            fallback={<div className="h-100 bg-(--colour-bg4) rounded-lg animate-pulse" />}
-                        >
-                            <section id="web-stories">
-                                <SectionHeader title="Web Stories" accentColor="var(--colour-fsP2)" />
+                            fetcher={fetchwebStories}
+                            render={(data) => {
+                                const categoryStories = data as any[];
+                                if (!categoryStories || categoryStories.length === 0) return null;
 
-                                {/* Stories Grid — 5 cols, 2 rows */}
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-                                    {webStories.map((post, idx) => (
-                                        <div
-                                            key={post.id}
-                                            onClick={() => openStory(idx)}
-                                            className="group relative rounded overflow-hidden aspect-9/16 border border-(--colour-border3) hover:shadow-lg transition-all duration-300 cursor-pointer"
-                                        >
-                                            <Image
-                                                src={post.thumb?.url || imglogo.src}
-                                                alt={post.title}
-                                                fill
-                                                className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
-                                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                                                quality={75}
+                                const activeCategoryStories = categoryStories[storyStartIndex]?.stories || [];
+
+                                return (
+                                    <>
+                                        {/* Story Viewer Dialog — only mounted when stories exist */}
+                                        {storyViewerOpen && activeCategoryStories.length > 0 && (
+                                            <StoryViewer
+                                                isOpen={storyViewerOpen}
+                                                webStories={activeCategoryStories}
+                                                initialStoryIndex={0}
+                                                onClose={() => setStoryViewerOpen(false)}
                                             />
-                                            {/* Dark gradient overlay */}
-                                            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-black/10" />
+                                        )}
+                                        <section id="web-stories">
+                                            <SectionHeader title="Web Stories based on your interest" accentColor="var(--colour-fsP2)" />
 
-                                            {/* Content */}
-                                            <div className="absolute bottom-0 left-0 right-0 p-3 flex flex-col items-center text-center gap-1.5">
-                                                <h4 className="text-[13px] font-bold text-white leading-snug line-clamp-2 group-hover:text-(--colour-yellow1) transition-colors">
-                                                    {post.title}
-                                                </h4>
-                                                {/* Story Count Badge */}
-                                                <span className="inline-flex items-center gap-1 bg-(--colour-fsP2) text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
-                                                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                        <rect x="2" y="2" width="20" height="20" rx="2" />
-                                                        <path d="M7 2v20M17 2v20" />
-                                                    </svg>
-                                                    {(post.id % 15) + 5} Stories
-                                                </span>
+                                            {/* Stories Grid — 5 cols, 2 rows */}
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                                                {categoryStories.map((item, idx: number) => {
+                                                    const firstStory = item.stories[0];
+                                                    if (!firstStory) return null;
+
+                                                    return (
+                                                        <div
+                                                            key={item.category.id || idx}
+                                                            onClick={() => openStory(idx)}
+                                                            className="group relative rounded overflow-hidden aspect-9/16 border border-(--colour-border3) hover:shadow-lg transition-all duration-300 cursor-pointer"
+                                                        >
+                                                            <Image
+                                                                src={firstStory.thumb?.url || imglogo.src}
+                                                                alt={item.category.title}
+                                                                fill
+                                                                className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+                                                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                                                                quality={75}
+                                                            />
+                                                            {/* Dark gradient overlay */}
+                                                            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-black/10" />
+
+                                                            <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-4 flex flex-col items-center text-center gap-1">
+                                                                <div className="text-[9px] sm:text-[10px] font-bold text-(--colour-yellow1) uppercase tracking-wider">
+                                                                    {item.category.title}
+                                                                </div>
+                                                                <h4 className="text-[11px] sm:text-[13px] font-bold text-white leading-tight line-clamp-2 group-hover:text-(--colour-yellow1) transition-colors mt-0.5 mb-0.5">
+                                                                    Top {item.stories.length} {item.category.title} Blogs
+                                                                </h4>
+                                                                {/* Story Count Badge */}
+                                                                <span className="inline-flex items-center gap-1 bg-(--colour-fsP2)/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full mt-0.5">
+                                                                    {item.stories.length} Stories
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        </LazySection>
+                                        </section>
+                                    </>
+                                );
+                            }}
+                            fallback={<div className="h-100 bg-(--colour-bg4) rounded-lg animate-pulse" />}
+                        />
+
+
 
 
 
@@ -277,7 +345,7 @@ export default function BlogListingClient({
                                 if (!featured.length) return null;
                                 return (
                                     <div className="flex flex-col gap-4">
-                                        <SectionHeader title="Buying Guides & Tips" accentColor="var(--colour-fsP2)" />
+                                        <SectionHeader title="Best Gaming Phones" accentColor="var(--colour-fsP2)" />
                                         {/* 5-Item CSS Grid — Responsive */}
                                         <div
                                             className="hidden lg:grid gap-1"
@@ -290,9 +358,9 @@ export default function BlogListingClient({
                                             `,
                                             }}
                                         >
-                                            {featured[0] && <FeaturedArticleCard article={featured[0]} variant="hero" gridArea="hero" />}
-                                            {featured[1] && <FeaturedArticleCard article={featured[1]} variant="compact" gridArea="bot1" />}
-                                            {featured[2] && <FeaturedArticleCard article={featured[2]} variant="compact" gridArea="bot2" />}
+                                            {featured[0] && <FeaturedArticleCard article={featured[0]} variant="hero" gridArea="hero" imageFit="cover" />}
+                                            {featured[1] && <FeaturedArticleCard article={featured[1]} variant="compact" gridArea="bot1" imageFit="cover" />}
+                                            {featured[2] && <FeaturedArticleCard article={featured[2]} variant="compact" gridArea="bot2" imageFit="cover" />}
                                             {featured[3] && <FeaturedArticleCard article={featured[3]} variant="tall" gridArea="side1" />}
                                             {featured[4] && <FeaturedArticleCard article={featured[4]} variant="tall" gridArea="side2" badgeColor="var(--colour-fsP1)" />}
                                             {featured[5] && <FeaturedArticleCard article={featured[5]} variant="tall" gridArea="side3" badgeColor="var(--colour-fsP1)" />}
@@ -312,7 +380,7 @@ export default function BlogListingClient({
 
                         {/* ═══ 6. Compare Products (Repositioned) ═══ */}
                         <LazySection
-                            fetcher={() => fetchCategoryProducts('drone-price-in-nepal', { per_page: 8, page: 1 }).then((res: any) => res.data)}
+                            fetcher={() => getRandomBasketProducts('drone-price-in-nepal', 8)}
                             render={(data) => (
                                 <section id="blog-compare-products">
                                     <BlogCompareProducts products={ensureArray(data).slice(0, 8)} />
@@ -325,12 +393,12 @@ export default function BlogListingClient({
                         <LazySection
                             fetcher={newsArticlesFetcher}
                             render={(data) => {
-                                const newsArray = ensureArray(data).slice(0, 4);
+                                const newsArray = ensureArray(data).slice(0, 6);
                                 if (!newsArray.length) return null;
                                 return (
                                     <section id="tech-news">
                                         <SectionHeader title="Latest Tech News" accentColor="var(--colour-fsP2)" />
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                                        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 sm:gap-1">
                                             {newsArray.map((post: any) => (
                                                 <BlogCard key={post.id} post={post} />
                                             ))}
@@ -343,15 +411,15 @@ export default function BlogListingClient({
 
 
                         {/* ═══ 8. YouTube Content Section ═══ */}
-                        <LazySection
+                        {/* <LazySection
                             fallback={<div className="h-100 bg-(--colour-bg4) rounded-lg animate-pulse" />}
                         >
                             <section id="youtube-content">
                                 {/* 80/20 Layout — responsive */}
-                                <div className="flex flex-col-reverse lg:flex-row-reverse gap-3 border-t-2 pt-3 mt-1 border-(--colour-border3)">
+                        {/* <div className="flex flex-col-reverse lg:flex-row-reverse gap-3 border-t-2 pt-3 mt-1 border-(--colour-border3)">
 
                                     {/* ─── Left: YouTube Grid ─── */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 w-full lg:w-3/4">
+                        {/* <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 w-full lg:w-3/4">
                                         {YOUTUBE_VIDEOS.map((video, idx) => (
                                             <YouTubeVideoCard key={`${video.id}-${idx}`} video={video} />
                                         ))}
@@ -361,51 +429,42 @@ export default function BlogListingClient({
                                         <LazySection
                                             fetcher={youtubeSidebarFetcher}
                                             render={(data) => {
-                                                const products = ensureArray(data).slice(0, 8);
-                                                const deals = products.map((p: any) => ({
-                                                    product: p,
-                                                    sellPrice: p.discountedPriceVal ?? p.discounted_price ?? (typeof p.price === 'object' ? p.price?.current : p.price) ?? 0
-                                                }));
-                                                return <ProductDeals deals={deals} title="Speaker Highlights" />;
+                                                const products = (data as any)?.products || (Array.isArray(data) ? data : []).slice(0, 8);
+                                                return <ProductDeals products={products} title="Speaker Highlights" slug="speaker-price-in-nepal" />;
                                             }}
                                             minHeight="400px"
                                             fallback={<div className="h-100 w-full bg-(--colour-bg4) rounded-lg animate-pulse" />}
                                         />
-                                    </div>
-                                </div>
+                                    </div> */}
+                        {/* </div>
                             </section>
-                        </LazySection>
+                        </LazySection> */}
 
                         {/* ═══ 9. Banner (lazy) ═══ */}
-                        <LazySection
-                            fallback={<div className="h-50 bg-(--colour-bg4) rounded-lg animate-pulse" />}
-                        >
-                            <section id="blog-banner-2" className="relative">
-                                {SectionOne}
-                            </section>
-                        </LazySection>
+                        <section id="blog-banner-2" className="relative">
+                            {SectionOne}
+                        </section>
 
                         {/* ═══ 11. Remaining Blog Cards ═══ */}
                         <LazySection
-                            fallback={
-                                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-                                    {[...Array(10)].map((_, i) => (
-                                        <div key={i} className="h-65 bg-(--colour-bg4) rounded-xl animate-pulse" />
-                                    ))}
-                                </div>
-                            }
-                        >
-                            <section id="blogs-remaining">
-                                <div className="w-full">
-                                    {/* Blog Cards Grid */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-                                        {articles?.length > 0 && articles.slice(0, 10).map((post) => (
-                                            <BlogCard key={post.id} post={post} />
-                                        ))}
-                                    </div>
-                                </div>
-                            </section>
-                        </LazySection>
+                            fetcher={remainingBlogsFetcher}
+                            render={(data) => {
+                                const remainingArray = ensureArray(data);
+                                if (!remainingArray.length) return null;
+                                return (
+                                    <section id="blogs-remaining">
+                                        <div className="w-full mt-4">
+                                            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 transition-opacity duration-300 opacity-100">
+                                                {remainingArray.map((post: Article) => (
+                                                    <BlogCard key={post.id} post={post} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </section>
+                                );
+                            }}
+                            fallback={<div className="h-75 bg-(--colour-bg4) rounded-lg animate-pulse" />}
+                        />
 
                     </div>
                 </div>

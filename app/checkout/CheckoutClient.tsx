@@ -36,6 +36,7 @@ import { OrderService } from '../api/services/order.service';
 import { useCartStore } from '../context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 import CheckoutFaq from './CheckoutFaq';
+import EmiFaq from '../emi/apply/_components/EmiFaq';
 
 
 export default function CheckoutClient() {
@@ -95,50 +96,54 @@ export default function CheckoutClient() {
             const finalTotal = subtotal - (appliedPromo?.discount || 0);
 
             const payload = {
-                ...checkoutState.address,
-                full_name: userInfo?.name || (checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : 'Guest'),
-                products: currentItems.map((item: any) => ({
-                    product_id: item.product?.id || item?.product_id || item.id,
-                    quantity: item.quantity || 1,
-                    varientcolour: item.varientcolour || null,
-                })),
-                shipping_address_id: checkoutState.address?.id,
-                total_amount: finalTotal,
-                payment_type: checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'),
-                promo_code: appliedPromo?.code || null,
-
-                recipient: {
-                    self_phone: checkoutState.recipient.type === 'self' ? checkoutState.recipient.phone : null,
-                    gift_recipient_name: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.name : null,
-                    gift_recipient_phone: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.phone : null,
-                    gift_message: checkoutState.recipient.type === 'gift' ? checkoutState.recipient.message : null,
-                    receiver_number: checkoutState.recipient.phone || null,
-                    recipent_type: checkoutState.recipient.type,
-                    gift_recipient_photo: checkoutState.recipient.recipientPhoto,
-                    gift_sender_photo: checkoutState.recipient.senderPhoto,
+                cart_id: cartItems?.id,
+                shipping_address: {
+                    id: checkoutState.address?.id,
+                    label: checkoutState.address?.address.label,
+                    landmark: checkoutState.address?.address.landmark,
+                    city: checkoutState.address?.address.city,
+                    district: checkoutState.address?.address.district,
+                    province: checkoutState.address?.address.province,
+                    country: checkoutState.address?.address.country,
+                    is_default: checkoutState.address?.address.is_default,
+                    geo: {
+                        lat: checkoutState.address?.geo?.lat,
+                        lng: checkoutState.address?.geo?.lng,
+                    }
                 },
-
-
-
-
-
-
-
-
-
-
-                
+                payment: {
+                    type: checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'),
+                    promo_code: appliedPromo?.code || null,
+                    total: finalTotal,
+                },
+                recipient: {
+                    type: checkoutState.recipient.type,
+                    phone: checkoutState.recipient.phone,
+                    name: userInfo?.name || checkoutState.recipient.name || '',
+                    photos: {
+                        sender: checkoutState.recipient.senderPhoto || null,
+                        receiver: checkoutState.recipient.recipientPhoto || null,
+                    },
+                    message: checkoutState.recipient.message || null,
+                }
             };
+
+
+
+
+
+
+
 
             await OrderService.CreateOrder(payload).then((res) => {
                 if (res?.data?.order_status === 'Placed' && res?.data?.payment_type === 'nic-asia') {
                     setProcessingPaymentOrder(res.data.id);
                 }
-                if (res?.success && res?.data?.payment_type !== 'cash') {
+                if (res?.success && res?.data?.payment_type !== 'cash_on_delivery') {
                     if (!isLoggedIn) clearGuestData();
                     toast.success('Order placed successfully!');
                     router.push(`/checkout/Successpage/${res.data.id}`);
-                } else if (res?.success && res?.data?.payment_type === 'cash') {
+                } else if (res?.success && res?.data?.payment_type === 'cash_on_delivery') {
                     if (!isLoggedIn) clearGuestData();
                     toast.success('Cash order placed successfully!');
                     router.push(`/checkout/Successpage/${res.data.id}`);
@@ -374,8 +379,8 @@ export default function CheckoutClient() {
                     </div>
 
                 </div>
-                
-                <CheckoutFaq type="standard" />
+
+                <EmiFaq params={{ type: 'brand' }} />
             </div>
         </div>
     );

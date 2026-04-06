@@ -34,7 +34,7 @@ export default function SectionHeader({
             {linkHref && (
                 <Link
                     href={linkHref}
-                    className="text-xs font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] transition-colors flex items-center gap-1"
+                    className="text-sm font-semibold text-[var(--colour-fsP2)] hover:text-[var(--colour-fsP1)] transition-colors flex items-center gap-1"
                 >
                     {linkText} <span className="text-sm">→</span>
                 </Link>

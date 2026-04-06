@@ -49,6 +49,7 @@ export const metadata = {
 };
 
 async function HeaderDataFetcher() {
+  
   const navItems = await getNavbarData();
   return <Header initialNavItems={navItems} />;
 }

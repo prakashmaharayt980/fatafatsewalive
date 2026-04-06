@@ -11,7 +11,7 @@ import type { ProductDetails } from '../../types/ProductDetailsTypes';
 import type { BannerItem } from '@/app/types/BannerTypes';
 import { formatDate } from '../../CommonVue/datetime';
 import imglogo from '../../assets/logoimg.png';
-import { fetchRandomBasketProducts } from '@/app/blogs/actions';
+import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
 
 import BlogCard from './BlogCard';
 import BlogCompareProducts from './BlogCompareProducts';
@@ -53,7 +53,7 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
     };
 
     // Camera Deals Sidebar Fetcher (matching listing focus)
-    const cameraDealsFetcher = React.useMemo(() => () => fetchRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
+    const cameraDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
 
     // ── Parse TOC headings (Targeting H2 and H3) ──
     const tocItems = useMemo<TocItem[]>(() => {
@@ -69,14 +69,14 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/(^-|-$)/g, '');
-                
+
                 // Avoid duplicate IDs
                 let finalId = id;
                 let counter = 1;
                 while (items.find(i => i.id === finalId)) {
                     finalId = `${id}-${counter++}`;
                 }
-                
+
                 items.push({ id: finalId, text, level });
             }
         }
@@ -112,7 +112,7 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
 
     useEffect(() => {
         if (tocItems.length === 0) return;
-        
+
         const handleObserver = (entries: IntersectionObserverEntry[]) => {
             // Find the first intersecting entry
             const visibleEntry = entries.find(entry => entry.isIntersecting);
@@ -156,20 +156,13 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
 
     const [tocOpen, setTocOpen] = useState(false);
 
-    // Derive next article to read
-    const nextArticle = relatedArticles.length > 0 ? relatedArticles[0] : null;
 
     // Derive category-specific articles for "Trending in [Category]"
     const trendingInCategory = (relatedArticles || [])
         .filter(a => a.category?.slug === article.category?.slug && a.id !== article.id)
         .slice(0, 6);
 
-    // Featured product from deals (the top-rated or first deal product)
-    const featuredProduct = dealProducts.length > 0
-        ? [...dealProducts].sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0))[0]
-        : null;
 
-    // Share handler
     const handleShare = useCallback(() => {
         if (navigator.share) {
             navigator.share({
@@ -333,12 +326,8 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                         <LazySection
                             fetcher={cameraDealsFetcher}
                             render={(data) => {
-                                const products = ensureArray(data).slice(0, 8);
-                                const deals = products.map((p: any) => ({
-                                    product: p,
-                                    sellPrice: p.discountedPriceVal ?? p.discounted_price ?? (typeof p.price === 'object' ? p.price?.current : p.price) ?? 0
-                                }));
-                                return <ProductDeals deals={deals} title="Camera Deals" />;
+                                const products = (data as any)?.products || (Array.isArray(data) ? data : []).slice(0, 8);
+                                return <ProductDeals products={products} title="Camera Deals" slug="dslr-camera-price-in-nepal" />;
                             }}
                             fallback={<div className="h-[500px] w-full bg-gray-100 rounded-lg animate-pulse" />}
                         />
@@ -451,7 +440,7 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                 )}
 
                 {/* ─── YouTube Content ─── */}
-                <LazySection>
+                {/* <LazySection>
                     <section>
                         <SectionHeader title="YouTube Content" accentColor="#ef4444" />
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
@@ -460,7 +449,7 @@ export default function BlogDetailsClient({ article, relatedArticles = [], autho
                             ))}
                         </div>
                     </section>
-                </LazySection>
+                </LazySection> */}
 
                 {/* ─── Compare Products ─── */}
                 {dealProducts.length >= 2 && (

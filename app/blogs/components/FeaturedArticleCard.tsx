@@ -16,6 +16,8 @@ interface FeaturedArticleCardProps {
     gridArea?: string;
     /** Category badge accent color */
     badgeColor?: string;
+    /** dictates image object-fit behavior */
+    imageFit?: 'cover' | 'contain';
 }
 
 /**
@@ -30,6 +32,7 @@ export default function FeaturedArticleCard({
     variant = 'compact',
     gridArea,
     badgeColor = 'var(--colour-fsP2)',
+    imageFit = 'contain',
 }: FeaturedArticleCardProps) {
     const imgSrc = article.thumb?.url || article.thumbnail_image?.full || imglogo.src;
 
@@ -48,14 +51,14 @@ export default function FeaturedArticleCard({
                 src={imgSrc}
                 alt={article.title}
                 fill
-                className="object-cover transition-transform duration-500"
+                className={`object-${imageFit} transition-transform duration-500`}
                 sizes={isHero ? '(max-width: 768px) 100vw, 50vw' : '25vw'}
             />
 
             {/* Dark gradient overlay */}
             <div className={`absolute inset-0 bg-gradient-to-t ${isHero
-                    ? 'from-black/85 via-black/30 to-transparent'
-                    : 'from-black/80 via-black/25 to-transparent'
+                ? 'from-black/85 via-black/30 to-transparent'
+                : 'from-black/80 via-black/25 to-transparent'
                 }`} />
 
             {/* Content */}

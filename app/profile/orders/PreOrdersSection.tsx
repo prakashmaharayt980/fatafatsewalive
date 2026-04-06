@@ -13,11 +13,11 @@ import {
 } from './shared';
 
 const PRE_CFG: Record<string, { label: string; cls: string }> = {
-    upcoming:   { label: 'Upcoming',    cls: 'text-(--colour-fsP2) bg-blue-50 border-blue-200' },
-    paid:       { label: 'Paid & Ready', cls: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-    history:    { label: 'Delivered',   cls: 'text-slate-600 bg-gray-50 border-gray-200' },
-    processing: { label: 'Processing',  cls: 'text-amber-600 bg-amber-50 border-amber-200' },
-    cancelled:  { label: 'Cancelled',   cls: 'text-red-600 bg-red-50 border-red-200' },
+    upcoming: { label: 'Upcoming', cls: 'text-(--colour-fsP2) bg-blue-50 border-blue-200' },
+    paid: { label: 'Paid & Ready', cls: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+    history: { label: 'Delivered', cls: 'text-slate-600 bg-gray-50 border-gray-200' },
+    processing: { label: 'Processing', cls: 'text-amber-600 bg-amber-50 border-amber-200' },
+    cancelled: { label: 'Cancelled', cls: 'text-red-600 bg-red-50 border-red-200' },
 };
 
 const fmtPayment = (type: string) => {
@@ -33,15 +33,15 @@ const fmtPayment = (type: string) => {
     return map[type] ?? type;
 };
 
-const getPreProduct   = (pre: PreOrder) => pre.products?.[0];
-const getPreName      = (pre: PreOrder) => getPreProduct(pre)?.product_name ?? 'Pre-order product';
-const getPreCategory  = (pre: PreOrder) => getPreProduct(pre)?.category ?? 'Pre-order';
-const getPreColor     = (pre: PreOrder) => getPreProduct(pre)?.selected_color ?? null;
-const getPreInvoice   = (pre: PreOrder) => pre.invoice_number ?? `PRE-${pre.id}`;
-const getDeposit      = (pre: PreOrder) => Number(pre.total_amount ?? 0);
-const getOrderTotal   = (pre: PreOrder) => Number(pre.order_total ?? 0);
-const getBalance      = (pre: PreOrder) => Math.max(getOrderTotal(pre) - getDeposit(pre), 0);
-const getPct          = (pre: PreOrder) => {
+const getPreProduct = (pre: PreOrder) => pre.products?.[0];
+const getPreName = (pre: PreOrder) => getPreProduct(pre)?.product_name ?? 'Pre-order product';
+const getPreCategory = (pre: PreOrder) => getPreProduct(pre)?.category ?? 'Pre-order';
+const getPreColor = (pre: PreOrder) => getPreProduct(pre)?.selected_color ?? null;
+const getPreInvoice = (pre: PreOrder) => pre.invoice_number ?? `PRE-${pre.id}`;
+const getDeposit = (pre: PreOrder) => Number(pre.total_amount ?? 0);
+const getOrderTotal = (pre: PreOrder) => Number(pre.order_total ?? 0);
+const getBalance = (pre: PreOrder) => Math.max(getOrderTotal(pre) - getDeposit(pre), 0);
+const getPct = (pre: PreOrder) => {
     const total = getOrderTotal(pre);
     return total > 0 ? Math.round((getDeposit(pre) / total) * 100) : 0;
 };
@@ -49,14 +49,14 @@ const getPct          = (pre: PreOrder) => {
 function PreOrderDetailDialog({ pre, onClose }: { pre: PreOrder | null; onClose: () => void }) {
     if (!pre) return null;
 
-    const cfg      = PRE_CFG[pre.status] ?? PRE_CFG.upcoming;
-    const pct      = getPct(pre);
-    const balance  = getBalance(pre);
-    const addr     = pre.shipping_address ?? MOCK_ADDRESS;
-    const color    = getPreColor(pre);
-    const isUpcoming   = pre.status === 'upcoming';
-    const isDelivered  = pre.status === 'history';
-    const isCancelled  = pre.status === 'cancelled';
+    const cfg = PRE_CFG[pre.status] ?? PRE_CFG.upcoming;
+    const pct = getPct(pre);
+    const balance = getBalance(pre);
+    const addr = pre.shipping_address ?? MOCK_ADDRESS;
+    const color = getPreColor(pre);
+    const isUpcoming = pre.status === 'upcoming';
+    const isDelivered = pre.status === 'history';
+    const isCancelled = pre.status === 'cancelled';
 
     return (
         <Dialog open={!!pre} onOpenChange={onClose}>
@@ -122,7 +122,7 @@ function PreOrderDetailDialog({ pre, onClose }: { pre: PreOrder | null; onClose:
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                                <DRow label="Payment Method" value={fmtPayment(pre.payment_type ?? '')} />
+                                <DRow label="Payment Method" value={pre.payment_type ?? ''} />
                                 <DRow label="Date of Purchase" value={fmt(pre.created_at)} />
                                 <DRow label="Reservation ID" value={getPreInvoice(pre)} />
                                 {color && <DRow label="Colour / Variant" value={color} />}

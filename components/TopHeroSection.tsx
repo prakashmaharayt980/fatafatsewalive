@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import BannerCarouselServer from './BannerCarouselServer';
-import BasketSectionServer from './BasketSectionServer';
+import BasketCard from '@/app/homepage/BasketCard';
+
 
 interface Props {
   slug: string;
@@ -13,9 +14,7 @@ export default async function TopHeroSection({ slug, title, imgSlug }: Props) {
     <div className="flex flex-col">
       <BannerCarouselServer />
       <div className="mt-[-10px] relative z-20">
-        <Suspense fallback={<div className="min-h-[400px] w-full bg-gray-50/50 animate-pulse rounded-xl" />}>
-          <BasketSectionServer slug={slug} title={title} imgSlug={imgSlug} />
-        </Suspense>
+        {slug && <BasketCard slug={slug} title={title} />}
       </div>
     </div>
   );

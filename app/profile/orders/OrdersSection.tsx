@@ -25,7 +25,7 @@ import Image from 'next/image';
 
 
 const noBar = '[&::-webkit-scrollbar]:w-0 [scrollbar-width:none]';
-const isCOD = (t: string) => !t || t.toLowerCase().includes('cash') || t.toLowerCase().includes('cod');
+const isCOD = (t: string) => !t || t.toLowerCase().includes('cash_on_delivery') || t.toLowerCase().includes('cod');
 
 
 // ─── Cancel Dialog ─────────────────────────────────────────────────────────────

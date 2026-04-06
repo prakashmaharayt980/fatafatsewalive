@@ -68,12 +68,7 @@ function CompareCard({ left, right }: { left: ProductDetails; right: ProductDeta
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            {/* Category Badge */}
-            <div className="flex justify-center pt-3 pb-1">
-                <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 bg-[var(--colour-bg4)] text-[var(--colour-text3)] rounded-full">
-                    {category}
-                </span>
-            </div>
+
 
             {/* Products Row */}
             <div className="relative flex items-center px-3 py-3">
@@ -97,8 +92,8 @@ function CompareCard({ left, right }: { left: ProductDetails; right: ProductDeta
             {/* Compare Button */}
             <div className="px-3 pb-3">
                 <Link
-                    href={`/compare/slugs=${left.slug},${right.slug}`}
-                
+                    href={`/compare?slugs=${left.slug},${right.slug}`}
+
                     className={`flex items-center justify-center w-full py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 ${hovered
                         ? 'bg-[var(--colour-fsP2)] text-white'
                         : 'bg-[var(--colour-bg4)] text-[var(--colour-text3)]'

@@ -4,7 +4,7 @@ import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import { searchProducts, submitRepairRequest } from '../api/services/product.service'
 import { getCategoryProducts } from '../api/services/category.service'
-import { useAuth } from '../context/AuthContext'
+
 import type { ShippingAddress } from '../checkout/checkoutTypes'
 
 // Sub-components
@@ -22,6 +22,8 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet'
+import { useAuthStore } from '../context/AuthContext'
+import { useShallow } from 'zustand/react/shallow'
 
 interface BrandItem { id: number; name: string; slug: string; image?: string }
 interface CategoryItem { id: number; title: string; slug: string; brands?: BrandItem[] }
@@ -57,9 +59,13 @@ interface State {
 }
 
 export default function RepairClient({ brands, categories }: RepairClientProps) {
-    const { isLoggedIn, setloginDailogOpen, user } = useAuth()
-
-    // ── Filter Categories to relevant ones (Mobile & Laptop) ──
+    const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(
+        useShallow((s) => ({
+            isLoggedIn: s.isLoggedIn,
+            user: s.user,
+            triggerLoginAlert: s.triggerLoginAlert,
+        }))
+    );
     const filteredCategories = useMemo(() => {
         return categories.filter(cat =>
             cat.title?.toLowerCase().includes('mobile') ||
@@ -220,7 +226,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
 
     const handleCheckout = async () => {
         if (!isLoggedIn) {
-            setloginDailogOpen(true)
+        triggerLoginAlert()
             return
         }
 
@@ -343,7 +349,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
                                 pickupSelected={true}
                                 onPickupSelect={() => {}}
                                 onCheckout={handleCheckout}
-                                onLoginRequest={() => setloginDailogOpen(true)}
+                                onLoginRequest={() => triggerLoginAlert()}
                                 isLoggedIn={isLoggedIn}
                                 selectedAddress={state.selectedAddress}
                                 onAddressSelect={(addr) => updateState({ selectedAddress: addr })}

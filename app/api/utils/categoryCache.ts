@@ -1,7 +1,14 @@
 'use server'
 
-import { getCategoryProducts } from '@/app/api/services/category.service';
-import type { SearchParams } from '@/app/category/[slug]/types';
+import { getAllCategories } from '@/app/api/services/category.service';
+import { getBlogCategories } from '@/app/api/services/blog.service';
 
-export const getCachedCategoryProducts = async (slug: string, params?: SearchParams) =>
-    getCategoryProducts(slug, params ?? {});
+export async function getCachedAllCategories() {
+    'use cache';
+    return getAllCategories();
+}
+
+export async function getCachedBlogCategories() {
+    'use cache';
+    return getBlogCategories();
+}

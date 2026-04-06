@@ -5,6 +5,7 @@ import imglogo from '@/app/assets/CompanyLogo.webp';
 import dynamic from 'next/dynamic';
 import type { NavbarItem } from '../context/navbar.interface';
 
+
 const NavBar = dynamic(() => import('./NavBar'), { ssr: true });
 const SearchBarClient = dynamic(() => import('./SearchBarClient'), { ssr: true });
 const HeaderActionsClient = dynamic(() => import('./HeaderActionsClient'), { ssr: true });
@@ -15,6 +16,7 @@ interface HeaderProps {
 }
 
 export default function Header({ initialNavItems }: HeaderProps) {
+
     return (
         <header className="sticky top-0 z-40 w-full bg-white shadow-sm">
             <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">

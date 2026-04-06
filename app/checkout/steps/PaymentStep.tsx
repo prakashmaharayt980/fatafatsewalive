@@ -27,7 +27,7 @@ const allPaymentMethods = [
         img: handshakeIcon,
         id: 99,
         description: 'Pay cash upon receiving your order',
-        type: 'Cash'
+        type: 'cash_on_delivery'
     },
 ];
 

@@ -29,14 +29,3 @@ export const getHomepageData = async () => {
     return { criticalData };
 };
 
-export const getBlogPageData = async () => {
-    const [blogRes] = await Promise.allSettled([
-        getBlogList({ page: 1, per_page:  20, sort:'asc'}),
-    ]);
-
-    const latestArticles = blogRes.status === 'fulfilled'
-        ? (Array.isArray(blogRes.value) ? blogRes.value : blogRes.value.data || [])
-        : [];
-
-    return { latestArticles };
-};

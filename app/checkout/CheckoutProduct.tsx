@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image';
-import React, { use } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,7 @@ export default function CheckoutProduct({
     return (
       <div className="bg-white rounded-3xl shadow-[var(--shadow-premium-sm)] border border-gray-100 p-10 text-center sticky top-24">
         <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5 motion-safe:animate-bounce-slow">
-          <ShoppingBag className="w-10 h-10 text-[var(--colour-fsP2)]" />
+          <ShoppingBag className="w-10 h-10 text-(--colour-fsP2)" />
         </div>
         <h3 className="text-gray-900 text-lg font-bold mb-2">Cart is empty</h3>
         <p className="text-gray-500 text-sm">Add amazing items to your cart<br />to see them here!</p>
@@ -101,14 +100,14 @@ export default function CheckoutProduct({
                 {/* Details - Standardized Stacked Layout */}
                 <div className="flex-1 min-w-0 py-0.5 flex flex-col justify-start gap-1">
                   <div>
-                    <p className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-[var(--colour-fsP2)] transition-colors">
+                    <p className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-(--colour-fsP2) transition-colors">
                       {product.name || 'Unnamed Product'}
                     </p>
                   </div>
 
                   {item.varientcolour && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-[var(--colour-fsP2)] bg-blue-50 px-2 py-0.5 rounded border border-blue-100/30 uppercase tracking-tight">
+                      <span className="text-[11px] font-bold text-(--colour-fsP2) bg-blue-50 px-2 py-0.5 rounded border border-blue-100/30 uppercase tracking-tight">
                         Color: {item.varientcolour}
                       </span>
                     </div>
@@ -118,7 +117,7 @@ export default function CheckoutProduct({
                     <p className="text-[12px] font-medium text-gray-500">
                       {quantity} <span className="text-[10px] mx-0.5">×</span> Rs. {price.toLocaleString()}
                     </p>
-                    <p className="text-[13px] font-black text-gray-900 group-hover:text-[var(--colour-fsP2)] transition-colors">
+                    <p className="text-[13px] font-black text-gray-900 group-hover:text-(--colour-fsP2) transition-colors">
                       Rs. {itemTotal.toLocaleString()}
                     </p>
                   </div>
@@ -133,17 +132,15 @@ export default function CheckoutProduct({
         {/* Promo Code Section - Ticket Style */}
         {Stepstate.currentStep !== 2 && (
           <div className="space-y-3">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-              <Ticket className="w-3 h-3" /> Have a Promo Code?
+            <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wide flex items-center gap-1.5">
+              <Ticket className="w-3 h-3 text-(--colour-fsP2)" /> Have a Promo Code?
             </label>
 
             {submittedvaluelist.appliedPromo ? (
-              <div className="relative bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between overflow-hidden group">
-                <div className="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl -mr-8 -mt-8"></div>
-
-                <div className="relative flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-emerald-600">
-                    <Tag className="w-5 h-5" />
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-white rounded-lg border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <Tag className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="font-bold text-emerald-700 text-sm">{submittedvaluelist.appliedPromo.code}</p>
@@ -153,7 +150,7 @@ export default function CheckoutProduct({
 
                 <button
                   onClick={() => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: '', appliedPromo: null }))}
-                  className="relative z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white border border-gray-200 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -161,18 +158,18 @@ export default function CheckoutProduct({
             ) : (
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-(--colour-fsP2)" />
                   <Input
                     value={submittedvaluelist.promoCode}
                     onChange={(e) => setsubmittedvaluelist((prev) => ({ ...prev, promoCode: e.target.value }))}
                     placeholder="Enter discount code"
-                    className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] focus:ring-[var(--colour-fsP2)] rounded text-sm transition-all"
+                    className="pl-10 h-10 bg-white border-gray-200 focus:border-(--colour-fsP2) focus:ring-2 focus:ring-(--colour-fsP2)/10 rounded-xl text-sm font-semibold text-gray-900 placeholder:text-gray-400 placeholder:font-normal outline-none transition-all"
                   />
                 </div>
                 <Button
                   onClick={handleApplyPromo}
                   disabled={!submittedvaluelist.promoCode}
-                  className="h-10 px-4 bg-[var(--colour-fsP2)] hover:bg-blue-700 text-white rounded font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:shadow-none active:scale-95"
+                  className="h-10 px-4 bg-(--colour-fsP2) hover:opacity-90 text-white rounded-xl font-bold transition-all disabled:opacity-40 active:scale-95"
                 >
                   Apply
                 </Button>
@@ -209,7 +206,7 @@ export default function CheckoutProduct({
                 <span className="text-sm font-bold text-gray-700 block">Total</span>
                 <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Incl. Taxes</span>
               </div>
-              <span className="text-2xl font-black text-[var(--colour-fsP2)]">
+              <span className="text-2xl font-black text-(--colour-fsP2)">
                 Rs. {totalPayable.toLocaleString()}
               </span>
             </div>

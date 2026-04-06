@@ -11,7 +11,7 @@ import {
 import { searchProducts, getProductBySlug } from '../api/services/product.service'
 import { getCategoryProducts } from '../api/services/category.service'
 import type { NavbarItem } from '../context/navbar.interface'
-import { useAuth } from '../context/AuthContext'
+import {  useAuthStore } from '../context/AuthContext'
 import type { ShippingAddress } from '../checkout/checkoutTypes'
 // @ts-ignore
 import EmiFaq from '../emi/apply/_components/EmiFaq'
@@ -28,6 +28,7 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet'
+import { useShallow } from 'zustand/react/shallow'
 
 interface Props {
     categories: NavbarItem[]
@@ -72,7 +73,13 @@ const BLANK_CONDITION: ConditionAnswer = {
 
 export default function ExchangeClient({ categories, initialProducts = [], bannerSection, blogSection }: Props) {
     const router = useRouter()
-    const { isLoggedIn, setloginDailogOpen, user } = useAuth()
+    const { isLoggedIn, user, triggerLoginAlert } = useAuthStore(
+        useShallow((s) => ({
+            isLoggedIn: s.isLoggedIn,
+            user: s.user,
+            triggerLoginAlert: s.triggerLoginAlert,
+        }))
+    );
 
     const [state, setState] = useState<State>({
         selectedCategory: null,
@@ -251,7 +258,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
 
     const handleCheckout = async () => {
         if (!isLoggedIn) {
-            setloginDailogOpen(true)
+            triggerLoginAlert()
             return
         }
 
@@ -385,7 +392,7 @@ export default function ExchangeClient({ categories, initialProducts = [], banne
                             onPickupSelect={(sel) => updateState({ pickupSelected: sel })}
                             onCheckout={handleCheckout}
                             isLoggedIn={isLoggedIn}
-                            onLoginRequest={() => setloginDailogOpen(true)}
+                            onLoginRequest={() => triggerLoginAlert()}
                             selectedAddress={state.selectedAddress}
                             onAddressSelect={(addr: ShippingAddress) => updateState({ selectedAddress: addr })}
                             serialNumber={state.serialNumber}

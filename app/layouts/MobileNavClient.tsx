@@ -45,7 +45,7 @@ export default function MobileNavClient({ initialNavItems }: MobileNavClientProp
         { label: 'Blog', icon: BookOpen, path: '/blogs' },
         { label: 'Search', icon: Search, path: null },
         { label: 'Repair', icon: Wrench, path: '/repair' },
-        { label: 'EMI Shop', icon: Store, path: '/emi' },
+        { label: 'EMI Shop', icon: Store, path: '/emi/shop' },
     ];
 
     useEffect(() => {

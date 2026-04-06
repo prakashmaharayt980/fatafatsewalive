@@ -1,26 +1,35 @@
 'use server'
 
-import { getCachedCategoryProducts } from './categoryCache';
+
 import { getBlogList } from '../services/blog.service';
+import { decorateProduct } from './productDecorator';
+import type { ProductData } from '../../types/ProductDetailsTypes';
+import { getCategoryProducts } from '../services/category.service';
 
 export async function getRandomBasketProducts(slug: string, count: number = 10) {
     try {
-        const [page1, page2] = await Promise.all([
-            getCachedCategoryProducts(slug, { per_page: count, page: 1, sort: 'newest' }),
-            getCachedCategoryProducts(slug, { per_page: count, page: 2, sort: 'newest' }),
-        ]);
-        const p1 = page1?.data?.products ?? page1?.data ?? [];
-        const p2 = page2?.data?.products ?? page2?.data ?? [];
-        return { data: { products: [...p1, ...p2] } };
+        // Fetch a larger single batch to avoid duplicate parallel requests and cache collision
+        const response = await getCategoryProducts(slug, { per_page: count, page: 1, sort: 'newest', brand: '' });
+        const rawProducts = response?.data?.products ?? response?.data ?? [];
+
+        // Apply an in-memory shuffle to create "randomness" without hammering the API
+        const shuffled = [...rawProducts].sort(() => 0.5 - Math.random())
+            .slice(0, count)
+            .map((p: ProductData, idx: number) => decorateProduct(p, idx));
+
+        return { products: shuffled };
     } catch (error) {
         console.error(`getRandomBasketProducts failed for ${slug}:`, error);
-        return getCachedCategoryProducts(slug, { per_page: count, sort: 'newest' });
+        return { products: [] };
     }
 }
 
-export async function getRandomBlogList(params: { category?: string; per_page?: number } = {}) {
+export async function getRandomBlogList(params: { category?: string; search?: string; page?: number; per_page?: number, sort?: string } = {
+    sort: 'desc',
+
+}) {
     try {
-        const result = await getBlogList({ ...params, page: 1 , sort:'asc'});
+        const result = await getBlogList({ ...params });
         return result?.data || result || [];
     } catch (error) {
         console.error('getRandomBlogList failed:', error);

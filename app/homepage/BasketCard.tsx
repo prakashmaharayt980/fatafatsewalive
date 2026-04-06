@@ -6,9 +6,13 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { trackCategoryClick } from '@/lib/analytics';
 import ProductCard from '../product-details/ProductCard';
+import useSWR from 'swr';
+import { getRandomBasketProducts } from '@/app/api/utils/productFetchers';
+import { decorateProduct } from '@/app/api/utils/productDecorator';
 import SkeletonCard from '../skeleton/SkeletonCard';
 import type { BasketProduct } from '../types/ProductDetailsTypes';
 import { useBasketState, useStoreSelectors, usePagination, useScrollObserver } from './hooks/useBasketState';
+
 
 interface Props {
   title?: string;
@@ -19,28 +23,7 @@ interface Props {
 
 const BATCH_SIZE = 4;
 
-const CardItem = memo(function CardItem({ product, index, isFirstSection, isWishlisted, isCompared, cart, auth }: {
-  product: any;
-  index: number;
-  isFirstSection: boolean;
-  isWishlisted: boolean;
-  isCompared: boolean;
-  cart: ReturnType<typeof useStoreSelectors>['cart'];
-  auth: ReturnType<typeof useStoreSelectors>['auth'];
-}) {
-  return (
-    <ProductCard
-      product={product}
-      isFirstSection={isFirstSection}
-      simple
-      index={index}
-      isWishlisted={isWishlisted}
-      isCompared={isCompared}
-      onWishlist={() => cart.addToWishlist(product.id, auth.user, auth.triggerLoginAlert, product as BasketProduct)}
-      onCompare={() => cart.isInCompare(product.id) ? cart.removeFromCompare(product.id) : cart.addToCompare(product)}
-    />
-  );
-});
+
 
 function BasketCard({ title, slug, initialData, isFirstSection = false }: Props) {
   const router = useRouter();
@@ -48,10 +31,30 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
   const sentinelRef = useRef<HTMLDivElement>(null);
   const itemWidthRef = useRef(0);
 
-  const products = initialData?.products ?? [];
+  const hasInitialData = Array.isArray(initialData?.products) && initialData!.products.length > 0;
+
+  const { data: swrProducts, isLoading: swrLoading } = useSWR(
+    hasInitialData ? null : ['basket', slug],
+    async ([_, s]) => {
+      const res = await getRandomBasketProducts(s);
+      const innerData = res;
+      const rawProducts = innerData?.products ?? [];
+      return rawProducts.map((p: any, index: number) => decorateProduct(p, index));
+    },
+    { revalidateOnFocus: false }
+  );
+
+  const products = useMemo(() => {
+    if (hasInitialData && initialData?.products) {
+      return initialData.products.map((p: any, index: number) => decorateProduct(p, index));
+    }
+    return swrProducts ?? [];
+  }, [hasInitialData, initialData?.products, swrProducts]);
+
+  const isLoading = hasInitialData ? false : swrLoading;
   const { state, updateState } = useBasketState(slug, products.length > 0);
-  const { auth, cart } = useStoreSelectors();
-  const { isMobile, itemsPerPage, totalPages } = usePagination(products.length, state.width);
+  const { auth, cart, wishlistSet } = useStoreSelectors();
+
 
   const visibleCountRef = useRef(state.visibleCount);
   visibleCountRef.current = state.visibleCount;
@@ -66,17 +69,15 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
 
   useEffect(() => { itemWidthRef.current = 0; }, [state.width]);
 
-  const wishlistSet = useMemo(() => new Set(cart.wishlistItems.map((i: any) => i.id)), [cart.wishlistItems]);
-
-  if (!state.ready || !products.length) return <SkeletonCard />;
-
 
 
   const visibleProducts = useMemo(() => products.slice(0, state.visibleCount), [products, state.visibleCount]);
 
+  if (isLoading || !state.ready || !products.length) return <SkeletonCard />;
+
   return (
     <div className="w-full py-2 sm:py-3 bg-transparent">
-      <div className="flex  items-center justify-between px-4 sm:px-6 mb-3">
+      <div className="flex  items-center justify-between px-4 sm:px-4 mb-3">
         <div className="flex items-center gap-3">
           <div className="w-1 h-7 bg-slate-800 rounded-full" />
           <h2 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight">{title}</h2>
@@ -93,7 +94,7 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
         </button>
       </div>
 
-      <div className="relative group/list px-1 sm:px-6">
+      <div className="relative group/list px-1 sm:px-4">
         <div
           ref={scrollRef}
           className="flex overflow-x-auto overflow-y-visible scrollbar-hide snap-x pb-2 mt-2 pt-2"
@@ -104,18 +105,22 @@ function BasketCard({ title, slug, initialData, isFirstSection = false }: Props)
               key={product.id}
               className="flex-shrink-0 snap-start px-1 sm:px-1.5 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
             >
-              <CardItem
+              <ProductCard
                 product={product}
                 isFirstSection={isFirstSection}
+                simple
                 index={index}
                 isWishlisted={wishlistSet.has(product.id)}
                 isCompared={cart.isInCompare(product.id)}
-                cart={cart}
-                auth={auth}
+                onWishlist={() => cart.addToWishlist(product.id, auth.user, auth.triggerLoginAlert, product as BasketProduct)}
+                onCompare={() => cart.isInCompare(product.id) ? cart.removeFromCompare(product.id) : cart.addToCompare(product)}
               />
             </div>
           ))}
-       
+          {/* Intersection Observer Sentinel */}
+          {state.visibleCount < products.length && (
+            <div ref={sentinelRef} className="shrink-0 w-4 h-full" aria-hidden="true" />
+          )}
         </div>
 
         {/* {totalPages > 1 && (

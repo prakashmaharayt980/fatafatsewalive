@@ -19,7 +19,7 @@ const ProductSidebar: React.FC<Props> = ({ product }) => {
     return (
         <div className="space-y-4 lg:sticky lg:top-24">
             {product.emi_enabled && <EmiWidget price={Number(currentPrice)} />}
-            <TrustWidget />
+            {/* <TrustWidget /> */}
             <PartnersWidget />
         </div>
     );

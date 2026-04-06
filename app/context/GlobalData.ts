@@ -1,12 +1,12 @@
 import { cookies } from 'next/headers';
-import { getAllCategories } from '../api/services/category.service';
+import { getCachedAllCategories } from '../api/utils/categoryCache';
 import type { NavbarItem } from './navbar.interface';
 
 export type { NavbarItem };
 
 export async function getNavbarData(): Promise<NavbarItem[]> {
     try {
-        const res = await getAllCategories();
+        const res = await getCachedAllCategories();
         return res.data as NavbarItem[];
     } catch (error) {
         console.error("Error fetching navbar items:", error);

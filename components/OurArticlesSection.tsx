@@ -4,7 +4,7 @@ import OurArticles from '@/app/homepage/OurArticles';
 
 export default async function OurArticlesSection() {
   const [blogRes] = await Promise.all([
-    getBlogList({ per_page: 6 , sort:'asc'}),
+    getBlogList({ per_page: 6 , sort:'desc'}),
  
   ]);
 
