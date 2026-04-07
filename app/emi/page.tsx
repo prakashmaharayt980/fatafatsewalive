@@ -23,7 +23,7 @@ const getProductBySlug = async (slug: string): Promise<ProductDetails | null> =>
 
 const getEmiBanner = async (): Promise<BannerItem | null> => {
     // Attempt to fetch production-ready banner, fallback to test if needed
-    const banner = await getBannerData('emi-banner-test');
+    const banner = await getBannerBySlug('emi-banner-test');
     if (banner) return banner;
     return getBannerData('emi-banner-test');
 };
@@ -54,6 +54,7 @@ export async function generateMetadata({ searchParams }: PageProps) {
 }
 
 import { Suspense } from 'react';
+import { getBannerBySlug } from '../api/services/misc.service';
 
 const EmiPageContent = async ({ searchParams }: PageProps) => {
     const resolvedSearchParams = await searchParams;

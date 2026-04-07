@@ -1,17 +1,8 @@
-import React from 'react';
-import {
-  MapPin,
-  PhoneCall,
-  Mail,
-  Headphones,
-  Clock,
-  Truck,
-  Shield,
-} from 'lucide-react';
+
+import { MapPin, PhoneCall, Mail, Headphones, Clock, Truck, Shield, Building2, IdCard } from 'lucide-react';
 import Image from 'next/image';
 import imglogo from '@/app/assets/CompanyLogo.webp';
 import Link from 'next/link';
-// SVGs
 import facebookIcon from '@/public/svgfile/facebook.svg';
 import twitterIcon from '@/public/svgfile/twitter.svg';
 import youtubeIcon from '@/public/svgfile/youtube.svg';
@@ -19,10 +10,11 @@ import tiktokIcon from '@/public/svgfile/tiktok.svg';
 import appStore from '@/public/imgfile/app-store.svg';
 import playStore from '@/public/imgfile/google-play.svg';
 import linkedinIcon from '@/public/svgfile/linkedin.svg';
-
 import { bankingEmiPartners, paymentPartners, insurancePartners } from '@/app/CommonVue/Partners';
 
-const FooterBody = async() => {
+
+
+const FooterBody = async () => {
 
   const QuickLinks = [
     { title: "About Us", url: "/pages/about-us" },
@@ -39,31 +31,31 @@ const FooterBody = async() => {
     { title: "EMI Payment", url: "/pages/emi" },
     { title: "Shipping Info", url: "/pages/contact-us" },
     { title: "FAQs", url: "/pages/contact-us" },
-    { title: "Store Location", url: "/pages/location" },
+
   ];
 
   const Categories = [
-    { title: "Mobile Phones", url: "/category/mobile" },
-    { title: "Laptops", url: "/category/laptop" },
-    { title: "Tablets", url: "/category/tablet" },
-    { title: "Accessories", url: "/category/accessories" },
-    { title: "Wearables", url: "/category/wearable" },
-    { title: "Audio", url: "/category/audio" },
+    { title: "Mobile Phones", url: "/category/mobile-price-in-nepal" },
+    { title: "Laptops", url: "/category/laptop-price-in-nepal" },
+    { title: "Tablets", url: "/category/tablet-price-in-nepal" },
+    { title: "Accessories", url: "/category/accessories-price-in-nepal" },
+    { title: "Drone", url: "/category/drone-price-in-nepal" },
+    { title: "Speaker", url: "/category/speaker-price-in-nepal" },
   ];
 
   const TopBrands = [
-    { title: "Apple", url: "/brand/apple" },
-    { title: "Samsung", url: "/brand/samsung" },
-    { title: "Xiaomi", url: "/brand/xiaomi" },
-    { title: "OnePlus", url: "/brand/oneplus" },
-    { title: "Lenovo", url: "/brand/lenovo" },
-    { title: "HP", url: "/brand/hp" },
+    { title: "Apple", url: "/category/mobile-price-in-nepal?brand=iphone-price-in-nepal" },
+    { title: "Samsung", url: "/category/mobile-price-in-nepal?brand=samsung-price-in-nepal" },
+    { title: "Xiaomi", url: "/category/mobile-price-in-nepal?brand=xiaomi-price-in-nepal" },
+    { title: "OnePlus", url: "/category/mobile-price-in-nepal?brand=oneplus-price-in-nepal" },
+    { title: "Mac book", url: "/category/laptop-price-in-nepal?brand=iphone-price-in-nepal" },
+    { title: "Dell", url: "/category/laptop-price-in-nepal?brand=dell-laptop-price-in-nepal" },
   ];
 
   const DiscoverMore = [
     { title: "Blogs", url: "/blogs" },
     { title: "Trending Products", url: "/products" },
-    { title: "EMI Application", url: "/pages/emi" },
+    { title: "EMI Application", url: "/emi" },
     { title: "Compare Products", url: "/compare" },
   ];
 
@@ -73,7 +65,7 @@ const FooterBody = async() => {
     { name: "TikTok", Icon: <Image src={tiktokIcon} alt="TikTok" width={24} height={24} className="w-6 h-6" />, url: "https://www.tiktok.com/@fatafatsewa" },
     { name: "YouTube", Icon: <Image src={youtubeIcon} alt="Youtube" width={24} height={24} className="w-6 h-6" />, url: "https://www.youtube.com/@fatafatsewa" },
     { name: "LinkedIn", Icon: <Image src={linkedinIcon} alt="LinkedIn" width={24} height={24} className="w-6 h-6" />, url: "https://www.linkedin.com/company/fatafatsewanp" },
-];
+  ];
 
   return (
     <footer className="font-[Inter,sans-serif]">
@@ -91,21 +83,21 @@ const FooterBody = async() => {
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 text-[#1a1a1a]">
+              <a href="tel:+9779828757575" className="flex items-center gap-2 text-[#1a1a1a] hover:opacity-80 transition-opacity">
                 <PhoneCall className="w-4 h-4 text-[#1a1a1a]" />
                 <div>
                   <p className="text-[10px] text-[#1a1a1a] uppercase tracking-wider font-bold">Call Us</p>
                   <p className="text-sm font-bold text-[#1a1a1a]">+977 9828757575</p>
                 </div>
-              </div>
+              </a>
               <div className="hidden sm:block h-8 bg-[#1a1a1a]/20 w-[1px]" />
-              <div className="flex items-center gap-2 text-[#1a1a1a]">
+              <a href="mailto:info@fatafatsewa.com" className="flex items-center gap-2 text-[#1a1a1a] hover:opacity-80 transition-opacity">
                 <Mail className="w-4 h-4 text-[#1a1a1a]" />
                 <div>
                   <p className="text-[10px] text-[#1a1a1a] uppercase tracking-wider font-bold">Email</p>
                   <p className="text-sm font-bold text-[#1a1a1a]">info@fatafatsewa.com</p>
                 </div>
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -188,34 +180,41 @@ const FooterBody = async() => {
 
             {/* ── Column 6: Contact Info ── */}
             <div>
-              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Legalites</h3>
+              <h3 className="text-white font-bold text-[13px] mb-4 uppercase tracking-wider">Contact Info</h3>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <Building2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
                   <span className="text-slate-400 text-[13px]">Fatafat Sewa Pvt. Ltd.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <IdCard className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
                   <span className="text-slate-400 text-[13px]">Reg No : 242282/077/078</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <IdCard className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
                   <span className="text-slate-400 text-[13px]"> VAT No: 609800038</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <MapPin className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-400 text-[13px] leading-snug">Sitapaila ,Kathmandu</span>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Fatafat+Sewa+Sitapaila+Kathmandu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 text-[13px] leading-snug hover:text-blue-300 transition-colors"
+                  >
+                    Sitapaila, Kathmandu
+                  </a>
                 </li>
 
 
                 <li className="flex items-start gap-2">
                   <PhoneCall className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-400 text-[13px]">+977 9828757575</span>
+                  <a href="tel:+9779828757575" className="text-slate-400 text-[13px] hover:text-blue-300 transition-colors">+977 9828757575</a>
                 </li>
 
                 <li className="flex items-start gap-2">
                   <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-400 text-[13px]">info[@]fatafatsewa.com</span>
+                  <a href="mailto:info@fatafatsewa.com" className="text-slate-400 text-[13px] hover:text-blue-300 transition-colors">info@fatafatsewa.com</a>
                 </li>
 
               </ul>

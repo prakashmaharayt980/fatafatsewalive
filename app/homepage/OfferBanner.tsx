@@ -1,30 +1,16 @@
-import { GetallOfferlist, GetOfferDetailsBySlug } from "@/app/api/services/offers.service";
+'use cache'
+import { cacheLife } from "next/cache";
+import { GetOfferDetailsBySlug } from "@/app/api/services/offers.service";
 import OfferBannerClient from "./OfferBannerClient";
-import type { CampaignDetails } from "@/app/api/services/offers.interface";
 
-const OfferBanner = async ({ data: preFetchedData }: { data?: CampaignDetails }) => {
+interface Props {
+    slug: string;
+}
+
+const OfferBanner = async ({ slug }: Props) => {
+    cacheLife("hours");
     try {
-        // If data is pre-fetched (e.g. from BannerSectionServer), use it directly
-        if (preFetchedData) {
-            return <OfferBannerClient offer={preFetchedData} />;
-        }
-
-        // Fetch all campaigns (cached for 2 hours)
-        const campaignsRes = await GetallOfferlist();
-        
-        if (!campaignsRes?.success || !Array.isArray(campaignsRes.data) || campaignsRes.data.length === 0) {
-            return null;
-        }
-
-        // Get the first active campaign
-        const primaryCampaign = campaignsRes.data[0];
-        
-        if (!primaryCampaign?.slug) {
-            return null;
-        }
-
-        // Fetch full details of the primary campaign (cached for 2 hours)
-        const campaignDetailsRes = await GetOfferDetailsBySlug(primaryCampaign.slug);
+        const campaignDetailsRes = await GetOfferDetailsBySlug(slug);
 
         if (!campaignDetailsRes?.success || !campaignDetailsRes.data) {
             return null;

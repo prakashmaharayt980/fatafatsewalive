@@ -171,11 +171,9 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
                 <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
                     <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100">
                         <p className={labelCls}>Selected Product</p>
-                        {activeProduct && (
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase tracking-widest ml-auto">
-                                EMI Eligible
-                            </span>
-                        )}
+                        <button onClick={()=>  router.push(`/emi/eligibility`)} className="text-[10px] cursor-pointer font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase tracking-widest ml-auto">
+                              Am I  Eligible for EMI?
+                            </button>
                     </div>
                     <div className="p-5">
                         <ProductEMIUI

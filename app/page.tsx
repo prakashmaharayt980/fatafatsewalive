@@ -153,7 +153,7 @@ export default async function Page() {
         }
         basketSection1={<BasketCard slug={categories[1].slug} title={categories[1].title} />}
         basketSection2={<BasketCardwithImage slug={categories[2].slug} title={categories[2].title} imgSlug={categories[2].imgSlug} />}
-        offerSection={<OfferBanner />}
+        offerSection={<OfferBanner slug="pathao-offer" />}
         basketSection3={<BasketCard slug={categories[3].slug} title={categories[3].title} />}
         sectionTwo={
           <TwoImageBannerServer slug={banners[1].slug} />

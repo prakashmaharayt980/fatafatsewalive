@@ -52,7 +52,7 @@ const TopBanner = ({ data }: TopBannerProps) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0  transition-opacity duration-300" />
 
       {/* Ads Indicator */}
-      <div className="absolute top-2 right-2 bg-[var(--colour-fsP2)]/30  px-2 py-0.5 rounded text-[10px] font-medium text-black border border-white/10 z-10">
+      <div className="absolute top-1 right-2 bg-[var(--colour-fsP2)]/30  px-2 py-0.5 rounded text-[10px] font-medium text-black border border-white/10 z-10">
         Ads
       </div>
     </div>

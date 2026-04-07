@@ -3,8 +3,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import imglogo from '@/app/assets/CompanyLogo.webp';
 import dynamic from 'next/dynamic';
+import { cookies } from 'next/headers';
 import type { NavbarItem } from '../context/navbar.interface';
-
 
 const NavBar = dynamic(() => import('./NavBar'), { ssr: true });
 const SearchBarClient = dynamic(() => import('./SearchBarClient'), { ssr: true });
@@ -15,7 +15,9 @@ interface HeaderProps {
     initialNavItems: NavbarItem[];
 }
 
-export default function Header({ initialNavItems }: HeaderProps) {
+export default async function Header({ initialNavItems }: HeaderProps) {
+    const cookieStore = await cookies();
+    const isLoggedIn = cookieStore.has('access_token');
 
     return (
         <header className="sticky top-0 z-40 w-full bg-white shadow-sm">
@@ -39,7 +41,7 @@ export default function Header({ initialNavItems }: HeaderProps) {
 
                     <div className="flex items-center space-x-2 sm:space-x-3">
                         {/* Auth & Cart Island */}
-                        <HeaderActionsClient />
+                        <HeaderActionsClient initialIsLoggedIn={isLoggedIn} />
 
                         {/* Mobile Nav & Sheet Island */}
                         <MobileNavClient initialNavItems={initialNavItems} />
