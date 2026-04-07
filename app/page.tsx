@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import HomePage from './homepage';
 
@@ -149,17 +150,29 @@ export default async function Page() {
       <HomePage
         mainBannerSection={<TopHeroSection slug={categories[0].slug} title={categories[0].title} />}
         sectionOne={
-          <FooterBannerServer slug={banners[0].slug} />
+          <Suspense fallback={<div className="h-48 animate-pulse bg-gray-100 rounded-xl" />}>
+            <FooterBannerServer slug={banners[0].slug} />
+          </Suspense>
         }
         basketSection1={<BasketCard slug={categories[1].slug} title={categories[1].title} />}
         basketSection2={<BasketCardwithImage slug={categories[2].slug} title={categories[2].title} imgSlug={categories[2].imgSlug} />}
-        offerSection={<OfferBanner slug="pathao-offer" />}
+        offerSection={
+          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-xl" />}>
+            <OfferBanner slug="pathao-offer" />
+          </Suspense>
+        }
         basketSection3={<BasketCard slug={categories[3].slug} title={categories[3].title} />}
         sectionTwo={
-          <TwoImageBannerServer slug={banners[1].slug} />
+          <Suspense fallback={<div className="h-48 animate-pulse bg-gray-100 rounded-xl" />}>
+            <TwoImageBannerServer slug={banners[1].slug} />
+          </Suspense>
         }
         basketSection4={<BasketCard slug={categories[4].slug} title={categories[4].title} />}
-        ourArticlesSection={<OurArticlesSection />}
+        ourArticlesSection={
+          <Suspense fallback={<div className="h-96 animate-pulse bg-gray-100 rounded-xl" />}>
+            <OurArticlesSection />
+          </Suspense>
+        }
       />
     </>
   );

@@ -1,9 +1,12 @@
-
 'use server'
 
+import { cacheLife, cacheTag } from 'next/cache';
 import { apiPublic, apiPrivate, n8nApi } from '../ServiceHelper/index';
 
 export const getBannerBySlug = async (slug: string) => {
+    'use cache';
+    cacheLife('hours');
+    cacheTag(`banner-${slug}`);
     return apiPublic.get(`/v1/banners/${slug}`).then(res => res.data);
 };
 
@@ -16,6 +19,9 @@ export const getChatbotHistory = async (sessionId?: string | number) => {
 };
 
 export const getFaqs = async (params: { type?: string; per_page?: number; page?: number }) => {
+    'use cache';
+    cacheLife('hours');
+    cacheTag('faqs');
     const query = new URLSearchParams();
     if (params.type) query.set('type', params.type);
     if (params.per_page) query.set('per_page', params.per_page.toString());
