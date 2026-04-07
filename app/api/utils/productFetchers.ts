@@ -9,11 +9,11 @@ export async function getRandomBasketProducts(slug: string, count: number = 10) 
     try {
         const response = await getCategoryProducts(slug, { per_page: count, page: 1, sort: 'newest', brand: '' })
         const rawProducts = response?.data?.products ?? response?.data ?? []
-        const shuffled = [...rawProducts]
-            .sort(() => 0.5 - Math.random())
+        // No randomization to ensure deterministic SSR and caching
+        const products = [...rawProducts]
             .slice(0, count)
             .map((p: ProductData, idx: number) => decorateProduct(p, idx))
-        return { products: shuffled }
+        return { products }
     } catch (error) {
         console.error(`getRandomBasketProducts failed for ${slug}:`, error)
         return { products: [] }

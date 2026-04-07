@@ -295,7 +295,7 @@ const FooterBody = async () => {
                       width={33}
                       height={20}
                       className="object-contain w-auto h-5"
-                      quality={75}
+                     
                     />
                   </div>
                 ))}
@@ -322,7 +322,7 @@ const FooterBody = async () => {
                         width={41}
                         height={24}
                         className="object-contain w-auto h-6"
-                        quality={75}
+                    
                       />
                     </div>
                   ))}
