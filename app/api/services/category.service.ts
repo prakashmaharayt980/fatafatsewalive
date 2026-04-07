@@ -1,24 +1,27 @@
-
 'use server'
 
+import { cacheLife } from 'next/cache';
 import type { SearchParams } from '@/app/category/[slug]/types';
 import { apiPublic, apiPrivate, n8nApi } from '../ServiceHelper/index';
 import { unstable_cache } from 'next/cache';
 
 
 export const getAllCategories = async () => {
-    // 'use cache';
+    'use cache';
+    cacheLife('hours');
     return apiPublic.get(`/categorys/navbarItems`).then(res => res.data);
 };
 
 export const getCategoryBySlug = async (slug: string) => {
-    // 'use cache';
+    'use cache';
+    cacheLife('hours');
     return apiPublic.get(`/v1/categories/${slug}`).then(res => res.data);
 };
 
 
 export const getAllBrands = async () => {
-    // 'use cache';
+    'use cache';
+    cacheLife('hours');
     return apiPublic.get(`/v1/get-all-brands`)
         .then(res => res.data)
         .catch((error: any) => {
@@ -37,7 +40,8 @@ export const getAllBrands = async () => {
 
 
 export const getCategoryProducts = async (slug: string, params?: SearchParams) => {
-    // 'use cache';
+    'use cache';
+    cacheLife('minutes');
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.per_page) queryParams.append('per_page', params.per_page.toString());

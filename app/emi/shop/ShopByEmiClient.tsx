@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import Image from 'next/image'
-import { ShoppingBag } from 'lucide-react'
+import { CreditCard } from 'lucide-react'
 import logoImg from '@/public/imgfile/logoimg.png'
 import type { NavbarItem } from '@/app/context/navbar.interface'
 import type { BannerItem } from '@/app/types/BannerTypes'
@@ -18,128 +18,92 @@ interface Props {
     initialProducts?: any
 }
 
-interface State {
-    budget: number
-    tenure: number
-    downPaymentStr: string
-    zeroEmi: boolean
+const BRANDS = ['Apple', 'Samsung', 'Xiaomi', 'OnePlus', 'Realme', 'Vivo', 'Oppo', 'HP', 'Dell', 'Lenovo', 'Asus']
+
+const STATS = [
+    { value: '0%', label: 'Interest' },
+    { value: '36mon', label: 'Tenure' },
+    { value: '500+', label: 'Products' },
+    { value: 'Free', label: 'Delivery' },
+]
+
+function Section({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="bg-white border-none border-(--colour-border3) px-4 py-1 sm:px-6 md:px-8">
+            {children}
+        </div>
+    )
 }
 
-export default function ShopByEmiClient({
-    footerBanners = [],
-    initialProducts,
-}: Props) {
-    const [state] = useState<State>({
-        budget: 500000,
-        tenure: 12,
-        downPaymentStr: '0',
-        zeroEmi: true,
-    })
-
+export default function ShopByEmiClient({ footerBanners = [], initialProducts }: Props) {
+    const [state] = useState({ budget: 500000, tenure: 12, downPaymentStr: '0', zeroEmi: true })
     const downPayment = Number(state.downPaymentStr) || 0
     const faqParams = useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), [])
 
     return (
-        <div className="min-h-screen bg-[#f8f9fa] pb-10">
+        <div className="min-h-screen bg-(--colour-bg4) pb-8">
+
             {/* ═══ HERO ═══ */}
-            <section className="bg-white border-b border-gray-100">
-                <div className="mx-auto px-4 lg:px-8 max-w-6xl py-8 md:py-12">
+            <section className="bg-white border-b border-(--colour-border3) px-6 md:px-10 py-8 md:py-12">
+                <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-14">
 
-                    {/* Top row */}
-                    <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                    {/* Left */}
+                    <div className="flex-1 space-y-5">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold" style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: '#EEF3FB' }}>
+                            <CreditCard style={{ width: 11, height: 11 }} /> Shop by EMI
+                        </div>
 
-                        {/* Left */}
-                        <div className="flex-1 space-y-4 text-center md:text-left">
-
-                            {/* Social proof badge */}
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border" style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: '#EEF3FB' }}>
-                                <ShoppingBag style={{ width: 10, height: 10 }} />
-                                <span>50,000+ buyers in Nepal trust Fatafat EMI</span>
-                            </div>
-
-                            <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold text-gray-900 leading-[1.15] tracking-tight">
+                        <div>
+                            <h1 className="text-3xl sm:text-4xl font-extrabold text-(--colour-text2) leading-[1.15] tracking-tight">
                                 Own it today.<br />
                                 <span style={{ color: 'var(--colour-fsP2)' }}>Pay in easy EMIs.</span>
                             </h1>
-
-                            <p className="text-gray-500 text-sm max-w-md mx-auto md:mx-0 leading-relaxed">
-                                Don't wait to save up — get your device now on <strong className="text-gray-700">0% interest EMI</strong> from Rs.&nbsp;1,000/month. Flexible tenures up to 24 months with major Nepali banks.
+                            <p className="text-(--colour-text3) text-sm mt-3 max-w-sm leading-relaxed">
+                                Get your device on <strong className="text-(--colour-text2)">0% interest EMI</strong> from Rs.&nbsp;1,000/mo. Up to 36 months with major Nepali banks.
                             </p>
-
-                            {/* Stats */}
-                            <div className="grid grid-cols-4 gap-2 max-w-sm mx-auto md:mx-0">
-                                {[
-                                    { value: '0%', label: 'Interest' },
-                                    { value: '24mo', label: 'Max tenure' },
-                                    { value: '500+', label: 'Products' },
-                                    { value: 'Free', label: 'Delivery' },
-                                ].map((s, i) => (
-                                    <div key={i} className="bg-[#F5F7FA] rounded-xl p-2.5 text-center border border-gray-100">
-                                        <p className="text-base font-extrabold text-gray-900">{s.value}</p>
-                                        <p className="text-[10px] text-gray-400 font-bold mt-0.5">{s.label}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* How it works — 3 steps */}
-                            <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto md:mx-0">
-                                {[
-                                    { step: '1', text: 'Pick your device' },
-                                    { step: '2', text: 'Choose EMI plan' },
-                                    { step: '3', text: 'Get it delivered' },
-                                ].map((s, i) => (
-                                    <div key={i} className="flex items-center gap-2 flex-1 bg-[#F5F7FA] rounded-xl px-3 py-2 border border-gray-100">
-                                        <span className="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center shrink-0" style={{ background: 'var(--colour-fsP2)' }}>
-                                            {s.step}
-                                        </span>
-                                        <span className="text-[11px] font-semibold text-gray-700">{s.text}</span>
-                                    </div>
-                                ))}
-                            </div>
                         </div>
 
-                        {/* Right — image only */}
-                        <div className="shrink-0 flex items-center justify-center">
-                            <div className="relative w-50 h-50 md:w-60 md:h-60">
-                                <div className="absolute inset-0 rounded-full" style={{ background: '#EEF3FB' }} />
-                                <Image
-                                    src={logoImg}
-                                    alt="Shop by EMI — Fatafat Sewa"
-                                    fill
-                                    className="object-contain relative z-10 p-6"
-                                    sizes="240px"
-                                    priority
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Popular brands — full width below */}
-                    <div className="mt-7 pt-5 border-t border-gray-100">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">EMI available on top brands</p>
-                        <div className="flex flex-wrap gap-2">
-                            {['Apple', 'Samsung', 'Xiaomi', 'OnePlus', 'Realme', 'Vivo', 'Oppo', 'HP', 'Dell', 'Lenovo', 'Asus'].map(b => (
-                                <span key={b} className="px-3 py-1 rounded-full bg-[#F5F7FA] border border-gray-100 text-[11px] font-bold text-gray-600">
-                                    {b}
-                                </span>
+                        {/* Stats */}
+                        <div className="grid grid-cols-4 gap-2 max-w-xs">
+                            {STATS.map(s => (
+                                <div key={s.label} className="bg-(--colour-bg4) rounded-xl p-2.5 text-center border border-(--colour-border3)">
+                                    <p className="text-sm font-extrabold text-(--colour-text2)">{s.value}</p>
+                                    <p className="text-[10px] text-(--colour-text3) font-medium mt-0.5">{s.label}</p>
+                                </div>
                             ))}
                         </div>
+
+                        {/* Brand chips */}
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-(--colour-text3) mb-2">EMI on top brands</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {BRANDS.map(b => (
+                                    <span key={b} className="px-2.5 py-1 rounded-full text-[11px] font-semibold text-(--colour-text3) bg-(--colour-bg4) border border-(--colour-border3)">
+                                        {b}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
+                    {/* Right — logo */}
+                    <div className="shrink-0">
+                        <div className="relative w-44 h-44 md:w-56 md:h-56 rounded-full" style={{ background: '#EEF3FB' }}>
+                            <Image src={logoImg} alt="Fatafat Sewa EMI" fill className="object-contain p-6" sizes="224px" priority />
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            {/* ── HERO BANNER ───────────────────────────────────── */}
-            <div>
-                <TopBanner data={footerBanners?.[0]} />
-            </div>
+            {/* ── BANNER ── */}
 
-            {/* ── iPHONE — 0% INTEREST EMI (SSR hydrated) ────────── */}
-            <div className="w-full mt-6">
-                <div className="bg-white w-full border-y border-gray-100 px-4 py-4 md:px-8">
+
+            {/* ── iPHONE 0% EMI ── */}
+            <div className="mt-3">
+                <Section>
                     <EmiBasketSection
                         slug="mobile-price-in-nepal"
-                        title="iPhone Series — 0% Interest EMI"
+                        title="With 0% EMI — Apple iPhones"
                         brandSlug="iphone-price-in-nepal"
                         budget={state.budget}
                         tenure={state.tenure}
@@ -148,12 +112,12 @@ export default function ShopByEmiClient({
                         initialData={initialProducts}
                         badge="0% Interest"
                     />
-                </div>
+                </Section>
             </div>
-
-            {/* ── LAPTOPS ON EMI (on-demand) ───────────────────────── */}
-            <div className="w-full mt-6">
-                <div className="bg-white w-full border-y border-gray-100 px-4 py-4 md:px-8">
+            <TopBanner data={footerBanners?.[0]} />
+            {/* ── LAPTOPS ── */}
+            <div className="">
+                <Section>
                     <EmiBasketSection
                         slug="laptop-price-in-nepal"
                         title="Laptops — Study & Work on Easy EMI"
@@ -163,19 +127,20 @@ export default function ShopByEmiClient({
                         zeroEmi={false}
                         badge="Easy EMI"
                     />
-                </div>
+                </Section>
             </div>
 
-            {/* ── EMI OFFER BANNER (on-demand) ─────────────────────── */}
-            {/* offer */}
-            <EmiOfferBanner slug="emi-offer-deals" />
+            {/* ── OFFER BANNER ── */}
+            <div className="mt-3">
+                <EmiOfferBanner slug="emi-offer-deals" />
+            </div>
 
-            {/* ── MID INCOME PLAN (on-demand) ──────────────────────── */}
-            <div className="w-full mt-6">
-                <div className="bg-white w-full border-y border-gray-100 px-4 py-4 md:px-8">
+            {/* ── MID INCOME ── */}
+            <div className="mt-3">
+                <Section>
                     <EmiBasketSection
                         slug="mobile-price-in-nepal"
-                        title="Mid Income Plan — Smartphones Rs. 30K–80K"
+                        title="Mid Income Plan — Rs. 30K–80K"
                         brandSlug="samsung-price-in-nepal"
                         budget={80000}
                         tenure={12}
@@ -183,30 +148,30 @@ export default function ShopByEmiClient({
                         zeroEmi={false}
                         badge="Popular"
                     />
-                </div>
+                </Section>
             </div>
-
-            {/* ── STUDENT PLAN (on-demand) ─────────────────────────── */}
-            <div className="w-full mt-6">
-                <div className="bg-white w-full border-y border-gray-100 px-4 py-4 md:px-8">
+            {/* ── FOOTER ── */}
+            <div className="">
+                <TopBanner data={footerBanners?.[0]} />
+            </div>
+            {/* ── STUDENT PLAN ── */}
+            <div className="mt-3">
+                <Section>
                     <EmiBasketSection
                         slug="mobile-price-in-nepal"
-                        title="Student Plan — Budget Phones Under Rs. 30K"
+                        title="Student Plan — Under Rs. 30K"
                         budget={30000}
                         tenure={6}
                         downPayment={downPayment}
                         zeroEmi={false}
                         badge="Budget"
                     />
-                </div>
+                </Section>
             </div>
 
-            {/* ── FOOTER BANNER ────────────────────────────────────── */}
-            <div className="mt-10">
-                <TopBanner data={footerBanners?.[0]} />
-            </div>
 
-            <div className="mx-2 sm:mx-4 rounded-t-xl border border-gray-200 bg-white px-2">
+
+            <div className="mt-3 bg-white border-t border-(--colour-border3) px-4 sm:px-6">
                 <EmiFaq params={faqParams} />
             </div>
         </div>

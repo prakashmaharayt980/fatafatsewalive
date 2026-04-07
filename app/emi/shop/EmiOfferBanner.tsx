@@ -3,42 +3,87 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Tag, ArrowRight, ShoppingBag } from 'lucide-react'
+import { Zap, ArrowRight, ShoppingBag } from 'lucide-react'
 import { useInView } from 'react-intersection-observer'
 import { fetchOfferDetails } from '@/app/api/services/offers.service'
 import type { CampaignDetails, CampaignProduct } from '@/app/api/services/offers.interface'
 
-interface Props {
-    slug: string
+interface Props { slug: string }
+interface TimeLeft { d: number; h: number; m: number; s: number }
+
+function useCountdown(end: string): TimeLeft {
+    const calc = (): TimeLeft => {
+        const dist = new Date(end).getTime() - Date.now()
+        if (dist < 0) return { d: 0, h: 0, m: 0, s: 0 }
+        return {
+            d: Math.floor(dist / 86400000),
+            h: Math.floor((dist % 86400000) / 3600000),
+            m: Math.floor((dist % 3600000) / 60000),
+            s: Math.floor((dist % 60000) / 1000),
+        }
+    }
+    const [t, setT] = useState<TimeLeft>(calc)
+    useEffect(() => {
+        const id = setInterval(() => { const n = calc(); setT(n); if (!n.d && !n.h && !n.m && !n.s) clearInterval(id) }, 1000)
+        return () => clearInterval(id)
+    }, [end])
+    return t
 }
 
-function ProductCard({ p }: { p: CampaignProduct }) {
-    const hasDiscount = p.price.current > p.price.discounted
-    const discountPercent = hasDiscount
+const R = 22
+const C = 2 * Math.PI * R
+
+function ClockRing({ value, max, label, color }: { value: number; max: number; label: string; color: string }) {
+    return (
+        <div className="flex flex-col items-center gap-1">
+            <div className="relative w-13 h-13">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r={R} fill="none" stroke="white" strokeWidth="3" opacity="0.6" />
+                    <circle cx="28" cy="28" r={R} fill="none" stroke={color} strokeWidth="3"
+                        strokeDasharray={C} strokeDashoffset={C - (value / max) * C}
+                        strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-black tabular-nums font-mono text-(--colour-text2)">
+                    {String(value).padStart(2, '0')}
+                </span>
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-(--colour-text3)">{label}</span>
+        </div>
+    )
+}
+
+function SaleProductCard({ p }: { p: CampaignProduct }) {
+    const disc = p.price.current > p.price.discounted
         ? Math.round(((p.price.current - p.price.discounted) / p.price.current) * 100)
         : 0
+    const emi = Math.round(p.price.discounted / 12)
 
     return (
         <Link
             href={`/product-details/${p.slug}`}
-            className="flex items-center gap-2.5 shrink-0 w-48 bg-white border border-gray-100 rounded-xl p-2 hover:border-gray-200 transition-colors"
+            className="group flex flex-col shrink-0 w-38 bg-white border border-(--colour-border3) rounded-xl overflow-hidden hover:border-(--colour-fsP2)/40 hover:shadow-sm transition-all duration-150"
         >
-            <div className="relative w-12 h-12 shrink-0 bg-[#F5F7FA] rounded-lg overflow-hidden">
+            <div className="relative w-full aspect-square bg-(--colour-bg4)">
+                {disc > 0 && (
+                    <span className="absolute top-1.5 left-1.5 z-10 text-[9px] font-black text-white px-1.5 py-0.5 rounded-md" style={{ background: 'var(--colour-fsP1)' }}>
+                        -{disc}%
+                    </span>
+                )}
                 {p.thumb?.url && (
-                    <Image src={p.thumb.url} alt={p.thumb.alt_text ?? p.name} fill sizes="48px" className="object-contain p-1.5" />
+                    <Image src={p.thumb.url} alt={p.thumb.alt_text ?? p.name} fill sizes="152px"
+                        className="object-contain p-3 mix-blend-multiply group-hover:scale-[1.03] transition-transform duration-200" />
                 )}
             </div>
-            <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-gray-800 truncate leading-snug">{p.name}</p>
-                <p className="text-[12px] font-extrabold text-gray-900 mt-0.5">Rs.&nbsp;{p.price.discounted.toLocaleString()}</p>
-                {hasDiscount && (
-                    <div className="flex items-center gap-1">
-                        <p className="text-[10px] text-gray-400 line-through">Rs.&nbsp;{p.price.current.toLocaleString()}</p>
-                        <span className="text-[9px] font-black px-1 py-px rounded" style={{ color: 'var(--colour-fsP1)', background: '#FFF4EE' }}>
-                            -{discountPercent}%
-                        </span>
-                    </div>
+
+            <div className="p-2.5 flex flex-col gap-0.5 border-t border-(--colour-border3)">
+                <p className="text-[11px] font-semibold text-(--colour-text2) line-clamp-2 leading-snug">{p.name}</p>
+                <p className="text-[13px] font-bold text-(--colour-text1) mt-1">Rs.&nbsp;{p.price.discounted.toLocaleString()}</p>
+                {disc > 0 && (
+                    <p className="text-[10px] text-(--colour-text3) line-through">Rs.&nbsp;{p.price.current.toLocaleString()}</p>
                 )}
+                <span className="mt-1 self-start text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ color: 'var(--colour-fsP2)', background: '#EEF3FB' }}>
+                    EMI Rs.&nbsp;{emi.toLocaleString()}/mo
+                </span>
             </div>
         </Link>
     )
@@ -50,10 +95,10 @@ export default function EmiOfferBanner({ slug }: Props) {
 
     useEffect(() => {
         if (!inView) return
-        fetchOfferDetails(slug)
-            .then(res => setOffer(res.data))
-            .catch(() => null)
+        fetchOfferDetails(slug).then(r => setOffer(r.data)).catch(() => null)
     }, [inView, slug])
+
+    const t = useCountdown(offer?.end_date ?? new Date(Date.now() + 86400000).toISOString())
 
     if (!inView) return <div ref={ref} className="min-h-25" />
     if (!offer) return null
@@ -61,74 +106,66 @@ export default function EmiOfferBanner({ slug }: Props) {
     const products = offer.products?.data ?? []
 
     return (
-        <div ref={ref} className="w-full mt-6 bg-white border-y border-gray-100">
+        <div ref={ref} className="w-full border-y border-(--colour-border3) overflow-hidden" style={{ background: '#EEF3FB' }}>
 
-            {/* Main content row */}
-            <div className="flex flex-col md:flex-row">
+            {/* Hero row */}
+            <div className="flex flex-col md:flex-row px-6 py-8 md:px-8 gap-8 md:gap-0">
 
-                {/* Left — content */}
-                <div className="flex-1 px-6 py-8 md:px-10 md:py-10 flex flex-col justify-center gap-5">
+                {/* Left — content 2/5 */}
+                <div className="md:w-2/5 flex flex-col justify-center gap-5">
 
-                    <div className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border" style={{ color: 'var(--colour-fsP1)', borderColor: '#FFD6C0', background: '#FFF4EE' }}>
-                        <Tag style={{ width: 9, height: 9 }} /> Special EMI Offer
+                    <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: 'white' }}>
+                        <Zap style={{ width: 9, height: 9, fill: 'currentColor' }} /> Limited EMI Offer
                     </div>
 
                     <div>
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                        <h2 className="text-xl sm:text-2xl font-extrabold text-(--colour-text1) leading-tight">
                             {offer.name}
                         </h2>
-                        <p className="text-gray-500 text-sm mt-2 max-w-sm leading-relaxed">
-                            Exclusive deals on top gadgets — all available on easy EMI. No hidden charges, instant approval with partner banks.
+                        <p className="text-(--colour-text3) text-sm mt-1.5 max-w-xs leading-relaxed">
+                            Exclusive gadget deals on 0% EMI — limited time, approved by major Nepali banks.
                         </p>
                     </div>
 
-                    {products.length > 0 && (
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                            {products.length} products in this offer
+                    {/* Clock countdown */}
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-3 text-(--colour-text3)">
+                            Offer ends in
                         </p>
-                    )}
+                        <div className="flex items-center gap-2">
+                            <ClockRing value={t.d} max={30} label="Days" color="var(--colour-fsP2)" />
+                            <span className="text-(--colour-border3) font-black text-xl mb-4">·</span>
+                            <ClockRing value={t.h} max={24} label="Hrs" color="var(--colour-fsP1)" />
+                            <span className="text-(--colour-border3) font-black text-xl mb-4">·</span>
+                            <ClockRing value={t.m} max={60} label="Min" color="var(--colour-fsP2)" />
+                            <span className="text-(--colour-border3) font-black text-xl mb-4">·</span>
+                            <ClockRing value={t.s} max={60} label="Sec" color="var(--colour-fsP1)" />
+                        </div>
+                    </div>
 
                     <div className="flex items-center gap-4">
                         <Link
                             href={`/offers/${offer.slug}`}
-                            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl text-white text-sm font-bold transition-opacity hover:opacity-90"
+                            className="inline-flex items-center gap-2 h-9 px-4 rounded-lg text-white text-sm font-bold transition-opacity hover:opacity-90"
                             style={{ background: 'var(--colour-fsP2)' }}
                         >
-                            <ShoppingBag style={{ width: 14, height: 14 }} /> Shop Offer
+                            <ShoppingBag style={{ width: 13, height: 13 }} /> Shop Offer
                         </Link>
-                        <Link
-                            href="/offers"
-                            className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
-                        >
-                            All deals <ArrowRight style={{ width: 13, height: 13 }} />
+                        <Link href="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-(--colour-text3) hover:text-(--colour-text2) transition-colors">
+                            All deals <ArrowRight style={{ width: 12, height: 12 }} />
                         </Link>
                     </div>
                 </div>
 
-                {/* Right — banner image */}
-                {offer.thumb?.url && (
-                    <div className="md:w-72 lg:w-96 shrink-0 bg-[#F5F7FA] border-l border-gray-100 flex items-center justify-center p-8">
-                        <div className="relative w-full aspect-square max-w-65">
-                            <Image
-                                src={offer.thumb.url}
-                                alt={offer.thumb.alt_text ?? offer.name}
-                                fill
-                                sizes="(max-width: 768px) 80vw, 384px"
-                                className="object-contain drop-shadow-xl"
-                                priority
-                            />
-                        </div>
-                    </div>
-                )}
+     
             </div>
 
-            {/* Product strip */}
+            {/* Product strip — white cards on tinted bg */}
             {products.length > 0 && (
-                <div className="border-t border-gray-100 px-6 md:px-10 py-4">
+                <div className="px-6 md:px-8 pb-6">
+     
                     <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-                        {products.map(p => (
-                            <ProductCard key={p.id} p={p} />
-                        ))}
+                        {products.map(p => <SaleProductCard key={p.id} p={p} />)}
                     </div>
                 </div>
             )}

@@ -1,7 +1,7 @@
 'use server'
 
+import { cacheLife, cacheTag } from 'next/cache';
 import { apiPublic } from '../ServiceHelper/index';
-import { unstable_cache } from 'next/cache';
 import type { CampaignsResponse, CampaignDetailsResponse } from './offers.interface';
 
 // Raw fetchers for use on client or in server actions
@@ -14,17 +14,17 @@ export const fetchOfferDetails = async (slug: string) => {
 };
 
 
-// Cached server-side versions (Server Actions)
-export const GetallOfferlist = async () =>
-    unstable_cache(
-        fetchAllOffers,
-        ['all-campaigns'],
-        { revalidate: 20, tags: ['campaigns'] }
-    )();
+// Cached server-side versions (Next.js 16 'use cache')
+export const GetallOfferlist = async () => {
+    'use cache';
+    cacheLife('minutes');
+    cacheTag('campaigns');
+    return fetchAllOffers();
+};
 
-export const GetOfferDetailsBySlug = async (slug: string) =>
-    unstable_cache(
-        () => fetchOfferDetails(slug),
-        [`campaign-details-${slug}`],
-        { revalidate: 1, tags: [`campaign-${slug}`] }
-    )();
+export const GetOfferDetailsBySlug = async (slug: string) => {
+    'use cache';
+    cacheLife('minutes');
+    cacheTag(`campaign-${slug}`);
+    return fetchOfferDetails(slug);
+};

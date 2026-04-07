@@ -1,3 +1,5 @@
+'use cache'
+import { cacheLife } from 'next/cache'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 
@@ -34,6 +36,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
+    cacheLife('minutes')
     const [heroBanner, footerBanner, categories, initialProducts] = await Promise.all([
         getBannerData(banners[0].slug),
         getBannerData(banners[1].slug),
