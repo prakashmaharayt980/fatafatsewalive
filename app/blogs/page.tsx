@@ -40,38 +40,51 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
     const activeCategory = resolvedParams.category;
     const searchQuery = resolvedParams.q;
 
-    // Fetch primary data
+    // 1. Core Data
     const heroBannerData = await getBannerData('blog-banner-test');
 
-    // Fetch dynamic data in parallel directly with the random fetcher (single chain)
-    let categoriesResponse: any = null;
-    let blogListResponse: any = null;
-    let cameraDealsResponse: any = null;
+    // 2. Fetch Base Listing and Categories
+    const [categoriesRes, blogListRes] = await Promise.all([
+        getCachedBlogCategories(),
+        getBlogList({
+            category: activeCategory && activeCategory !== 'all' ? activeCategory : undefined,
+            search: searchQuery || undefined,
+            per_page: 12,
+            sort: 'desc',
+        }),
+    ]);
 
-    try {
-        const [categoriesRes, blogListRes, cameraRes] = await Promise.all([
-            getCachedBlogCategories(),
-            getBlogList({
-                category: activeCategory !== 'all' ? activeCategory : undefined,
-                search: searchQuery || undefined,
-                per_page: 12,
-                sort: 'desc',
-            }),
-            getRandomBasketProducts('dslr-camera-price-in-nepal', 5)
-        ]);
-        categoriesResponse = categoriesRes;
-        blogListResponse = blogListRes;
-        cameraDealsResponse = cameraRes;
-    } catch (e) {
-        console.error("Critical fetch failure in BlogPage", e);
-    }
-
-    const categories: any[] = categoriesResponse?.success ? categoriesResponse.data : [];
+    const categories: any[] = categoriesRes?.success ? categoriesRes.data : [];
     if (!categories.find((c: any) => c.slug === 'all' || c.title === 'All')) {
         categories.unshift({ id: 'all', title: 'All', slug: 'all' });
     }
+    const allArticles: Article[] = blogListRes?.data || blogListRes || [];
 
-    const allArticles: Article[] = blogListResponse?.data || blogListResponse || [];
+    // 3. Web Stories Logic (Now on Server)
+    const validCats = categories.filter((c: any) => c.slug !== 'all' && (c.status === true || c.status === 1));
+    const randomCats = [...validCats].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+    // 4. Parallel fetch for all additional sections
+    const [
+        cameraRes,
+        webStoriesRes,
+        newsRes,
+        gamingRes,
+        laptopsRes,
+        footerBannerData
+    ] = await Promise.all([
+        getRandomBasketProducts('dslr-camera-price-in-nepal', 5),
+        Promise.all(randomCats.map(async (cat) => {
+            const res = await getRandomBlogList({ category: cat.slug, per_page: 5 });
+            return { category: cat, stories: Array.isArray(res) ? res : (res?.data || []) };
+        })),
+        getRandomBlogList({ category: 'news', per_page: 6 }),
+        getRandomBlogList({ category: 'best-gaming-phones', per_page: 7 }),
+        getRandomBasketProducts('laptop-price-in-nepal', 5),
+        getBannerData('home-banner-fourth-test').then(res => res?.data ?? res)
+    ]);
+
+    const webStories = webStoriesRes.filter(item => item.stories.length > 0);
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -88,13 +101,6 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
             url: `${SITE_URL}/blogs/${article.slug}`,
         })),
     };
-
-
-    let footerBannerData = null;
-    try {
-        const res = await getBannerData('home-banner-fourth-test');
-        footerBannerData = res?.data ?? res;
-    } catch (e) { }
 
     const SectionOne = (
         <div className="mt-4 w-full">
@@ -113,7 +119,11 @@ async function BlogPageContent({ searchParams }: { searchParams: Promise<{ categ
                 categories={categories}
                 SectionOne={SectionOne}
                 heroBannerData={heroBannerData}
-                cameraDeals={cameraDealsResponse?.products}
+                cameraDeals={cameraRes?.products ?? []}
+                initialWebStories={webStories}
+                initialNews={newsRes ?? []}
+                initialGaming={gamingRes ?? []}
+                initialLaptops={laptopsRes?.products ?? []}
             />
         </>
     );

@@ -32,6 +32,10 @@ interface BlogListingClientProps {
     SectionOne?: React.ReactNode;
     heroBannerData?: any;
     cameraDeals?: any;
+    initialWebStories?: any[];
+    initialNews?: any[];
+    initialGaming?: any[];
+    initialLaptops?: any[];
 }
 
 export default function BlogListingClient({
@@ -40,16 +44,24 @@ export default function BlogListingClient({
     SectionOne,
     heroBannerData,
     cameraDeals,
+    initialWebStories = [],
+    initialNews = [],
+    initialGaming = [],
+    initialLaptops = [],
 }: BlogListingClientProps) {
 
     const searchParams = useSearchParams();
     const activeCategory = searchParams.get('category') ?? 'all';
     const searchQuery = searchParams.get('q') ?? '';
-    console.log('cjsmc ', cameraDeals)
+
     // ─── SWR Article Fetching ───
     const { data: swrArticles, isLoading } = useSWR(
         ['blogs', activeCategory, searchQuery],
         async ([_, cat, q]: [string, string, string]) => {
+            // Only fetch if it's not the initial load or if parameters changed
+            if (cat === (searchParams.get('category') ?? 'all') && q === (searchParams.get('q') ?? '')) {
+                return articles;
+            }
             const res = await getRandomBlogList({
                 category: cat !== 'all' ? cat : undefined,
                 search: q || undefined,
@@ -60,6 +72,7 @@ export default function BlogListingClient({
         {
             fallbackData: articles,
             revalidateOnFocus: false,
+            revalidateIfStale: false,
         }
     );
 
@@ -80,38 +93,15 @@ export default function BlogListingClient({
         return data.data?.products || data.data?.data || data.products || data.data || [];
     };
 
-    const fetchwebStories = async () => {
-        // Step 1: Fetch categories on demand
-        const catData = await getBlogCategories();
-        const cats = catData?.data || catData || [];
-
-        // Step 2: Randomly pick up to five categories to filter by
-        const filtered = cats.filter((c: any) => c.slug !== 'all' && (c.status === true || c.status === 1));
-        const selected = [...filtered].sort(() => 0.5 - Math.random()).slice(0, 5);
-
-        // Step 3: Fetch 5 blogs for each of the selected categories
-        const results = await Promise.all(
-            selected.map(async (cat) => {
-                const res = await getRandomBlogList({ category: cat.slug, per_page: 5 });
-                return {
-                    category: cat,
-                    stories: ensureArray(res)
-                };
-            })
-        );
-
-        // Only return categories that actually have stories
-        return results.filter(item => item.stories.length > 0);
-    }
-
-    // Randomized Fetchers (The "Func" Improvements)
-    // const latestDealsFetcher = React.useMemo(() => () => getRandomBasketProducts('dslr-camera-price-in-nepal', 8), []);
+    // Optimized Fetchers (using pre-fetched data where available)
     const emiFetcher = React.useMemo(() => () => getCategoryProducts('mobile-price-in-nepal', { page: 1, per_page: 5, emi_enabled: true, brand: 'iphone-price-in-nepal' }), []);
-    const laptopsFetcher = React.useMemo(() => () => getRandomBasketProducts('laptop-price-in-nepal', 5), []);
-    const newsArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'news', per_page: 6 }), []);
-    const featuredArticlesFetcher = React.useMemo(() => () => getRandomBlogList({ category: 'best-gaming-phones', per_page: 7 }), []);
+    const laptopsFetcher = React.useMemo(() => () => initialLaptops.length > 0 ? Promise.resolve({ products: initialLaptops }) : getRandomBasketProducts('laptop-price-in-nepal', 5), [initialLaptops]);
+    const newsArticlesFetcher = React.useMemo(() => () => initialNews.length > 0 ? Promise.resolve(initialNews) : getRandomBlogList({ category: 'news', per_page: 6 }), [initialNews]);
+    const featuredArticlesFetcher = React.useMemo(() => () => initialGaming.length > 0 ? Promise.resolve(initialGaming) : getRandomBlogList({ category: 'best-gaming-phones', per_page: 7 }), [initialGaming]);
     const remainingBlogsFetcher = React.useMemo(() => () => getRandomBlogList({ per_page: 15, sort: 'asc' }), []);
-    // const youtubeSidebarFetcher = React.useMemo(() => () => getRandomBasketProducts('speaker-price-in-nepal', 8), []);
+
+    // Helper for stories
+    const webStoriesFetcher = React.useMemo(() => () => Promise.resolve(initialWebStories), [initialWebStories]);
 
     return (
         <>
@@ -239,7 +229,7 @@ export default function BlogListingClient({
                         />
 
                         <LazySection
-                            fetcher={fetchwebStories}
+                            fetcher={webStoriesFetcher}
                             render={(data) => {
                                 const categoryStories = data as any[];
                                 if (!categoryStories || categoryStories.length === 0) return null;
