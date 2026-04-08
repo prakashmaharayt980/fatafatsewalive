@@ -17,16 +17,16 @@ import { useShallow } from 'zustand/react/shallow';
 import { UserLock } from "lucide-react";
 
 export default function LoginAlertDialog() {
-    const { showLoginAlert, setShowLoginAlert, setloginDailogOpen } = useAuthStore(useShallow(state => ({
+    const { showLoginAlert, setShowLoginAlert, setLoginDialogOpen } = useAuthStore(useShallow(state => ({
         showLoginAlert: state.showLoginAlert,
         setShowLoginAlert: state.setShowLoginAlert,
-        setloginDailogOpen: state.setloginDailogOpen
+        setLoginDialogOpen: state.setLoginDialogOpen
     })));
 
 
     const handleLoginConfirm = () => {
         setShowLoginAlert(false);
-        setloginDailogOpen(true);
+        setLoginDialogOpen(true);
     };
 
     return (

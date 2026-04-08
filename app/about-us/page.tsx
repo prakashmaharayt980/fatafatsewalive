@@ -74,7 +74,7 @@ async function AboutHeroSection() {
 const AboutUsPage = () => {
     return (
         <main className="min-h-screen bg-white">
-            <Suspense fallback={<div className="w-full relative bg-slate-200 animate-pulse" style={{ aspectRatio: '20 / 6' }} />}>
+            <Suspense fallback={<div className="w-full relative  animate-pulse" style={{ aspectRatio: '20 / 6' }} />}>
                 <AboutHeroSection />
             </Suspense>
 

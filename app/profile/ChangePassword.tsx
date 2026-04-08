@@ -144,7 +144,7 @@ function ChangePassword() {
 
             {/* Confirm Dialog */}
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                <AlertDialogContent className="rounded-2xl border border-gray-200 shadow-lg p-0 overflow-hidden max-w-sm mx-auto">
+                <AlertDialogContent className="rounded-2xl bg-white border border-gray-200 shadow-lg p-0 overflow-hidden max-w-sm mx-auto">
                     <AlertDialogHeader className="px-6 py-5 border-b border-gray-100">
                         <div className="flex items-center gap-2.5">
                             <ShieldCheck className="w-4 h-4 text-(--colour-fsP2) shrink-0" />
@@ -154,7 +154,7 @@ function ChangePassword() {
                             You will need this new password for all future logins. Make sure it is saved somewhere safe.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="px-6 py-4 bg-gray-50 flex gap-2 sm:flex-row flex-col">
+                    <AlertDialogFooter className="px-6 py-4 bg-gray-50 flex flex-col sm:flex-row gap-2">
                         <AlertDialogCancel
                             disabled={submitting}
                             className="flex-1 h-9 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-slate-700 hover:bg-gray-50 transition-colors"

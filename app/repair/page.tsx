@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import RepairClient from './RepairClient'
 import { getAllBrands, getAllCategories } from '../api/services/category.service'
 import { Suspense } from 'react'
+import UnderConstruction from '@/components/UnderConstruction'
 
 export const metadata: Metadata = {
     title: 'Mobile & Laptop Repair — Expert Device Repair Service | Fatafat Sewa',
@@ -38,6 +39,7 @@ export const metadata: Metadata = {
 }
 
 async function RepairPageContent() {
+    /*
     let brands: any[] = []
     let categories: any[] = []
 
@@ -53,6 +55,15 @@ async function RepairPageContent() {
     }
 
     return <RepairClient brands={brands} categories={categories} />
+    */
+    return (
+        <main className="min-h-[70vh] flex items-center justify-center py-12 px-4">
+            <UnderConstruction
+                title="Repair Services Coming Soon"
+                description="Our expert technicians are setting up shop to provide you with the best repair service in Nepal. Stay tuned for a smarter way to fix your gadgets!"
+            />
+        </main>
+    )
 }
 
 export default function RepairPage() {

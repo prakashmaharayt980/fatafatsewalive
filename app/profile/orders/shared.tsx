@@ -19,57 +19,7 @@ export const MOCK_USER: UserInfo = {
     name: 'Ram Prasad Sharma', email: 'ram@example.com', phone: '9841000000',
 };
 
-// Rich mock orders used as fallback / demo data when API returns empty
-export const MOCK_ORDERS: Order[] = [
-    {
-        id: 1001, invoice_number: 'INV-1772209838-37522', status: 1,
-        order_status: 'placed', payment_type: 'cash_on_delivery',
-        order_total: 205498, shipping_cost: 0,
-        created_at: '2026-02-27T08:12:00Z',
-        shipping_address: MOCK_ADDRESS, user: MOCK_USER,
-        items: [
-            { id: 1, product_id: 101, quantity: 1, price: 112999, product: { id: 101, name: 'OnePlus 15R 5G (12+512GB)', slug: 'oneplus-15r-512', image: { thumb: '', full: '' } } },
-            { id: 2, product_id: 102, quantity: 1, price: 92499, product: { id: 102, name: 'OnePlus 15R 5G (12+256GB)', slug: 'oneplus-15r-256', image: { thumb: '', full: '' } } },
-        ],
-    },
-    {
-        id: 1002, invoice_number: 'INV-1772110044-18800', status: 2,
-        order_status: 'processing', payment_type: 'esewa',
-        order_total: 183000, shipping_cost: 150,
-        created_at: '2026-02-25T11:45:00Z',
-        processed_at: '2026-02-25T14:00:00Z',
-        shipping_address: MOCK_ADDRESS, user: MOCK_USER,
-        items: [
-            { id: 3, product_id: 103, quantity: 1, price: 182850, product: { id: 103, name: 'Samsung Galaxy S25 Ultra 256GB', slug: 'samsung-s25-ultra', image: { thumb: '', full: '' } } },
-        ],
-    },
-    {
-        id: 1003, invoice_number: 'INV-1771980088-55310', status: 3,
-        order_status: 'delivered', payment_type: 'khalti',
-        order_total: 48000, shipping_cost: 0,
-        created_at: '2026-02-10T09:00:00Z',
-        processed_at: '2026-02-10T12:00:00Z',
-        shipped_at: '2026-02-12T08:30:00Z',
-        delivered_at: '2026-02-14T14:00:00Z',
-        shipping_address: MOCK_ADDRESS, user: MOCK_USER,
-        notes: 'Please leave at the gate if no one at home.',
-        items: [
-            { id: 4, product_id: 104, quantity: 2, price: 24000, product: { id: 104, name: 'Sony WH-1000XM5 Headphones', slug: 'sony-wh1000xm5', image: { thumb: '', full: '' } } },
-        ],
-    },
-    {
-        id: 1004, invoice_number: 'INV-1771850033-91020', status: 5,
-        order_status: 'cancelled', payment_type: 'cash_on_delivery',
-        order_total: 32500, shipping_cost: 0,
-        created_at: '2026-01-28T16:20:00Z',
-        cancelled_at: '2026-01-29T10:00:00Z',
-        cancel_reason: 'Changed my mind after placing the order.',
-        shipping_address: MOCK_ADDRESS, user: MOCK_USER,
-        items: [
-            { id: 5, product_id: 105, quantity: 1, price: 32500, product: { id: 105, name: 'Xiaomi 14T Pro 5G 256GB', slug: 'xiaomi-14t-pro', image: { thumb: '', full: '' } } },
-        ],
-    },
-];
+
 
 export const MOCK_PRE_ORDERS: PreOrder[] = [
     {
@@ -323,12 +273,9 @@ export const MOCK_EMI_ORDERS: EmiOrder[] = [
 
 export const fmt = (d?: string) => !d ? 'N/A' : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 export const fmtRs = (n: number) => `Rs ${(n || 0).toLocaleString()}`;
-export const isDelivered = (s: string) => { const l = s?.toLowerCase() ?? ''; return l.includes('deliver') || l.includes('success') || l.includes('received'); };
+export const isDelivered = (s: string) => { const l = s?.toLowerCase() ?? ''; return l.includes('deliver') || l.includes('success') || l.includes('received') || l.includes('complete'); };
 
-// ─── Status config ────────────────────────────────────────────────────────────
 
-// Only brand + neutral colours — no green/purple/amber
-// positive → blue   warning → orange   negative → red
 
 type StatusEntry = { label: string; cls: string; dot: string; icon: React.ReactNode };
 const STATUS_MAP: Record<string, StatusEntry> = {
@@ -338,6 +285,8 @@ const STATUS_MAP: Record<string, StatusEntry> = {
     approved: { label: 'Approved', dot: 'bg-[var(--colour-fsP2)]', cls: 'text-[var(--colour-fsP2)] bg-blue-50 border-blue-200', icon: <BadgeCheck size={11} /> },
     active: { label: 'Active', dot: 'bg-[var(--colour-fsP2)]', cls: 'text-[var(--colour-fsP2)] bg-blue-50 border-blue-200', icon: <Activity size={11} /> },
     placed: { label: 'Placed', dot: 'bg-[var(--colour-fsP2)]', cls: 'text-[var(--colour-fsP2)] bg-blue-50 border-blue-200', icon: <Receipt size={11} /> },
+    confirmed: { label: 'Confirmed', dot: 'bg-[var(--colour-fsP2)]', cls: 'text-[var(--colour-fsP2)] bg-blue-50 border-blue-200', icon: <BadgeCheck size={11} /> },
+    completed: { label: 'Completed', dot: 'bg-[var(--colour-fsP2)]', cls: 'text-[var(--colour-fsP2)] bg-blue-50 border-blue-200', icon: <BadgeCheck size={11} /> },
     processing: { label: 'Processing', dot: 'bg-[var(--colour-fsP1)]', cls: 'text-[var(--colour-fsP1)] bg-orange-50 border-orange-200', icon: <Hourglass size={11} className="animate-spin" /> },
     pending: { label: 'Pending', dot: 'bg-[var(--colour-fsP1)]', cls: 'text-[var(--colour-fsP1)] bg-orange-50 border-orange-200', icon: <Hourglass size={11} /> },
     cancelled: { label: 'Cancelled', dot: 'bg-red-500', cls: 'text-red-600 bg-red-50 border-red-200', icon: <XCircle size={11} /> },

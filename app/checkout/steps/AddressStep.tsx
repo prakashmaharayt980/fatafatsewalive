@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, ChevronRight, Loader2, X, Check, Search, Plus, Edit2, Trash2, ChevronLeft, Home, Building2, Map as MapIcon, Crosshair } from 'lucide-react';
+import { MapPin, Navigation, ChevronRight, Loader2, X, Check, Search, Plus, Edit2, Trash2, ChevronLeft, Home, Building2, Map as MapIcon, Crosshair, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,6 +46,7 @@ export default function AddressStep({
     const [isSaving, setIsSaving] = useState(false);
 
     const [mapLocation, setMapLocation] = useState<LocationData | null>(null);
+    const [isMapExpanded, setIsMapExpanded] = useState(false);
 
     const [addressEntryMode, setAddressEntryMode] = useState<'gps' | 'manual'>('gps');
 
@@ -181,8 +182,8 @@ export default function AddressStep({
                 ...prev,
                 province: location.addressComponents?.province || prev.province,
                 district: location.addressComponents?.district || prev.district,
-                city: location.addressComponents?.municipality || location.addressComponents?.city || prev.city,
-                landmark: location.addressComponents?.tole || location.addressComponents?.city || prev.landmark,
+                city: location.addressComponents?.municipality || prev.city,
+                landmark: location.addressComponents?.city || prev.landmark,
                 full_address: location.address,
                 country: 'Nepal'
             }));
@@ -201,12 +202,12 @@ export default function AddressStep({
         }
 
         setIsSaving(true);
-        const fullAddress = formData.full_address || `${formData.city}, ${formData.district}`;
+        const fullAddress = formData.full_address || [formData.landmark, formData.city, formData.district, formData.province].filter(Boolean).join(', ');
 
         const addressPayload = {
-            first_name: formData.first_name || 'Customer',
-            last_name: formData.last_name || 'Customer last',
-            contact_number: formData.contact_number || 'Customer number',
+            first_name: formData.first_name || 'checkout user',
+            last_name: formData.last_name || 'checkout user',
+            contact_number: formData.contact_number || 'phonenumber',
             lat: mapLocation?.lat || null,
             lng: mapLocation?.lng || null,
             label: formData.label,
@@ -222,16 +223,12 @@ export default function AddressStep({
         };
 
         try {
-            // Build a properly-nested ShippingAddress object from form data
-            // This ensures the address list ALWAYS gets the correct structure
-            // regardless of what shape the API returns
-            const fullAddress = formData.full_address || [formData.landmark, formData.city, formData.district, formData.province].filter(Boolean).join(', ');
             const localAddress: ShippingAddress = {
                 id: selectedAddressId || -1,
                 contact_info: {
-                    first_name: addressPayload.first_name,
-                    last_name: addressPayload.last_name,
-                    contact_number: addressPayload.contact_number,
+                    first_name: addressPayload.first_name || '',
+                    last_name: addressPayload.last_name || '',
+                    contact_number: addressPayload.contact_number || '',
                 },
                 geo: {
                     lat: mapLocation?.lat || null,
@@ -383,20 +380,20 @@ export default function AddressStep({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {filteredAddresses.slice(0, 4).map((address, index) => {
                                     const isSelected = selectedAddressId === address.id;
-                                    const LabelIcon = address.address?.label === 'Office' ? Building2 : address.address?.label === 'Other' ? MapIcon : Home;
+                                    // const LabelIcon = address.address?.label === 'Office' ? Building2 : address.address?.label === 'Other' ? MapIcon : Home;
                                     const hasGeo = !!(address.geo?.lat && address.geo?.lng);
-                                    const fullLine = [
-                                        address.address?.landmark,
-                                        address.address?.house_no,
-                                        address.address?.city,
-                                        address.address?.district,
-                                        address.address?.province,
-                                    ].filter(Boolean).join(', ');
-                                    const geoLine = [
-                                        address.address?.city,
-                                        address.address?.district,
-                                        address.address?.province,
-                                    ].filter(Boolean).join(' · ');
+                                    // const fullLine = [
+                                    //     address.address?.landmark,
+                                    //     address.address?.house_no,
+                                    //     address.address?.city,
+                                    //     address.address?.district,
+                                    //     address.address?.province,
+                                    // ].filter(Boolean).join(', ');
+                                    // const geoLine = [
+                                    //     address.address?.city,
+                                    //     address.address?.district,
+                                    //     address.address?.province,
+                                    // ].filter(Boolean).join(' · ');
 
                                     return (
                                         <div
@@ -509,12 +506,22 @@ export default function AddressStep({
                         </h3>
                     </div>
 
-                    {/* Map — always visible */}
-                    <div className="relative h-52 sm:h-64 border-b border-gray-100">
+                    {/* Map — expandable */}
+                    <div className={`relative border-b border-gray-100 transition-all duration-300 ${isMapExpanded ? 'h-[70vh]' : 'h-64 sm:h-80'}`}>
                         <GoogleMapAddress
                             onLocationSelect={handleMapLocationSelect}
                             initialPosition={mapLocation || undefined}
                         />
+                        <button
+                            type="button"
+                            onClick={() => setIsMapExpanded(v => !v)}
+                            className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-2 bg-white text-gray-700 text-xs font-bold rounded-xl shadow-md border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all select-none"
+                        >
+                            {isMapExpanded
+                                ? <><Minimize2 className="w-3.5 h-3.5" /> Collapse</>
+                                : <><Maximize2 className="w-3.5 h-3.5" /> Expand</>
+                            }
+                        </button>
                     </div>
 
                     {/* Form fields */}
@@ -572,6 +579,8 @@ export default function AddressStep({
                                 className="h-9 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[var(--colour-fsP2)] text-xs font-medium"
                             />
                         </div>
+
+
 
                         {/* GPS hint if map location was selected */}
                         {mapLocation && (

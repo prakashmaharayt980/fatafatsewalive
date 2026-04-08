@@ -204,7 +204,7 @@ export default function CheckoutProduct({
             <div className="flex justify-between items-end">
               <div>
                 <span className="text-sm font-bold text-gray-700 block">Total</span>
-                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Incl. Taxes</span>
+    
               </div>
               <span className="text-2xl font-black text-(--colour-fsP2)">
                 Rs. {totalPayable.toLocaleString()}

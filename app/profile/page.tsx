@@ -30,15 +30,15 @@ const NAV = [
     { id: 'user-info', label: 'My Profile', icon: User },
     { id: 'orders', label: 'Normal Orders', icon: ShoppingBag },
     { id: 'emi', label: 'EMI Orders', icon: CreditCard },
-    { id: 'pre-orders', label: 'Pre-orders', icon: Layers },
+    // { id: 'pre-orders', label: 'Pre-orders', icon: Layers },
     { id: 'addresses', label: 'Address Book', icon: MapPin },
-    { id: 'return-cancel', label: 'Return & Cancel', icon: Undo2 },
-    { id: 'identity', label: 'Identity Verification', icon: ShieldCheck },
-    { id: 'tracking', label: 'Track Order', icon: Truck },
-    { id: 'exchange', label: 'Exchange', icon: ArrowLeftRight },
-    { id: 'repair', label: 'Repair', icon: Wrench },
+    // { id: 'return-cancel', label: 'Return & Cancel', icon: Undo2 },
+    // { id: 'identity', label: 'Identity Verification', icon: ShieldCheck },
+    // { id: 'tracking', label: 'Track Order', icon: Truck },
+    // { id: 'exchange', label: 'Exchange', icon: ArrowLeftRight },
+    // { id: 'repair', label: 'Repair', icon: Wrench },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
+    // { id: 'notifications', label: 'Notifications', icon: Bell },
 ] as const;
 
 const emptySubscribe = () => () => { };
@@ -91,13 +91,13 @@ function ProfilePageContent() {
             case 'emi': return <EmiSection />;
             case 'pre-orders': return <PreOrdersSection />;
             case 'addresses': return <AddressBook />;
-            case 'return-cancel': return <ReturnCancel />;
-            case 'identity': return <IdentityVerification />;
-            case 'tracking': return <OrderTracking />;
-            case 'exchange': return <ExchangeSection />;
-            case 'repair': return <RepairSection />;
+            // case 'return-cancel': return <ReturnCancel />;
+            // case 'identity': return <IdentityVerification />;
+            // case 'tracking': return <OrderTracking />;
+            // case 'exchange': return <ExchangeSection />;
+            // case 'repair': return <RepairSection />;
             case 'security': return <ChangePassword />;
-            case 'notifications': return <Notifications />;
+            // case 'notifications': return <Notifications />;
             default: return <ProfileContent />;
         }
     };
@@ -109,7 +109,7 @@ function ProfilePageContent() {
 
     return (
         <div className="min-h-screen bg-slate-100">
-            <div className="max-w-7xl mx-auto px-4 py-8 pb-20">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-16">
                 <div className="flex flex-col lg:flex-row gap-5">
 
                     {/* Sidebar */}
@@ -187,7 +187,7 @@ function ProfilePageContent() {
                             </button>
                         </div>
 
-                        <div className="bg-white border border-slate-200 rounded-xl p-5 md:p-7 min-h-[600px]">
+                        <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 md:p-6 min-h-96">
                             {renderContent()}
                         </div>
                     </main>

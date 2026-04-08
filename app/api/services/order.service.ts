@@ -17,6 +17,6 @@ export const OrderService = {
         const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         return apiPrivate.get(`/v1/orders/${id}`, config).then(res => res.data);
     },
-    OrderCancel: (id: number) =>
-        apiPrivate.delete(`/v1/orders/${id}/cancel`).then(res => res.data),
+    OrderCancel: (id: number, cancel_reason: string) =>
+        apiPrivate.post(`/v1/orders/${id}/cancel`, { cancel_reason }).then(res => res.data),
 };

@@ -118,19 +118,19 @@ function Profile() {
         <div className="space-y-4">
 
             {/* ── Header ───────────────────────────────────────────────────── */}
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-3 min-w-0">
                     <div className="w-11 h-11 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
                         <span className="text-sm font-black text-(--colour-fsP2)">{initials}</span>
                     </div>
-                    <div>
-                        <p className="text-sm font-bold text-slate-900">{state.userData.name}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{state.userData.email}</p>
+                    <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">{state.userData.name}</p>
+                        <p className="text-xs text-slate-500 mt-0.5 truncate">{state.userData.email}</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                     {isVerified && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border text-(--colour-fsP2) bg-blue-50 border-blue-200 uppercase tracking-widest">
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border text-(--colour-fsP2) bg-blue-50 border-blue-200 uppercase tracking-widest">
                             <ShieldCheck size={10} /> Verified
                         </span>
                     )}
@@ -260,15 +260,15 @@ function Profile() {
 
             {/* ── Edit Dialog ───────────────────────────────────────────────── */}
             <Dialog open={state.dialogOpen} onOpenChange={open => update({ dialogOpen: open })}>
-                <DialogContent className="mx-auto max-w-lg overflow-hidden rounded-xl border border-gray-200 bg-white p-0">
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <DialogContent className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-200 bg-white p-0">
+                    <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
                         <div>
                             <DialogTitle className="text-sm font-bold text-slate-900">Edit Profile</DialogTitle>
                             <p className="text-xs text-slate-500 mt-0.5">Keep your details up to date.</p>
                         </div>
                     </div>
 
-                    <div className="px-6 py-5 space-y-4">
+                    <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="sm:col-span-2 space-y-1.5">
                                 <label className={labelCls}>Full Name</label>
@@ -312,7 +312,7 @@ function Profile() {
                         </div>
                     </div>
 
-                    <DialogFooter className="grid grid-cols-2 gap-3 border-t border-gray-100 px-6 py-4">
+                    <DialogFooter className="grid grid-cols-2 gap-3 border-t border-gray-100 px-4 sm:px-6 py-4">
                         <DialogClose asChild>
                             <button className="h-9 rounded-lg border border-gray-200 text-xs font-bold text-slate-600 hover:bg-gray-50 transition-colors">
                                 Cancel

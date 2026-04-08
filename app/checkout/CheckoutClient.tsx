@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronRight, ShoppingBag } from 'lucide-react';
+import { ChevronRight, Loader2, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -37,12 +37,14 @@ import { useCartStore } from '../context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 import CheckoutFaq from './CheckoutFaq';
 import EmiFaq from '../emi/apply/_components/EmiFaq';
+import { CartService } from '../api/services/cart.service';
 
 
 export default function CheckoutClient() {
-    const { cartItems, clearGuestData } = useCartStore(useShallow((state) => ({
+    const { cartItems, clearGuestData, setLastOrderData } = useCartStore(useShallow((state) => ({
         cartItems: state.cartItems,
-        clearGuestData: state.clearGuestData
+        clearGuestData: state.clearGuestData,
+        setLastOrderData: state.setLastOrderData
     })));
     const { user, isLoggedIn, isLoading, triggerLoginAlert } = useAuthStore(useShallow(state => ({
         user: state.user,
@@ -71,9 +73,9 @@ export default function CheckoutClient() {
         }
     }, [cartItems]);
 
-    // Calculate shipping based on address
+
     useEffect(() => {
-        // Free Shipping Policy - All over Nepal
+
         setShippingCost(0);
     }, [checkoutState.address]);
 
@@ -131,26 +133,28 @@ export default function CheckoutClient() {
 
 
 
-
-
-
-
             await OrderService.CreateOrder(payload).then((res) => {
-                if (res?.data?.order_status === 'Placed' && res?.data?.payment_type === 'nic-asia') {
-                    setProcessingPaymentOrder(res.data.id);
-                }
-                if (res?.success && res?.data?.payment_type !== 'cash_on_delivery') {
-                    if (!isLoggedIn) clearGuestData();
-                    toast.success('Order placed successfully!');
-                    router.push(`/checkout/Successpage/${res.data.id}`);
-                } else if (res?.success && res?.data?.payment_type === 'cash_on_delivery') {
-                    if (!isLoggedIn) clearGuestData();
-                    toast.success('Cash order placed successfully!');
-                    router.push(`/checkout/Successpage/${res.data.id}`);
+
+                if (res?.data) {
+                    const orderData = res.data;
+                    setLastOrderData(res.data);
+
+                    if (orderData?.order?.order_status === 'Placed' && orderData?.order?.payment_type === 'nic-asia') {
+                        setProcessingPaymentOrder(orderData.order.id);
+                    }
+
+                    if (orderData?.order?.order_status === 'Placed' && orderData?.order?.payment_type === 'cash_on_delivery') {
+                        setIsSubmitting(false);
+                        clearGuestData();
+                        toast.success('Cash order placed successfully!');
+                        router.push(`/checkout/Successpage`);
+                    }
+
+
                 }
             });
         } catch (error) {
-            console.error('Order Error', error);
+
             setIsSubmitting(false);
         }
     }, [cartItems, appliedPromo, checkoutState, userInfo, isLoggedIn, clearGuestData, router]);
@@ -189,27 +193,22 @@ export default function CheckoutClient() {
         setCheckoutState((prev) => ({ ...prev, recipient }));
     }, []);
 
-    const handleDeliveryChange = useCallback((delivery: DeliverySelection) => {
-        setCheckoutState((prev) => ({ ...prev, delivery }));
-    }, []);
 
     const handlePaymentMethodChange = useCallback((paymentMethod: string) => {
         setCheckoutState((prev) => ({ ...prev, paymentMethod }));
     }, []);
 
     // Promo handling
-    const handleApplyPromo = useCallback(() => {
+    const handleApplyPromo = useCallback(async () => {
         const code = promoCode.trim().toUpperCase();
         if (!code) return;
 
-        const subtotal = cartItems?.cart_total || 0;
-        if (code === 'SAVE10') {
-            const discountAmount = Math.round(subtotal * 0.1);
-            setAppliedPromo({ code: 'SAVE10', discount: discountAmount });
-        } else if (code === 'FLAT500') {
-            setAppliedPromo({ code: 'FLAT500', discount: 500 });
+
+        const res = await CartService.PromoCodeUse({ code }).then(res => res.data);
+        if (res?.success) {
+            setAppliedPromo({ code: res.data.code, discount: res.data.discount });
         } else {
-            alert('Invalid promo code');
+            alert(res?.message || 'Failed to apply promo code');
             setAppliedPromo(null);
         }
     }, [promoCode, cartItems]);
@@ -220,7 +219,7 @@ export default function CheckoutClient() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-3 bg-white border border-gray-200 rounded-xl px-10 py-8">
                     <div className="w-10 h-10 border-2 border-gray-200 border-t-[var(--colour-fsP2)] rounded-full animate-spin" />
                     <p className="text-sm text-gray-500 font-medium">Loading checkout...</p>
                 </div>
@@ -228,10 +227,7 @@ export default function CheckoutClient() {
         );
     }
 
-    // No longer blocking unauthenticated users
-    // Guests are allowed to proceed through the checkout flow
 
-    // Render current step
     const renderStep = () => {
         switch (checkoutState.currentStep) {
             case CHECKOUT_STEPS.ADDRESS:
@@ -282,49 +278,79 @@ export default function CheckoutClient() {
     const total = subtotal + shippingCost - discount;
 
     return (
-        <div className="bg-gray-50 min-h-screen py-2 sm:py-5">
-            <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
+        <>
+            <div className="bg-gray-50 min-h-screen py-2 sm:py-5">
+                <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
 
-                {/* Breadcrumb */}
-                <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide">
-                    <Link href="/" className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">Home</Link>
-                    <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
-                    <span onClick={() => router.back()} className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">{"Product-details"}</span>
-                    <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
-                    <span className="text-gray-700 font-semibold whitespace-nowrap">Checkout</span>
-                    {checkoutState.currentStep > 0 && (
-                        <>
-                            <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
-                            <span className="text-[var(--colour-fsP2)] font-medium whitespace-nowrap">
-                                {STEP_LABELS[checkoutState.currentStep]}
-                            </span>
-                        </>
-                    )}
-                </nav>
+                    {/* Breadcrumb */}
+                    <nav className="flex items-center gap-1 text-xs mb-3 overflow-x-auto scrollbar-hide bg-white border-none border-gray-200 rounded-lg px-3 py-2">
+                        <Link href="/" className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">Home</Link>
+                        <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                        <span onClick={() => router.back()} className="text-[var(--colour-fsP2)] hover:underline whitespace-nowrap font-medium">{"Product-details"}</span>
+                        <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                        <span className="text-gray-700 font-semibold whitespace-nowrap">Checkout</span>
+                        {checkoutState.currentStep > 0 && (
+                            <>
+                                <ChevronRight className="w-3 h-3 text-gray-400 shrink-0" />
+                                <span className="text-[var(--colour-fsP2)] font-medium whitespace-nowrap">
+                                    {STEP_LABELS[checkoutState.currentStep]}
+                                </span>
+                            </>
+                        )}
+                    </nav>
 
-                {/* Step Progress */}
-                <div className="mb-4">
+                    {/* Step Progress */}
                     <StepProgress
                         currentStep={checkoutState.currentStep}
                         state={checkoutState}
                         onStepClick={goToStep}
                     />
-                </div>
 
-                {/* Two Column Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-3 lg:gap-4 items-start">
+                    {/* Two Column Layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-3 lg:gap-4 items-start">
 
-                    {/* Right Column — Collapsible Order Summary on mobile */}
-                    <div className="lg:hidden">
-                        <details className="group">
-                            <summary className="flex items-center justify-between w-full bg-white rounded-xl border border-gray-200 px-4 py-3 cursor-pointer list-none select-none">
-                                <span className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                                    <ShoppingBag className="w-4 h-4 text-[var(--colour-fsP2)]" />
-                                    Order Summary
-                                </span>
-                                <ChevronRight className="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-90" />
-                            </summary>
-                            <div className="mt-2">
+                        {/* Right Column — Collapsible Order Summary on mobile */}
+                        <div className="lg:hidden">
+                            <details className="group">
+                                <summary className="flex items-center justify-between w-full bg-white rounded-xl border border-[var(--colour-fsP2)] px-4 py-3 cursor-pointer list-none select-none">
+                                    <span className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                        <ShoppingBag className="w-4 h-4 text-[var(--colour-fsP2)]" />
+                                        Order Summary
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 text-gray-400 transition-transform duration-200 group-open:rotate-90" />
+                                </summary>
+                                <div className="mt-2">
+                                    <CheckoutProduct
+                                        setsubmittedvaluelist={(updater: any) => {
+                                            if (typeof updater === 'function') {
+                                                const result = updater({ promoCode });
+                                                if (result.promoCode !== undefined) setPromoCode(result.promoCode);
+                                            }
+                                        }}
+                                        submittedvaluelist={{
+                                            promoCode,
+                                            appliedPromo,
+                                            totalpayment: total,
+                                            paymentmethod: checkoutState.paymentMethod,
+                                            address: checkoutState.address,
+                                            productsID: cartItems?.items || [],
+                                            receiverNO: userInfo?.phone || '',
+                                        }}
+                                        handleApplyPromo={handleApplyPromo}
+                                        Stepstate={checkoutState}
+                                    />
+                                </div>
+                            </details>
+                        </div>
+
+                        {/* Left Column — Step Content */}
+                        <div className="min-w-0">
+                            {renderStep()}
+                        </div>
+
+                        {/* Right Column — Sticky on desktop */}
+                        <div className="hidden lg:block">
+                            <div className="sticky top-20">
                                 <CheckoutProduct
                                     setsubmittedvaluelist={(updater: any) => {
                                         if (typeof updater === 'function') {
@@ -345,43 +371,19 @@ export default function CheckoutClient() {
                                     Stepstate={checkoutState}
                                 />
                             </div>
-                        </details>
-                    </div>
-
-                    {/* Left Column — Step Content */}
-                    <div className="min-w-0">
-                        {renderStep()}
-                    </div>
-
-                    {/* Right Column — Sticky on desktop */}
-                    <div className="hidden lg:block">
-                        <div className="sticky top-20">
-                            <CheckoutProduct
-                                setsubmittedvaluelist={(updater: any) => {
-                                    if (typeof updater === 'function') {
-                                        const result = updater({ promoCode });
-                                        if (result.promoCode !== undefined) setPromoCode(result.promoCode);
-                                    }
-                                }}
-                                submittedvaluelist={{
-                                    promoCode,
-                                    appliedPromo,
-                                    totalpayment: total,
-                                    paymentmethod: checkoutState.paymentMethod,
-                                    address: checkoutState.address,
-                                    productsID: cartItems?.items || [],
-                                    receiverNO: userInfo?.phone || '',
-                                }}
-                                handleApplyPromo={handleApplyPromo}
-                                Stepstate={checkoutState}
-                            />
                         </div>
+
                     </div>
+
+                    <EmiFaq params={{ type: 'brand' }} />
+                </div>
+            </div>
+
+            {isSubmitting &&
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
 
                 </div>
-
-                <EmiFaq params={{ type: 'brand' }} />
-            </div>
-        </div>
+            }
+        </>
     );
 }

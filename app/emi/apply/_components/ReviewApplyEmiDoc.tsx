@@ -1,9 +1,8 @@
 'use client'
 
 import React from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, FileText, User, CreditCard, ArrowLeft, Send, Check } from 'lucide-react';
+import { AlertCircle, FileText, User, CreditCard, ArrowLeft, Send, Check, X } from 'lucide-react';
 import SignaturePad from './SignaturePad';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -171,22 +170,41 @@ const RenderReview: React.FC<RenderReviewProps> = ({
           <div className="grid grid-cols-2 gap-2.5 p-4 sm:grid-cols-4">
             {Object.entries(previews)
               .filter(([key]) => key !== 'userSignature')
-              .map(([key, url]) => (
-                <div
-                  key={key}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-gray-100 bg-gray-50 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <Image src={url} alt={key} fill className="object-cover" />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-2">
-                    <p className="truncate text-[10px] font-medium text-white capitalize">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
-                    </p>
+              .map(([key, url]) => {
+                const isPdf = key === 'bankStatement';
+                const docLabel = key.replace(/([A-Z])/g, ' $1').trim();
+                return (
+                  <div
+                    key={key}
+                    className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-gray-100 bg-gray-50 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    {isPdf ? (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 hover:bg-red-50/60 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-red-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-600 text-center leading-tight capitalize">{docLabel}</span>
+                        <span className="text-[9px] text-red-400 font-medium uppercase tracking-wide">PDF — tap to view</span>
+                      </a>
+                    ) : (
+                      <img src={url} alt={key} className="absolute inset-0 w-full h-full object-cover" />
+                    )}
+                    {!isPdf && (
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-2">
+                        <p className="truncate text-[10px] font-medium text-white capitalize">{docLabel}</p>
+                      </div>
+                    )}
+                    <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center opacity-90">
+                      <Check className="w-2.5 h-2.5 text-white" />
+                    </div>
                   </div>
-                  <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center opacity-90">
-                    <Check className="w-2.5 h-2.5 text-white" />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
       )}
@@ -220,10 +238,29 @@ const RenderReview: React.FC<RenderReviewProps> = ({
           </label>
 
           <div className="max-w-md">
-            <SignaturePad
-              onSignatureChange={onSignatureChange}
-              existingSignature={previews['userSignature']}
-            />
+            {previews['userSignature'] ? (
+              <div className="relative group rounded-xl border border-gray-200 bg-gray-50 overflow-hidden h-32 w-full">
+                <img
+                  src={previews['userSignature']}
+                  alt="Signature"
+                  className="absolute inset-0 w-full h-full object-contain p-4"
+                />
+                <div className="absolute top-2 left-2 flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                  <Check className="w-3 h-3" /> Captured
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onSignatureChange(null)}
+                  className="absolute top-2 right-2 flex items-center justify-center w-7 h-7 rounded-lg bg-white/80 border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <SignaturePad
+                onSignatureChange={onSignatureChange}
+              />
+            )}
           </div>
 
           {!isSignatureComplete && (

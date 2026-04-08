@@ -26,9 +26,9 @@ const GoogleAuthWrapper = dynamic(() => import('./GoogleAuthWrapper'), {
 
 
 export default function LoginPage() {
-  const { loginDailogOpen, setloginDailogOpen, login } = useAuthStore(useShallow(state => ({
-    loginDailogOpen: state.loginDailogOpen,
-    setloginDailogOpen: state.setloginDailogOpen,
+  const { loginDialogOpen, setLoginDialogOpen, login } = useAuthStore(useShallow(state => ({
+    loginDialogOpen: state.loginDialogOpen,
+    setLoginDialogOpen: state.setLoginDialogOpen,
     login: state.login
   })));
 
@@ -130,7 +130,7 @@ export default function LoginPage() {
         if (res && res.data) {
           toast.success("Login successful!");
           login(res.data.access_token, res.data.user);
-          setloginDailogOpen(false);
+          setLoginDialogOpen(false);
           setFormData(prev => ({ ...prev, login: { email: '', password: '' } }));
         }
       })
@@ -152,7 +152,7 @@ export default function LoginPage() {
         if (res && res.data) {
           toast.success("Login successful!");
           login(res.data.access_token, res.data.user);
-          setloginDailogOpen(false);
+          setLoginDialogOpen(false);
         }
       })
       .catch((error: any) => {
@@ -171,7 +171,7 @@ export default function LoginPage() {
         if (res && res.data) {
           toast.success("Login successful!");
           login(res.data.access_token, res.data.user);
-          setloginDailogOpen(false);
+          setLoginDialogOpen(false);
         }
       })
       .catch((error: any) => {
@@ -192,7 +192,7 @@ export default function LoginPage() {
         if (res && res.data) {
           toast.success("Registration successful!");
           login(res.data.access_token, res.data.user);
-          setloginDailogOpen(false);
+          setLoginDialogOpen(false);
           setFormData(prev => ({
             ...prev,
             register: { name: '', email: '', password: '', password_confirmation: '', phone: '', address: '' }
@@ -307,10 +307,10 @@ export default function LoginPage() {
     handleFacebookSuccess: handleFacebookLogin,
   };
 
-  if (!loginDailogOpen) return null;
+  if (!loginDialogOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setloginDailogOpen(false)}>
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-2 animate-in fade-in duration-200" onClick={() => setLoginDialogOpen(false)}>
       <div
         className={`
           relative 
@@ -327,7 +327,7 @@ export default function LoginPage() {
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={() => setloginDailogOpen(false)}
+          onClick={() => setLoginDialogOpen(false)}
           className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

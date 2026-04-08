@@ -20,8 +20,6 @@ export interface LocationData {
         province: string;
         district: string;
         municipality: string;
-        ward: number;
-        tole: string;
         city: string;
     };
 }
@@ -45,8 +43,11 @@ export default function GoogleMapAddress({ onLocationSelect, initialPosition }: 
     useEffect(() => {
         if (initialPosition?.lat && initialPosition?.lng) {
             setMarkerPosition({ lat: initialPosition.lat, lng: initialPosition.lng });
+        } else if (!initialPosition) {
+            // Reset to default center if initialPosition is explicitly cleared (e.g., clicking 'Add New')
+            setMarkerPosition(defaultCenter);
         }
-    }, [initialPosition?.lat, initialPosition?.lng]);
+    }, [initialPosition?.lat, initialPosition?.lng, initialPosition]);
 
     return (
         <div className="w-full h-full min-h-50 relative">
@@ -90,7 +91,7 @@ function MapInternal({
             map.panTo(markerPosition);
             map.setZoom(17);
         }
-    }, [hasInitialPosition, map]);
+    }, [hasInitialPosition, map, markerPosition]);
 
     const handleLocationUpdate = useCallback((lat: number, lng: number) => {
         setMarkerPosition({ lat, lng });
@@ -111,31 +112,32 @@ function MapInternal({
                 return;
             }
 
-            const result = results[0];
+            // Prefer a street-level or premise result for more exact address
+            const result =
+                results.find(r =>
+                    r.types.some(t => ['street_address', 'premise', 'sublocality_level_1'].includes(t))
+                ) ?? results[0];
+
             let province = '', district = '', municipality = '', city = '', tole = '';
-            let ward = 0;
 
             result.address_components.forEach((comp) => {
                 const t = comp.types;
                 if (t.includes('administrative_area_level_1')) province = comp.long_name;
                 if (t.includes('administrative_area_level_2')) district = comp.long_name;
-                if (t.includes('locality')) city = comp.long_name;
                 if (t.includes('administrative_area_level_3')) municipality = comp.long_name;
-                if (t.includes('sublocality_level_1')) {
-                    const wardMatch = comp.long_name.match(/\d+/);
-                    if (wardMatch) ward = parseInt(wardMatch[0], 10);
-                }
-                if ((t.includes('neighborhood') || t.includes('sublocality_level_2') || t.includes('route') || t.includes('premise') || t.includes('point_of_interest')) && !tole) {
-                    tole = comp.long_name;
-                }
+                if (t.includes('locality')) city = comp.long_name;
+                if (t.includes('sublocality_level_1') || t.includes('neighborhood')) tole = comp.long_name;
             });
+
+            // Fallback: use tole as city if locality is missing (rural Nepal)
+            if (!city) city = tole;
 
             const finalAddress = result.formatted_address;
             setConfirmedAddress(finalAddress);
             onLocationSelect({
                 lat, lng,
                 address: finalAddress,
-                addressComponents: { province, district, municipality: municipality || city, ward, tole, city },
+                addressComponents: { province, district, municipality: municipality || city, city: tole || city },
             });
         });
     }, [geocodingLib, onLocationSelect, setMarkerPosition]);
@@ -157,15 +159,15 @@ function MapInternal({
                     setIsLocating(false);
                 },
                 () => setIsLocating(false),
-                // Use cached position (up to 30s old) + lower accuracy = fast resolve when permission already granted
-                { enableHighAccuracy: false, timeout: 6000, maximumAge: 30000 }
+                // Use high accuracy for exact location
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         };
 
         if (navigator.permissions) {
             navigator.permissions.query({ name: 'geolocation' as PermissionName })
                 .then(result => { if (result.state === 'granted') tryAutoLocate(); })
-                .catch(() => {});
+                .catch(() => { });
         }
     }, [map, geocodingLib, hasInitialPosition, handleLocationUpdate]);
 
@@ -194,7 +196,7 @@ function MapInternal({
                     toast.error('Could not get location. Tap the map to set your pin.');
                 }
             },
-            { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
         );
     };
 
@@ -219,8 +221,8 @@ function MapInternal({
 
             {/* Geocoding overlay */}
             {isGeocoding && (
-                <div className="absolute inset-0 z-[2] bg-black/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-                    <div className="bg-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2">
+                <div className="absolute inset-0 z-2 bg-black/5 flex items-center justify-center pointer-events-none">
+                    <div className="bg-white px-4 py-2.5 rounded-xl shadow-lg border border-gray-200 text-xs font-bold flex items-center gap-2">
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-(--colour-fsP2)" />
                         Fetching address...
                     </div>
@@ -230,9 +232,9 @@ function MapInternal({
             {/* Address confirmation bar */}
             {confirmedAddress && !isGeocoding && (
                 <div className="absolute bottom-3 left-3 right-3 z-1">
-                    <div className="bg-white/96 px-3 py-2 rounded-xl shadow-lg border border-gray-100 flex items-start gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
-                        <p className="text-[11px] text-gray-700 font-medium line-clamp-2 leading-relaxed">{confirmedAddress}</p>
+                    <div className="bg-white px-3 py-2 rounded-xl shadow-md border border-gray-200 flex items-start gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-(--colour-fsP2) shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-gray-800 font-semibold leading-relaxed">{confirmedAddress}</p>
                     </div>
                 </div>
             )}

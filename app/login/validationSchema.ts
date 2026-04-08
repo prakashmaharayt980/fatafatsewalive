@@ -64,6 +64,6 @@ export interface AuthContextType {
   };
   login: (data: AuthContextType['authState']) => void;
   logout: () => void;
-  loginDailogOpen: boolean;
-  setloginDailogOpen: Dispatch<React.SetStateAction<AuthContextType['loginDailogOpen']>>;
+  loginDialogOpen: boolean;
+  setLoginDialogOpen: Dispatch<React.SetStateAction<AuthContextType['loginDialogOpen']>>;
 }

@@ -93,7 +93,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
         photos: [],
         isFormOpen: false,
         serialNumber: '',
- 
+
         phoneNumber: '',
         isSubmitting: false,
         selectedAddress: null,
@@ -226,7 +226,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
 
     const handleCheckout = async () => {
         if (!isLoggedIn) {
-        triggerLoginAlert()
+            triggerLoginAlert()
             return
         }
 
@@ -245,7 +245,7 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
                 product_id: state.selectedProduct?.id,
                 name: state.selectedProduct?.name,
                 serial_number: state.serialNumber,
-           
+
             },
             repair_details: {
                 selected_repairs: state.selectedRepairs,
@@ -347,14 +347,14 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
                                 onPhotoUpload={handlePhotoUpload}
                                 onPhotoRemove={handlePhotoRemove}
                                 pickupSelected={true}
-                                onPickupSelect={() => {}}
+                                onPickupSelect={() => { }}
                                 onCheckout={handleCheckout}
                                 onLoginRequest={() => triggerLoginAlert()}
                                 isLoggedIn={isLoggedIn}
                                 selectedAddress={state.selectedAddress}
                                 onAddressSelect={(addr) => updateState({ selectedAddress: addr })}
                                 serialNumber={state.serialNumber}
-                             
+
                                 phoneNumber={state.phoneNumber}
                                 onVerificationChange={handleVerificationChange}
                                 isSubmitting={state.isSubmitting}
@@ -366,10 +366,10 @@ export default function RepairClient({ brands, categories }: RepairClientProps) 
 
             <RepairSEOSections onGetQuoteClick={() => formSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} />
         </main>
-        <RepairSuccessDialog
-            data={state.successData}
-            onClose={() => updateState({ successData: null })}
-        />
+            <RepairSuccessDialog
+                data={state.successData}
+                onClose={() => updateState({ successData: null })}
+            />
         </>
     )
 }

@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
 import OrdersSection from './orders/OrdersSection';
-import { MOCK_ORDERS } from './orders/shared';
 import { OrderService } from '../api/services/order.service';
 import type { Order } from './types';
 
@@ -23,17 +21,17 @@ export default function OrderHistory() {
             .finally(() => setLoading(false));
     }, []);
 
-    const effectiveOrders = orders.length > 0 ? orders : MOCK_ORDERS;
-
-    const filteredOrders = effectiveOrders.filter(order => {
+    const filteredOrders = orders.filter(order => {
         const id = String(order.id ?? '').toLowerCase();
-        const status = String(order.status ?? '').toLowerCase();
+        const invoice = String(order.invoice_number ?? '').toLowerCase();
+        const status = String(order.order_status ?? '').toLowerCase();
         const search = searchTerm.toLowerCase();
+
         const hasProduct = order.items?.some(item =>
-            (item.product?.name ?? '').toLowerCase().includes(search) ||
-            (item.name ?? '').toLowerCase().includes(search)
+            (item.product?.name ?? '').toLowerCase().includes(search)
         );
-        return id.includes(search) || status.includes(search) || hasProduct;
+
+        return id.includes(search) || invoice.includes(search) || status.includes(search) || hasProduct;
     });
 
     return (
@@ -42,22 +40,12 @@ export default function OrderHistory() {
                 <div>
                     <h2 className="text-lg font-bold text-slate-900">Orders</h2>
                     <p className="text-xs text-slate-500 mt-0.5">
-                        {effectiveOrders.length > 0 ? `${effectiveOrders.length} total orders` : 'Your purchase history'}
+                        {orders.length} total orders
                     </p>
-                </div>
-                <div className="relative w-full sm:w-52">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-                    <input
-                        type="text"
-                        placeholder="Search by order or product..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full h-9 pl-9 pr-3 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-(--colour-fsP2) focus:bg-white transition-colors"
-                    />
                 </div>
             </div>
 
-            <OrdersSection orders={filteredOrders} loading={loading} error={orders.length > 0 ? error : null} />
+            <OrdersSection orders={filteredOrders} loading={loading} error={error} />
         </div>
     );
 }

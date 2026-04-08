@@ -13,6 +13,6 @@ export const CartService = {
     CartUpdate: (id: number, data: any) =>
         apiPrivate.put(`/v1/cart/items/${id}`, data).then(res => res.data),
 
-    PromoCdeUse: (data: any) =>
+    PromoCodeUse: (data: any) =>
         apiPrivate.post(`/v1/cart/apply-coupon`, data).then(res => res.data),
 };

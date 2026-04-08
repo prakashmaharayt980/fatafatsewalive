@@ -9,18 +9,18 @@ import { useCartStore } from '../context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
 
 interface Props {
-  initialIsLoggedIn: boolean;
+    initialIsLoggedIn: boolean;
 }
 
 export default function HeaderActionsClient({ initialIsLoggedIn }: Props) {
     const { cartItems, setIsCartOpen, setIsWishlistOpen } = useCartStore(useShallow(
         state => ({ cartItems: state.cartItems, setIsCartOpen: state.setIsCartOpen, setIsWishlistOpen: state.setIsWishlistOpen })
     ));
-    const { user, isLoggedIn, logout, setloginDailogOpen, hasHydrated } = useAuthStore(useShallow(state => ({
+    const { user, isLoggedIn, logout, setLoginDialogOpen, hasHydrated } = useAuthStore(useShallow(state => ({
         user: state.user,
         isLoggedIn: state.isLoggedIn,
         logout: state.logout,
-        setloginDailogOpen: state.setloginDailogOpen,
+        setLoginDialogOpen: state.setLoginDialogOpen,
         hasHydrated: state.hasHydrated
     })));
 
@@ -36,6 +36,28 @@ export default function HeaderActionsClient({ initialIsLoggedIn }: Props) {
 
     return (
         <div className="flex items-center space-x-2 sm:space-x-3 min-h-[40px]">
+            <div className='flex items-center space-x-2'>
+                <button
+                    onClick={() => setIsCartOpen(true)}
+                    aria-label="Open cart"
+                    className="relative p-1.5 rounded-full border border-gray-300 text-slate-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-blue-50 transition-all"
+                >
+                    <ShoppingCart className="h-4 w-4" strokeWidth={2.5} />
+                    {badgeCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-[var(--colour-fsP1)] text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                            {badgeCount}
+                        </span>
+                    )}
+                </button>
+
+                <button
+                    onClick={() => setIsWishlistOpen(true)}
+                    aria-label="Open wishlist"
+                    className="relative p-1.5 rounded-full border border-gray-300 text-slate-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-blue-50 transition-all"
+                >
+                    <Heart className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+            </div>
             {authResolved ? (
                 <>
                     <div className="relative">
@@ -82,30 +104,11 @@ export default function HeaderActionsClient({ initialIsLoggedIn }: Props) {
                         )}
                     </div>
 
-                    <button
-                        onClick={() => setIsCartOpen(true)}
-                        aria-label="Open cart"
-                        className="relative p-1.5 rounded-full border border-gray-300 text-slate-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-blue-50 transition-all"
-                    >
-                        <ShoppingCart className="h-4 w-4" strokeWidth={2.5} />
-                        {badgeCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-[var(--colour-fsP1)] text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                                {badgeCount}
-                            </span>
-                        )}
-                    </button>
 
-                    <button
-                        onClick={() => setIsWishlistOpen(true)}
-                        aria-label="Open wishlist"
-                        className="relative p-1.5 rounded-full border border-gray-300 text-slate-700 hover:text-[var(--colour-fsP2)] hover:border-[var(--colour-fsP2)] hover:bg-blue-50 transition-all"
-                    >
-                        <Heart className="h-4 w-4" strokeWidth={2.5} />
-                    </button>
                 </>
             ) : (
                 <button
-                    onClick={() => setloginDailogOpen(true)}
+                    onClick={() => setLoginDialogOpen(true)}
                     className="px-5 py-2 bg-[var(--colour-fsP2)] hover:opacity-90 text-white rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
                 >
                     <span className="font-bold">Sign In</span>

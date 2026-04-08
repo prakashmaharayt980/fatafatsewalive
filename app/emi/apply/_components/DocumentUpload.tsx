@@ -3,12 +3,13 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash, X, UploadCloud, FileCheck } from 'lucide-react';
+import { Eye, Pencil, Trash, X, UploadCloud, FileCheck, FileText } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 interface DocumentUploadProps {
   docTypes: string[];
   isGranter?: boolean;
+  pdfTypes?: string[];
   files: {
     citizenshipFile: Record<string, File | null>;
     granterDocument: Record<string, File | null>;
@@ -23,6 +24,7 @@ interface DocumentUploadProps {
 const DocumentUpload: React.FC<DocumentUploadProps> = ({
   docTypes,
   isGranter = false,
+  pdfTypes = [],
   files,
   previews,
   handleFileChange,
@@ -53,6 +55,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     return docType === 'ppphoto' ? 'Passport Photo' : `Citizenship ${docType.charAt(0).toUpperCase() + docType.slice(1)}`;
   };
 
+  const isPdf = (docType: string) => pdfTypes.includes(docType);
+
   return (
     <div className="bg-white py-4">
       <div className="w-full">
@@ -61,6 +65,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             const file = getFile(docType);
             const previewKey = getPreviewKey(docType);
             const label = getLabel(docType);
+            const pdf = isPdf(docType);
             return (
               <div key={docType} className="relative group">
                 <input
@@ -68,52 +73,83 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   id={previewKey}
                   onChange={(e) => handleFileChange(e, docType, isGranter)}
                   className="hidden"
-                  accept="image/*"
+                  accept={pdf ? 'application/pdf' : 'image/*'}
                 />
 
                 {file ? (
-                  <div className="relative h-48 w-full rounded-xl overflow-hidden border border-[var(--colour-fsP2)]/20 shadow-sm bg-gray-50 flex items-center justify-center group-hover:shadow-md transition-all">
-                    {previews[previewKey] && (
-                      <Image
-                        src={previews[previewKey]}
-                        alt={label || 'document img'}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-contain p-2"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-9 w-9 bg-white/90 text-[var(--colour-fsP2)] hover:bg-white hover:text-[var(--colour-fsP2)] rounded-full"
-                        onClick={() => setZoomData({ url: previews[previewKey], label, key: previewKey })}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="h-9 w-9 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-transform hover:scale-110"
-                        onClick={() => handleFileDelete(docType, isGranter)}
-                        title="Remove Document"
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
+                  pdf ? (
+                    /* PDF uploaded — show icon card */
+                    <div className="relative h-48 w-full rounded-xl overflow-hidden border border-(--colour-fsP2)/20 shadow-sm bg-blue-50/40 flex flex-col items-center justify-center gap-2 group-hover:shadow-md transition-all">
+                      <div className="w-14 h-14 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
+                        <FileText className="w-7 h-7 text-red-500" />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-700 px-3 text-center line-clamp-2">{file.name}</span>
+                      <span className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(0)} KB</span>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 bg-white/90 text-(--colour-fsP2) hover:bg-white rounded-full"
+                          onClick={() => window.open(previews[previewKey], '_blank')}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-9 w-9 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg"
+                          onClick={() => handleFileDelete(docType, isGranter)}
+                          title="Remove Document"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    /* Image uploaded — show image preview */
+                    <div className="relative h-48 w-full rounded-xl overflow-hidden border border-[var(--colour-fsP2)]/20 shadow-sm bg-gray-50 flex items-center justify-center group-hover:shadow-md transition-all">
+                      {previews[previewKey] && (
+                        <Image
+                          src={previews[previewKey]}
+                          alt={label || 'document img'}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-contain p-2"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 bg-white/90 text-[var(--colour-fsP2)] hover:bg-white hover:text-[var(--colour-fsP2)] rounded-full"
+                          onClick={() => setZoomData({ url: previews[previewKey], label, key: previewKey })}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-9 w-9 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-transform hover:scale-110"
+                          onClick={() => handleFileDelete(docType, isGranter)}
+                          title="Remove Document"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )
                 ) : (
                   <label htmlFor={previewKey} className="cursor-pointer h-48 w-full rounded-xl border-2 border-dashed border-gray-200 hover:border-[var(--colour-fsP2)] hover:bg-[var(--colour-fsP2)]/5 transition-all flex flex-col items-center justify-center gap-3 group">
                     <div className="h-12 w-12 rounded-full bg-[var(--colour-fsP2)]/10 flex items-center justify-center group-hover:scale-110 transition-transform text-[var(--colour-fsP2)]">
-                      <UploadCloud className="w-6 h-6" />
+                      {pdf ? <FileText className="w-6 h-6" /> : <UploadCloud className="w-6 h-6" />}
                     </div>
                     <div className="text-center px-4">
                       <span className="block text-xs font-bold text-gray-600 group-hover:text-[var(--colour-fsP2)] uppercase tracking-wide">
                         Upload {label?.replace('Citizenship', '')}
                       </span>
                       <span className="block text-[10px] text-gray-400 mt-1 font-medium italic text-center">
-                         Max: 300KB | Images only
+                        {pdf ? 'PDF only | Max 5MB' : 'Max: 300KB | Images only'}
                       </span>
                     </div>
                   </label>
@@ -161,6 +197,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                     src={zoomData.url}
                     alt={zoomData.label}
                     fill
+                    unoptimized
                     className="object-contain"
                     sizes="100vw"
                     priority

@@ -14,10 +14,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i.ytimg.com" },
     ],
     formats: ["image/webp"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     loader: 'custom',
     loaderFile: './app/imageLoader.ts',
-    qualities: [75, 85, 95],
   },
 
   reactCompiler: true,

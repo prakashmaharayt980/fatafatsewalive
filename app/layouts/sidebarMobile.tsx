@@ -7,9 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import { Heart, ShoppingCart, Home, FileText, Calculator, User, ChevronRight, LogOut, Package, Settings } from 'lucide-react';
-import Link from 'next/link';
+import { User, ChevronRight, LogOut, Package, Settings } from 'lucide-react';
 import Image from 'next/image';
 import { CompanyLogo } from '../CommonVue/Payment';
 import { placeholderimg } from '../CommonVue/Image';
@@ -28,11 +26,11 @@ const MobileSidebar = ({ open, toggleMobileMenu, initialNavItems, openCart, open
   navbarExtradata?: { path: string, title: string, icon: React.ReactNode | null }[];
 }) => {
   const router = useRouter();
-  const { user, isLoggedIn, logout, setloginDailogOpen } = useAuthStore(useShallow(state => ({
+  const { user, isLoggedIn, logout, setLoginDialogOpen } = useAuthStore(useShallow(state => ({
     user: state.user,
     isLoggedIn: state.isLoggedIn,
     logout: state.logout,
-    setloginDailogOpen: state.setloginDailogOpen
+    setLoginDialogOpen: state.setLoginDialogOpen
   })));
 
 
@@ -96,7 +94,7 @@ const MobileSidebar = ({ open, toggleMobileMenu, initialNavItems, openCart, open
               </div>
             ) : (
               <div
-                onClick={() => { toggleMobileMenu(); setloginDailogOpen?.(true); }}
+                onClick={() => { toggleMobileMenu(); setLoginDialogOpen?.(true); }}
                 className="flex items-center gap-3 p-3 bg-gradient-to-r from-[var(--colour-fsP2)] to-blue-600 rounded-xl shadow-[0_4px_12px_-4px_rgba(6,81,237,0.4)] cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all text-white group"
               >
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">

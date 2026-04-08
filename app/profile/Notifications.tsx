@@ -250,9 +250,9 @@ export default function Notifications() {
                         const ts = TYPE_STYLE[item.type];
                         return (
                             <article key={item.id}
-                                className={`flex items-start gap-4 p-4 border rounded-xl transition-colors ${item.read ? 'border-gray-200 bg-white' : `${ts.border} ${ts.bg}`}`}>
-                                <div className={`p-2.5 rounded-lg border shrink-0 ${item.read ? 'border-gray-200 bg-gray-50 text-slate-500' : `${ts.iconBorder} ${ts.iconBg} ${ts.iconText}`}`}>
-                                    <Icon size={15} />
+                                className={`flex items-start gap-3 p-4 border rounded-xl transition-colors ${item.read ? 'border-gray-200 bg-white' : `${ts.border} ${ts.bg}`}`}>
+                                <div className={`p-2 rounded-lg border shrink-0 mt-0.5 ${item.read ? 'border-gray-200 bg-gray-50 text-slate-500' : `${ts.iconBorder} ${ts.iconBg} ${ts.iconText}`}`}>
+                                    <Icon size={14} />
                                 </div>
                                 <div className="flex-1 min-w-0 space-y-1">
                                     <div className="flex items-center gap-2 flex-wrap">
@@ -266,18 +266,20 @@ export default function Notifications() {
                                         )}
                                     </div>
                                     <p className="text-sm font-bold text-slate-900">{item.title}</p>
-                                    <p className="text-xs font-semibold text-slate-600 leading-5">{item.summary}</p>
-                                    <div className="flex items-center gap-1.5 pt-0.5">
-                                        <Clock3 size={11} className="text-slate-400" />
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.time}</p>
+                                    <p className="text-xs text-slate-600 leading-5">{item.summary}</p>
+                                    <div className="flex items-center justify-between gap-2 pt-1">
+                                        <div className="flex items-center gap-1.5">
+                                            <Clock3 size={11} className="text-slate-400" />
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.time}</p>
+                                        </div>
+                                        <button type="button"
+                                            onClick={() => update({ detailOpen: true, selectedId: item.id })}
+                                            className={`h-7 px-2.5 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 uppercase tracking-widest border
+                                                ${item.read ? 'border-gray-200 bg-white text-slate-600 hover:border-(--colour-fsP2) hover:text-(--colour-fsP2)' : `${ts.iconBorder} bg-white ${ts.iconText}`}`}>
+                                            {item.action} <ArrowRight size={10} />
+                                        </button>
                                     </div>
                                 </div>
-                                <button type="button"
-                                    onClick={() => update({ detailOpen: true, selectedId: item.id })}
-                                    className={`shrink-0 h-8 px-3 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1.5 uppercase tracking-widest border
-                                        ${item.read ? 'border-gray-200 bg-white text-slate-600 hover:border-(--colour-fsP2) hover:text-(--colour-fsP2)' : `${ts.iconBorder} bg-white ${ts.iconText}`}`}>
-                                    {item.action} <ArrowRight size={11} />
-                                </button>
                             </article>
                         );
                     })
@@ -286,8 +288,8 @@ export default function Notifications() {
 
             {/* Detail dialog */}
             <Dialog open={state.detailOpen} onOpenChange={open => update({ detailOpen: open })}>
-                <DialogContent className="p-0 overflow-hidden bg-white rounded-xl border border-gray-200 sm:max-w-4xl">
-                    <DialogHeader className={`px-6 py-5 border-b ${selStyle.border} ${selStyle.bg}`}>
+                <DialogContent className="p-0 overflow-hidden bg-white rounded-xl border border-gray-200 sm:max-w-2xl">
+                    <DialogHeader className={`px-4 sm:px-6 py-4 border-b ${selStyle.border} ${selStyle.bg}`}>
                         <div className="flex items-center gap-2 mb-1.5">
                             <div className={`p-1.5 rounded-lg border ${selStyle.iconBorder} bg-white ${selStyle.iconText}`}>
                                 <SelIcon size={13} />
@@ -306,7 +308,7 @@ export default function Notifications() {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="px-6 py-5 grid sm:grid-cols-2 gap-5">
+                    <div className="px-4 sm:px-6 py-4 sm:py-5 grid sm:grid-cols-2 gap-4 sm:gap-5">
                         {/* Left: detail + highlights */}
                         <div className="space-y-4">
                             <div>
@@ -365,7 +367,7 @@ export default function Notifications() {
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t border-gray-100 px-6 py-4 flex gap-2">
+                    <DialogFooter className="border-t border-gray-100 px-4 sm:px-6 py-4 flex gap-2">
                         <button type="button" onClick={() => update({ detailOpen: false })}
                             className="flex-1 h-9 border border-gray-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
                             Close

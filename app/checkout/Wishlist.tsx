@@ -95,9 +95,8 @@ const WishList = () => {
                         <h4 className="font-medium text-xs sm:text-sm truncate">
                           {item.name}
                         </h4>
-                        <p className="text-[10px] sm:text-xs text-gray-500">
-                          Rs.{" "}
-                          {(item.discounted_price || item.price)?.toLocaleString()}
+                        <p className="text-[10px] sm:text-xs text-gray-500 font-bold">
+                          Rs. {item.price?.toLocaleString() ?? '0'}
                         </p>
                       </div>
                     </div>

@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect } from 'react';
 import { getCookie } from 'cookies-next';
 import { create } from 'zustand';
@@ -33,7 +34,6 @@ interface CartResponse {
 }
 
 interface CartStore {
-    // State
     cartItems: CartResponse | undefined;
     wishlistItems: BasketProduct[];
     wishlistMap: Record<number, number>;
@@ -41,46 +41,45 @@ interface CartStore {
     isWishlistOpen: boolean;
     compareItems: BasketProduct[];
     guestAddresses: ShippingAddress[];
+    hasHydrated: boolean;
 
-    // Setters
     setIsCartOpen: (open: boolean) => void;
     setIsWishlistOpen: (open: boolean) => void;
     setCompareItems: React.Dispatch<React.SetStateAction<BasketProduct[]>>;
+    setHasHydrated: (state: boolean) => void;
 
-    // Guest Actions
     addGuestAddress: (address: ShippingAddress) => void;
     updateGuestAddress: (id: number, address: ShippingAddress) => void;
     deleteGuestAddress: (id: number) => void;
     clearGuestData: () => void;
 
-    // Cart actions
     fetchCart: () => Promise<void>;
     addToCart: (
         id: number,
         quantity: number,
         authState: { isLoggedIn: boolean },
         triggerLoginAlert: () => void,
-        product?: BasketProduct, // New optional parameter for offline mode
+        product?: BasketProduct,
         varientcolour?: string
     ) => Promise<void>;
     deleteFromCart: (id: number) => Promise<void>;
-    CartUpdateQuantity: (id: number, quantity: number, varientcolour?: string) => Promise<void>;
+    updateCartQuantity: (id: number, quantity: number, varientcolour?: string) => Promise<void>;
 
-    // Wishlist actions
     fetchWishlist: () => Promise<void>;
     addToWishlist: (
         id: number,
         user: unknown,
         triggerLoginAlert: () => void,
-        product?: BasketProduct // New optional parameter for offline mode
+        product?: BasketProduct
     ) => Promise<void>;
     removeFromWishlist: (id: number) => Promise<void>;
 
-    // Compare actions
     addToCompare: (product: BasketProduct) => void;
     removeFromCompare: (id: number) => void;
     isInCompare: (id: number) => boolean;
     clearCompare: () => void;
+    lastOrderData: any;
+    setLastOrderData: (data: any) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -93,8 +92,9 @@ export const useCartStore = create<CartStore>()(
             isWishlistOpen: false,
             compareItems: [],
             guestAddresses: [],
+            hasHydrated: false,
+            lastOrderData: undefined,
 
-            // Guest Address Actions
             addGuestAddress: (address) =>
                 set((state) => ({ 
                     guestAddresses: [...state.guestAddresses, { ...address, id: Date.now() + Math.floor(Math.random() * 100) }] 
@@ -118,6 +118,8 @@ export const useCartStore = create<CartStore>()(
 
             setIsCartOpen: (open) => set({ isCartOpen: open }),
             setIsWishlistOpen: (open) => set({ isWishlistOpen: open }),
+            setHasHydrated: (state) => set({ hasHydrated: state }),
+            setLastOrderData: (data) => set({ lastOrderData: data }),
 
             setCompareItems: (action) =>
                 set((state) => ({
@@ -134,11 +136,10 @@ export const useCartStore = create<CartStore>()(
                 }
             },
 
-            CartUpdateQuantity: async (id, quantity, varientcolour) => {
+            updateCartQuantity: async (id, quantity, varientcolour) => {
                 const { cartItems } = get();
                 const item = cartItems?.items?.find((i) => i.id === id);
                 
-                // If it's a completely local fake cart item (cart_id === 0)
                 if (item && item.cart_id === 0) {
                     const localItems = cartItems!.items.map(i => {
                         if (i.id === id) {
@@ -146,7 +147,7 @@ export const useCartStore = create<CartStore>()(
                                 ...i, 
                                 quantity, 
                                 subtotal: i.price * quantity,
-                                varientcolour: varientcolour || i.varientcolour
+                                varientcolour: varientcolour ?? i.varientcolour
                             };
                         }
                         return i;
@@ -167,12 +168,11 @@ export const useCartStore = create<CartStore>()(
 
             addToCart: async (id, quantity, authState, triggerLoginAlert, product, varientcolour) => {
                 if (!authState.isLoggedIn) {
-                    // ─── OFFLINE GUEST CART ───
                     const { cartItems } = get();
                     let localItems = cartItems?.items ? [...cartItems.items] : [];
                     
                     const existingItem = localItems.find((i) => i.product_id === id);
-                    console.log('Existing cart items:', localItems);
+            
                     if (existingItem) {
                         existingItem.quantity += quantity;
                         existingItem.subtotal = existingItem.price * existingItem.quantity;
@@ -182,7 +182,7 @@ export const useCartStore = create<CartStore>()(
                         const finalPrice = product.discounted_price && product.discounted_price > 0 ? product.discounted_price : price;
                         
                         localItems.push({
-                            id: Date.now() + Math.floor(Math.random() * 1000), // Generate unique local id
+                            id: Date.now() + Math.floor(Math.random() * 1000),
                             cart_id: 0,
                             product_id: id,
                             quantity,
@@ -190,7 +190,7 @@ export const useCartStore = create<CartStore>()(
                             product_attributes: [],
                             product: product,
                             subtotal: finalPrice * quantity,
-                            varientcolour: varientcolour || (product.attributes?.Color as string) || (product.attributes?.color as string)
+                            varientcolour: varientcolour ?? (product.attributes?.Color as string) ?? (product.attributes?.color as string)
                         });
                     }
                     
@@ -199,10 +199,10 @@ export const useCartStore = create<CartStore>()(
                     set({ 
                         cartItems: { 
                             ...cartItems, 
-                            id: cartItems?.id || 0,
+                            id: cartItems?.id ?? 0,
                             user_id: 0,
                             discount_coupon: null,
-                            created_at: cartItems?.created_at || new Date().toISOString(),
+                            created_at: cartItems?.created_at ?? new Date().toISOString(),
                             updated_at: new Date().toISOString(),
                             items: localItems, 
                             cart_total 
@@ -214,12 +214,11 @@ export const useCartStore = create<CartStore>()(
                     return;
                 }
 
-                // ─── API AUTHENTICATED CART ───
-                const { cartItems, CartUpdateQuantity, fetchCart } = get();
+                const { cartItems, updateCartQuantity, fetchCart } = get();
                 const existingItem = cartItems?.items?.find((i) => i.product_id === id);
 
                 if (existingItem) {
-                    await CartUpdateQuantity(existingItem.id, existingItem.quantity + quantity, varientcolour);
+                    await updateCartQuantity(existingItem.id, existingItem.quantity + quantity, varientcolour);
                     set({ isCartOpen: true });
                     trackAddToCart(existingItem.product, quantity);
                     return;
@@ -243,7 +242,6 @@ export const useCartStore = create<CartStore>()(
                 const { cartItems } = get();
                 const item = cartItems?.items?.find(i => i.id === id);
                 
-                // Offline delete
                 if (item && item.cart_id === 0) {
                     const localItems = cartItems!.items.filter(i => i.id !== id);
                     const cart_total = localItems.reduce((acc, i) => acc + i.subtotal, 0);
@@ -262,8 +260,8 @@ export const useCartStore = create<CartStore>()(
                 }
             },
 
-            // ─── Wishlist ─────────────────────────────────────────────────────────────
             fetchWishlist: async () => {
+                /*
                 try {
                     const data = await WishlistService.getWishlist();
                     const products: BasketProduct[] = [];
@@ -289,26 +287,37 @@ export const useCartStore = create<CartStore>()(
                 } catch (error) {
                     console.error('Failed to fetch wishlist', error);
                 }
+                */
             },
 
             addToWishlist: async (id, user, triggerLoginAlert, product) => {
-                if (!user) {
-                    // ─── OFFLINE WISHLIST ───
-                    const { wishlistItems, wishlistMap } = get();
-                    if (wishlistItems.find((i) => i.id === id)) return;
+                const { wishlistItems, wishlistMap } = get();
+                if (wishlistItems.find((i) => i.id === id)) return;
+                
+                if (product) {
+                    const price = typeof product.price === 'object' ? (product.price as any).current : product.price;
+                    const finalPrice = product.discounted_price && product.discounted_price > 0 ? product.discounted_price : price;
                     
-                    if (product) {
-                        set({ 
-                            wishlistItems: [...wishlistItems, product],
-                            wishlistMap: { ...wishlistMap, [id]: Date.now() }, // fake mapping
-                            isWishlistOpen: true 
-                        });
-                    }
+                    const normalizedProduct = {
+                        ...product,
+                        price: finalPrice,
+                        discounted_price: 0
+                    };
+
+                    set({ 
+                        wishlistItems: [...wishlistItems, normalizedProduct],
+                        wishlistMap: { ...wishlistMap, [id]: Date.now() },
+                        isWishlistOpen: true 
+                    });
+                }
+
+                /*
+                if (!user) {
                     return;
                 }
 
-                const { wishlistItems, fetchWishlist } = get();
-                if (wishlistItems.find((i) => i.id === id)) return;
+                const { wishlistItems: currentWishlistItems, fetchWishlist } = get();
+                if (currentWishlistItems.find((i) => i.id === id)) return;
 
                 try {
                     await WishlistService.addToWishlist(id);
@@ -317,14 +326,16 @@ export const useCartStore = create<CartStore>()(
                 } catch (error) {
                     console.error('Failed to add to wishlist', error);
                 }
+                */
             },
 
             removeFromWishlist: async (id) => {
+                const { wishlistItems } = get();
+                set({ wishlistItems: wishlistItems.filter(i => i.id !== id) });
+                
+                /*
                 const token = getCookie('access_token');
                 if (!token) {
-                    // ─── OFFLINE WISHLIST ───
-                    const { wishlistItems } = get();
-                    set({ wishlistItems: wishlistItems.filter(i => i.id !== id) });
                     return;
                 }
 
@@ -334,16 +345,13 @@ export const useCartStore = create<CartStore>()(
 
                 try {
                     await WishlistService.removeFromWishlist(wishlistId);
-                    set((state) => ({
-                        wishlistItems: state.wishlistItems.filter((item) => item.id !== id),
-                    }));
                     await fetchWishlist();
                 } catch (error) {
                     console.error('Failed to remove from wishlist', error);
                 }
+                */
             },
 
-            // ─── Compare ──────────────────────────────────────────────────────────────
             addToCompare: (product) =>
                 set((state) => {
                     if (state.compareItems.find((i) => i.id === product.id)) return state;
@@ -367,8 +375,12 @@ export const useCartStore = create<CartStore>()(
                 wishlistItems: state.wishlistItems, 
                 wishlistMap: state.wishlistMap,
                 compareItems: state.compareItems,
-                guestAddresses: state.guestAddresses
+                guestAddresses: state.guestAddresses,
+                lastOrderData: state.lastOrderData
             }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            },
         }
     )
 );
@@ -380,18 +392,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const token = getCookie('access_token');
         if (token) {
-            
-            // Sync guest data
             const syncGuestData = async () => {
                 const state = useCartStore.getState();
                 
-                // 1. Sync guest cart
-                const guestCartItems = state.cartItems?.items || [];
+                const guestCartItems = state.cartItems?.items ?? [];
                 if (guestCartItems.length > 0 && guestCartItems.some(i => i.id > 1000000000000 || !i.id)) {
                     try {
                         for (const item of guestCartItems) {
                             if (!item.id || item.id > 1000000000000) {
-                                await CartService.CreateCart({ product_id: item.product.id, quantity: item.quantity || 1 });
+                                await CartService.CreateCart({ product_id: item.product.id, quantity: item.quantity ?? 1 });
                             }
                         }
                     } catch (error) {
@@ -399,8 +408,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                 }
 
-                // 2. Sync guest wishlist
-                const guestWishlistItems = state.wishlistItems || [];
+                /*
+                const guestWishlistItems = state.wishlistItems ?? [];
                 if (guestWishlistItems.length > 0 && guestWishlistItems.some(i => i.id > 1000000000000 || !i.id)) {
                     try {
                         for (const item of guestWishlistItems) {
@@ -412,24 +421,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         console.error('Failed to sync guest wishlist:', error);
                     }
                 }
+                */
 
-                // 3. Sync guest addresses
                 if (state.guestAddresses && state.guestAddresses.length > 0) {
                     try {
                         for (const addr of state.guestAddresses) {
-                            const { id, ...addressData } = addr; // Omit the local id
+                            const { id, ...addressData } = addr;
                             await CreateShippingAddress(addressData as any);
                         }
-                        // Clear guest addresses after sync
                         useCartStore.setState({ guestAddresses: [] });
                     } catch (error) {
                         console.error('Failed to sync guest addresses:', error);
                     }
                 }
                 
-                // 4. Finally, fetch real integrated state from API
                 fetchCart();
-                fetchWishlist();
+                // fetchWishlist();
             };
             syncGuestData();
         }

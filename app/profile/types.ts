@@ -27,48 +27,84 @@ export interface ProfileFormData {
 
 // ─── Order Types ──────────────────────────────────────────────────────────────
 
-export interface OrderItem {
-    id: number | string;
-    product_id?: number;
-    quantity: number;
-    price: number;
-    unit_price?: number;
-    product: {
-        id: number;
-        name: string;
-        slug: string;
-        sku?: string;
-        image?: { thumb: string; full: string };
+export interface ProductInfo {
+    id: number;
+    name: string;
+    slug: string;
+    sku: string;
+    description: {
+        short_description: string;
+        description: string;
+        highlights: string;
+        warranty_description: string | null;
     };
-    name?: string;
-    pack?: string;
-    qty?: number;
-    image?: string;
+    price: {
+        original_price: number | null;
+        current: number;
+    };
+    quantity: number;
+    status: number;
+    attributes: Record<string, string>;
+    emi_enabled: number;
+    pre_order: {
+        available: number;
+        price: number | null;
+    };
+    thumb: {
+        url: string | null;
+        alt_text: string | null;
+    };
+    images: any[];
+}
+
+export interface OrderItem {
+    id: number;
+    order_id: number;
+    product_id: number;
+    quantity: number;
+    price: number | null;
+    product_attributes: any[];
+    product: ProductInfo;
+}
+
+export interface OrderShippingAddress {
+    id: number;
+    contact_info: {
+        first_name: string;
+        last_name: string;
+        contact_number: string;
+    };
+    geo: {
+        lat: number;
+        lng: number;
+    };
+    address: {
+        label: string | null;
+        landmark: string;
+        city: string;
+        district: string;
+        province: string;
+        country: string;
+        is_default: boolean;
+    };
 }
 
 export interface Order {
-    id: number | string;
+    id: number;
     invoice_number: string;
-    status: number | string;
+    status: number;
     order_status: string;
     order_total: number;
     shipping_cost: number;
+    discounts_total: number;
+    total: number;
     payment_type: string;
+    discount_coupon: string | null;
+    cancel_reason: string | null;
     items: OrderItem[];
+    shipping_address: OrderShippingAddress | null;
     created_at: string;
-    notes?: string;
-    shipping_address?: ShippingAddress;
-    user?: UserInfo;
-    processed_at?: string;
-    shipped_at?: string;
-    delivered_at?: string;
-    cancelled_at?: string;
-    cancel_reason?: string;
-    date?: string;
-    total?: number;
-    items_count?: number;
-    payment_method?: string;
-    tax?: number;
+    updated_at: string;
 }
 
 export interface UserInfo {

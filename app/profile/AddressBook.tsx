@@ -199,7 +199,7 @@ export default function AddressBook() {
                                     placeholder="Search..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="h-9 pl-9 pr-3 w-44 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-(--colour-fsP2) focus:bg-white transition-colors"
+                                    className="h-9 pl-9 pr-3 w-36 sm:w-44 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-(--colour-fsP2) focus:bg-white transition-colors"
                                 />
                             </div>
                             <button
@@ -305,7 +305,7 @@ export default function AddressBook() {
             {/* Form View */}
             {viewMode === 'form' && (
                 <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-                    <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/60">
+                    <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
                         <p className="text-sm font-bold text-slate-900">
                             {selectedAddressId ? 'Edit Address' : 'New Delivery Address'}
                         </p>

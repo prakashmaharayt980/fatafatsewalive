@@ -4,6 +4,7 @@ import { getAllCategories, getCategoryProducts } from '../api/services/category.
 import type { NavbarItem } from '../context/navbar.interface'
 import { IS_EXCHANGE_CATEGORY, type ProductListItem } from './exchange-helpers'
 import { Suspense, type ReactNode } from 'react'
+import UnderConstruction from '@/components/UnderConstruction'
 
 import LazySection from '@/components/LazySection'
 import BannerSectionServer from '@/components/BannerSectionServer'
@@ -46,6 +47,7 @@ async function getInitialProducts(categorySlug: string, brandSlug?: string) {
 }
 
 async function ExchangePageContent({ blogSection }: { blogSection: ReactNode }) {
+    /*
     const categories = await getCategories()
     let initialProducts: ProductListItem[] = []
 
@@ -72,6 +74,15 @@ async function ExchangePageContent({ blogSection }: { blogSection: ReactNode }) 
             bannerSection={bannerSection}
             blogSection={blogSection}
         />
+    )
+    */
+    return (
+        <div className="flex flex-col gap-8 py-12 px-4 min-h-[70vh] items-center justify-center">
+            <UnderConstruction
+                title="Mobile Exchange Coming Soon"
+                description="We are refining our exchange process to give you the best value for your old devices. Stay tuned for a smarter way to upgrade!"
+            />
+        </div>
     )
 }
 

@@ -28,14 +28,14 @@ const CheckoutDrawer = () => {
     setIsCartOpen,
     addToCart,
     deleteFromCart,
-    CartUpdateQuantity
+    updateCartQuantity
   } = useCartStore(useShallow(state => ({
     cartItems: state.cartItems,
     isCartOpen: state.isCartOpen,
     setIsCartOpen: state.setIsCartOpen,
     addToCart: state.addToCart,
     deleteFromCart: state.deleteFromCart,
-    CartUpdateQuantity: state.CartUpdateQuantity
+    updateCartQuantity: state.updateCartQuantity
   })));
 
   const router = useRouter();
@@ -53,9 +53,9 @@ const CheckoutDrawer = () => {
   const handleQuantityDecrease = useCallback(async (e: React.MouseEvent, itemId: number, currentQuantity: number) => {
     e.stopPropagation();
     if (currentQuantity > 1) {
-      await CartUpdateQuantity(itemId, currentQuantity - 1);
+      await updateCartQuantity(itemId, currentQuantity - 1);
     }
-  }, [CartUpdateQuantity]);
+  }, [updateCartQuantity]);
 
   const handleDeleteItem = useCallback(async (e: React.MouseEvent, itemId: number) => {
     e.stopPropagation();

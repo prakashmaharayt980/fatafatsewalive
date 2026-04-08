@@ -88,9 +88,9 @@ function ProductCard({
         </div>
 
         <div className="relative aspect-auto w-full h-full">
-          {/* placeholderimg */}
+          {/* TODO: placeholderimg */}
           <Image
-            src={product.thumb?.url || ""}
+            src={product.thumb?.url || placeholderimg}
             alt={product.thumb?.alt_text ?? product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"

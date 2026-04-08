@@ -18,10 +18,10 @@ interface User {
 interface AuthState {
   user: User | null;
   isLoggedIn: boolean;
-  loginDailogOpen: boolean;
+  loginDialogOpen: boolean;
   showLoginAlert: boolean;
   isLoading: boolean;
-  hasHydrated: boolean; // ✅ NEW
+  hasHydrated: boolean;
 }
 
 interface AuthActions {
@@ -29,9 +29,9 @@ interface AuthActions {
   logout: () => void;
   syncSession: (session: { user: User; access_token: string }) => void;
   triggerLoginAlert: () => void;
-  setloginDailogOpen: (open: boolean) => void;
+  setLoginDialogOpen: (open: boolean) => void;
   setShowLoginAlert: (show: boolean) => void;
-  setHasHydrated: (state: boolean) => void; // ✅ NEW
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState & AuthActions>()(
@@ -39,13 +39,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     (set, get) => ({
       user: null,
       isLoggedIn: false,
-      loginDailogOpen: false,
+      loginDialogOpen: false,
       showLoginAlert: false,
       isLoading: false,
       hasHydrated: false,
 
       login: (token, userData) => {
-        if (get().isLoggedIn) return; 
+        if (get().isLoggedIn) return;
 
         setCookie('access_token', token, {
           maxAge: 60 * 60 * 24 * 7,
@@ -72,15 +72,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
         toast.info('Logged out');
 
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && window.location.pathname === '/profile') {
           window.location.href = '/';
         }
       },
 
-   
       syncSession: (session) => {
         const current = get().user;
-        if (current?.id === session.user.id) return; 
+        if (current?.id === session.user.id) return;
 
         set({
           user: session.user,
@@ -93,19 +92,16 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         setTimeout(() => set({ showLoginAlert: false }), 3000);
       },
 
-      setloginDailogOpen: (open) => set({ loginDailogOpen: open }),
+      setLoginDialogOpen: (open) => set({ loginDialogOpen: open }),
       setShowLoginAlert: (show) => set({ showLoginAlert: show }),
       setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
       name: 'auth-storage',
-
       partialize: (state) => ({
         user: state.user,
         isLoggedIn: state.isLoggedIn,
       }),
-
-
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },

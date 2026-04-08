@@ -22,6 +22,7 @@ export const personalDetailsSchema = (isGranter = false) =>
     dob_bs: Yup.string()
       .required('Date of Birth (BS) is required')
       .matches(/^\d{4}[-/]\d{2}[-/]\d{2}$/, 'Must be a valid BS date (YYYY-MM-DD)'),
+
     gender: Yup.string().required('Please select a gender'),
     marriageStatus: Yup.string().required('Please select marriage status'),
     userpartnerName: Yup.string().when('marriageStatus', {
@@ -32,6 +33,16 @@ export const personalDetailsSchema = (isGranter = false) =>
           .required('Partner name is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
+    dob: Yup.string()
+      .required('Date of Birth (AD) is required')
+      .matches(/^\d{4}[-/]\d{2}[-/]\d{2}$/, 'Must be a valid AD date (YYYY-MM-DD)')
+      .test('not-future', 'Date of Birth (AD) cannot be in the future', function (value) {
+        if (!value) return true;
+        const [year, month, day] = value.split(/[-/]/).map(Number);
+        const today = new Date();
+        const inputDate = new Date(year, month - 1, day);
+        return inputDate < today;
+      }),
   });
 
 export const creditCardSchema = Yup.object().shape({

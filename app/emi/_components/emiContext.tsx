@@ -56,6 +56,24 @@ const defaultState: EmiContextState = {
     },
 };
 
+export interface LastEmiSubmission {
+    response: any;
+    product: any;
+    userInfo: any;
+    bankInfo: any;
+    creditCardInfo?: any;
+    granterInfo?: any;
+    emiData: {
+        downPayment: number;
+        financeAmount: number;
+        tenure: number;
+        paymentpermonth: number;
+    };
+    selectedOption: string;
+    selectedVariant?: string;
+    submittedAt: string;
+}
+
 interface EmiStore {
     emiContextInfo: EmiContextState;
     setEmiContextInfo: (updater: EmiContextState | ((prev: EmiContextState) => EmiContextState)) => void;
@@ -63,6 +81,8 @@ interface EmiStore {
     banks: FetchedBank[];
     isBanksLoading: boolean;
     fetchBanks: () => Promise<void>;
+    lastEmiSubmission: LastEmiSubmission | null;
+    setLastEmiSubmission: (data: LastEmiSubmission) => void;
 }
 
 export const useEmiStore = create<EmiStore>((set, get) => ({
@@ -72,6 +92,8 @@ export const useEmiStore = create<EmiStore>((set, get) => ({
             emiContextInfo: typeof updater === 'function' ? updater(state.emiContextInfo) : updater,
         })),
     resetEmi: () => set({ emiContextInfo: defaultState }),
+    lastEmiSubmission: null,
+    setLastEmiSubmission: (data) => set({ lastEmiSubmission: data }),
     banks: [],
     isBanksLoading: false,
     fetchBanks: async () => {

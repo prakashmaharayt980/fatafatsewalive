@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu, X, Search, Home, BookOpen, Wrench, Store, ShoppingCart, Heart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -34,7 +34,8 @@ export default function MobileNavClient({ initialNavItems }: MobileNavClientProp
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [searchHistory, setSearchHistory] = useState<string[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const abortRef = useRef<AbortController | null>(null);
 
     const { setIsCartOpen, setIsWishlistOpen } = useCartStore(useShallow(
         state => ({ setIsCartOpen: state.setIsCartOpen, setIsWishlistOpen: state.setIsWishlistOpen })
@@ -49,6 +50,14 @@ export default function MobileNavClient({ initialNavItems }: MobileNavClientProp
     ];
 
     useEffect(() => {
+        setSearchHistory(getSearchHistory());
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            abortRef.current?.abort();
+        };
+    }, []);
+
+    useEffect(() => {
         let lastScrollY = window.scrollY;
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
@@ -59,7 +68,7 @@ export default function MobileNavClient({ initialNavItems }: MobileNavClientProp
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleSearchChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearch(value);
 
@@ -68,28 +77,39 @@ export default function MobileNavClient({ initialNavItems }: MobileNavClientProp
             : [];
         setSuggestions(filtered);
 
-        if (searchTimeout) clearTimeout(searchTimeout);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        abortRef.current?.abort();
 
         if (value.length > 2) {
             setIsSearching(true);
-            const timeoutId = setTimeout(async () => {
+            const controller = new AbortController();
+            abortRef.current = controller;
+
+            timeoutRef.current = setTimeout(async () => {
                 try {
-                    const res = await searchProducts({ search: value, per_page: 5, sort: "newest" });
+                    const fetchPromise = searchProducts({ search: value, per_page: 5, sort: "newest" });
+                    const abortPromise = new Promise<never>((_, reject) => {
+                        controller.signal.addEventListener('abort', () =>
+                            reject(new DOMException('Search aborted', 'AbortError'))
+                        );
+                    });
+                    const res = await Promise.race([fetchPromise, abortPromise]);
                     setSearchResults(res.data || []);
                     setIsSearching(false);
                     trackSearch(value);
                     saveSearchTerm(value);
                     setSearchHistory(getSearchHistory());
-                } catch {
+                } catch (e) {
+                    if (e instanceof DOMException && e.name === 'AbortError') return;
                     setSearchResults([]);
                     setIsSearching(false);
                 }
-            }, 1000);
-            setSearchTimeout(timeoutId);
+            }, 500);
         } else {
             setSearchResults([]);
+            setIsSearching(false);
         }
-    };
+    }, []);
 
     const toggleMobileSearch = () => {
         setMobileSearchVisible(!mobileSearchVisible);

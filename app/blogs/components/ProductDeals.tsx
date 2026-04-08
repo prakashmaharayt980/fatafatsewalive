@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, ShoppingBasket, Star } from 'lucide-react';
 import { parseHighlights } from '@/app/CommonVue/highlights';
+import { placeholderimg } from '@/app/CommonVue/Image';
 
 interface ProductDealsProps {
     products?: any[];
@@ -36,7 +37,7 @@ const ProductDeals = React.memo(({ products = [], title, slug = 'mobile-price-in
                     // Robust Data Logic (The "Func")
                     const rating = item.displayRating || item.average_rating || 0;
                     const ratingCount = item.displayRatingCount || item.rating_count || 0;
-                    const imageUrl = item.thumb?.url || item.image?.thumb;
+                    const imageUrl = item.thumb?.url || item.image?.thumb || placeholderimg;
                     const displayPrice = item.displayPrice || (item.discountedPriceVal ?? item.price)?.toLocaleString();
                     const highlights = parseHighlights(item.highlights, 2);
 
@@ -47,8 +48,10 @@ const ProductDeals = React.memo(({ products = [], title, slug = 'mobile-price-in
                             className="group flex gap-3 p-2.5 rounded-xl bg-white border border-(--colour-border3) hover:border-(--colour-fsP2)/50 hover:shadow-[0_1px_6px_rgba(0,0,0,0.06)] transition-all duration-200"
                         >
                             <div className="relative flex-shrink-0 w-17 h-17 rounded-lg bg-(--colour-bg4) overflow-hidden border border-(--colour-border3)">
+
+          {/* TODO: placeholderimg */}
                                 <Image
-                                    src={imageUrl}
+                                    src={imageUrl }
                                     alt={item.name}
                                     fill
                                     className="object-contain p-1.5 group-hover:scale-[1.04] transition-transform duration-300"
