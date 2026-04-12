@@ -34,7 +34,7 @@ import { trackViewContent } from "@/lib/Analytic";
 import LazySection from "@/components/LazySection";
 
 import SkeletonCard from "@/app/skeleton/SkeletonCard";
-import { getRandomBasketProducts } from "@/app/api/utils/productFetchers";
+
 import { getCategoryProducts } from "@/app/api/services/category.service";
 
 const BasketCard = dynamic(() => import("@/app/homepage/BasketCard"), { ssr: false });

@@ -230,9 +230,9 @@ const RenderReview: React.FC<RenderReviewProps> = ({
             />
             <span className="text-xs leading-relaxed text-gray-600">
               I confirm all information provided is accurate and I agree to the{' '}
-              <span className="font-semibold text-(--colour-fsP2) hover:underline">
+              <a href="/pages/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="font-semibold text-(--colour-fsP2) hover:underline">
                 Terms & Conditions
-              </span>{' '}
+              </a>{' '}
               of Fatafatsewa EMI Service.
             </span>
           </label>

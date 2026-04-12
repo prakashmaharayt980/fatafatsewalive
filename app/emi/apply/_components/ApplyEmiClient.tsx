@@ -146,6 +146,16 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         return product.price.current;
     }, [product]);
 
+    // Always-resolved variant ID — updates live when color changes, falls back to first variant
+    const variantId = useMemo(() => {
+        const variants = product?.variants;
+        if (!variants?.length) return '';
+        const matched = variants.find(v =>
+            v.attributes?.Color === localVariant || v.attributes?.color === localVariant
+        );
+        return String(matched?.id ?? variants[0].id ?? '');
+    }, [localVariant, product?.variants]);
+
     const getValidationSchema = useCallback((sectionKey: string, option: string) => {
         if (sectionKey === 'userInfo') return personalDetailsSchema();
         if (sectionKey === 'granterPersonalDetails') return personalDetailsSchema(true);
@@ -310,8 +320,8 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
         if (!file) return;
 
         const isPdfDoc = docType === 'bankStatement';
-        const maxSize = isPdfDoc ? 5 * 1024 * 1024 : 300 * 1024;
-        const maxLabel = isPdfDoc ? '5MB' : '300KB';
+        const maxSize = isPdfDoc ? 1* 1024 * 1024 : 300 * 1024;
+        const maxLabel = isPdfDoc ? '1MB' : '300KB';
 
         if (file.size > maxSize) {
             toast.error(`"${file.name}" exceeds ${maxLabel} limit. Please upload a smaller file.`, {
@@ -479,35 +489,32 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             const typeMap: Record<string, string> = {
                 'creditCard': 'credit_card',
                 'downPayment': 'citizenship',
-                'makeCard': 'apply_card'
+                'makeCard': 'apply_card',
             };
-            const apiType = typeMap[selectedOption] || selectedOption;
+            const apiType = typeMap[selectedOption] ?? selectedOption;
+
+            const bank_code = banks.find(b => b.name === localBankInfo.bankname)?.bank_code ?? '';
 
             // ─── 1. Common Metadata ───────────────────────────────────────────
-            const selectedVariantObj = product.variants?.find(v =>
-                (v.attributes?.Color ?? v.attributes?.color ?? v.color) === localVariant
-            );
             formData.append('type', apiType);
             formData.append('product_id', String(product.id));
-            if (selectedVariantObj?.id) formData.append('variant_id', String(selectedVariantObj.id));
+             if(variantId) formData.append('variant_id', variantId);
             formData.append('down_payment', String(emiData.downPayment));
-            formData.append('loan_amount', String(emiData.financeAmount));
             formData.append('duration', String(localEmiCalculation.duration));
             formData.append('agreed_terms', '1');
 
-            // ─── 2. Personal Info (field names differ per type) ───────────────
-            const isCitizenship = selectedOption === 'downPayment';
-            formData.append( 'full_name' , localUserInfo.name ?? '');
+            // ─── 2. Personal Info ─────────────────────────────────────────────
+            formData.append('full_name', localUserInfo.name );
             if (localUserInfo.email) formData.append('email', localUserInfo.email);
-            formData.append('phone', localUserInfo.phone ?? '');
+            formData.append('phone', localUserInfo.phone );
             if (localUserInfo.dob) formData.append('dob_ad', localUserInfo.dob);
-            if (localUserInfo.dob_bs != null) formData.append('dob_bs', String(localUserInfo.dob_bs));
+            if (localUserInfo.dob_bs) formData.append('dob_bs', String(localUserInfo.dob_bs));
             if (localUserInfo.gender) formData.append('gender', localUserInfo.gender.toLowerCase());
-            if (localUserInfo.marriageStatus) formData.append(isCitizenship ? 'marriage_status' : 'marital_status', localUserInfo.marriageStatus.toLowerCase());
-            if (localUserInfo.nationalID != null) formData.append(isCitizenship ? 'nid_number' : 'national_id', String(localUserInfo.nationalID));
+            if (localUserInfo.marriageStatus) formData.append('marriage_status', localUserInfo.marriageStatus.toLowerCase());
+            if (localUserInfo.nationalID != null) formData.append('nid_number', String(localUserInfo.nationalID));
             if (localUserInfo.address) formData.append('address', localUserInfo.address);
 
-            // ─── 3. Common Files ───────────────────────────────────────────────
+            // ─── 3. Common Documents ──────────────────────────────────────────
             if (files.citizenshipFile?.ppphoto) formData.append('documents[pp_photo]', files.citizenshipFile.ppphoto);
             if (files.citizenshipFile?.front) formData.append('documents[citizenship_front]', files.citizenshipFile.front);
             if (files.citizenshipFile?.back) formData.append('documents[citizenship_back]', files.citizenshipFile.back);
@@ -515,45 +522,41 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
             // ─── 4. Branch-Specific Data ──────────────────────────────────────
             if (selectedOption === 'creditCard') {
-                formData.append('credit_card[card_number]', (localCreditCardInfo.creditCardNumber || '').replace(/\s/g, ''));
-                formData.append('credit_card[card_holder]', localCreditCardInfo.cardHolderName ?? '');
-                formData.append('credit_card[card_provider]', localBankInfo.bankname ?? '');
-                formData.append('credit_card[expiry_date]', localCreditCardInfo.expiryDate ?? '');
-                if (localCreditCardInfo.cardLimit != null) formData.append('credit_card[credit_limit]', String(localCreditCardInfo.cardLimit));
-            }
-            else if (selectedOption === 'downPayment') {
-                formData.append('bank', localBankInfo.bankname );
+                formData.append('credit_card[card_number]', (localCreditCardInfo.creditCardNumber ).replace(/\s/g, ''));
+                formData.append('credit_card[card_holder]', localCreditCardInfo.cardHolderName );
+                formData.append('credit_card[card_provider]', bank_code);
+                formData.append('credit_card[expiry_date]', localCreditCardInfo.expiryDate );
+                if (localCreditCardInfo.cardLimit) formData.append('credit_card[credit_limit]', String(localCreditCardInfo.cardLimit));
+            } else if (selectedOption === 'downPayment') {
+                formData.append('bank', bank_code);
                 formData.append('guarantor[name]', localGranterInfo.name );
                 formData.append('guarantor[phone]', localGranterInfo.phone );
                 if (localGranterInfo.gender) formData.append('guarantor[gender]', localGranterInfo.gender.toLowerCase());
                 if (localGranterInfo.marriageStatus) formData.append('guarantor[marriage_status]', localGranterInfo.marriageStatus.toLowerCase());
                 if (localGranterInfo.nationalID != null) formData.append('guarantor[citizenship_number]', String(localGranterInfo.nationalID));
                 if (localGranterInfo.dob) formData.append('guarantor[dob_ad]', localGranterInfo.dob);
-                if (localGranterInfo.dob_bs != null) formData.append('guarantor[dob_bs]', String(localGranterInfo.dob_bs));
+                if (localGranterInfo.dob_bs) formData.append('guarantor[dob_bs]', String(localGranterInfo.dob_bs));
                 if (localGranterInfo.address) formData.append('guarantor[address]', localGranterInfo.address);
-
                 if (files.granterDocument?.ppphoto) formData.append('guarantor[documents][pp_photo]', files.granterDocument.ppphoto);
                 if (files.granterDocument?.front) formData.append('guarantor[documents][citizenship_front]', files.granterDocument.front);
                 if (files.granterDocument?.back) formData.append('guarantor[documents][citizenship_back]', files.granterDocument.back);
-            }
-            else if (selectedOption === 'makeCard') {
-                formData.append('bank[code]', localBankInfo.bankname ?? '');
+            } else if (selectedOption === 'makeCard') {
+                formData.append('bank[code]', bank_code);
                 if (localBankInfo.accountNumber) formData.append('bank[account_number]', localBankInfo.accountNumber);
                 if (localBankInfo.bankbranch) formData.append('bank[branch]', localBankInfo.bankbranch);
-                if (localBankInfo.salaryAmount != null) formData.append('salary[amount]', String(localBankInfo.salaryAmount));
-                if (files.bankStatement) formData.append('salary[statement]', files.bankStatement);
+                if (localBankInfo.salaryAmount != null) formData.append('monthly_salary', String(localBankInfo.salaryAmount));
+                if (files.bankStatement) formData.append('documents[salary_statement]', files.bankStatement);
             }
 
-            console.table(
-  Array.from(formData.entries()).map(([k, v]) => [
-    k,
-    v instanceof File ? `${v.name} | ${v.type} | ${v.size} bytes` : v
-  ])
-);
+            
+console.table(      
+        Array.from(formData.entries()).map(([k, v]) => [              
+          k,                          
+          v instanceof File ? `${v.name} | ${v.type} | ${v.size} bytes` : v                           
+        ])                            
+      ); 
 
-            console.log("Submitting EMI application with data:", formData);
-            const response = await EmiRequest(formData)
-            console.log("API Response:", response);
+            const response = await EmiRequest(formData);
 
 
             if (response?.success === false) {

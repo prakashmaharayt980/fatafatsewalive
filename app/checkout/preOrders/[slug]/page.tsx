@@ -2,8 +2,8 @@
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import PreOrderCheckoutClient from './PreOrderCheckoutClient';
 import { getProductBySlug } from '@/app/api/services/product.service';
+import { Suspense } from 'react';
 
-// Same fetch pattern as products/[slug]/page.tsx
 async function getProduct(slug: string): Promise<ProductDetails | null> {
     if (!slug) return null;
     try {
@@ -15,9 +15,7 @@ async function getProduct(slug: string): Promise<ProductDetails | null> {
     }
 }
 
-import { Suspense } from 'react';
 
-// --- CONTENT COMPONENT ---
 async function PreOrderCheckoutPageContent({
     params,
 }: {
@@ -39,7 +37,6 @@ async function PreOrderCheckoutPageContent({
     return <PreOrderCheckoutClient product={productData} />;
 }
 
-// --- MAIN PAGE WRAPPER ---
 export default function PreOrderCheckoutPage(props: { params: Promise<{ slug: string }> }) {
     return (
         <Suspense fallback={

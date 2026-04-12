@@ -92,9 +92,14 @@ export interface ProductData {
     highlights?: string; // fallback in case some old properties use it directly
     product_video_url?: string | null;
     emi_enabled?: number | boolean;
-    pre_order?: any;
-    pre_order_price?: number;
+    // pre_order?: any;
+    // pre_order_price?: number;
     average_rating: number;
+
+    pre_order:{
+        available: boolean;
+        price: number;
+    }
 
     // Media
     thumb?: ImageInfo | null;

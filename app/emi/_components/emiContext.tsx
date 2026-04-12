@@ -12,6 +12,7 @@ export interface FetchedBank {
     tenureOptions: number[];
     rateByTenure: Record<number, number>;
     img?: any;
+    bank_code: string;
 }
 
 const defaultState: EmiContextState = {
@@ -118,6 +119,7 @@ export const useEmiStore = create<EmiStore>((set, get) => ({
                         rate: rateByTenure[12] || 0,
                         tenureOptions: Object.keys(rateByTenure).map(Number).filter(k => rateByTenure[k] > 0),
                         rateByTenure,
+                        bank_code: b.bank_code,
                     
                     };
                 });

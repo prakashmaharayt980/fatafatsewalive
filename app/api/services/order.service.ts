@@ -4,6 +4,9 @@ export const OrderService = {
     CreateOrder: (data: any) =>
         apiPrivate.post(`/v1/orders`, data).then(res => res.data),
 
+    CreatePreOrder: (data: any) =>
+        apiPrivate.post(`/v1/orders/pre-order`, data).then(res => res.data),
+
     OrderList: () =>
         apiPrivate.get(`/v1/orders`).then(res => res.data),
 

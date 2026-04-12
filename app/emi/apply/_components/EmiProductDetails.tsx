@@ -68,6 +68,8 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
             <span className="text-gray-600">Down Payment</span>
             <span className="font-semibold text-gray-900">Rs. {Number(emiData.downPayment || 0).toLocaleString()}</span>
           </div>
+          
+
 
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">Loan Amount</span>

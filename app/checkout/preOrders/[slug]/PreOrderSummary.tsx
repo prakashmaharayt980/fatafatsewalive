@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import type { ProductDetails } from '@/app/types/ProductDetailsTypes';
 import { type ShippingAddress } from '@/app/checkout/checkoutTypes';
-import { CalendarClock, ShieldCheck, MapPin, Banknote, Clock } from 'lucide-react';
+import { CalendarClock, MapPin, Clock } from 'lucide-react';
 
 interface PreOrderSummaryProps {
     product: ProductDetails;
@@ -73,11 +73,15 @@ export default function PreOrderSummary({
             {/* Financials */}
             <div className="p-6 space-y-4">
                 <div className="flex justify-between items-center">
-                    <span className="text-gray-500 text-sm font-medium">Estimated Price</span>
-                    <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold px-3 py-1 rounded-full">
-                        <Clock className="w-3.5 h-3.5" />
-                        Coming Soon
-                    </span>
+                    <span className="text-gray-500 text-sm font-medium">Product Price</span>
+                    {product.pre_order?.price ? (
+                        <span className="text-sm font-bold text-gray-900">Rs. {productPrice.toLocaleString()}</span>
+                    ) : (
+                        <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold px-3 py-1 rounded-full">
+                            <Clock className="w-3.5 h-3.5" />
+                            Coming Soon
+                        </span>
+                    )}
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-gray-500 text-sm font-medium">Shipping</span>

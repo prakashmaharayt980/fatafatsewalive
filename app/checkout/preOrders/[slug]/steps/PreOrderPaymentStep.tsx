@@ -7,11 +7,16 @@ import Image from 'next/image';
 import { PaymentMethodsOptions } from '@/app/CommonVue/Payment';
 import { useAuthStore } from '@/app/context/AuthContext';
 import { useShallow } from 'zustand/react/shallow';
+import esewaImg from '@/public/imgfile/esewa.png';
+import khaltiImg from '@/public/imgfile/khalti.webp';
+import nicAsiaImg from '@/public/imgfile/bankingPartners11.png';
+import handshakeIcon from '@/public/imgfile/handshakeIcon.webp';
 
-
-// Notice: We strictly omit Cash on Delivery for Pre-orders
-const allPaymentMethods = [
-    ...PaymentMethodsOptions.map(m => ({ ...m, type: 'Digital Wallet' })),
+const PAYMENT_METHODS = [
+    { id: 1, name: 'Esewa',            img: esewaImg,      description: 'You will be redirected to eSewa to complete your purchase.',        recommended: true  },
+    { id: 2, name: 'Khalti',           img: khaltiImg,     description: 'You will be redirected to Khalti to complete your purchase.',       recommended: true  },
+    { id: 3, name: 'Nic-Asia',         img: nicAsiaImg,    description: 'You will be redirected to NIC Asia to complete your purchase.',     recommended: false },
+                         
 ];
 
 interface PreOrderPaymentStepProps {
@@ -20,6 +25,8 @@ interface PreOrderPaymentStepProps {
     onPlaceOrder: () => void;
     onBack: () => void;
     isSubmitting: boolean;
+    error?: string | null;
+    onClearError?: () => void;
 }
 
 export default function PreOrderPaymentStep({
@@ -27,7 +34,9 @@ export default function PreOrderPaymentStep({
     onPaymentMethodChange,
     onPlaceOrder,
     onBack,
-    isSubmitting
+    isSubmitting,
+    error,
+    onClearError,
 }: PreOrderPaymentStepProps) {
     const { isLoggedIn, triggerLoginAlert } = useAuthStore(useShallow(state => ({
         isLoggedIn: state.isLoggedIn,
@@ -55,7 +64,7 @@ export default function PreOrderPaymentStep({
 
                 <div className="p-6 space-y-6 max-h-[55vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                     <div className="grid gap-4 sm:grid-cols-2">
-                        {allPaymentMethods.map((method) => {
+                        {PAYMENT_METHODS.map((method) => {
                             const isSelected = paymentMethod === method.name;
                             const isRecommended = ['Esewa', 'Khalti'].includes(method.name);
 
@@ -106,6 +115,15 @@ export default function PreOrderPaymentStep({
                     </div>
                 </div>
             </div>
+
+            {error && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600 font-medium flex items-center justify-between gap-2">
+                    <span>{error}</span>
+                    {onClearError && (
+                        <button onClick={onClearError} className="text-red-400 hover:text-red-600 font-bold text-xs shrink-0">✕</button>
+                    )}
+                </div>
+            )}
 
             {/* Navigation Buttons */}
             <div className="flex flex-col-reverse sm:flex-row justify-between gap-4 pt-6 border-t border-gray-100">
