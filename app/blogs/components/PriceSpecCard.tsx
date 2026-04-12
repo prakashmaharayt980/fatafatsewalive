@@ -17,7 +17,9 @@ const PriceSpecCard = ({ image, name, price, specs, shopLink, product }: PriceSp
 
     const displayImage = product?.image?.full || image || '';
     const displayName = product?.name || name || '';
-    const displayPrice = product ? `Rs. ${product.discounted_price.toLocaleString()}` : price || '';
+    const displayPrice = product
+        ? `Rs. ${((typeof product.price === 'object' ? product.price.current : product.price) ?? 0).toLocaleString()}`
+        : price || '';
     const displayLink = product ? `/product-details/${product.slug}` : shopLink || '#';
 
     const displaySpecs = product ? [

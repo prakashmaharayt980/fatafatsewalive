@@ -74,7 +74,7 @@ export default async function ProductDetailsPage({ params }: SlugProps) {
   const currentPrice =
     typeof productDetails.price === "object"
       ? (productDetails.price as any).current
-      : productDetails.discounted_price ?? productDetails.price;
+      : productDetails.price;
 
   const jsonLd: Record<string, any> = {
     "@context": "https://schema.org",

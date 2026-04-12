@@ -21,15 +21,15 @@ export default function BlogFastSaleProductCards({
     const extractPrice = (p: any): number => {
         if (typeof p === 'number') return p;
         if (typeof p === 'string') return parseInt(p) || 0;
-        if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
+        if (typeof p === 'object' && p !== null) return parseInt(String(p.current ?? p.price ?? 0)) || 0;
         return 0;
     };
 
     const originalPrice = (product as any).basePrice ?? extractPrice(product.price);
-    const discountedPrice = (product as any).discountedPriceVal ?? extractPrice((product as any).discounted_price || product.price);
+    const discountedPrice = (product as any).discountedPriceVal ?? extractPrice(product.price);
     const hasDiscount = originalPrice > discountedPrice;
     const discountPercent = (product as any).discountPercent ?? (hasDiscount ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100) : 0);
-    const displayPrice = (product as any).displayPrice ?? (discountedPrice || originalPrice).toLocaleString();
+    const displayPrice = (product as any).displayPrice ?? ((discountedPrice > 0 ? discountedPrice : originalPrice).toLocaleString());
     
     // Robust Image URL
     // Robust Image URL

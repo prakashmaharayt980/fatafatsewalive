@@ -126,7 +126,6 @@ export type ProductSummary = ProductData;
 export interface CustomVariantGroup {
     color: string;
     price: number;
-    discounted_price: number;
     variantId: number;
     sku: string | null;
     quantity: number;

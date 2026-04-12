@@ -42,7 +42,6 @@ export interface CategorySlug {
       highlights: string;
       emi_enabled: number;
       image: string;
-      discounted_price: string;
       price: string;
       average_rating: number;
       name: string;
@@ -61,7 +60,6 @@ export interface CategorySlug_ID {
       thumb: string,
       preview: string
     }
-    discounted_price: string;
     price: string;
     average_rating: number;
     name: string;
@@ -117,7 +115,6 @@ export interface ProductDetails {
   name: string;
   slug: string;
   price: string;
-  discounted_price: string;
   quantity: number;
   emi_enabled: boolean;
   brand: string;

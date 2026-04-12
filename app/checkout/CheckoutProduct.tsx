@@ -80,7 +80,7 @@ export default function CheckoutProduct({
               if (typeof p === 'object' && p !== null) return parseInt(String(p.current || p.price || 0)) || 0;
               return 0;
             };
-            const price = extractPrice((product as any).discounted_price || product.price);
+            const price = extractPrice(product.price);
             const quantity = item.quantity || 1;
             const itemTotal = price * quantity;
 

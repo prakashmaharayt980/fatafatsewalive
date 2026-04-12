@@ -4,7 +4,6 @@ export interface ProductListItem {
     slug: string
     image: { full: string; thumb: string; preview: string } | string
     price: number | string
-    discounted_price: number | string
     created_at: string
     average_rating?: number
     brand?: { id: number; name: string; slug: string }
@@ -15,7 +14,6 @@ export interface FullProduct {
     name: string
     slug: string
     price: number
-    discounted_price: number
     created_at: string
     image: { full: string; thumb: string; preview: string }
     brand: { id: number; name: string; slug: string }

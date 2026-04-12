@@ -20,7 +20,7 @@ function ProductSide({ product, side }: { product: ProductDetails; side: 'left' 
         return 0;
     };
 
-    const price = extractPrice(product.discounted_price || product.price);
+    const price = extractPrice(product.price);
     const imgUrl = product.thumb?.url || product.image?.preview || product.image?.full || imglogo.src;
     const rating = product.average_rating || 0;
 

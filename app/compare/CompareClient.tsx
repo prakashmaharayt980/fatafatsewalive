@@ -17,7 +17,7 @@ import { useShallow } from 'zustand/react/shallow';
 const hasFullData = (p: ProductDetails) => Object.keys(p.attributes ?? {}).length > 0;
 
 const getPrice = (p: ProductDetails) =>
-    p.discounted_price ?? (typeof p.price === 'object' ? p.price.current : p.price) ?? 0;
+    (typeof p.price === 'object' ? p.price.current : p.price) ?? 0;
 
 const getImage = (p: ProductDetails) =>
     p.thumb?.url ?? (p as any).image?.full ?? (p as any).image?.thumb ?? '/placeholder.png';

@@ -22,7 +22,7 @@ export default function ExchangeProductCard({
     isSelected = false,
     variant = 'catalog'
 }: Props) {
-    const maxVal = getMaxExchangeValue(product.discounted_price || product.price, product.created_at)
+    const maxVal = getMaxExchangeValue(product.price, product.created_at)
     const brandName = product.brand?.name ?? selectedBrand
 
     const getProductImage = (p: any) => {

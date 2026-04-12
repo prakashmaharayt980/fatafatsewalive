@@ -12,7 +12,7 @@ interface PreOrderReceiptStepProps {
 }
 
 export default function PreOrderReceiptStep({ product, address, onNext, onBack }: PreOrderReceiptStepProps) {
-    const productPrice = product.discounted_price || product.price;
+    const productPrice = typeof product.price === 'object' ? product.price.current : product.price;
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-300">

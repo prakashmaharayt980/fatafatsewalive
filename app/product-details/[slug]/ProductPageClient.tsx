@@ -70,7 +70,7 @@ export default function ProductPageClient({ productDetails }: { productDetails: 
     const relatedCategory = productDetails.categories?.[0] ?? ({} as any);
 
     const priceRange = useMemo(() => {
-        const currentPrice = productDetails.price?.current ?? productDetails.discounted_price ?? productDetails.price;
+        const currentPrice = productDetails.price?.current ?? productDetails.price;
         if (!currentPrice || typeof currentPrice !== "number") return null;
         return { min: currentPrice * 0.5, max: currentPrice * 1.3 };
     }, [productDetails]);

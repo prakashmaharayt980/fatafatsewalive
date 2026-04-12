@@ -62,11 +62,11 @@ const CategoryProductStrip = ({ categorySlug, categoryTitle }: CategoryProductSt
                                 </h4>
                                 <div className="flex items-baseline gap-2 mt-2">
                                     <span className="font-bold text-blue-600">
-                                        Rs. {product.discounted_price.toLocaleString()}
+                                        Rs. {((typeof product.price === 'object' ? product.price.current : product.price) ?? 0).toLocaleString()}
                                     </span>
-                                    {product.discounted_price && product.discounted_price < (typeof product.price === 'object' ? product.price.current : product.price) && (
+                                    {(typeof product.price === 'object' && product.price.original_price && product.price.current < product.price.original_price) && (
                                         <span className="text-xs text-gray-400 line-through">
-                                            {(typeof product.price === 'object' ? product.price.current : product.price).toLocaleString()}
+                                            {product.price.original_price.toLocaleString()}
                                         </span>
                                     )}
                                 </div>

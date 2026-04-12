@@ -17,7 +17,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const getProductPrice = (p: ProductDetails) =>
-    p.discounted_price ?? (typeof p.price === 'object' ? p.price.current : p.price) ?? 0;
+    (typeof p.price === 'object' ? p.price.current : p.price) ?? 0;
 
 interface Props {
     onSelect: (product: ProductDetails) => void;

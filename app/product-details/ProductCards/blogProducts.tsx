@@ -67,7 +67,7 @@ const BlogProductCard = ({
         (product as any).basePrice ?? extractPrice(product.price);
     const discountedPrice =
         (product as any).discountedPriceVal ??
-        extractPrice((product as any).discounted_price || product.price);
+        extractPrice(product.price);
     const hasDiscount = originalPrice > discountedPrice;
     const discountPercent =
         (product as any).discountPercent ??
@@ -76,7 +76,7 @@ const BlogProductCard = ({
             : 0);
     const displayPrice =
         (product as any).displayPrice ??
-        (discountedPrice || originalPrice).toLocaleString();
+        (discountedPrice > 0 ? discountedPrice : originalPrice).toLocaleString();
 
     const imageUrl =
         product.thumb?.url ||

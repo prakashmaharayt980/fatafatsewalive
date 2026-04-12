@@ -29,10 +29,15 @@ export const trackSearch = async (searchTerm: string) => {
 
 
 export const trackViewContent = async (product: any) => {
+    const unitPrice = Number(
+        (typeof product?.price === "object"
+            ? product?.price?.current ?? product?.price?.price ?? product?.price?.original_price
+            : product?.price) ?? 0
+    );
 
     safeSendGAEvent('event', 'view_item', {
         currency: 'NPR',
-        value: product.discounted_price || product.price,
+        value: unitPrice,
         items: [{ item_id: product.id, item_name: product.name }]
     })
 
@@ -40,16 +45,21 @@ export const trackViewContent = async (product: any) => {
     safeFbq('track', 'ViewContent', {
         content_ids: [product.id],
         content_type: 'product',
-        value: product.discounted_price || product.price,
+        value: unitPrice,
         currency: 'NPR',
         content_name: product.name
     })
 }
 
 export const trackAddToCart = async (product: any, quantity: number = 1) => {
+    const unitPrice = Number(
+        (typeof product?.price === "object"
+            ? product?.price?.current ?? product?.price?.price ?? product?.price?.original_price
+            : product?.price) ?? 0
+    );
     safeSendGAEvent('event', 'add_to_cart', {
         currency: 'NPR',
-        value: (product.discounted_price || product.price) * quantity,
+        value: unitPrice * quantity,
         items: [{
             item_id: product.id,
             item_name: product.name,
@@ -60,7 +70,7 @@ export const trackAddToCart = async (product: any, quantity: number = 1) => {
     safeFbq('track', 'AddToCart', {
         content_ids: [product.id],
         content_type: 'product',
-        value: (product.discounted_price || product.price) * quantity,
+        value: unitPrice * quantity,
         currency: 'NPR',
         content_name: product.name,
         num_items: quantity

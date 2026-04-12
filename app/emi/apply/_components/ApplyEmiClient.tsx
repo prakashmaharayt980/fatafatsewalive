@@ -85,9 +85,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const product = initialProduct || emiContextInfo.product;
 
     useEffect(() => {
-        // Only write product to context when SSR didn't resolve it.
-        // If initialProduct came from server (slug in URL), it's already correct —
-        // no need to write to context and trigger a re-render.
+
         if (initialProduct && initialProduct.id !== emiContextInfo.product?.id) {
             if (!emiContextInfo.product) {
                 setEmiContextInfo(prev => ({ ...prev, product: initialProduct }));
@@ -438,7 +436,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                             {fileErrors.map((err, i) => <li key={i}>{err}</li>)}
                         </ul>
                     ),
-                    duration: 5000,
+                    duration: 1000,
                 });
                 return;
             }
@@ -499,7 +497,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
             // ─── 2. Personal Info (field names differ per type) ───────────────
             const isCitizenship = selectedOption === 'downPayment';
-            formData.append(isCitizenship ? 'full_name' : 'name', localUserInfo.name ?? '');
+            formData.append( 'full_name' , localUserInfo.name ?? '');
             if (localUserInfo.email) formData.append('email', localUserInfo.email);
             formData.append('phone', localUserInfo.phone ?? '');
             if (localUserInfo.dob) formData.append('dob_ad', localUserInfo.dob);
@@ -524,9 +522,9 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 if (localCreditCardInfo.cardLimit != null) formData.append('credit_card[credit_limit]', String(localCreditCardInfo.cardLimit));
             }
             else if (selectedOption === 'downPayment') {
-                formData.append('bank', localBankInfo.bankname ?? '');
-                formData.append('guarantor[name]', localGranterInfo.name ?? '');
-                formData.append('guarantor[phone]', localGranterInfo.phone ?? '');
+                formData.append('bank', localBankInfo.bankname );
+                formData.append('guarantor[name]', localGranterInfo.name );
+                formData.append('guarantor[phone]', localGranterInfo.phone );
                 if (localGranterInfo.gender) formData.append('guarantor[gender]', localGranterInfo.gender.toLowerCase());
                 if (localGranterInfo.marriageStatus) formData.append('guarantor[marriage_status]', localGranterInfo.marriageStatus.toLowerCase());
                 if (localGranterInfo.nationalID != null) formData.append('guarantor[citizenship_number]', String(localGranterInfo.nationalID));
@@ -546,7 +544,17 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 if (files.bankStatement) formData.append('salary[statement]', files.bankStatement);
             }
 
+            console.table(
+  Array.from(formData.entries()).map(([k, v]) => [
+    k,
+    v instanceof File ? `${v.name} | ${v.type} | ${v.size} bytes` : v
+  ])
+);
+
+            console.log("Submitting EMI application with data:", formData);
             const response = await EmiRequest(formData)
+            console.log("API Response:", response);
+
 
             if (response?.success === false) {
                 toast.error(response?.message ?? 'Failed to submit application.');

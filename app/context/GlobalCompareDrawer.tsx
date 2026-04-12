@@ -124,7 +124,7 @@ export default function GlobalCompareDrawer() {
                                             <div className="min-w-0 flex-1 hidden sm:block">
                                                 <p className="text-[10px] sm:text-[11px] font-semibold text-white truncate leading-tight">{p.name}</p>
                                                 <p className="text-[10px] sm:text-[11px] font-bold text-white/80 mt-0.5">
-                                                    Rs. {((p.discounted_price ?? (typeof p.price === 'object' ? (p.price as any).current : p.price)) ?? 0).toLocaleString()}
+                                                    Rs. {(((typeof p.price === 'object' ? (p.price as any).current : p.price) ?? 0).toLocaleString())}
                                                 </p>
                                             </div>
                                             {/* Mobile: just show price */}
@@ -251,7 +251,7 @@ export default function GlobalCompareDrawer() {
                                                     {product.name}
                                                 </p>
                                                 <p className="text-xs font-bold text-(--colour-fsP2) mt-0.5">
-                                                    Rs. {((product.discounted_price ?? (typeof product.price === 'object' ? (product.price as any).current : product.price)) ?? 0).toLocaleString()}
+                                                    Rs. {(((typeof product.price === 'object' ? (product.price as any).current : product.price) ?? 0).toLocaleString())}
                                                 </p>
                                             </div>
                                             <Plus className="w-4 h-4 text-gray-300 group-hover:text-(--colour-fsP2) shrink-0 transition-colors" />
