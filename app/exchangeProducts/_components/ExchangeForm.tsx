@@ -185,7 +185,7 @@ export default function ExchangeForm({
                 province: loc.addressComponents?.province ?? uiState.addrForm.province,
                 district: loc.addressComponents?.district ?? uiState.addrForm.district,
                 city: loc.addressComponents?.municipality ?? loc.addressComponents?.city ?? uiState.addrForm.city,
-                landmark: loc.addressComponents?.tole ?? loc.addressComponents?.city ?? uiState.addrForm.landmark,
+                landmark: loc.addressComponents?.city ?? uiState.addrForm.landmark,
             }
         })
     }
