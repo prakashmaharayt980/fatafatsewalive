@@ -101,7 +101,7 @@ export default function AddressBook() {
                 province: loc.addressComponents?.province ?? prev.province,
                 district: loc.addressComponents?.district ?? prev.district,
                 city: loc.addressComponents?.municipality ?? loc.addressComponents?.city ?? prev.city,
-                landmark: loc.addressComponents?.tole ?? loc.addressComponents?.city ?? prev.landmark,
+                landmark: loc.addressComponents?.municipality ?? loc.addressComponents?.city ?? prev.landmark,
                 full_address: loc.address,
                 country: 'Nepal',
             }));

@@ -103,7 +103,7 @@ export default function RepairForm({
             province: loc.addressComponents?.province ?? p.province,
             district: loc.addressComponents?.district ?? p.district,
             city: loc.addressComponents?.municipality ?? loc.addressComponents?.city ?? p.city,
-            landmark: loc.addressComponents?.tole ?? loc.addressComponents?.city ?? p.landmark,
+            landmark: loc.addressComponents?.municipality ?? loc.addressComponents?.city ?? p.landmark,
         }))
     }
 

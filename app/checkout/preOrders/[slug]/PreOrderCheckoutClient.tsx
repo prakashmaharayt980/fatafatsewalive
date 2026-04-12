@@ -84,7 +84,8 @@ export default function PreOrderCheckoutClient({ product }: PreOrderCheckoutClie
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [processingPaymentOrder, setProcessingPaymentOrder] = useState<number | null>(null);
 
-    const productPrice = typeof product.price === 'object' ? product.price.current : product.price;
+    const basePrice = typeof product.price === 'object' ? product.price.current : product.price;
+    const productPrice = product.pre_order_price ?? basePrice;
 
     // Guest mode — no login required to browse/fill form
     // Login is enforced only on submit via PreOrderPaymentStep

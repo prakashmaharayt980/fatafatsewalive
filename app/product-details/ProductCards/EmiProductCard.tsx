@@ -29,8 +29,8 @@ const EmiProductCard = ({
 
     const imgSrc = product.thumb?.url ?? product.image?.thumb ?? product.image?.full ?? banner2
     const brandName = product.brand?.name ?? 'Featured'
-    const originalPrice = Number(product.original_price ?? 0)
-    const currentPrice = Number(product.numericPrice ?? 0)
+    const originalPrice = Number(product.price?.original_price ?? 0)
+    const currentPrice = Number(product.numericPrice ?? product.price?.current ?? 0)
     const hasDiscount = originalPrice > currentPrice && currentPrice > 0
     const discount = hasDiscount ? Math.round((1 - currentPrice / originalPrice) * 100) : 0
     const rating = Number(product.average_rating ?? 0)

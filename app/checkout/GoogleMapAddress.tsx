@@ -118,7 +118,7 @@ function MapInternal({
                     r.types.some(t => ['street_address', 'premise', 'sublocality_level_1'].includes(t))
                 ) ?? results[0];
 
-            let province = '', district = '', municipality = '', city = '', tole = '';
+            let province = '', district = '', municipality = '', city = '';
 
             result.address_components.forEach((comp) => {
                 const t = comp.types;
@@ -126,18 +126,17 @@ function MapInternal({
                 if (t.includes('administrative_area_level_2')) district = comp.long_name;
                 if (t.includes('administrative_area_level_3')) municipality = comp.long_name;
                 if (t.includes('locality')) city = comp.long_name;
-                if (t.includes('sublocality_level_1') || t.includes('neighborhood')) tole = comp.long_name;
+                if ((t.includes('sublocality_level_1') || t.includes('neighborhood')) && !municipality) municipality = comp.long_name;
             });
 
-            // Fallback: use tole as city if locality is missing (rural Nepal)
-            if (!city) city = tole;
+            if (!city) city = municipality;
 
             const finalAddress = result.formatted_address;
             setConfirmedAddress(finalAddress);
             onLocationSelect({
                 lat, lng,
                 address: finalAddress,
-                addressComponents: { province, district, municipality: municipality || city, city: tole || city },
+                addressComponents: { province, district, municipality: municipality || city, city },
             });
         });
     }, [geocodingLib, onLocationSelect, setMarkerPosition]);
