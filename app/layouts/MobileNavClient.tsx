@@ -87,20 +87,16 @@ export default function MobileNavClient({ initialNavItems }: MobileNavClientProp
 
             timeoutRef.current = setTimeout(async () => {
                 try {
-                    const fetchPromise = searchProducts({ search: value, per_page: 5, sort: "newest" });
-                    const abortPromise = new Promise<never>((_, reject) => {
-                        controller.signal.addEventListener('abort', () =>
-                            reject(new DOMException('Search aborted', 'AbortError'))
-                        );
-                    });
-                    const res = await Promise.race([fetchPromise, abortPromise]);
+                    const res = await searchProducts({ search: value, per_page: 5, sort: "newest" });
+                    if (controller.signal.aborted) return;
+
                     setSearchResults(res.data || []);
                     setIsSearching(false);
                     trackSearch(value);
                     saveSearchTerm(value);
                     setSearchHistory(getSearchHistory());
                 } catch (e) {
-                    if (e instanceof DOMException && e.name === 'AbortError') return;
+                    if (controller.signal.aborted) return;
                     setSearchResults([]);
                     setIsSearching(false);
                 }

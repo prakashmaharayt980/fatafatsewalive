@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, ChevronRight, Loader2, X, Check, Search, Plus, Edit2, Trash2, ChevronLeft, Home, Building2, Map as MapIcon, Crosshair, Maximize2, Minimize2 } from 'lucide-react';
+import { MapPin, Navigation, ChevronRight, Loader2, Check, Plus, Edit2, Trash2, ChevronLeft, Crosshair, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,6 @@ export default function AddressStep({
     onNext
 }: AddressStepProps) {
     const [viewMode, setViewMode] = useState<'list' | 'form'>('list');
-    const [searchQuery, setSearchQuery] = useState('');
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
     const [savedAddresses, setSavedAddresses] = useState<ShippingAddress[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -47,8 +46,6 @@ export default function AddressStep({
 
     const [mapLocation, setMapLocation] = useState<LocationData | null>(null);
     const [isMapExpanded, setIsMapExpanded] = useState(false);
-
-    const [addressEntryMode, setAddressEntryMode] = useState<'gps' | 'manual'>('gps');
 
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [addressToDelete, setAddressToDelete] = useState<number | null>(null);
@@ -82,28 +79,21 @@ export default function AddressStep({
     );
 
     useEffect(() => {
-        const fetchAddresses = async () => {
-            if (!isLoggedIn) {
-                setSavedAddresses(guestAddresses);
-                return;
-            }
-            setIsLoading(true);
-            try {
-                const response = await ShippingAddressList();
-                // Handle new response structure { data: [...], pagination: ..., meta: ... }
-                // or fallback to array if API hasn't updated yet (defensive)
-                const addresses = Array.isArray(response) ? response : (response.data || []);
-                setSavedAddresses(addresses);
-            } catch (error) {
-                console.error('Failed to fetch addresses:', error);
-                toast.error('Failed to load saved addresses');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAddresses();
+        if (isLoggedIn) return;
+        setSavedAddresses(guestAddresses);
     }, [isLoggedIn, guestAddresses]);
+
+    useEffect(() => {
+        if (!isLoggedIn) return;
+        setIsLoading(true);
+        ShippingAddressList()
+            .then(response => {
+                const addresses = Array.isArray(response) ? response : (response.data ?? []);
+                setSavedAddresses(addresses);
+            })
+            .catch(() => toast.error('Failed to load saved addresses'))
+            .finally(() => setIsLoading(false));
+    }, [isLoggedIn]);
 
     useEffect(() => {
         if (state.address) {
@@ -247,14 +237,16 @@ export default function AddressStep({
             };
 
             if (!isLoggedIn) {
-                const guestId = selectedAddressId || Date.now();
+                const guestId = selectedAddressId ?? Date.now();
                 const guestAddress = { ...localAddress, id: guestId };
 
                 if (selectedAddressId) {
                     updateGuestAddress(selectedAddressId, guestAddress);
+                    setSavedAddresses(prev => prev.map(a => a.id === selectedAddressId ? guestAddress : a));
                     toast.success('Address updated');
                 } else {
                     addGuestAddress(guestAddress);
+                    setSavedAddresses(prev => [...prev, guestAddress]);
                     toast.success('Address saved');
                 }
 
@@ -296,21 +288,21 @@ export default function AddressStep({
     };
 
     const confirmDelete = async () => {
-        if (!addressToDelete) return;
+        if (!addressToDelete) {
+            setShowDeleteDialog(false);
+            return;
+        }
 
         try {
             if (!isLoggedIn) {
                 deleteGuestAddress(addressToDelete);
-                if (selectedAddressId === addressToDelete) {
-                    setSelectedAddressId(null);
-                }
-                toast.success("Guest Address deleted");
+                setSavedAddresses(prev => prev.filter(a => a.id !== addressToDelete));
+                if (selectedAddressId === addressToDelete) setSelectedAddressId(null);
+                toast.success("Address deleted");
             } else {
                 await ShippingAddressDelete(addressToDelete);
                 setSavedAddresses(prev => prev.filter(a => a.id !== addressToDelete));
-                if (selectedAddressId === addressToDelete) {
-                    setSelectedAddressId(null);
-                }
+                if (selectedAddressId === addressToDelete) setSelectedAddressId(null);
                 toast.success("Address deleted");
             }
         } catch (error) {
@@ -321,14 +313,6 @@ export default function AddressStep({
             setAddressToDelete(null);
         }
     };
-
-    const filteredAddresses = savedAddresses.filter(addr => {
-        const addrStr = String(addr.address?.landmark || addr.address?.city || '');
-        const cityDistStr = String(addr.address?.district || addr.address?.city || addr.address?.province || '');
-
-        return addrStr.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            cityDistStr.toLowerCase().includes(searchQuery.toLowerCase());
-    });
 
     const isComplete = state.address !== null;
 
@@ -363,7 +347,7 @@ export default function AddressStep({
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="w-8 h-8 text-[var(--colour-fsP2)] animate-spin" />
                             </div>
-                        ) : filteredAddresses.length === 0 ? (
+                        ) : savedAddresses.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 bg-white flex items-center justify-center mb-4">
                                     <MapPin className="w-8 h-8 text-gray-300" />
@@ -378,7 +362,7 @@ export default function AddressStep({
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {filteredAddresses.slice(0, 4).map((address, index) => {
+                                {savedAddresses.slice(0, 4).map((address, index) => {
                                     const isSelected = selectedAddressId === address.id;
                                     // const LabelIcon = address.address?.label === 'Office' ? Building2 : address.address?.label === 'Other' ? MapIcon : Home;
                                     const hasGeo = !!(address.geo?.lat && address.geo?.lng);
@@ -479,7 +463,7 @@ export default function AddressStep({
                         )}
 
                         {/* Max limit notice */}
-                        {filteredAddresses.length >= 4 && (
+                        {savedAddresses.length >= 4 && (
                             <p className="text-center text-xs text-gray-400 font-medium mt-3">
                                 Maximum 4 addresses. Delete one to add another.
                             </p>

@@ -36,22 +36,12 @@ export default function EmiProductCard({ product, priority = false }: Props) {
     const isWishlisted = wishlistItems.some(i => i.id === product.id)
     const isCompared = compareItems.some(i => i.id === product.id)
 
-    const extract = (p: any): number => {
-        if (typeof p === 'number') return p
-        if (typeof p === 'string') return parseFloat(p) || 0
-        if (p && typeof p === 'object') {
-            const v = p.current ?? p.price ?? p.original_price ?? p.value ?? 0
-            return typeof v === 'number' ? v : parseFloat(String(v)) || 0
-        }
-        return 0
-    }
-
-    const original = product.basePrice ?? extract(product.price)
-    const discounted = product.discountedPriceVal ?? extract(product.discounted_price || product.price)
-    const hasDisc = original > discounted && discounted > 0
-    const discPct = product.discountPercent ?? (hasDisc ? Math.round(((original - discounted) / original) * 100) : 0)
-    const price = product.displayPrice ?? (discounted || original).toLocaleString()
-    const emiMonthly = Math.round((discounted || original) / 12)
+    const sellingPrice: number = product.price?.current ?? 0
+    const originalPrice: number | null = product.price?.original_price ?? null
+    const hasDisc = originalPrice !== null && originalPrice > sellingPrice
+    const discPct = hasDisc ? Math.round(((originalPrice - sellingPrice) / originalPrice) * 100) : 0
+    const price = sellingPrice.toLocaleString()
+    const emiMonthly = Math.round(sellingPrice / 12)
 
     const img = product.thumb?.url || product.image?.thumb || product.image?.full || product.thumb_url || '/images/placeholder.svg'
 
@@ -107,8 +97,8 @@ export default function EmiProductCard({ product, priority = false }: Props) {
 
                 <div className="mt-auto pt-1.5">
                     <p className="text-[13px] font-bold text-[var(--colour-text1)]">Rs.&nbsp;{price}</p>
-                    {hasDisc && (
-                        <p className="text-[10px] text-[var(--colour-text3)] line-through">Rs.&nbsp;{original.toLocaleString()}</p>
+                    {hasDisc && originalPrice !== null && (
+                        <p className="text-[10px] text-[var(--colour-text3)] line-through">Rs.&nbsp;{originalPrice.toLocaleString()}</p>
                     )}
                     <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold" style={{ color: 'var(--colour-fsP2)', background: '#EEF3FB' }}>
                         EMI Rs.&nbsp;{emiMonthly.toLocaleString()}/mo

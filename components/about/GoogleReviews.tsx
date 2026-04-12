@@ -51,7 +51,7 @@ const GoogleReviews = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {reviews.map((review, index) => (
-                        <div key={index} className="bg-white p-6 border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full">
+                        <div key={index} className="bg-white p-6 rounded-xl border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full">
                             <div className="flex gap-1 text-(--colour-fsP1) mb-4">
                                 {Array.from({ length: 5 }, (_, i) => (
                                     <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill={i < review.rating ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
@@ -59,13 +59,10 @@ const GoogleReviews = () => {
                             </div>
                             <p className="text-slate-700 font-poppins mb-6 grow">"{review.text}"</p>
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-orange-50 flex items-center justify-center text-(--colour-fsP1) font-bold text-sm">
+                                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-(--colour-fsP1) font-bold text-sm">
                                     {review.name.charAt(0)}
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-slate-900 text-sm">{review.name}</h4>
-                                    <span className="text-slate-500 text-xs">{review.date}</span>
-                                </div>
+                                <h4 className="font-bold text-slate-900 text-sm">{review.name}</h4>
                             </div>
                         </div>
                     ))}

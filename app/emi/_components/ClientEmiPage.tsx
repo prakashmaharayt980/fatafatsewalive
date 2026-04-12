@@ -30,17 +30,12 @@ interface State {
     selectedVariant: string
 }
 
-const getAmount = (value: number | { current: number } | null | undefined) => {
-    if (typeof value === 'object') return Number(value?.current ?? 0)
-    return Number(value ?? 0)
-}
-
-const getProductPrice = (product: ProductDetails | null) => {
-    if (!product) return 0
-    const discounted = getAmount(product.discounted_price)
-    if (discounted > 0) return discounted
-    return getAmount(product.price)
-}
+const getCurrentPrice = (product: ProductDetails | null): number => {
+    if (!product) return 0;
+    const p = product.price as any;
+    if (typeof p === "number") return p;
+    return p?.current ?? 0;
+};
 
 const getProductImage = (product: ProductDetails | null) => {
     if (!product) return ''
@@ -66,7 +61,7 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
 
     const [state, setState] = useState<State>({
         product:         initialProduct,
-        productPrice:    getProductPrice(initialProduct),
+        productPrice:    getCurrentPrice(initialProduct),
         downPayment:     0,
         tenure:          12,
         selectedBankId:  '',
@@ -77,8 +72,8 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
 
     useEffect(() => { fetchBanks() }, [fetchBanks])
 
-    const activeProduct      = state.product ?? emiContextInfo.product ?? initialProduct
-    const activeProductPrice = state.productPrice > 0 ? state.productPrice : getProductPrice(activeProduct)
+    const activeProduct      = state.product ?? initialProduct ?? emiContextInfo.product
+    const activeProductPrice = state.productPrice > 0 ? state.productPrice : getCurrentPrice(activeProduct)
     const selectedBankId     = state.selectedBankId || banks[0]?.id || ''
     const selectedBank       = useMemo(() => banks.find(b => b.id === selectedBankId) ?? null, [banks, selectedBankId])
     const activeTenure       = selectedBank?.tenureOptions.includes(state.tenure) ? state.tenure : (selectedBank?.tenureOptions[0] ?? state.tenure)
@@ -105,7 +100,7 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
 
     const resetCalculator = () => update({
         product:         activeProduct,
-        productPrice:    getProductPrice(activeProduct),
+        productPrice:    getCurrentPrice(activeProduct),
         downPayment:     0,
         tenure:          selectedBank?.tenureOptions[0] ?? 12,
         selectedVariant: '',
@@ -138,27 +133,28 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
     const chooseProduct = (color: string) => {
         if (!activeProduct?.variants?.length) return
         const matchedVariant = activeProduct.variants.find(v => v.attributes?.Color === color)
-        const matchedImage   = activeProduct.images?.find(img => img.color === color || img.custom_properties?.color === color)
-        const nextPrice      = matchedVariant?.discounted_price ?? matchedVariant?.price ?? getProductPrice(activeProduct)
+        // Variant price is a plain number on the API response
+        const nextPrice = matchedVariant?.price ?? getCurrentPrice(activeProduct)
+        // Variant images live on the variant itself (not product.images)
+        const variantImg = matchedVariant?.images?.[0]
         setState(prev => ({
             ...prev,
             selectedVariant: color,
-            productPrice:    Number(nextPrice ?? prev.productPrice),
+            productPrice:    Number(nextPrice),
             product:         activeProduct ? {
                 ...activeProduct,
-                image: matchedImage
-                    ? { full: matchedImage.url, thumb: matchedImage.thumb, preview: matchedImage.preview }
+                image: variantImg
+                    ? { full: variantImg.url, thumb: variantImg.url, preview: variantImg.url }
                     : activeProduct.image,
             } : null,
         }))
     }
 
     const summaryRows = [
-        { label: 'Product price',   value: formatRs(activeProductPrice)       },
-        { label: 'Down payment',    value: formatRs(emiData.downPayment)       },
-        { label: 'Finance amount',  value: formatRs(emiData.financeAmount)     },
-    
-        { label: 'Total payable',   value: formatRs(emiData.totalPayment)      },
+        { label: 'Product price',  value: formatRs(activeProductPrice)       },
+        { label: 'Down payment',   value: formatRs(emiData.downPayment)       },
+        { label: 'Finance amount', value: formatRs(emiData.financeAmount)     },
+        { label: 'Total payable',  value: formatRs(emiData.totalPayment)      },
     ]
 
     return (
@@ -178,9 +174,12 @@ const ClientEmiPage: React.FC<Props> = ({ initialProduct, emiBanner }) => {
                     <div className="p-5">
                         <ProductEMIUI
                             chooseProduct={chooseProduct}
-                            setProductPrice={productPrice => update({ productPrice })}
-                            onProductChange={product => update({ product, productPrice: getProductPrice(product), selectedVariant: '' })}
+                            onProductChange={product => {
+                                setEmiContextInfo(prev => ({ ...prev, product, selectedVariant: "" }));
+                                update({ product, productPrice: getCurrentPrice(product), selectedVariant: "" });
+                            }}
                             product={activeProduct}
+                            selectedVariant={state.selectedVariant}
                         />
                     </div>
                 </div>

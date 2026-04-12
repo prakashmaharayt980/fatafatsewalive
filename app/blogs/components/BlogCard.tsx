@@ -26,7 +26,7 @@ export default function BlogCard({ post }: BlogCardProps) {
     return (
         <Link
             href={`/blogs/${post.slug}`}
-            className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-gray-200/60 transition-all duration-300 flex flex-col h-full hover:border-gray-200 hover:-translate-y-0.5"
+            className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 flex flex-col h-full"
         >
             {/* Image */}
             <div className="relative w-full overflow-hidden bg-gray-50">
@@ -36,7 +36,7 @@ export default function BlogCard({ post }: BlogCardProps) {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     width={500}
                     height={500}
-                    className="object-fill aspect-[3/2] transition-transform duration-500 group-hover:scale-[1.03]"
+                    className="object-fill aspect-[3/2]"
                 />
                 {categoryName && (
                     <div className="absolute top-2.5 left-2.5 bg-[var(--colour-fsP2)] px-2 py-0.5 rounded-full text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">

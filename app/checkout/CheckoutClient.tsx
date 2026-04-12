@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronRight, Loader2, ShoppingBag } from 'lucide-react';
+import { ChevronRight, Loader2, ShoppingBag, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -19,7 +19,6 @@ import type {
     CheckoutStep,
     ShippingAddress,
     RecipientInfo,
-    DeliverySelection,
 } from './checkoutTypes';
 
 // Step Components
@@ -30,21 +29,20 @@ import PaymentStep from './steps/PaymentStep';
 import CheckoutProduct from './CheckoutProduct';
 import NicAsiaPayment from '../PaymentsBox/NicAsiaPayment';
 import EeswaPayment from '../PaymentsBox/EeswaPayment';
-import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { OrderService } from '../api/services/order.service';
 import { useCartStore } from '../context/CartContext';
 import { useShallow } from 'zustand/react/shallow';
-import CheckoutFaq from './CheckoutFaq';
 import EmiFaq from '../emi/apply/_components/EmiFaq';
 import { CartService } from '../api/services/cart.service';
 
 
 export default function CheckoutClient() {
-    const { cartItems, clearGuestData, setLastOrderData } = useCartStore(useShallow((state) => ({
+    const { cartItems, clearGuestData, setLastOrderData, hasHydrated } = useCartStore(useShallow((state) => ({
         cartItems: state.cartItems,
         clearGuestData: state.clearGuestData,
-        setLastOrderData: state.setLastOrderData
+        setLastOrderData: state.setLastOrderData,
+        hasHydrated: state.hasHydrated,
     })));
     const { user, isLoggedIn, isLoading, triggerLoginAlert } = useAuthStore(useShallow(state => ({
         user: state.user,
@@ -57,6 +55,7 @@ export default function CheckoutClient() {
     // Checkout state
     const [checkoutState, setCheckoutState] = useState<CheckoutState>(initialCheckoutState);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [orderError, setOrderError] = useState<string | null>(null);
     const [shippingCost, setShippingCost] = useState(0);
     const [promoCode, setPromoCode] = useState('');
     const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
@@ -93,69 +92,71 @@ export default function CheckoutClient() {
 
         try {
             setIsSubmitting(true);
-            const currentItems = cartItems?.items || [];
-            const subtotal = cartItems?.cart_total || 0;
-            const finalTotal = subtotal - (appliedPromo?.discount || 0);
+            setOrderError(null);
+            const subtotal = cartItems?.cart_total ?? 0;
+            const finalTotal = subtotal - (appliedPromo?.discount ?? 0);
 
-            const payload = {
-                cart_id: cartItems?.id,
-                shipping_address: {
-                    id: checkoutState.address?.id,
-                    label: checkoutState.address?.address.label,
-                    landmark: checkoutState.address?.address.landmark,
-                    city: checkoutState.address?.address.city,
-                    district: checkoutState.address?.address.district,
-                    province: checkoutState.address?.address.province,
-                    country: checkoutState.address?.address.country,
-                    is_default: checkoutState.address?.address.is_default,
-                    geo: {
-                        lat: checkoutState.address?.geo?.lat,
-                        lng: checkoutState.address?.geo?.lng,
-                    }
-                },
-                payment: {
-                    type: checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'),
-                    promo_code: appliedPromo?.code || null,
-                    total: finalTotal,
-                },
-                recipient: {
-                    type: checkoutState.recipient.type,
-                    phone: checkoutState.recipient.phone,
-                    name: userInfo?.name || checkoutState.recipient.name || '',
-                    photos: {
-                        sender: checkoutState.recipient.senderPhoto || null,
-                        receiver: checkoutState.recipient.recipientPhoto || null,
-                    },
-                    message: checkoutState.recipient.message || null,
+            const formData = new FormData();
+            formData.append('cart_id', String(cartItems?.id ?? ''));
+
+            formData.append('shipping_address[id]', String(checkoutState.address?.id ?? ''));
+            formData.append('shipping_address[first_name]', checkoutState.address?.contact_info?.first_name ?? userInfo?.name ?? '');
+            formData.append('shipping_address[last_name]', checkoutState.address?.contact_info?.last_name ?? '');
+            formData.append('shipping_address[contact_number]', checkoutState.address?.contact_info?.contact_number ?? checkoutState.recipient.phone ?? '');
+            formData.append('shipping_address[label]', checkoutState.address?.address.label ?? 'Home');
+            formData.append('shipping_address[landmark]', checkoutState.address?.address.landmark ?? '');
+            formData.append('shipping_address[city]', checkoutState.address?.address.city ?? '');
+            formData.append('shipping_address[district]', checkoutState.address?.address.district ?? '');
+            formData.append('shipping_address[province]', checkoutState.address?.address.province ?? '');
+            formData.append('shipping_address[country]', checkoutState.address?.address.country ?? 'Nepal');
+            formData.append('shipping_address[is_default]', checkoutState.address?.address.is_default ? '1' : '0');
+            formData.append('shipping_address[geo][lat]', String(checkoutState.address?.geo?.lat ?? ''));
+            formData.append('shipping_address[geo][lng]', String(checkoutState.address?.geo?.lng ?? ''));
+
+            formData.append('payment[type]', checkoutState.paymentMethod.toLowerCase().replace(/\s+/g, '_'));
+            if (appliedPromo?.code) formData.append('payment[promo_code]', appliedPromo.code);
+            formData.append('payment[total]', String(finalTotal));
+
+            formData.append('recipient[type]', checkoutState.recipient.type);
+            formData.append('recipient[phone]', checkoutState.recipient.phone ?? '');
+            formData.append('recipient[name]', checkoutState.recipient.type === 'gift' ? (checkoutState.recipient.name ?? '') : (userInfo?.name ?? ''));
+            if (checkoutState.recipient.message) formData.append('recipient[message]', checkoutState.recipient.message);
+            if (checkoutState.recipient.senderPhoto) formData.append('recipient[photo_sender]', checkoutState.recipient.senderPhoto);
+            if (checkoutState.recipient.recipientPhoto) formData.append('recipient[photo_receiver]', checkoutState.recipient.recipientPhoto);
+
+            const res = await OrderService.CreateOrder(formData);
+
+            if (res?.data) {
+                const orderData = res.data;
+                // Store data first so success page has it instantly on mount
+                setLastOrderData(orderData);
+
+                if (orderData?.order?.payment_type === 'nic-asia') {
+                    setIsSubmitting(false);
+                    setProcessingPaymentOrder(orderData.order.id);
+                    return;
                 }
-            };
 
-
-
-
-            await OrderService.CreateOrder(payload).then((res) => {
-
-                if (res?.data) {
-                    const orderData = res.data;
-                    setLastOrderData(res.data);
-
-                    if (orderData?.order?.order_status === 'Placed' && orderData?.order?.payment_type === 'nic-asia') {
-                        setProcessingPaymentOrder(orderData.order.id);
-                    }
-
-                    if (orderData?.order?.order_status === 'Placed' && orderData?.order?.payment_type === 'cash_on_delivery') {
-                        setIsSubmitting(false);
-                        clearGuestData();
-                        toast.success('Cash order placed successfully!');
-                        router.push(`/checkout/Successpage`);
-                    }
-
-
+                if (orderData?.order?.payment_type?.includes('esewa')) {
+                    setIsSubmitting(false);
+                    setProcessingPaymentOrder(orderData.order.id);
+                    return;
                 }
-            });
-        } catch (error) {
 
+                clearGuestData();
+                setCheckoutState(initialCheckoutState);
+                setAppliedPromo(null);
+                setPromoCode('');
+                setShippingCost(0);
+                setIsSubmitting(false);
+                router.push('/checkout/Successpage');
+            } else {
+                setIsSubmitting(false);
+                setOrderError('Order could not be placed. Please try again.');
+            }
+        } catch (error: any) {
             setIsSubmitting(false);
+            setOrderError(error?.message ?? 'Something went wrong. Please try again.');
         }
     }, [cartItems, appliedPromo, checkoutState, userInfo, isLoggedIn, clearGuestData, router]);
 
@@ -216,12 +217,36 @@ export default function CheckoutClient() {
 
 
     // Loading state
-    if (isLoading) {
+    if (isLoading || !hasHydrated) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="flex flex-col items-center gap-3 bg-white border border-gray-200 rounded-xl px-10 py-8">
                     <div className="w-10 h-10 border-2 border-gray-200 border-t-[var(--colour-fsP2)] rounded-full animate-spin" />
                     <p className="text-sm text-gray-500 font-medium">Loading checkout...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const isEmpty = !cartItems?.items?.length;
+    if (isEmpty) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col items-center gap-4 max-w-sm w-full text-center shadow-sm">
+                    <div className="w-16 h-16 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
+                        <ShoppingCart className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-900 mb-1">Your cart is empty</h2>
+                        <p className="text-sm text-gray-500">Add items to your cart before proceeding to checkout.</p>
+                    </div>
+                    <Link
+                        href="/"
+                        className="w-full h-11 flex items-center justify-center gap-2 bg-[var(--colour-fsP2)] text-white font-bold rounded-xl text-sm hover:opacity-90 transition-opacity"
+                    >
+                        <ShoppingBag className="w-4 h-4" />
+                        Browse Products
+                    </Link>
                 </div>
             </div>
         );
@@ -249,7 +274,6 @@ export default function CheckoutClient() {
                     />
                 );
             case CHECKOUT_STEPS.PAYMENT:
-                // If we are processing a NIC Asia or eSewa payment, show the loading component
                 if (processingPaymentOrder) {
                     if (checkoutState.paymentMethod.toLowerCase().includes('esewa')) {
                         const subtotal = cartItems?.cart_total || 0;
@@ -258,6 +282,7 @@ export default function CheckoutClient() {
                     }
                     return <NicAsiaPayment orderId={processingPaymentOrder} />;
                 }
+
                 return (
                     <PaymentStep
                         state={checkoutState}
@@ -265,6 +290,8 @@ export default function CheckoutClient() {
                         onPlaceOrder={nextStep}
                         onBack={prevStep}
                         isSubmitting={isSubmitting}
+                        error={orderError}
+                        onClearError={() => setOrderError(null)}
                     />
                 );
 
@@ -379,11 +406,17 @@ export default function CheckoutClient() {
                 </div>
             </div>
 
-            {isSubmitting &&
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-
+            {isSubmitting && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl px-10 py-8 flex flex-col items-center gap-4 shadow-xl border border-gray-100 mx-4">
+                        <div className="w-12 h-12 border-[3px] border-gray-200 border-t-[var(--colour-fsP2)] rounded-full animate-spin" />
+                        <div className="text-center">
+                            <p className="text-base font-bold text-gray-900">Placing your order...</p>
+                            <p className="text-xs text-gray-400 mt-1">Please don't close this window</p>
+                        </div>
+                    </div>
                 </div>
-            }
+            )}
         </>
     );
 }

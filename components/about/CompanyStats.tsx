@@ -18,12 +18,10 @@ const bars = [
 ];
 
 const chartData = [
-    { month: 'Jan', nepal: 300, usa: 80, uae: 40 },
-    { month: 'Feb', nepal: 320, usa: 90, uae: 50 },
-    { month: 'Mar', nepal: 380, usa: 120, uae: 70 },
-    { month: 'Apr', nepal: 420, usa: 140, uae: 90 },
-    { month: 'May', nepal: 500, usa: 180, uae: 110 },
-    { month: 'Jun', nepal: 600, usa: 250, uae: 180 },
+    { year: '2021', finance: 18, orders: 4200 },
+    { year: '2022', finance: 35, orders: 8500 },
+    { year: '2023', finance: 72, orders: 18600 },
+    { year: '2024', finance: 150, orders: 32000 },
 ];
 
 const CompanyStats = () => {
@@ -103,8 +101,8 @@ const CompanyStats = () => {
                                 className="w-48 h-48 rounded-full relative flex items-center justify-center shrink-0"
                                 style={{ background: 'conic-gradient(var(--colour-fsP1) 0% 60%, var(--colour-fsP2) 60% 85%, #f59e0b 85% 100%)' }}
                             >
-                                <div className="w-24 h-24 bg-white rounded-full absolute flex items-center justify-center shadow-sm">
-                                    <span className="font-bold text-slate-800 text-lg">100%</span>
+                                <div className="w-24 h-24 bg-white rounded-full absolute flex items-center justify-center">
+                                    <span className="font-bold text-slate-800 text-xs text-center leading-tight px-1">EMI<br/>Sales</span>
                                 </div>
                             </div>
 
@@ -170,21 +168,17 @@ const CompanyStats = () => {
                 <div className="bg-white p-6 md:p-8 border border-slate-200 mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                         <div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-1">Global User Traffic Source</h3>
-                            <p className="text-sm text-slate-500">Monthly active users by geographic location (2024)</p>
+                            <h3 className="text-xl font-bold text-slate-900 mb-1">Annual EMI Finance Disbursed</h3>
+                            <p className="text-sm text-slate-500">Total EMI value disbursed year-over-year (Rs. Crore)</p>
                         </div>
                         <div className="flex items-center gap-4 text-sm font-medium">
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-sm bg-emerald-500" />
-                                <span className="text-slate-700">Nepal</span>
+                                <div className="w-3 h-3 bg-(--colour-fsP1)" />
+                                <span className="text-slate-700">Finance (Rs. Cr)</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-sm bg-blue-500" />
-                                <span className="text-slate-700">USA/EU</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-sm bg-amber-500" />
-                                <span className="text-slate-700">Middle East</span>
+                                <div className="w-3 h-3 bg-(--colour-fsP2)" />
+                                <span className="text-slate-700">Orders</span>
                             </div>
                         </div>
                     </div>
@@ -193,29 +187,28 @@ const CompanyStats = () => {
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id="colorNepal" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.6} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    <linearGradient id="colorFinance" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#f86014" stopOpacity={0.5} />
+                                        <stop offset="95%" stopColor="#f86014" stopOpacity={0} />
                                     </linearGradient>
-                                    <linearGradient id="colorUsa" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorUae" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.6} />
-                                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                    <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#1967b3" stopOpacity={0.4} />
+                                        <stop offset="95%" stopColor="#1967b3" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                                <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgb(0 0 0 / 0.08)' }}
+                                    contentStyle={{ border: '1px solid #e2e8f0', boxShadow: 'none' }}
                                     labelStyle={{ fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}
+                                    formatter={(value, name) => [
+                                        name === 'Finance (Rs. Cr)' ? `Rs. ${value} Cr` : Number(value).toLocaleString(),
+                                        name
+                                    ]}
                                 />
-                                <Area type="monotone" dataKey="uae" stackId="1" stroke="#f59e0b" fill="url(#colorUae)" strokeWidth={2} name="Middle East" />
-                                <Area type="monotone" dataKey="usa" stackId="1" stroke="#3b82f6" fill="url(#colorUsa)" strokeWidth={2} name="USA & Europe" />
-                                <Area type="monotone" dataKey="nepal" stackId="1" stroke="#10b981" fill="url(#colorNepal)" strokeWidth={3} name="Nepal" />
+                                <Area type="monotone" dataKey="orders" stroke="#1967b3" fill="url(#colorOrders)" strokeWidth={2} name="Orders" />
+                                <Area type="monotone" dataKey="finance" stroke="#f86014" fill="url(#colorFinance)" strokeWidth={2.5} name="Finance (Rs. Cr)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>

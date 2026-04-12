@@ -77,6 +77,9 @@ body {
     --sidebar-accent-foreground: hsl(240 5.9% 10%);
     --sidebar-border: hsl(220 13% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+    --colour-fsP1-root: #f86014;
+    --colour-fsP2-root: #1967b3;
 }
 
 

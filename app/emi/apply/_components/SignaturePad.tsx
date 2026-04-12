@@ -207,7 +207,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange }) => {
         <div className="space-y-3">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Signature <span className="normal-case font-normal text-gray-400">(optional)</span>
+                    Digital Signature <span className="text-red-400 normal-case font-normal">*</span>
                 </p>
                 {!isFullscreen && (
                     <button

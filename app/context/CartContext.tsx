@@ -178,9 +178,8 @@ export const useCartStore = create<CartStore>()(
                         existingItem.subtotal = existingItem.price * existingItem.quantity;
                         if (varientcolour) existingItem.varientcolour = varientcolour;
                     } else if (product) {
-                        const price = typeof product.price === 'object' ? (product.price as any).current : product.price;
-                        const finalPrice = product.discounted_price && product.discounted_price > 0 ? product.discounted_price : price;
-                        
+                        const finalPrice = product.price.current;
+
                         localItems.push({
                             id: Date.now() + Math.floor(Math.random() * 1000),
                             cart_id: 0,
@@ -295,17 +294,8 @@ export const useCartStore = create<CartStore>()(
                 if (wishlistItems.find((i) => i.id === id)) return;
                 
                 if (product) {
-                    const price = typeof product.price === 'object' ? (product.price as any).current : product.price;
-                    const finalPrice = product.discounted_price && product.discounted_price > 0 ? product.discounted_price : price;
-                    
-                    const normalizedProduct = {
-                        ...product,
-                        price: finalPrice,
-                        discounted_price: 0
-                    };
-
-                    set({ 
-                        wishlistItems: [...wishlistItems, normalizedProduct],
+                    set({
+                        wishlistItems: [...wishlistItems, product],
                         wishlistMap: { ...wishlistMap, [id]: Date.now() },
                         isWishlistOpen: true 
                     });

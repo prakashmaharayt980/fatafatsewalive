@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -23,7 +23,7 @@ import FeaturedArticleCard from './FeaturedArticleCard';
 import useSWR from 'swr';
 import { getRandomBasketProducts, getRandomBlogList } from '@/app/api/utils/productFetchers';
 import { getCategoryProducts } from '@/app/api/services/category.service';
-import { getBlogCategories } from '@/app/api/services/blog.service';
+import { getWebstories } from '@/app/api/services/blog.service';
 
 
 interface BlogListingClientProps {
@@ -43,7 +43,7 @@ export default function BlogListingClient({
     categories,
     SectionOne,
     heroBannerData,
-    cameraDeals,
+    cameraDeals = [],
     initialWebStories = [],
     initialNews = [],
     initialGaming = [],
@@ -53,11 +53,16 @@ export default function BlogListingClient({
     const searchParams = useSearchParams();
     const activeCategory = searchParams.get('category') ?? 'all';
     const searchQuery = searchParams.get('q') ?? '';
+    const ensureArray = (data: any) => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        return data.data?.products || data.data?.data || data.products || data.data || [];
+    };
 
     // ─── SWR Article Fetching ───
     const { data: swrArticles, isLoading } = useSWR(
         ['blogs', activeCategory, searchQuery],
-        async ([_, cat, q]: [string, string, string]) => {
+        async ([, cat, q]: [string, string, string]) => {
             // Only fetch if it's not the initial load or if parameters changed
             if (cat === (searchParams.get('category') ?? 'all') && q === (searchParams.get('q') ?? '')) {
                 return articles;
@@ -86,22 +91,51 @@ export default function BlogListingClient({
         setStoryViewerOpen(true);
     };
 
-    // Helper to ensure we have a clean array of products/articles from varying API shapes
-    const ensureArray = (data: any) => {
-        if (!data) return [];
-        if (Array.isArray(data)) return data;
-        return data.data?.products || data.data?.data || data.products || data.data || [];
-    };
-
     // Optimized Fetchers (using pre-fetched data where available)
     const emiFetcher = React.useMemo(() => () => getCategoryProducts('mobile-price-in-nepal', { page: 1, per_page: 5, emi_enabled: true, brand: 'iphone-price-in-nepal' }), []);
+    const cameraDealsFetcher = React.useMemo(() => () => cameraDeals.length > 0 ? Promise.resolve({ products: cameraDeals }) : getRandomBasketProducts('dslr-camera-price-in-nepal', 5), [cameraDeals]);
     const laptopsFetcher = React.useMemo(() => () => initialLaptops.length > 0 ? Promise.resolve({ products: initialLaptops }) : getRandomBasketProducts('laptop-price-in-nepal', 5), [initialLaptops]);
     const newsArticlesFetcher = React.useMemo(() => () => initialNews.length > 0 ? Promise.resolve(initialNews) : getRandomBlogList({ category: 'news', per_page: 6 }), [initialNews]);
     const featuredArticlesFetcher = React.useMemo(() => () => initialGaming.length > 0 ? Promise.resolve(initialGaming) : getRandomBlogList({ category: 'best-gaming-phones', per_page: 7 }), [initialGaming]);
     const remainingBlogsFetcher = React.useMemo(() => () => getRandomBlogList({ per_page: 15, sort: 'asc' }), []);
+    const webStoryCategories = React.useMemo(() => {
+        const activeCategorySlug = activeCategory !== 'all' ? activeCategory : undefined;
+        const filteredSlugs = categories
+            .filter((cat: any) => cat.slug !== 'all' && (cat.status === true || cat.status === 1))
+            .map((cat: any) => cat.slug)
+            .filter((slug: string) => slug !== activeCategorySlug)
+            .slice(0, activeCategorySlug ? 4 : 5);
+        return activeCategorySlug ? [activeCategorySlug, ...filteredSlugs] : filteredSlugs;
+    }, [activeCategory, categories]);
 
     // Helper for stories
-    const webStoriesFetcher = React.useMemo(() => () => Promise.resolve(initialWebStories), [initialWebStories]);
+    const webStoriesFetcher = React.useMemo(() => async () => {
+        if (initialWebStories.length > 0) return initialWebStories;
+        const webStoriesRes = await getWebstories({
+            per_page: 5,
+            category: webStoryCategories.length > 0 ? webStoryCategories : undefined,
+        });
+        const webStoriesData = webStoriesRes?.data ?? webStoriesRes ?? {};
+        if (Array.isArray(webStoriesData)) {
+            return webStoriesData.filter((item: any) => (item?.stories?.length ?? 0) > 0);
+        }
+        return Array.from(new Set([...webStoryCategories, ...Object.keys(webStoriesData as Record<string, any[]>)]))
+            .map((slug) => {
+                const stories = (webStoriesData as Record<string, any[]>)[slug];
+                if (!Array.isArray(stories) || stories.length === 0) return null;
+                const matchedCategory = categories.find((cat: any) => cat.slug === slug);
+                const firstStory = stories[0];
+                return {
+                    category: {
+                        id: matchedCategory?.id ?? slug,
+                        slug,
+                        title: matchedCategory?.title ?? firstStory?.category?.name ?? slug,
+                    },
+                    stories,
+                };
+            })
+            .filter((item): item is { category: { id: string | number; slug: string; title: string }; stories: any[] } => item !== null);
+    }, [categories, initialWebStories, webStoryCategories]);
 
     return (
         <>
@@ -180,15 +214,21 @@ export default function BlogListingClient({
                                     </div>
                                 </div>
                                 <div className="hidden lg:block w-full lg:w-1/4">
-                                    {cameraDeals.length > 0 ? (
-                                        <ProductDeals
-                                            products={cameraDeals}
-                                            title="Camera Deals"
-                                            slug="dslr-camera-price-in-nepal"
-                                        />
-                                    ) : (
-                                        <div className="h-150 w-full bg-gray-100 rounded-xl animate-pulse" />
-                                    )}
+                                    <LazySection
+                                        fetcher={cameraDealsFetcher}
+                                        render={(data) => {
+                                            const products = ensureArray(data).slice(0, 5);
+                                            if (products.length === 0) return <div className="h-150 w-full bg-gray-100 rounded-xl animate-pulse" />;
+                                            return (
+                                                <ProductDeals
+                                                    products={products}
+                                                    title="Camera Deals"
+                                                    slug="dslr-camera-price-in-nepal"
+                                                />
+                                            );
+                                        }}
+                                        fallback={<div className="h-150 w-full bg-gray-100 rounded-xl animate-pulse" />}
+                                    />
                                 </div>
                             </div>
                         </section>

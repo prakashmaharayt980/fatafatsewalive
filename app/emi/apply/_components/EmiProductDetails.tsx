@@ -51,7 +51,7 @@ export default function EmiProductDetails({ emiData, product, selectedVariant }:
               </span>
             )}
             <p className="text-sm font-bold text-[var(--colour-fsP2)]">
-              Rs. {Number(typeof product.price === 'object' ? (product.price as any)?.current : product.price).toLocaleString()}
+              Rs. {product.price.current.toLocaleString()}
             </p>
           </div>
         </div>

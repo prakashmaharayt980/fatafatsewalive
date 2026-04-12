@@ -240,13 +240,13 @@ export function OrderDetailDialog({
                                     <div className="space-y-3">
                                         {addr ? (
                                             <>
-                                                <div className="flex items-start gap-3">
+                                                {/* <div className="flex items-start gap-3">
                                                     <User size={14} className="text-(--colour-fsP2) mt-0.5 shrink-0" />
                                                     <div>
                                                         <p className="text-sm font-bold text-slate-900">{recipient?.first_name} {recipient?.last_name}</p>
                                                         <p className="text-xs text-slate-500 mt-0.5">{recipient?.contact_number}</p>
                                                     </div>
-                                                </div>
+                                                </div> */}
                                                 <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl relative">
                                                     <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0">
                                                         <MapPin size={14} className="text-(--colour-fsP2)" />
@@ -435,10 +435,10 @@ export default function OrdersSection({ orders: rawOrders, loading, error }: {
                     const active = filter === tab.key;
                     return (
                         <button key={tab.key} onClick={() => setFilter(tab.key)}
-                            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors ${active ? 'border-(--colour-fsP2) text-(--colour-fsP2)' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+                            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors ${active ? 'border-(--colour-fsP2) text-(--colour-fsP2)' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>
                             {tab.label}
                             {counts[tab.key] > 0 && (
-                                <span className={`text-[10px] font-bold ${active ? 'text-(--colour-fsP2)' : 'text-gray-400'}`}>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? 'bg-(--colour-fsP2) text-white' : 'bg-gray-100 text-gray-500'}`}>
                                     {counts[tab.key]}
                                 </span>
                             )}
@@ -447,82 +447,76 @@ export default function OrdersSection({ orders: rawOrders, loading, error }: {
                 })}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
                 {filtered.length === 0 ? (
                     <EmptyState label="No orders found" sub="Try a different filter." />
                 ) : filtered.map(order => {
                     const status = order.order_status?.toLowerCase() ?? '';
                     const isPlaced = status.includes('placed') || status.includes('pending');
                     const isCancelled = status.includes('cancel');
+                    const isDeliveredOrder = status.includes('deliver');
 
                     return (
                         <div key={order.id} className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+
+                            {/* Card Header */}
                             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900">#{order.invoice_number}</p>
-                                    <p className="text-[11px] text-slate-500 mt-0.5">{fmt(order.created_at)}</p>
+                                    <p className="text-xs font-bold text-gray-900">#{order.invoice_number}</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{fmt(order.created_at)}</p>
                                 </div>
                                 <StatusBadge status={order.order_status} />
                             </div>
 
-                            <div className="divide-y divide-gray-50">
+                            {/* Items */}
+                            <div className="divide-y divide-gray-50 px-4">
                                 {(order.items || []).slice(0, 2).map(item => (
-                                    <div key={item.id} className="flex items-center gap-3 px-4 py-3">
-                                        <div className="w-10 h-10 rounded border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
+                                    <div key={item.id} className="flex items-center gap-3 py-3">
+                                        <div className="w-11 h-11 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
                                             {item.product?.thumb?.url
-                                                ? <Image src={item.product.thumb.url} alt={item.product.name} width={40} height={40} className="w-full h-full object-contain" />
+                                                ? <Image src={item.product.thumb.url} alt={item.product.name} width={44} height={44} className="w-full h-full object-contain p-0.5" />
                                                 : <Package size={16} className="text-gray-300" />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-semibold text-slate-900 truncate">{item.product?.name}</p>
-                                            <p className="text-[11px] text-slate-500 mt-0.5">Qty {item.quantity}</p>
+                                            <p className="text-xs font-semibold text-gray-900 truncate">{item.product?.name}</p>
+                                            <p className="text-[11px] text-gray-400 mt-0.5">Qty {item.quantity}</p>
                                         </div>
-                                        <p className="text-xs font-bold text-slate-700 shrink-0">{fmtRs(item.price ?? item.product?.price?.current)}</p>
+                                        <p className="text-xs font-bold text-(--colour-fsP2) shrink-0">{fmtRs(item.price ?? item.product?.price?.current)}</p>
                                     </div>
                                 ))}
-                                {(order.items?.length ?? 0) > 2 && (
-                                    <button onClick={() => setDetail(order)}
-                                        className="w-full text-center text-[11px] font-semibold text-(--colour-fsP2) py-2 hover:underline">
-                                        +{order.items.length - 2} more item{(order.items.length - 2) > 1 ? 's' : ''}
-                                    </button>
-                                )}
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-between gap-y-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-                                <div>
-                                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Total</p>
-                                    <p className="text-sm font-bold text-slate-900 mt-0.5">{fmtRs(order.order_total)}</p>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            {(order.items?.length ?? 0) > 2 && (
+                                <button onClick={() => setDetail(order)}
+                                    className="w-full text-center text-[11px] font-semibold text-(--colour-fsP2) py-1.5 border-t border-gray-50 hover:bg-gray-50 transition-colors">
+                                    +{order.items.length - 2} more item{(order.items.length - 2) > 1 ? 's' : ''}
+                                </button>
+                            )}
+
+                            {/* Card Footer */}
+                            <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100">
+                                <p className="text-sm font-bold text-(--colour-fsP2)">{fmtRs(order.order_total)}</p>
+                                <div className="flex items-center gap-1.5">
                                     <button onClick={() => setDetail(order)}
-                                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                                        className="h-7 px-3 rounded-lg border border-gray-200 text-[11px] font-semibold text-gray-600 hover:border-gray-300 hover:text-gray-900 transition-colors">
                                         Details
                                     </button>
                                     {!isCancelled && order.items[0]?.product?.slug && (
-                                        <>
-                                            <span className="text-gray-200">·</span>
-                                            <Link href={`/product-details/${order.items[0].product.slug}`}
-                                                className="text-xs font-semibold text-(--colour-fsP2) hover:underline transition-colors">
-                                                Buy Again
-                                            </Link>
-                                        </>
+                                        <Link href={`/product-details/${order.items[0].product.slug}`}
+                                            className="h-7 px-3 rounded-lg border border-(--colour-fsP2) text-[11px] font-semibold text-(--colour-fsP2) hover:bg-blue-50 transition-colors flex items-center">
+                                            Buy Again
+                                        </Link>
                                     )}
-                                    {status.includes('deliver') && (
-                                        <>
-                                            <span className="text-gray-200">·</span>
-                                            <button className="text-xs font-semibold text-orange-500 hover:underline transition-colors">
-                                                Return
-                                            </button>
-                                        </>
+                                    {isDeliveredOrder && (
+                                        <button className="h-7 px-3 rounded-lg border border-orange-200 text-[11px] font-semibold text-orange-500 hover:bg-orange-50 transition-colors">
+                                            Return
+                                        </button>
                                     )}
                                     {isPlaced && (
-                                        <>
-                                            <span className="text-gray-200">·</span>
-                                            <button onClick={() => setCancelTarget(order)}
-                                                className="text-xs font-semibold text-red-500 hover:underline transition-colors">
-                                                Cancel
-                                            </button>
-                                        </>
+                                        <button onClick={() => setCancelTarget(order)}
+                                            className="h-7 px-3 rounded-lg border border-red-200 text-[11px] font-semibold text-red-500 hover:bg-red-50 transition-colors">
+                                            Cancel
+                                        </button>
                                     )}
                                 </div>
                             </div>

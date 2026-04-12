@@ -3,15 +3,11 @@ import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import AboutHero from '@/components/about/AboutHero';
 import OurServices from '@/components/about/OurServices';
+import AboutQuickLinks from '@/components/about/AboutQuickLinks';
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData';
 import LazyAboutSection from '@/components/about/LazyAboutSection';
 
 // Dynamic Imports for Client Components and Heavy Sections
-const CompanyStats = dynamic(() => import('@/components/about/CompanyStats'), {
-    loading: () => <div className="h-96 animate-pulse bg-slate-50" />,
-    ssr: true
-});
-
 const CompanyPartners = dynamic(() => import('@/components/about/CompanyPartners'), {
     ssr: true
 });
@@ -78,9 +74,7 @@ const AboutUsPage = () => {
                 <AboutHeroSection />
             </Suspense>
 
-            <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50" />}>
-                <CompanyStats />
-            </Suspense>
+            <AboutQuickLinks />
 
             <OurServices />
 

@@ -21,6 +21,7 @@ import { useContextEmi, useEmiStore } from '../../_components/emiContext';
 import { calculateEMI } from '../../_components/_func_emiCalacutor';
 import RenderReview from './ReviewApplyEmiDoc'
 import ProgressBar from './ProgressBar';
+import ProductSearchGate from './ProductSearchGate';
 import EmiProductDetails from './EmiProductDetails';
 import CreditCardform from './CreditCardform';
 import DocumentUpload from './DocumentUpload';
@@ -84,8 +85,13 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const product = initialProduct || emiContextInfo.product;
 
     useEffect(() => {
+        // Only write product to context when SSR didn't resolve it.
+        // If initialProduct came from server (slug in URL), it's already correct —
+        // no need to write to context and trigger a re-render.
         if (initialProduct && initialProduct.id !== emiContextInfo.product?.id) {
-            setEmiContextInfo(prev => ({ ...prev, product: initialProduct }));
+            if (!emiContextInfo.product) {
+                setEmiContextInfo(prev => ({ ...prev, product: initialProduct }));
+            }
         }
 
         const bankParam = searchParams.get('bank');
@@ -107,7 +113,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 downPayment: downPaymentParam ? Number(downPaymentParam) : prev.downPayment
             }));
         }
-    }, [initialProduct, searchParams, emiContextInfo.product?.id, setEmiContextInfo, selectedcolor, banks]);
+    }, [initialProduct, searchParams, emiContextInfo.product, setEmiContextInfo, selectedcolor]);
 
     useEffect(() => {
         const newPreviews: { [key: string]: string } = {};
@@ -139,9 +145,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
 
     const productPrice = useMemo(() => {
         if (!product) return 0;
-        return typeof product.price === 'object'
-            ? Number((product.price as any).current || (product.price as any).price || 0)
-            : Number(product.price) || 0;
+        return product.price.current;
     }, [product]);
 
     const getValidationSchema = useCallback((sectionKey: string, option: string) => {
@@ -487,22 +491,23 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             );
             formData.append('type', apiType);
             formData.append('product_id', String(product.id));
-            formData.append('variant_id', selectedVariantObj?.id ? String(selectedVariantObj.id) : '');
+            if (selectedVariantObj?.id) formData.append('variant_id', String(selectedVariantObj.id));
             formData.append('down_payment', String(emiData.downPayment));
             formData.append('loan_amount', String(emiData.financeAmount));
             formData.append('duration', String(localEmiCalculation.duration));
             formData.append('agreed_terms', '1');
 
-            // ─── 2. Personal Info ────────────────────────────────────────────
-            formData.append('full_name', localUserInfo.name ?? '');
-            formData.append('email', localUserInfo.email ?? '');
+            // ─── 2. Personal Info (field names differ per type) ───────────────
+            const isCitizenship = selectedOption === 'downPayment';
+            formData.append(isCitizenship ? 'full_name' : 'name', localUserInfo.name ?? '');
+            if (localUserInfo.email) formData.append('email', localUserInfo.email);
             formData.append('phone', localUserInfo.phone ?? '');
-            formData.append('dob_ad', localUserInfo.dob ?? '');
-            formData.append('dob_bs', String(localUserInfo.dob_bs ?? ''));
-            formData.append('gender', (localUserInfo.gender || '').toLowerCase());
-            formData.append('marital_status', (localUserInfo.marriageStatus || '').toLowerCase());
-            formData.append('national_id', String(localUserInfo.nationalID ?? ''));
-            formData.append('address', localUserInfo.address ?? '');
+            if (localUserInfo.dob) formData.append('dob_ad', localUserInfo.dob);
+            if (localUserInfo.dob_bs != null) formData.append('dob_bs', String(localUserInfo.dob_bs));
+            if (localUserInfo.gender) formData.append('gender', localUserInfo.gender.toLowerCase());
+            if (localUserInfo.marriageStatus) formData.append(isCitizenship ? 'marriage_status' : 'marital_status', localUserInfo.marriageStatus.toLowerCase());
+            if (localUserInfo.nationalID != null) formData.append(isCitizenship ? 'nid_number' : 'national_id', String(localUserInfo.nationalID));
+            if (localUserInfo.address) formData.append('address', localUserInfo.address);
 
             // ─── 3. Common Files ───────────────────────────────────────────────
             if (files.citizenshipFile?.ppphoto) formData.append('documents[pp_photo]', files.citizenshipFile.ppphoto);
@@ -516,18 +521,18 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
                 formData.append('credit_card[card_holder]', localCreditCardInfo.cardHolderName ?? '');
                 formData.append('credit_card[card_provider]', localBankInfo.bankname ?? '');
                 formData.append('credit_card[expiry_date]', localCreditCardInfo.expiryDate ?? '');
-                formData.append('credit_card[credit_limit]', String(localCreditCardInfo.cardLimit ?? ''));
+                if (localCreditCardInfo.cardLimit != null) formData.append('credit_card[credit_limit]', String(localCreditCardInfo.cardLimit));
             }
             else if (selectedOption === 'downPayment') {
                 formData.append('bank', localBankInfo.bankname ?? '');
-                formData.append('guarantor[full_name]', localGranterInfo.name ?? '');
+                formData.append('guarantor[name]', localGranterInfo.name ?? '');
                 formData.append('guarantor[phone]', localGranterInfo.phone ?? '');
-                formData.append('guarantor[gender]', (localGranterInfo.gender || '').toLowerCase());
-                formData.append('guarantor[marital_status]', (localGranterInfo.marriageStatus || '').toLowerCase());
-                formData.append('guarantor[citizenship_number]', String(localGranterInfo.nationalID ?? ''));
-                formData.append('guarantor[dob_ad]', localGranterInfo.dob ?? '');
-                formData.append('guarantor[dob_bs]', String(localGranterInfo.dob_bs ?? ''));
-                formData.append('guarantor[address]', localGranterInfo.address ?? '');
+                if (localGranterInfo.gender) formData.append('guarantor[gender]', localGranterInfo.gender.toLowerCase());
+                if (localGranterInfo.marriageStatus) formData.append('guarantor[marriage_status]', localGranterInfo.marriageStatus.toLowerCase());
+                if (localGranterInfo.nationalID != null) formData.append('guarantor[citizenship_number]', String(localGranterInfo.nationalID));
+                if (localGranterInfo.dob) formData.append('guarantor[dob_ad]', localGranterInfo.dob);
+                if (localGranterInfo.dob_bs != null) formData.append('guarantor[dob_bs]', String(localGranterInfo.dob_bs));
+                if (localGranterInfo.address) formData.append('guarantor[address]', localGranterInfo.address);
 
                 if (files.granterDocument?.ppphoto) formData.append('guarantor[documents][pp_photo]', files.granterDocument.ppphoto);
                 if (files.granterDocument?.front) formData.append('guarantor[documents][citizenship_front]', files.granterDocument.front);
@@ -535,15 +540,13 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
             }
             else if (selectedOption === 'makeCard') {
                 formData.append('bank[code]', localBankInfo.bankname ?? '');
-                formData.append('bank[account_number]', localBankInfo.accountNumber ?? '');
-                formData.append('bank[branch]', localBankInfo.bankbranch ?? '');
-                formData.append('salary[amount]', String(localBankInfo.salaryAmount ?? ''));
+                if (localBankInfo.accountNumber) formData.append('bank[account_number]', localBankInfo.accountNumber);
+                if (localBankInfo.bankbranch) formData.append('bank[branch]', localBankInfo.bankbranch);
+                if (localBankInfo.salaryAmount != null) formData.append('salary[amount]', String(localBankInfo.salaryAmount));
                 if (files.bankStatement) formData.append('salary[statement]', files.bankStatement);
             }
 
-            console.log("Submitting EMI application with data:" ,formData);
-
-            const response = await EmiRequest(formData);
+            const response = await EmiRequest(formData)
 
             if (response?.success === false) {
                 toast.error(response?.message ?? 'Failed to submit application.');
@@ -977,15 +980,7 @@ const ApplyEmiClient: React.FC<ApplyEmiClientProps> = ({ initialProduct, selecte
     const faqParams = useMemo(() => ({ type: 'brand', per_page: 10, page: 1 }), []);
 
     if (!product) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
-                    <p className="text-gray-500 mb-6">We couldn&apos;t find the product details. Please access this page from a valid product link.</p>
-                    <Button onClick={() => router.push('/')} className="bg-blue-600 hover:bg-blue-700 text-white">Return Home</Button>
-                </div>
-            </div>
-        );
+        return <ProductSearchGate onProductSelected={() => { }} />;
     }
 
     return (

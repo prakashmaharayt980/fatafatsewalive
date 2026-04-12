@@ -60,12 +60,14 @@ export default function SuccessClient() {
         );
     }
 
-    // Format Date
-    const formattedDate = orderData.created_at ? new Date(orderData.created_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    }) : 'N/A';
+    const formattedDate = useMemo(() => {
+        if (!orderData?.created_at) return 'N/A';
+        return new Date(orderData.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    }, [orderData?.created_at]);
 
     return (
         <div className="min-h-screen p-3 sm:p-4 bg-gray-50 mt-8">

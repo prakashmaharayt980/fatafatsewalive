@@ -61,8 +61,8 @@ const FooterBody = async () => {
 
   const socialIcons = [
     { name: "Facebook", Icon: <Image src={facebookIcon} alt="Facebook" width={24} height={24} className="w-6 h-6" />, url: "https://www.facebook.com/fatafatsewanpl" },
-    { name: "Twitter", Icon: <Image src={twitterIcon} alt="Twitter" width={24} height={24} className="w-6 h-6" />, url: "https://www.twitter.com/fatafatsewanp" },
-    { name: "TikTok", Icon: <Image src={tiktokIcon} alt="TikTok" width={24} height={24} className="w-6 h-6" />, url: "https://www.tiktok.com/@fatafatsewa" },
+    // { name: "Twitter", Icon: <Image src={twitterIcon} alt="Twitter" width={24} height={24} className="w-6 h-6" />, url: "https://www.twitter.com/fatafatsewanp" },
+    { name: "TikTok", Icon: <Image src={tiktokIcon} alt="TikTok" width={24} height={24} className="w-6 h-6" />, url: "https://www.tiktok.com/@fatafatsewa.com" },
     { name: "YouTube", Icon: <Image src={youtubeIcon} alt="Youtube" width={24} height={24} className="w-6 h-6" />, url: "https://www.youtube.com/@fatafatsewa" },
     { name: "LinkedIn", Icon: <Image src={linkedinIcon} alt="LinkedIn" width={24} height={24} className="w-6 h-6" />, url: "https://www.linkedin.com/company/fatafatsewanp" },
   ];

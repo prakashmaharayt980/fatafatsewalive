@@ -10,7 +10,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const routes: MetadataRoute.Sitemap = [
         { path: '', priority: 1.0 },
         { path: '/blogs', priority: 0.9 },
+        { path: '/emi', priority: 0.9 },
         { path: '/emi/shop', priority: 0.9 },
+        { path: '/emi/eligibility', priority: 0.85 },
         { path: '/repair', priority: 0.8 },
         { path: '/exchangeProducts', priority: 0.8 },
         { path: '/compare', priority: 0.7 },

@@ -100,7 +100,7 @@ const CompanyPartners = () => {
                     </p>
                 </div>
 
-                <div className="border border-slate-200 p-8">
+                <div className="rounded-xl border border-slate-200 p-8">
                     <MarqueeRow images={bankingEmiPartners} label="Banking & EMI Partners" speed={32} />
                     <MarqueeRow images={paymentPartners} label="Payment Methods" speed={20} reverse />
                     <MarqueeRow images={insurancePartners} label="Insurance Partners" speed={16} />
@@ -108,7 +108,7 @@ const CompanyPartners = () => {
 
                 <div ref={statsRef} className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-5">
                     {partnerStats.map((stat, i) => (
-                        <div key={i} className="bg-white border border-slate-200 p-6 text-center hover:border-slate-300 transition-colors duration-200">
+                        <div key={i} className="bg-white rounded-xl border border-slate-200 p-6 text-center hover:border-slate-300 transition-colors duration-200">
                             <p className="text-3xl font-extrabold mb-1 text-(--colour-fsP1) tabular-nums">
                                 {counts[i]}{stat.suffix}
                             </p>

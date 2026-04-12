@@ -14,7 +14,7 @@ interface TimeLeft { d: number; h: number; m: number; s: number }
 function useCountdown(end: string): TimeLeft {
     const calc = (): TimeLeft => {
         const dist = new Date(end).getTime() - Date.now()
-        if (dist < 0) return { d: 0, h: 0, m: 0, s: 0 }
+        if (dist <= 0) return { d: 0, h: 0, m: 0, s: 0 }
         return {
             d: Math.floor(dist / 86400000),
             h: Math.floor((dist % 86400000) / 3600000),
@@ -24,64 +24,74 @@ function useCountdown(end: string): TimeLeft {
     }
     const [t, setT] = useState<TimeLeft>(calc)
     useEffect(() => {
-        const id = setInterval(() => { const n = calc(); setT(n); if (!n.d && !n.h && !n.m && !n.s) clearInterval(id) }, 1000)
+        const id = setInterval(() => {
+            const n = calc()
+            setT(n)
+            if (!n.d && !n.h && !n.m && !n.s) clearInterval(id)
+        }, 1000)
         return () => clearInterval(id)
     }, [end])
     return t
 }
 
-const R = 22
-const C = 2 * Math.PI * R
-
-function ClockRing({ value, max, label, color }: { value: number; max: number; label: string; color: string }) {
+function CountBlock({ value, label }: { value: number; label: string }) {
     return (
-        <div className="flex flex-col items-center gap-1">
-            <div className="relative w-13 h-13">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
-                    <circle cx="28" cy="28" r={R} fill="none" stroke="white" strokeWidth="3" opacity="0.6" />
-                    <circle cx="28" cy="28" r={R} fill="none" stroke={color} strokeWidth="3"
-                        strokeDasharray={C} strokeDashoffset={C - (value / max) * C}
-                        strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-black tabular-nums font-mono text-(--colour-text2)">
-                    {String(value).padStart(2, '0')}
-                </span>
+        <div className="flex flex-col items-center gap-1.5">
+            <div
+                className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-xl text-white text-xl sm:text-2xl font-black tabular-nums font-mono"
+                style={{ background: 'var(--colour-fsP2)' }}
+            >
+                {String(value).padStart(2, '0')}
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-(--colour-text3)">{label}</span>
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--colour-fsP2)' }}>
+                {label}
+            </span>
         </div>
     )
 }
 
-function SaleProductCard({ p }: { p: CampaignProduct }) {
-    const disc = p.price.current > p.price.discounted
-        ? Math.round(((p.price.current - p.price.discounted) / p.price.current) * 100)
-        : 0
+function ProductRow({ p }: { p: CampaignProduct }) {
+    const hasDisc = p.price.current > p.price.discounted
+    const disc = hasDisc ? Math.round(((p.price.current - p.price.discounted) / p.price.current) * 100) : 0
     const emi = Math.round(p.price.discounted / 12)
 
     return (
         <Link
             href={`/product-details/${p.slug}`}
-            className="group flex flex-col shrink-0 w-38 bg-white border border-(--colour-border3) rounded-xl overflow-hidden hover:border-(--colour-fsP2)/40 hover:shadow-sm transition-all duration-150"
+            className="group flex items-center gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-(--colour-border3) hover:border-(--colour-fsP2)/30 hover:shadow-sm transition-all shrink-0 min-w-[170px] sm:min-w-[190px]"
         >
-            <div className="relative w-full aspect-square bg-(--colour-bg4)">
-                {disc > 0 && (
-                    <span className="absolute top-1.5 left-1.5 z-10 text-[9px] font-black text-white px-1.5 py-0.5 rounded-md" style={{ background: 'var(--colour-fsP1)' }}>
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-(--colour-bg4) overflow-hidden shrink-0">
+                {hasDisc && (
+                    <span
+                        className="absolute top-0.5 left-0.5 z-10 text-[8px] font-black text-white px-1 py-0.5 rounded"
+                        style={{ background: 'var(--colour-fsP1)' }}
+                    >
                         -{disc}%
                     </span>
                 )}
                 {p.thumb?.url && (
-                    <Image src={p.thumb.url} alt={p.thumb.alt_text ?? p.name} fill sizes="152px"
-                        className="object-contain p-3 mix-blend-multiply group-hover:scale-[1.03] transition-transform duration-200" />
+                    <Image
+                        src={p.thumb.url}
+                        alt={p.thumb.alt_text ?? p.name}
+                        fill
+                        sizes="56px"
+                        className="object-contain p-1.5"
+                    />
                 )}
             </div>
-
-            <div className="p-2.5 flex flex-col gap-0.5 border-t border-(--colour-border3)">
-                <p className="text-[11px] font-semibold text-(--colour-text2) line-clamp-2 leading-snug">{p.name}</p>
-                <p className="text-[13px] font-bold text-(--colour-text1) mt-1">Rs.&nbsp;{p.price.discounted.toLocaleString()}</p>
-                {disc > 0 && (
-                    <p className="text-[10px] text-(--colour-text3) line-through">Rs.&nbsp;{p.price.current.toLocaleString()}</p>
+            <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-semibold text-(--colour-text2) truncate group-hover:text-(--colour-fsP2) transition-colors">
+                    {p.name}
+                </p>
+                <p className="text-xs sm:text-sm font-bold" style={{ color: 'var(--colour-fsP1)' }}>
+                    Rs.&nbsp;{p.price.discounted.toLocaleString()}
+                </p>
+                {hasDisc && (
+                    <p className="text-[10px] text-(--colour-text3) line-through">
+                        Rs.&nbsp;{p.price.current.toLocaleString()}
+                    </p>
                 )}
-                <span className="mt-1 self-start text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ color: 'var(--colour-fsP2)', background: '#EEF3FB' }}>
+                <span className="text-[9px] font-bold" style={{ color: 'var(--colour-fsP2)' }}>
                     EMI Rs.&nbsp;{emi.toLocaleString()}/mo
                 </span>
             </div>
@@ -98,77 +108,118 @@ export default function EmiOfferBanner({ slug }: Props) {
         fetchOfferDetails(slug).then(r => setOffer(r.data)).catch(() => null)
     }, [inView, slug])
 
-    const t = useCountdown(offer?.end_date ?? new Date(Date.now() + 86400000).toISOString())
+    const fallbackEnd = new Date(Date.now() + 86400000).toISOString()
+    const t = useCountdown(offer?.end_date ?? fallbackEnd)
 
-    if (!inView) return <div ref={ref} className="min-h-25" />
+    if (!inView) return <div ref={ref} className="min-h-24" />
     if (!offer) return null
 
     const products = offer.products?.data ?? []
 
     return (
-        <div ref={ref} className="w-full border-y border-(--colour-border3) overflow-hidden" style={{ background: '#EEF3FB' }}>
+        <div ref={ref} className="w-full border-y border-(--colour-border3)" style={{ background: '#EEF3FB' }}>
+            <div className="px-4 sm:px-6 md:px-10 py-8 sm:py-10">
+                <div className="max-w-5xl mx-auto">
 
-            {/* Hero row */}
-            <div className="flex flex-col md:flex-row px-6 py-8 md:px-8 gap-8 md:gap-0">
+                    {/* ── Main row: content + image ── */}
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-8 lg:gap-12 mb-8">
 
-                {/* Left — content 2/5 */}
-                <div className="md:w-2/5 flex flex-col justify-center gap-5">
+                        {/* Left — content */}
+                        <div className="flex-1 flex flex-col items-center lg:items-start gap-4 text-center lg:text-left">
 
-                    <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--colour-fsP2)', borderColor: '#C7D9F5', background: 'white' }}>
-                        <Zap style={{ width: 9, height: 9, fill: 'currentColor' }} /> Limited EMI Offer
-                    </div>
+                            {/* Badge */}
+                            <div
+                                className="inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full"
+                                style={{ background: 'var(--colour-fsP2)' }}
+                            >
+                                <span
+                                    className="p-1.5 rounded-full"
+                                    style={{ background: 'var(--colour-fsP1)' }}
+                                >
+                                    <Zap className="w-3 h-3 text-white" style={{ fill: 'white' }} />
+                                </span>
+                                <span className="text-white text-xs font-bold uppercase tracking-wider">
+                                    Limited EMI Offer
+                                </span>
+                            </div>
 
-                    <div>
-                        <h2 className="text-xl sm:text-2xl font-extrabold text-(--colour-text1) leading-tight">
-                            {offer.name}
-                        </h2>
-                        <p className="text-(--colour-text3) text-sm mt-1.5 max-w-xs leading-relaxed">
-                            Exclusive gadget deals on 0% EMI — limited time, approved by major Nepali banks.
-                        </p>
-                    </div>
+                            {/* Heading */}
+                            <div className="space-y-2">
+                                <h2
+                                    className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.1]"
+                                    style={{ color: 'var(--colour-fsP2)' }}
+                                >
+                                    {offer.name}
+                                </h2>
+                                <p className="text-sm sm:text-base text-(--colour-text3) max-w-md mx-auto lg:mx-0 leading-relaxed">
+                                    Don&apos;t miss out — exclusive gadget deals on{' '}
+                                    <span className="font-bold" style={{ color: 'var(--colour-fsP1)' }}>0% EMI</span>{' '}
+                                    approved by major Nepali banks.
+                                </p>
+                            </div>
 
-                    {/* Clock countdown */}
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-3 text-(--colour-text3)">
-                            Offer ends in
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <ClockRing value={t.d} max={30} label="Days" color="var(--colour-fsP2)" />
-                            <span className="text-(--colour-border3) font-black text-xl mb-4">·</span>
-                            <ClockRing value={t.h} max={24} label="Hrs" color="var(--colour-fsP1)" />
-                            <span className="text-(--colour-border3) font-black text-xl mb-4">·</span>
-                            <ClockRing value={t.m} max={60} label="Min" color="var(--colour-fsP2)" />
-                            <span className="text-(--colour-border3) font-black text-xl mb-4">·</span>
-                            <ClockRing value={t.s} max={60} label="Sec" color="var(--colour-fsP1)" />
+                            {/* Countdown */}
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-(--colour-text3) mb-3">
+                                    Offer ends in
+                                </p>
+                                <div className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start">
+                                    <CountBlock value={t.d} label="Days" />
+                                    <span className="font-black text-xl sm:text-2xl mb-5" style={{ color: 'var(--colour-fsP1)' }}>:</span>
+                                    <CountBlock value={t.h} label="Hours" />
+                                    <span className="font-black text-xl sm:text-2xl mb-5" style={{ color: 'var(--colour-fsP1)' }}>:</span>
+                                    <CountBlock value={t.m} label="Min" />
+                                    <span className="font-black text-xl sm:text-2xl mb-5" style={{ color: 'var(--colour-fsP1)' }}>:</span>
+                                    <CountBlock value={t.s} label="Sec" />
+                                </div>
+                            </div>
+
+                            {/* CTAs */}
+                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                                <Link
+                                    href={`/offers/${offer.slug}`}
+                                    className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90"
+                                    style={{ background: 'var(--colour-fsP2)' }}
+                                >
+                                    <ShoppingBag className="w-4 h-4" />
+                                    Shop Now
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                                <Link
+                                    href="/offers"
+                                    className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80"
+                                    style={{ color: 'var(--colour-fsP2)' }}
+                                >
+                                    View All Deals <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </div>
                         </div>
+
+                        {/* Right — offer image */}
+                        {offer?.thumb?.url && (
+                            <div className="lg:w-5/12 flex justify-center shrink-0">
+                                <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80">
+                                    <Image
+                                        src={offer.thumb.url}
+                                        alt={offer.thumb.alt_text ?? offer.name}
+                                        fill
+                                        sizes="(max-width: 640px) 224px, (max-width: 768px) 288px, 320px"
+                                        className="object-contain"
+                                        priority
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href={`/offers/${offer.slug}`}
-                            className="inline-flex items-center gap-2 h-9 px-4 rounded-lg text-white text-sm font-bold transition-opacity hover:opacity-90"
-                            style={{ background: 'var(--colour-fsP2)' }}
-                        >
-                            <ShoppingBag style={{ width: 13, height: 13 }} /> Shop Offer
-                        </Link>
-                        <Link href="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-(--colour-text3) hover:text-(--colour-text2) transition-colors">
-                            All deals <ArrowRight style={{ width: 12, height: 12 }} />
-                        </Link>
-                    </div>
+                    {/* ── Product strip ── */}
+                    {products.length > 0 && (
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3 sm:overflow-x-auto scrollbar-hide pb-1">
+                            {products.map(p => <ProductRow key={p.id} p={p} />)}
+                        </div>
+                    )}
                 </div>
-
-     
             </div>
-
-            {/* Product strip — white cards on tinted bg */}
-            {products.length > 0 && (
-                <div className="px-6 md:px-8 pb-6">
-     
-                    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-                        {products.map(p => <SaleProductCard key={p.id} p={p} />)}
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

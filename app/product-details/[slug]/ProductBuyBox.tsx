@@ -7,7 +7,6 @@ import {
     Scale,
     Star,
     Check,
-    Share2,
     Heart,
     CalendarClock,
     Minus,
@@ -19,8 +18,6 @@ import { useRouter } from "next/navigation";
 import type { BasketProduct, ProductDetails } from "@/app/types/ProductDetailsTypes";
 import dynamic from "next/dynamic";
 
-const ProductCoupons = dynamic(() => import("./ProductCoupons"), { ssr: false });
-const ShareDialog = dynamic(() => import("./ShareDialog"), { ssr: false });
 const PreOrderDialog = dynamic(() => import("./PreOrderDialog"), { ssr: false });
 
 import { parseHighlights } from "@/app/CommonVue/highlights";
@@ -70,22 +67,20 @@ const ProductBuyBox: React.FC<Props> = ({
 
     const router = useRouter();
 
-    const baseCurrentPrice =
-        typeof product.price === "object"
-            ? (product.price as any).current
-            : product.discounted_price ?? product.price;
-    const baseOriginalPrice =
-        typeof product.price === "object" ? (product.price as any).original_price : product.original_price;
+    const baseCurrentPrice = product.price.current;
+    const baseOriginalPrice = product.price.original_price;
 
-    const currentPrice = selectedVariant?.discounted_price ?? selectedVariant?.price ?? baseCurrentPrice;
-    const originalPrice = selectedVariant?.original_price ?? baseOriginalPrice;
+    const currentPrice = selectedVariant?.price ?? baseCurrentPrice;
+    const originalPrice = baseOriginalPrice;
     const currentStock = selectedVariant ? selectedVariant.quantity : product.quantity;
     const discountPercentage =
-        originalPrice && originalPrice > currentPrice
+        originalPrice !== null && originalPrice > currentPrice
             ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
             : 0;
 
-    const [isShareOpen, setIsShareOpen] = useState(false);
+    const isPreOrder = !!product.pre_order?.available;
+    const preOrderPrice: number | null = product.pre_order?.price ?? null;
+
     const [isPreOrderOpen, setIsPreOrderOpen] = useState(false);
 
     const selectedColor =
@@ -114,13 +109,7 @@ const ProductBuyBox: React.FC<Props> = ({
         isInCompare ? removeFromCompare(product.id) : addToCompare(product as any);
     };
 
-    const currentUrl = typeof window !== "undefined" ? window.location.href : "";
-
-    const highlights = parseHighlights(
-        typeof product.description === "object"
-            ? (product.description as any)?.highlights
-            : product.highlights ?? ""
-    );
+    const highlights = parseHighlights(product.description?.highlights ?? "");
 
     const stockStatus =
         currentStock === 0
@@ -188,17 +177,23 @@ const ProductBuyBox: React.FC<Props> = ({
             {/* Price */}
             <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/40">
                 <div className="flex items-end gap-3 flex-wrap">
-                    <span className="text-3xl sm:text-[34px] font-bold text-slate-900 tracking-tight leading-none">
-                        Rs.{currentPrice.toLocaleString()}
-                    </span>
-                    {originalPrice && originalPrice > currentPrice && (
+                    {isPreOrder && preOrderPrice === null ? (
+                        <span className="text-2xl font-bold text-slate-500 tracking-tight leading-none">Coming Soon</span>
+                    ) : (
                         <>
-                            <span className="text-sm text-slate-500 line-through pb-0.5">
-                                Rs.{originalPrice.toLocaleString()}
+                            <span className="text-3xl sm:text-[34px] font-bold text-slate-900 tracking-tight leading-none">
+                                Rs.{(isPreOrder && preOrderPrice !== null ? preOrderPrice : currentPrice).toLocaleString()}
                             </span>
-                            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-lg pb-0.5">
-                                -{discountPercentage}% OFF
-                            </span>
+                            {!isPreOrder && originalPrice !== null && originalPrice > currentPrice && (
+                                <>
+                                    <span className="text-sm text-slate-500 line-through pb-0.5">
+                                        Rs.{originalPrice.toLocaleString()}
+                                    </span>
+                                    <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-lg pb-0.5">
+                                        -{discountPercentage}% OFF
+                                    </span>
+                                </>
+                            )}
                         </>
                     )}
                 </div>
@@ -320,13 +315,13 @@ const ProductBuyBox: React.FC<Props> = ({
                         {currentStock === 0 ? "Out of Stock" : "Add to Cart"}
                     </button>
 
-                    {product.pre_order?.available && (
+                    {isPreOrder && (
                         <button
                             onClick={() => setIsPreOrderOpen(true)}
                             className="h-10 flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-xl transition-transform active:scale-[0.98] cursor-pointer"
                         >
                             <CalendarClock className="w-3.5 h-3.5 shrink-0" />
-                            Pre-Order
+                            {preOrderPrice !== null ? "Pre-Order" : "Coming Soon"}
                         </button>
                     )}
 

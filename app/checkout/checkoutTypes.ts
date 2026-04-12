@@ -34,9 +34,9 @@ export interface RecipientInfo {
     type: RecipientType;
     name?: string;
     phone?: string;
-    message?: string; // Gift message
-    recipientPhoto?: string; // URL or base64
-    senderPhoto?: string; // URL or base64
+    message?: string;
+    recipientPhoto?: File;
+    senderPhoto?: File;
 }
 
 // ========================

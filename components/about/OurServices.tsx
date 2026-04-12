@@ -135,9 +135,9 @@ export default function OurServices() {
                     {services.map((s, i) => (
                         <div
                             key={i}
-                            className="group flex flex-col gap-4 p-7 border border-slate-200 bg-white hover:border-[#f86014] transition-colors duration-200"
+                            className="group flex flex-col gap-4 p-7 rounded-xl border border-slate-200 bg-white hover:border-[#f86014] transition-colors duration-200"
                         >
-                            <div className={`w-12 h-12 flex items-center justify-center ${s.bg} ${s.accent} shrink-0`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${s.bg} ${s.accent} shrink-0`}>
                                 {s.icon}
                             </div>
                             <div>
@@ -149,7 +149,7 @@ export default function OurServices() {
                 </div>
 
                 {/* ── Why Us section ────────────────────────────────── */}
-                <div className="border border-slate-200 p-8 md:p-14">
+                <div className="rounded-xl border border-slate-200 p-8 md:p-14">
 
                     <div className="flex flex-col lg:flex-row gap-12">
 
@@ -170,9 +170,9 @@ export default function OurServices() {
                             {valueProps.map((v, i) => (
                                 <div
                                     key={i}
-                                    className="flex flex-col gap-3 p-5 bg-white border border-slate-200 hover:border-[#1967b3] transition-colors duration-200"
+                                    className="flex flex-col gap-3 p-5 rounded-xl bg-white border border-slate-200 hover:border-[#1967b3] transition-colors duration-200"
                                 >
-                                    <div className={`w-10 h-10 flex items-center justify-center ${v.bg} ${v.colour} shrink-0`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${v.bg} ${v.colour} shrink-0`}>
                                         {v.icon}
                                     </div>
                                     <div>

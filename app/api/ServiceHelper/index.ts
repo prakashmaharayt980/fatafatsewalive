@@ -114,7 +114,14 @@ class FetchInstance {
         }
     }
 
+    private static refreshTokenPromise: Promise<string | null> | null = null;
+
     private async refreshToken(): Promise<string | null> {
+        if (FetchInstance.refreshTokenPromise) {
+            return FetchInstance.refreshTokenPromise;
+        }
+
+        FetchInstance.refreshTokenPromise = (async () => {
         try {
             const refreshToken = getCookie("refresh_token");
             if (!refreshToken) throw new Error("No refresh token");
@@ -140,6 +147,13 @@ class FetchInstance {
             deleteCookie("refresh_token");
             if (typeof window !== "undefined") window.location.href = "/login";
             return null;
+        }
+        })();
+
+        try {
+            return await FetchInstance.refreshTokenPromise;
+        } finally {
+            FetchInstance.refreshTokenPromise = null;
         }
     }
 

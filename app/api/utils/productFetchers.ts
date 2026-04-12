@@ -20,10 +20,10 @@ export async function getRandomBasketProducts(slug: string, count: number = 10) 
     }
 }
 
-export async function getFilteredBasketProducts(slug: string, options: { brand?: string; min_price?: number; count?: number } = {}) {
-    const { brand = '', min_price, count = 10 } = options
+export async function getFilteredBasketProducts(slug: string, options: { brand?: string; min_price?: number; count?: number; emi_enabled?: boolean } = {}) {
+    const { brand = '', min_price, count = 10, emi_enabled } = options
     try {
-        const response = await getCategoryProducts(slug, { per_page: count, page: 1, sort: 'newest', brand, min_price })
+        const response = await getCategoryProducts(slug, { per_page: count, page: 1, sort: 'newest', brand, min_price, emi_enabled })
         const rawProducts = response?.data?.products ?? response?.data ?? []
         const decorated = rawProducts.map((p: ProductData, idx: number) => decorateProduct(p, idx))
         return { products: decorated }

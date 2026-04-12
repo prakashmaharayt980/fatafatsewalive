@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-
 import { getBlogBySlug, getBlogList } from '../../api/services/blog.service';
 import BlogDetailsClient from '../components/BlogDetailsClient';
 import type { Article } from '../../types/Blogtypes';
@@ -14,64 +13,51 @@ interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
-// Optimized Data Fetcher — Returns full response for article + related items
-const getArticleResponse = async (slug: string) => {
-    try {
-        const response = await getBlogBySlug(slug);
-        // Robust extraction: Handle { data: {...}, related: [...] } or direct {...}
-        if (!response) return null;
-        
-        const data = response.data || response;
-        const related = response.related || [];
-        
-        return {
-            data,
-            related,
-            raw: response
-        };
-    } catch (e) {
-        console.error(`Failed to fetch blog response for slug: ${slug}`, e);
-        return null;
-    }
+interface ArticleResponse {
+    article: Article;
+    related: Article[];
 }
 
-// Dynamic Metadata with Enhanced SEO
+const getArticleWithRelated = async (slug: string): Promise<ArticleResponse | null> => {
+    try {
+        const res = await getBlogBySlug(slug);
+        if (!res?.data) return null;
+        return {
+            article: res.data,
+            related: res.related ?? [],
+        };
+    } catch {
+        return null;
+    }
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const response = await getArticleResponse(slug);
-    const article = response?.data;
+    const res = await getArticleWithRelated(slug);
+    const article = res?.article;
 
     if (!article) {
         return {
             title: 'Article Not Found | Fatafat Sewa',
             description: 'The requested article could not be found.',
-        }
+        };
     }
 
     const articleUrl = `${SITE_URL}/blogs/${slug}`;
-    const imageUrl = article.thumb?.url || article.thumbnail_image?.full || imglogo.src;
+    const imageUrl = article.thumb?.url ?? article.thumbnail_image?.full ?? imglogo.src;
 
     return {
         title: `${article.title} | Fatafat Sewa Blog`,
         description: article.short_desc || article.title,
         keywords: article.category?.title ? [article.category.title, 'tech review', 'buying guide'] : undefined,
         authors: [{ name: article.author }],
-        alternates: {
-            canonical: articleUrl,
-        },
+        alternates: { canonical: articleUrl },
         openGraph: {
             title: article.title,
             description: article.short_desc || article.title,
             url: articleUrl,
             siteName: 'Fatafat Sewa',
-            images: [
-                {
-                    url: imageUrl,
-                    width: 1200,
-                    height: 630,
-                    alt: article.title,
-                }
-            ],
+            images: [{ url: imageUrl, width: 1200, height: 630, alt: article.title }],
             locale: 'en_US',
             type: 'article',
             publishedTime: article.publish_date,
@@ -89,109 +75,58 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         robots: {
             index: true,
             follow: true,
-            googleBot: {
-                index: true,
-                follow: true,
-                'max-video-preview': -1,
-                'max-image-preview': 'large',
-                'max-snippet': -1,
-            },
+            googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large', 'max-snippet': -1 },
         },
     };
 }
 
-// Optimized Data Fetcher Content
 async function BlogPostPageContent({ params }: PageProps) {
     const { slug } = await params;
-    const response = await getArticleResponse(slug);
-    const article = response?.data;
+    const result = await getArticleWithRelated(slug);
 
-    if (!article) {
-        return notFound();
-    }
+    if (!result) return notFound();
 
-    // Use related articles already present in the single response
-    const relatedArticles: Article[] = response?.related || [];
+    const { article, related: relatedArticles } = result;
 
-    // Fetch latest articles for the sidebar directly
-    const latestArticlesRes = await getBlogList({ page: 1, per_page: 10, sort: 'desc' });
-    const latestArticles = latestArticlesRes?.data || latestArticlesRes || [];
-
-    const authorArticles = (latestArticles || [])
+    const listRes = await getBlogList({ page: 1, per_page: 10, sort: 'desc' });
+    const latestArticles: Article[] = listRes?.data ?? listRes ?? [];
+    const authorArticles = latestArticles
         .filter((a: Article) => a.id !== article.id && a.author === article.author)
         .slice(0, 6);
 
-    // Generate JSON-LD structured data for article
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
         headline: article.title,
         description: article.short_desc || article.title,
-        image: article.thumb?.url || imglogo.src,
+        image: article.thumb?.url ?? imglogo.src,
         datePublished: article.publish_date,
         dateModified: article.publish_date,
-        author: {
-            '@type': 'Person',
-            name: article.author,
-        },
+        author: { '@type': 'Person', name: article.author },
         publisher: {
             '@type': 'Organization',
             name: 'Fatafat Sewa',
             url: SITE_URL,
-            logo: {
-                '@type': 'ImageObject',
-                url: `${SITE_URL}/logo.png`,
-            },
+            logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
         },
-        mainEntityOfPage: {
-            '@type': 'WebPage',
-            '@id': `${SITE_URL}/blogs/${slug}`,
-        },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blogs/${slug}` },
     };
 
-    // Breadcrumb structured data
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
-            {
-                '@type': 'ListItem',
-                position: 1,
-                name: 'Home',
-                item: SITE_URL,
-            },
-            {
-                '@type': 'ListItem',
-                position: 2,
-                name: 'Blog',
-                item: `${SITE_URL}/blogs`,
-            },
-            {
-                '@type': 'ListItem',
-                position: 3,
-                name: article.title,
-                item: `${SITE_URL}/blogs/${slug}`,
-            },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+            { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blogs` },
+            { '@type': 'ListItem', position: 3, name: article.title, item: `${SITE_URL}/blogs/${slug}` },
         ],
     };
 
     return (
         <>
-            {/* Article Structured Data */}
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            {/* Breadcrumb Structured Data */}
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-            />
-            <BlogDetailsClient
-                article={article}
-                relatedArticles={relatedArticles}
-                authorArticles={authorArticles}
-            />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+            <BlogDetailsClient article={article} relatedArticles={relatedArticles} authorArticles={authorArticles} />
         </>
     );
 }
@@ -200,14 +135,10 @@ export default function BlogPostPage(props: PageProps) {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                    <div className="w-12 h-12 border-4 border-[var(--colour-fsP2)] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-gray-500 font-medium">Loading article...</p>
-                </div>
+                <div className="w-10 h-10 border-4 border-[var(--colour-fsP2)] border-t-transparent rounded-full animate-spin" />
             </div>
         }>
             <BlogPostPageContent {...props} />
         </Suspense>
     );
 }
-

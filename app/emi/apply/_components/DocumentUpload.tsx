@@ -175,48 +175,48 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       </div>
 
       {zoomData && createPortal(
-          <div
-            className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200"
-            onClick={() => setZoomData(null)}
-          >
-            <div className="absolute top-0 left-0 right-0 z-[10001] flex items-center justify-between px-6 py-4 bg-gradient-to-b from-black/60 to-transparent">
-                <span className="text-white font-bold text-lg tracking-wide uppercase">
-                    {zoomData.label} Preview
-                </span>
-                <button
-                    onClick={() => setZoomData(null)}
-                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white hover:bg-white/20 transition-all cursor-pointer"
-                    aria-label="Close"
-                >
-                    <X className="w-5 h-5" />
-                </button>
-            </div>
+        <div
+          className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200"
+          onClick={() => setZoomData(null)}
+        >
+          <div className="absolute top-0 left-0 right-0 z-[10001] flex items-center justify-between px-6 py-4 bg-gradient-to-b from-black/60 to-transparent">
+            <span className="text-white font-bold text-lg tracking-wide uppercase">
+              {zoomData.label} Preview
+            </span>
+            <button
+              onClick={() => setZoomData(null)}
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white hover:bg-white/20 transition-all cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-            <div className="relative w-full h-full max-w-4xl max-h-[85vh] mx-4 my-16 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                <Image
-                    src={zoomData.url}
-                    alt={zoomData.label}
-                    fill
-                    unoptimized
-                    className="object-contain"
-                    sizes="100vw"
-                    priority
-                />
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
-                  <Button
-                    onClick={() => {
-                        const input = document.getElementById(zoomData.key);
-                        input?.click();
-                        setZoomData(null);
-                    }}
-                    className="bg-white/90 backdrop-blur-sm text-gray-900 hover:bg-white rounded-full px-8 py-3 shadow-2xl border border-gray-200 font-bold transition-transform hover:scale-105"
-                  >
-                    <Pencil className="w-5 h-5 mr-3 text-[var(--colour-fsP2)]" /> Replace Document
-                  </Button>
-                </div>
+          <div className="relative w-full h-full max-w-4xl max-h-[85vh] mx-4 my-16 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={zoomData.url}
+              alt={zoomData.label}
+              fill
+              unoptimized
+              className="object-contain"
+              sizes="100vw"
+              priority
+            />
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+              <Button
+                onClick={() => {
+                  const input = document.getElementById(zoomData.key);
+                  input?.click();
+                  setZoomData(null);
+                }}
+                className="bg-white/90 backdrop-blur-sm text-gray-900 hover:bg-white rounded-full px-8 py-3 shadow-2xl border border-gray-200 font-bold transition-transform hover:scale-105"
+              >
+                <Pencil className="w-5 h-5 mr-3 text-[var(--colour-fsP2)]" /> Replace Document
+              </Button>
             </div>
-          </div>,
-          document.body
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

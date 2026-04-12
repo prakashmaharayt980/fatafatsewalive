@@ -81,9 +81,7 @@ export default function EmiSuccessClient() {
     const formattedDate = new Date(submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const emiTypeLabel = labelMap[selectedOption] ?? selectedOption;
     const productImage = product?.thumb?.url ?? product?.images?.[0]?.url ?? null;
-    const productPrice = typeof product?.price === 'object'
-        ? (product.price as any).current ?? (product.price as any).price ?? 0
-        : product?.price ?? 0;
+    const productPrice = product?.price?.current ?? 0;
     const nextSteps = nextStepsMap[selectedOption];
 
     return (

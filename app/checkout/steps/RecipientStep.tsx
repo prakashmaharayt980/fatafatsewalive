@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { User, Gift, ChevronRight, ChevronLeft, Phone, UserCircle, MessageSquare, Heart, Camera, X, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
@@ -28,8 +28,19 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
     const { recipient } = state;
     const fileInputRefRecipient = useRef<HTMLInputElement>(null);
     const fileInputRefSender = useRef<HTMLInputElement>(null);
+    const [previews, setPreviews] = useState<{ recipientPhoto?: string; senderPhoto?: string }>({});
+
+    useEffect(() => {
+        return () => {
+            if (previews.recipientPhoto) URL.revokeObjectURL(previews.recipientPhoto);
+            if (previews.senderPhoto) URL.revokeObjectURL(previews.senderPhoto);
+        };
+    }, []);
 
     const handleTypeSelect = (type: RecipientType) => {
+        if (previews.recipientPhoto) URL.revokeObjectURL(previews.recipientPhoto);
+        if (previews.senderPhoto) URL.revokeObjectURL(previews.senderPhoto);
+        setPreviews({});
         onRecipientChange({
             ...recipient,
             type,
@@ -46,18 +57,19 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
     };
 
     const handlePhotoUpload = (field: 'recipientPhoto' | 'senderPhoto', file: File) => {
-        // Validation: 300KB Max
         if (file.size > 300 * 1024) {
             toast.error("Image size must be less than 300KB");
             return;
         }
-
-        const reader = new FileReader();
-        reader.onloadend = () => onRecipientChange({ ...recipient, [field]: reader.result as string });
-        reader.readAsDataURL(file);
+        if (previews[field]) URL.revokeObjectURL(previews[field]!);
+        const objectUrl = URL.createObjectURL(file);
+        setPreviews(prev => ({ ...prev, [field]: objectUrl }));
+        onRecipientChange({ ...recipient, [field]: file });
     };
 
     const removePhoto = (field: 'recipientPhoto' | 'senderPhoto') => {
+        if (previews[field]) URL.revokeObjectURL(previews[field]!);
+        setPreviews(prev => ({ ...prev, [field]: undefined }));
         onRecipientChange({ ...recipient, [field]: undefined });
         if (field === 'recipientPhoto' && fileInputRefRecipient.current) fileInputRefRecipient.current.value = '';
         if (field === 'senderPhoto' && fileInputRefSender.current) fileInputRefSender.current.value = '';
@@ -72,18 +84,19 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
     };
 
     const PhotoUpload = ({
-        label, photo, field, inputRef,
+        label, field, inputRef,
     }: {
         label: string;
-        photo?: string;
         field: 'recipientPhoto' | 'senderPhoto';
         inputRef: React.RefObject<HTMLInputElement | null>;
-    }) => (
+    }) => {
+        const previewUrl = previews[field];
+        return (
         <div>
             <span className={labelClass}>{label}</span>
-            {photo ? (
+            {previewUrl ? (
                 <div className="relative w-full h-24 rounded-xl overflow-hidden border border-gray-200 group">
-                    <Image src={photo} alt="Uploaded" fill sizes="300px" className="object-cover" />
+                    <Image src={previewUrl} alt="Uploaded" fill sizes="300px" className="object-cover" />
                     <button
                         onClick={() => removePhoto(field)}
                         className="absolute top-1.5 right-1.5 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer shadow-sm"
@@ -111,7 +124,8 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                 onChange={(e) => e.target.files?.[0] && handlePhotoUpload(field, e.target.files[0])}
             />
         </div>
-    );
+        );
+    };
 
     return (
         <div className="space-y-4">
@@ -235,8 +249,8 @@ export default function RecipientStep({ state, onRecipientChange, onNext, onBack
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
-                                <PhotoUpload label="Recipient Photo" photo={recipient.recipientPhoto} field="recipientPhoto" inputRef={fileInputRefRecipient} />
-                                <PhotoUpload label="Your Photo" photo={recipient.senderPhoto} field="senderPhoto" inputRef={fileInputRefSender} />
+                                <PhotoUpload label="Recipient Photo" field="recipientPhoto" inputRef={fileInputRefRecipient} />
+                                <PhotoUpload label="Your Photo" field="senderPhoto" inputRef={fileInputRefSender} />
                             </div>
 
                             <div>

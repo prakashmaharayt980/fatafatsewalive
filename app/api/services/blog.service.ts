@@ -38,4 +38,23 @@ export const getBlogCategories = async () => {
     return apiPublic.get(`/v1/blogs/categories`).then((res: any) => res.data);
 };
 
-// No object exports allowed in 'use server' files
+
+
+export const getWebstories = async (params?: { page?: number; per_page?: number; category?: string[] }) => {
+    'use cache';
+    cacheLife('hours');
+    cacheTag('blog-webstories');
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+    if (params?.category?.length) {
+        const categories = params.category.map((cat) => cat.trim()).filter((cat) => cat.length > 0);
+        if (categories.length > 0) queryParams.append('category', categories.join(','));
+    }
+    const query = queryParams.toString();
+    return apiPublic.get(`/v1/webstories${query ? `?${query}` : ''}`).then((res: any) => res.data);
+};
+
+export const getWebstoies = getWebstories;
+
+

@@ -62,10 +62,8 @@ export interface CategoryInfo {
 export interface ProductVariant {
     id?: number;
     product_id?: number;
-    sku: string | null;
+    sku?: string | null;
     price: number;
-    original_price: number | null;
-    discounted_price: number;
     quantity: number;
     attributes: Record<string, string>;
     status?: any;
@@ -80,9 +78,7 @@ export interface ProductData {
     slug: string;
     sku: string | null;
     description: ProductDescription;
-    price: number | PriceInfo;
-    original_price?: number | null;
-    discounted_price: number;
+    price: PriceInfo;
     quantity: number;
     unit?: string | null;
     weight?: string | null;
