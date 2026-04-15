@@ -2,22 +2,11 @@
 import { cacheLife } from 'next/cache'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-
-
 import ShopByEmiClient from './ShopByEmiClient'
 import { getBannerData } from '@/app/api/CachedHelper/getBannerData'
-import { getCachedAllCategories } from '@/app/api/utils/categoryCache'
-import { getCategoryProducts } from '@/app/api/services/category.service'
+import { getFilteredBasketProducts } from '@/app/api/utils/productFetchers'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://fatafatsewa.com'
-
-const banners = [
-    { slug: 'banner-3-img-test', type: 'Banner2' as const },
-    { slug: 'home-banner-fourth-test', type: 'Bannerfooter' as const },
-
-] as const
-
-
 
 export const metadata: Metadata = {
     title: 'Shop by EMI — Buy Mobiles & Laptops on Easy Installments | Fatafat Sewa',
@@ -37,11 +26,9 @@ export const metadata: Metadata = {
 
 export default async function Page() {
     cacheLife('minutes')
-    const [heroBanner, footerBanner, categories, initialProducts] = await Promise.all([
-        getBannerData(banners[0].slug),
-        getBannerData(banners[1].slug),
-        getCachedAllCategories(),
-        getCategoryProducts('mobile-price-in-nepal', { emi_enabled: true, brand: 'iphone-price-in-nepal', per_page: 5, sort: 'newest' }),
+    const [footerBanner, initialProducts] = await Promise.all([
+        getBannerData('home-banner-fourth-test'),
+        getFilteredBasketProducts('mobile-price-in-nepal', { brand: 'iphone-price-in-nepal', count: 10, emi_enabled: true }),
     ])
 
     const jsonLd = {
@@ -78,16 +65,11 @@ export default async function Page() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <Suspense fallback={
-                <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                    <div className="text-center space-y-3">
-                        <div className="w-10 h-10 border-4 border-[var(--colour-fsP2)] border-t-transparent rounded-full animate-spin mx-auto" />
-                        <p className="text-sm font-semibold text-slate-500">Loading EMI Shop…</p>
-                    </div>
+                <div className="min-h-screen flex items-center justify-center bg-(--colour-bg4)">
+                    <div className="w-8 h-8 border-4 border-(--colour-fsP2) border-t-transparent rounded-full animate-spin" />
                 </div>
             }>
                 <ShopByEmiClient
-                    initialCategories={categories ?? []}
-                    heroBanners={[heroBanner].filter(Boolean) as any}
                     footerBanners={[footerBanner].filter(Boolean) as any}
                     initialProducts={initialProducts}
                 />

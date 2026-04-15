@@ -57,13 +57,13 @@ export default function EmiFaq({
     const [error, setError] = useState<string | null>(null);
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-    const paramsKey = JSON.stringify(params || { type: 'emi', per_page: 10, page: 1 });
+    const paramsKey = JSON.stringify(params || { type: 'brand', per_page: 10, page: 1 });
     useEffect(() => {
         const fetchFaqsData = async () => {
             try {
                 setLoading(true);
                 setError(null);
-                const effectiveParams = params || { type: 'emi', per_page: 10, page: 1 };
+                const effectiveParams = params || { type: 'brand', per_page: 10, page: 1 };
                 const json = await fetchFaqs(effectiveParams);
                 if (!json.success || !Array.isArray(json.data))
                     throw new Error('Unexpected response format');

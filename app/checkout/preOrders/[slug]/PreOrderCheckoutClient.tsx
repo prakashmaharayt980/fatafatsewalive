@@ -23,6 +23,7 @@ import EeswaPayment from '@/app/PaymentsBox/EeswaPayment';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { OrderService } from '@/app/api/services/order.service';
+import EmiFaq from '@/app/emi/apply/_components/EmiFaq';
 
 interface Props {
     product: ProductDetails;
@@ -112,16 +113,8 @@ export default function PreOrderCheckoutClient({ product }: Props) {
 
             const formData = new FormData();
             formData.append('product_id', String(product.id));
-            formData.append('product_name', product.name);
+          
             formData.append('product_slug', product.slug);
-            formData.append('product_image', productImage);
-            formData.append('quantity', '1');
-            formData.append('is_preorder', '1');
-            formData.append('pre_order_price', String(productPrice));
-            formData.append('deposit_amount', String(depositAmount));
-            formData.append('order_total', String(productPrice));
-            if (selectedColor) formData.append('selected_color', selectedColor);
-            if (product.categories?.[0]?.title) formData.append('category', product.categories[0].title);
 
             formData.append('shipping_address[id]', String(checkoutState.address?.id ?? ''));
             formData.append('shipping_address[first_name]', checkoutState.address?.contact_info?.first_name ?? user?.name ?? '');
@@ -146,6 +139,7 @@ export default function PreOrderCheckoutClient({ product }: Props) {
                 ? (checkoutState.recipient.name ?? '')
                 : (user?.name ?? ''));
             if (checkoutState.recipient.message) formData.append('recipient[message]', checkoutState.recipient.message);
+          
 
             const res = await OrderService.CreatePreOrder(formData);
 
@@ -324,7 +318,7 @@ export default function PreOrderCheckoutClient({ product }: Props) {
                         </div>
                     </div>
 
-                    <CheckoutFaq type="preorder" />
+     <EmiFaq className="mt-16 lg:mt-20"  title='pre Oredr relaed information ' params={{type: 'brand',per_page: 10, page: 1}} />
                 </div>
             </div>
 
